@@ -1,0 +1,72 @@
+/**
+ * Frontend styles — Lead form.
+ *
+ * @package WP4Odoo
+ * @since   1.0.0
+ */
+
+.wp4odoo-lead-form p {
+	margin-bottom: 1em;
+}
+
+.wp4odoo-lead-form label {
+	display: block;
+	margin-bottom: 0.3em;
+	font-weight: 600;
+}
+
+.wp4odoo-lead-form .required {
+	color: #c00;
+}
+
+.wp4odoo-lead-form input,
+.wp4odoo-lead-form textarea {
+	width: 100%;
+	padding: 0.5em;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	font-size: 1em;
+}
+
+.wp4odoo-lead-form .wp4odoo-lead-submit {
+	padding: 0.6em 1.5em;
+	border: none;
+	border-radius: 4px;
+	background: #0073aa;
+	color: #fff;
+	font-size: 1em;
+	cursor: pointer;
+}
+
+.wp4odoo-lead-form .wp4odoo-lead-submit:hover {
+	background: #005a87;
+}
+
+.wp4odoo-lead-form .wp4odoo-lead-submit:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.wp4odoo-lead-feedback {
+	margin-top: 1em;
+	padding: 0.6em 1em;
+	border-radius: 4px;
+	display: none;
+}
+
+.wp4odoo-lead-feedback.success,
+.wp4odoo-lead-feedback.error {
+	display: block;
+}
+
+.wp4odoo-lead-feedback.success {
+	background: #dff0d8;
+	color: #3c763d;
+	border: 1px solid #d6e9c6;
+}
+
+.wp4odoo-lead-feedback.error {
+	background: #f2dede;
+	color: #a94442;
+	border: 1px solid #ebccd1;
+}

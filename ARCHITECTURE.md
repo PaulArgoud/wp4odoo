@@ -1,0 +1,555 @@
+# Architecture — WordPress For Odoo
+
+## Overview
+
+Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v17+). The plugin covers three domains: CRM, Sales & Invoicing, and WooCommerce.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        WordPress                                │
+│                                                                 │
+│  ┌──────────┐  ┌──────────┐  ┌───────────────┐                │
+│  │   CRM    │  │  Sales   │  │  WooCommerce  │   Modules      │
+│  │  Module  │  │  Module  │  │    Module      │                │
+│  └────┬─────┘  └────┬─────┘  └──────┬────────┘                │
+│       │              │               │                          │
+│       └──────────────┼───────────────┘                          │
+│                      ▼                                          │
+│              ┌──────────────┐     ┌────────────────┐           │
+│              │  Sync Engine │◄────│ Queue Manager  │           │
+│              │  (cron job)  │     └────────────────┘           │
+│              └──────┬───────┘                                   │
+│                     │                                           │
+│              ┌──────▼───────┐     ┌────────────────┐           │
+│              │ Field Mapper │     │ Webhook Handler│◄── REST   │
+│              └──────┬───────┘     └────────┬───────┘    API    │
+│                     │                      │                    │
+│              ┌──────▼──────────────────────▼────┐              │
+│              │          Odoo Client             │              │
+│              │  ┌──────────┐  ┌──────────────┐  │              │
+│              │  │ JSON-RPC │  │   XML-RPC    │  │              │
+│              │  │Transport │  │  Transport   │  │              │
+│              │  └────┬─────┘  └──────┬───────┘  │              │
+│              │       └──── Transport ────┘       │              │
+│              │            interface              │              │
+│              └──────────────┬───────────────────┘              │
+│                             │                                   │
+└─────────────────────────────┼───────────────────────────────────┘
+                              │ HTTP
+                              ▼
+                    ┌──────────────────┐
+                    │    Odoo ERP      │
+                    │     (v17+)       │
+                    └──────────────────┘
+```
+
+## Directory Structure
+
+```
+WordPress For Odoo/
+├── wp4odoo.php              # Entry point, singleton, autoloader, hooks
+├── CLAUDE.md                          # Instructions for Claude Code
+├── ARCHITECTURE.md                    # This file
+├── CHANGELOG.md                       # Version history
+│
+├── includes/
+│   ├── api/
+│   │   ├── interface-transport.php    # Transport interface (authenticate, execute_kw, get_uid)
+│   │   ├── class-odoo-client.php      # High-level client (CRUD, search, fields_get)
+│   │   ├── class-odoo-jsonrpc.php     # JSON-RPC 2.0 transport (Odoo 17+) implements Transport
+│   │   ├── class-odoo-xmlrpc.php      # XML-RPC transport (legacy) implements Transport
+│   │   └── class-odoo-auth.php        # Auth, API key encryption, connection testing
+│   │
+│   ├── modules/
+│   │   ├── class-crm-module.php       # CRM: contact sync (WP users ↔ res.partner)
+│   │   ├── class-lead-manager.php     # CRM: lead CPT, shortcode, form, data load/save
+│   │   ├── class-contact-refiner.php  # CRM: name/country/state refinement filters
+│   │   ├── class-sales-module.php     # Sales: orders, invoices, products (~350 lines, 12 methods)
+│   │   ├── class-portal-manager.php   # Sales: customer portal shortcode, AJAX, queries
+│   │   └── class-woocommerce-module.php  # WooCommerce: products/orders/stock sync
+│   │
+│   ├── admin/
+│   │   ├── class-admin.php            # Admin menu, asset enqueuing, plugin action link
+│   │   ├── class-admin-ajax.php       # 9 AJAX handlers (test, retry, cleanup, logs, module settings, etc.)
+│   │   └── class-settings-page.php    # Settings API, 5-tab rendering, sanitize callbacks
+│   │
+│   ├── class-module-base.php          # Abstract base class for modules
+│   ├── class-entity-map-repository.php # Static DB access for wp4odoo_entity_map
+│   ├── class-sync-queue-repository.php # Static DB access for wp4odoo_sync_queue
+│   ├── class-sync-engine.php          # Queue processor, batch operations, locking
+│   ├── class-queue-manager.php        # Helpers for enqueuing sync jobs
+│   ├── class-query-service.php        # Paginated queries (queue jobs, log entries)
+│   ├── class-field-mapper.php         # Type conversions (Many2one, dates, HTML)
+│   ├── class-webhook-handler.php      # REST API endpoints for Odoo webhooks
+│   └── class-logger.php              # DB-backed logger with level filtering
+│
+├── admin/
+│   ├── css/admin.css                  # Admin styles (~240 lines)
+│   ├── js/admin.js                    # Admin JS: AJAX interactions (~350 lines)
+│   └── views/                         # Admin page templates
+│       ├── page-settings.php          #   Main wrapper (h1 + nav-tabs + tab dispatch)
+│       ├── tab-connection.php         #   Odoo connection form + webhook token
+│       ├── tab-sync.php               #   Sync settings + logging settings
+│       ├── tab-modules.php            #   Module cards with AJAX toggles + inline settings panels
+│       ├── tab-queue.php              #   Stats cards + paginated jobs table
+│       └── tab-logs.php               #   Filter bar + AJAX paginated log table
+│
+├── assets/                            # Frontend assets
+│   ├── css/frontend.css              #   Lead form styling
+│   ├── css/portal.css                #   Customer portal styling
+│   ├── js/lead-form.js              #   Lead form AJAX submission
+│   └── js/portal.js                 #   Portal tab switching + AJAX pagination
+│
+├── templates/
+│   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
+│
+├── tests/                             # PHPUnit tests
+│   ├── bootstrap.php                 #   WP function stubs + class loading
+│   └── Unit/
+│       ├── FieldMapperTest.php       #   30 tests for Field_Mapper pure PHP methods
+│       └── ModuleBaseHashTest.php    #   4 tests for generate_sync_hash()
+│
+├── uninstall.php                      # Cleanup on plugin uninstall
+│
+└── languages/                         # i18n files
+    ├── wp4odoo.pot          #   Gettext template (source strings)
+    ├── wp4odoo-fr_FR.po     #   French translations
+    └── wp4odoo-fr_FR.mo     #   Compiled French translations
+```
+
+## Architectural Patterns
+
+### 1. Singleton — Single Entry Point
+
+```php
+// wp4odoo.php
+final class WP4Odoo_Plugin {
+    private static ?self $instance = null;
+
+    public static function instance(): self { /* ... */ }
+    private function __construct() { /* ... */ }
+}
+
+// Global accessor
+function wp4odoo(): WP4Odoo_Plugin {
+    return WP4Odoo_Plugin::instance();
+}
+```
+
+The singleton loads dependencies, registers WordPress hooks, and exposes access to the API client and modules.
+
+### 2. Module System
+
+Each Odoo domain is encapsulated in an independent module extending `Module_Base`:
+
+```
+Module_Base (abstract)
+├── CRM_Module          → res.partner, crm.lead         [COMPLETE]
+├── Sales_Module        → product.template, sale.order, account.move  [COMPLETE]
+├── WooCommerce_Module  → + stock.quant, woocommerce hooks
+└── [Custom_Module]     → extensible via action hook
+```
+
+**Module_Base provides:**
+- Push/Pull orchestration: `push_to_odoo()`, `pull_from_odoo()`
+- Entity mapping CRUD: `get_mapping()`, `save_mapping()`, `get_wp_mapping()`, `remove_mapping()` (delegates to `Entity_Map_Repository`)
+- Data transformation: `map_to_odoo()`, `map_from_odoo()`, `generate_sync_hash()`
+- Settings: `get_settings()`, `get_settings_fields()`, `get_default_settings()`
+- Helpers: `is_importing()` (anti-loop guard), `resolve_many2one_field()` (Many2one → scalar), `client()`
+- Subclass hooks: `boot()`, `load_wp_data()`, `save_wp_data()`, `delete_wp_data()`
+
+**Module lifecycle:**
+1. Instantiated in `register_modules()` on the `init` hook
+2. Registered via `register_module($id, $module)`
+3. If `wp4odoo_module_{id}_enabled` is true → `$module->boot()` is called
+4. `boot()` registers module-specific WordPress hooks
+
+**Third-party extension:**
+```php
+add_action('wp4odoo_register_modules', function($plugin) {
+    $plugin->register_module('my_module', new My_Module());
+});
+```
+
+### 3. Queue-Based Synchronization
+
+No Odoo API requests are made during user requests. Everything goes through a persistent database queue:
+
+```
+WP Event               Sync Engine (cron)           Odoo
+    │                       │                        │
+    │  enqueue()            │                        │
+    ├──────────────►  sync_queue table               │
+    │                       │                        │
+    │                  process_queue()                │
+    │                       ├───── execute_kw() ────►│
+    │                       │◄──── response ─────────│
+    │                       │                        │
+    │                  update status                  │
+    │                  (completed/failed)             │
+```
+
+**Table `wp4odoo_sync_queue`:**
+
+| Column | Purpose |
+|--------|---------|
+| `module` | Source module (crm, sales, woocommerce) |
+| `direction` | `wp_to_odoo` or `odoo_to_wp` |
+| `entity_type` | Entity type (contact, lead, product, order...) |
+| `wp_id` / `odoo_id` | Identifiers on both sides |
+| `action` | `create`, `update`, `delete` |
+| `payload` | JSON-serialized data |
+| `priority` | 1-10, lower values processed first |
+| `status` | `pending` → `processing` → `completed` / `failed` |
+| `attempts` | Retry counter (max 3 by default) |
+| `max_attempts` | Maximum retry count (default 3) |
+| `error_message` | Last error message on failure |
+| `scheduled_at` | Scheduling (exponential backoff: `attempts × 60s`) |
+| `processed_at` | Timestamp when the job was last processed |
+| `created_at` | Timestamp when the job was enqueued |
+
+**Reliability mechanisms:**
+- WordPress transient locking (prevents parallel execution)
+- Exponential backoff on failure
+- Deduplication: updates an existing `pending` job rather than creating a duplicate
+- Configurable batch size (50 items per cron tick by default)
+
+### 4. Interchangeable Transport (Strategy Pattern)
+
+Both transports implement the `Transport` interface (`includes/api/interface-transport.php`):
+
+```php
+interface Transport {
+    public function authenticate( string $username ): int;
+    public function execute_kw( string $model, string $method, array $args, array $kwargs ): mixed;
+    public function get_uid(): ?int;
+}
+```
+
+```
+Odoo_Client ── uses ── Transport (interface)
+                            │
+    ┌───────────────────────┼──────────────────────┐
+    │                       │                      │
+Odoo_JsonRPC            Odoo_XmlRPC
+POST /jsonrpc           POST /xmlrpc/2/common (auth)
+                        POST /xmlrpc/2/object (CRUD)
+```
+
+The protocol is configurable in options (`wp4odoo_connection.protocol`). JSON-RPC is the default for Odoo 17+.
+
+### 5. Entity Mapping
+
+The `wp4odoo_entity_map` table maintains the correspondence between WordPress and Odoo IDs:
+
+```
+┌─────────────────────────────────────────────────────┐
+│              wp4odoo_entity_map                     │
+├──────────┬─────────────┬───────┬─────────┬──────────┤
+│ module   │ entity_type │ wp_id │ odoo_id │ odoo_model     │ sync_hash│ last_synced_at      │
+├──────────┼─────────────┼───────┼─────────┼────────────────┼──────────┼─────────────────────┤
+│ crm      │ contact     │ 42    │ 1337    │ res.partner    │ a3f8...  │ 2026-02-10 12:00:00 │
+│ woo      │ product     │ 15    │ 201     │ product.tmpl   │ b7e2...  │ 2026-02-10 12:05:00 │
+│ woo      │ order       │ 88    │ 5042    │ sale.order     │ c1d9...  │ 2026-02-10 12:10:00 │
+└──────────┴─────────────┴───────┴─────────┴────────────────┴──────────┴─────────────────────┘
+```
+
+- Unique composite index `(module, entity_type, wp_id, odoo_id)` to prevent duplicates
+- `odoo_model` stores the Odoo model name (e.g. `res.partner`) for reverse lookups
+- `sync_hash` (SHA-256 of data) to detect changes without making an API call
+- `last_synced_at` tracks when the mapping was last synchronized
+- Fast lookup in both directions via separate indexes (`idx_wp_lookup`, `idx_odoo_lookup`)
+
+### 6. Query Service (Data Access Layer)
+
+The `Query_Service` class (`includes/class-query-service.php`) provides static methods for paginated data retrieval, decoupling database queries from the admin UI:
+
+```php
+Query_Service::get_queue_jobs( $page, $per_page, $status );
+Query_Service::get_log_entries( $filters, $page, $per_page );
+```
+
+Used by both `Settings_Page` (server-side rendering) and `Admin_Ajax` (AJAX endpoints).
+
+## Database
+
+### Tables Created on Activation
+
+Managed via `dbDelta()` in `create_tables()`:
+
+**`{prefix}wp4odoo_sync_queue`** — Sync queue
+- Primary index: `(status, priority, scheduled_at)` for efficient polling
+
+**`{prefix}wp4odoo_entity_map`** — WP ↔ Odoo mapping
+- Unique: `(module, entity_type, wp_id, odoo_id)`
+- WP lookup: `(entity_type, wp_id)`
+- Odoo lookup: `(odoo_model, odoo_id)`
+
+**`{prefix}wp4odoo_logs`** — Structured logs
+- Indexes: `(level, created_at)` and `(module)`
+- `context` field stores JSON contextual data
+
+### WordPress Options (`wp_options`)
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `wp4odoo_connection` | `array` | URL, database, username, encrypted API key, protocol, timeout |
+| `wp4odoo_sync_settings` | `array` | Direction, conflict rule, batch size, interval |
+| `wp4odoo_log_settings` | `array` | Enabled, level, retention days |
+| `wp4odoo_module_{id}_enabled` | `bool` | Per-module activation |
+| `wp4odoo_module_{id}_settings` | `array` | Per-module configuration |
+| `wp4odoo_module_{id}_mappings` | `array` | Custom field mappings |
+| `wp4odoo_webhook_token` | `string` | Auto-generated webhook auth token |
+| `wp4odoo_db_version` | `string` | DB schema version |
+
+## REST API
+
+Namespace: `wp-json/wp4odoo/v1/`
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/webhook` | `POST` | Token | Receives change notifications from Odoo |
+| `/webhook/test` | `GET` | Public | Health check |
+| `/sync/{module}/{entity}` | `POST` | WP Auth | Triggers sync for a specific module/entity |
+
+The webhook is authenticated via an `X-Odoo-Token` header compared against `wp4odoo_webhook_token`.
+
+## Sync Flows
+
+### Push (WP → Odoo)
+
+```
+1. WP hook triggered (e.g., woocommerce_update_product)
+2. Module::push_to_odoo() called
+3. Data transformed via map_to_odoo() + Field_Mapper
+4. Job added to queue via Sync_Engine::enqueue()
+5. Cron runs process_queue()
+6. Odoo_Client::create() or write() via JSON-RPC/XML-RPC
+7. Mapping saved in entity_map
+8. Status updated (completed/failed)
+```
+
+### Pull (Odoo → WP)
+
+```
+1. Odoo sends a webhook POST /wp4odoo/v1/webhook
+2. Webhook_Handler validates the token
+3. Job added to queue (direction: odoo_to_wp)
+4. Cron runs process_queue()
+5. Module::pull_from_odoo() called
+6. Data fetched via Odoo_Client::read()
+7. Transformed via map_from_odoo() + Field_Mapper
+8. WP4ODOO_IMPORTING constant defined (anti-loop)
+9. WP entity created/updated
+10. Mapping and hash saved
+```
+
+## Security
+
+### API Key Encryption
+
+```
+Storage:  API key → sodium_crypto_secretbox() → wp_options (encrypted)
+Reading:  wp_options → sodium_crypto_secretbox_open() → API key (plaintext)
+```
+
+- Derivation key based on WordPress salts (`AUTH_KEY`, `SECURE_AUTH_KEY`)
+- Optional dedicated key via `WP4ODOO_ENCRYPTION_KEY` in `wp-config.php`
+- OpenSSL fallback if libsodium is unavailable
+
+### Request Authentication
+
+- **Admin AJAX**: `manage_options` capability + nonce verification
+- **Incoming webhooks**: token in `X-Odoo-Token` header
+- **REST API sync**: standard WordPress authentication (cookie/nonce or Application Passwords)
+
+### Input Sanitization
+
+All user inputs are sanitized with:
+- `sanitize_text_field()` for strings
+- `esc_url_raw()` for URLs
+- `absint()` for integers
+- `wp_kses_post()` for rich HTML
+
+## Admin UI
+
+5-tab settings interface accessible via top-level "Odoo Connector" menu:
+
+| Tab | Template | Features |
+|-----|----------|----------|
+| Connection | `tab-connection.php` | Credentials form, "Test connection" AJAX, webhook token display + copy |
+| Sync | `tab-sync.php` | Direction, conflict rule, batch size, interval, auto-sync; logging settings |
+| Modules | `tab-modules.php` | Card grid with AJAX toggle switches, inline settings panels, WooCommerce dependency check |
+| Queue | `tab-queue.php` | 4 status cards, jobs table with server-side pagination, retry/cleanup/cancel |
+| Logs | `tab-logs.php` | Filter bar (level, module, dates), AJAX paginated log table, purge |
+
+**Key classes:**
+- `Admin` — orchestrator: menu registration, asset enqueuing, plugin settings link
+- `Settings_Page` — Settings API registration, tab rendering, sanitize callbacks
+- `Admin_Ajax` — 9 handlers: test_connection, retry_failed, cleanup_queue, cancel_job, purge_logs, fetch_logs, queue_stats, toggle_module, save_module_settings
+
+## Modules Detail
+
+### CRM — COMPLETE
+
+**Files:** `class-crm-module.php` (contact sync), `class-lead-manager.php` (leads), `class-contact-refiner.php` (field refinement)
+
+**Odoo models:** `res.partner`, `crm.lead`
+
+| Direction | Source | Destination | Matching |
+|-----------|--------|-------------|----------|
+| WP → Odoo | `user_register` / `profile_update` | `res.partner` create/update | Email dedup |
+| WP → Odoo | `delete_user` | `res.partner` archive (`active=false`) or unlink | Mapping |
+| WP → Odoo | `[wp4odoo_lead_form]` submission | `crm.lead` create | — |
+| Odoo → WP | Webhook `res.partner` | WP user create/update (subscriber) | Email dedup |
+| Odoo → WP | Webhook `crm.lead` | `wp4odoo_lead` CPT | Mapping |
+
+**Key features:**
+- Email deduplication in both directions (push: searches Odoo by email before creating; pull: `get_user_by('email')`)
+- Archive-on-delete: sends `active=false` instead of unlink when setting enabled
+- Role-based filtering: configurable `sync_role` (empty = all roles)
+- Anti-loop via `$this->is_importing()` in every WP hook callback
+- Country/state resolution: ISO code ↔ Odoo `res.country` / `res.country.state` IDs
+- `wp4odoo_lead` CPT for storing leads locally, nested under plugin admin menu
+- `[wp4odoo_lead_form]` shortcode with AJAX submission (`assets/js/lead-form.js`)
+
+**Field mappings:**
+
+Contact (WP user ↔ `res.partner`):
+```
+display_name → name, user_email → email, description → comment,
+first_name → x_wp_first_name, last_name → x_wp_last_name (composed into name by Contact_Refiner),
+billing_phone → phone,
+billing_company → company_name, billing_address_1 → street,
+billing_address_2 → street2, billing_city → city, billing_postcode → zip,
+billing_country → country_id (ISO→ID), billing_state → state_id (name→ID),
+user_url → website
+```
+
+Lead (form → `crm.lead`):
+```
+name → name, email → email_from, phone → phone,
+company → partner_name, description → description, source → x_wp_source
+```
+
+**Settings:** `sync_users_as_contacts`, `archive_on_delete`, `sync_role`, `create_users_on_pull`, `default_user_role`, `lead_form_enabled`
+
+### Sales — COMPLETE
+
+**Files:** `class-sales-module.php` (order/invoice sync, CPTs), `class-portal-manager.php` (portal shortcode, AJAX, queries)
+
+**Odoo models:** `product.template`, `sale.order`, `account.move`
+
+| Direction | Source | Destination | Matching |
+|-----------|--------|-------------|----------|
+| Odoo → WP | Webhook `sale.order` | `wp4odoo_order` CPT | Mapping |
+| Odoo → WP | Webhook `account.move` | `wp4odoo_invoice` CPT | Mapping |
+
+**Customer portal:** `[wp4odoo_customer_portal]` shortcode renders a tabbed interface (Orders / Invoices) with pagination. Links WP users to Odoo partners via CRM entity_map, then queries `wp4odoo_order` / `wp4odoo_invoice` CPTs by `_wp4odoo_partner_id` meta.
+
+**Field mappings:**
+
+Order (Odoo `sale.order` → `wp4odoo_order` CPT):
+```
+name → post_title, amount_total → _order_total, date_order → _order_date,
+state → _order_state, partner_id → _wp4odoo_partner_id (Many2one → ID)
+```
+
+Invoice (Odoo `account.move` → `wp4odoo_invoice` CPT):
+```
+name → post_title, amount_total → _invoice_total, invoice_date → _invoice_date,
+state → _invoice_state, payment_state → _payment_state, partner_id → _wp4odoo_partner_id
+```
+
+**Settings:** `import_products`, `portal_enabled`, `orders_per_page`
+
+### WooCommerce — STUB (`includes/modules/class-woocommerce-module.php`)
+
+> **Status:** The module class exists with Odoo model and field mapping definitions, but `boot()` is empty. No hooks are registered and no sync logic is implemented yet.
+
+**Planned bidirectional sync:**
+
+| Entity | WP → Odoo | Odoo → WP | Matching |
+|--------|-----------|-----------|----------|
+| Products | `woocommerce_update_product` | webhook | SKU |
+| Orders | `woocommerce_new_order` | webhook | — |
+| Customers | `woocommerce_new_order` | webhook | Email |
+| Stock | `woocommerce_product_set_stock` | webhook | SKU |
+
+**Planned order status mapping:**
+
+```php
+// Default
+$map = [
+    'draft'   => 'pending',
+    'sent'    => 'on-hold',
+    'sale'    => 'processing',
+    'done'    => 'completed',
+    'cancel'  => 'cancelled',
+];
+
+// Customizable via filter
+add_filter('wp4odoo_order_status_map', function($map) { /* ... */ });
+```
+
+**Anti-loop protection:** The `WP4ODOO_IMPORTING` constant is defined during pull operations to prevent WooCommerce hooks from re-enqueuing a sync.
+
+## Hooks & Filters
+
+### Actions
+
+| Hook | Trigger | Parameters |
+|------|---------|------------|
+| `wp4odoo_init` | Plugin initialized | `$plugin` |
+| `wp4odoo_loaded` | All plugins loaded | — |
+| `wp4odoo_register_modules` | Module registration | `$plugin` |
+| `wp4odoo_lead_created` | Lead form submitted and saved | `$wp_id`, `$lead_data` |
+| `wp4odoo_api_call` | Every Odoo API call | `$model`, `$method`, `$args`, `$kwargs`, `$result` |
+
+### Filters
+
+| Filter | Usage |
+|--------|-------|
+| `wp4odoo_map_to_odoo_{module}_{entity}` | Modify mapped Odoo values before push |
+| `wp4odoo_map_from_odoo_{module}_{entity}` | Modify mapped WP data during pull |
+| `wp4odoo_woo_product_to_odoo` | Modify product data before push (planned) |
+| `wp4odoo_order_status_map` | Customize order status mapping (planned) |
+| `wp4odoo_ssl_verify` | Enable/disable SSL verification |
+
+## Cron
+
+| Schedule | Interval | Usage |
+|----------|----------|-------|
+| `wp4odoo_five_minutes` | 300s | Default for sync |
+| `wp4odoo_fifteen_minutes` | 900s | Configurable alternative |
+
+Cron event: `wp4odoo_scheduled_sync` → `Sync_Engine::process_queue()`
+
+## Odoo API Reference
+
+### Common Signature
+
+```
+execute_kw(db, uid, password, model, method, args, kwargs)
+```
+
+### Relational Field Types
+
+| Type | Read | Write |
+|------|------|-------|
+| Many2one | `[id, "Name"]` or `false` | `id` (int) |
+| One2many | `[id, id, ...]` | `[[0,0,{vals}]]` create, `[[1,id,{vals}]]` update, `[[2,id,0]]` delete |
+| Many2many | `[id, id, ...]` | `[[6,0,[ids]]]` replace, `[[4,id,0]]` add |
+
+### Search Domains (Polish Notation)
+
+```python
+# Simple
+[['email', '!=', False]]
+
+# Implicit AND
+[['state', '=', 'sale'], ['partner_id', '!=', False]]
+
+# Explicit OR
+['|', ['state', '=', 'sale'], ['state', '=', 'done']]
+```

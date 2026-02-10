@@ -1,0 +1,21 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - includes/
+    bootstrapFiles:
+        - phpstan-bootstrap.php
+    ignoreErrors:
+        # Portal_Manager::$logger is injected for future use (consistent with Lead_Manager pattern)
+        - identifier: property.onlyWritten
+          path: includes/modules/class-portal-manager.php
+        # Typed array protocol key always exists — intentional defensive ?? for runtime safety
+        - identifier: nullCoalesce.offset
+          path: includes/api/class-odoo-auth.php
+        # Defensive double-check after empty() — harmless, keeps intent clear
+        - identifier: identical.alwaysFalse
+          path: includes/api/class-odoo-jsonrpc.php
+        - identifier: identical.alwaysFalse
+          path: includes/api/class-odoo-xmlrpc.php

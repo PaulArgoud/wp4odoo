@@ -1,0 +1,527 @@
+<?php
+declare( strict_types=1 );
+
+namespace WP4Odoo;
+
+use WP4Odoo\API\Odoo_Client;
+use WP4Odoo\Field_Mapper;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Abstract base class for all synchronization modules.
+ *
+ * Provides shared infrastructure for pushing/pulling entities between
+ * WordPress and Odoo, entity mapping, and sync hash management.
+ *
+ * @package WP4Odoo
+ * @since   1.0.0
+ */
+abstract class Module_Base {
+
+	/**
+	 * Unique module identifier (e.g., 'crm', 'sales', 'woocommerce').
+	 *
+	 * @var string
+	 */
+	protected string $id;
+
+	/**
+	 * Human-readable module name.
+	 *
+	 * @var string
+	 */
+	protected string $name;
+
+	/**
+	 * Odoo models this module interacts with.
+	 *
+	 * Keys are entity types, values are Odoo model names.
+	 * Example: ['contact' => 'res.partner', 'lead' => 'crm.lead']
+	 *
+	 * @var array<string, string>
+	 */
+	protected array $odoo_models = [];
+
+	/**
+	 * Default field mappings per entity type.
+	 *
+	 * Structure: [entity_type => [wp_field => odoo_field, ...]]
+	 *
+	 * @var array<string, array<string, string>>
+	 */
+	protected array $default_mappings = [];
+
+	/**
+	 * Logger instance.
+	 *
+	 * @var Logger
+	 */
+	protected Logger $logger;
+
+	/**
+	 * Constructor.
+	 */
+	public function __construct() {
+		$this->logger = new Logger( $this->id );
+	}
+
+	/**
+	 * Boot the module: register WordPress hooks.
+	 *
+	 * Called only when the module is enabled.
+	 *
+	 * @return void
+	 */
+	abstract public function boot(): void;
+
+	/**
+	 * Get default settings for this module.
+	 *
+	 * @return array
+	 */
+	abstract public function get_default_settings(): array;
+
+	// -------------------------------------------------------------------------
+	// Push / Pull
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Push a WordPress entity to Odoo.
+	 *
+	 * Called by the Sync_Engine when processing a wp_to_odoo job.
+	 *
+	 * @param string $entity_type The entity type (e.g., 'product').
+	 * @param string $action      'create', 'update', or 'delete'.
+	 * @param int    $wp_id       WordPress entity ID.
+	 * @param int    $odoo_id     Odoo ID (0 if creating).
+	 * @param array  $payload     Additional data from the queue.
+	 * @return bool True on success.
+	 */
+	public function push_to_odoo( string $entity_type, string $action, int $wp_id, int $odoo_id = 0, array $payload = [] ): bool {
+		$model = $this->get_odoo_model( $entity_type );
+
+		if ( 'delete' === $action ) {
+			if ( $odoo_id > 0 ) {
+				$this->client()->unlink( $model, [ $odoo_id ] );
+				$this->remove_mapping( $entity_type, $wp_id );
+				$this->logger->info( 'Deleted Odoo record.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
+			}
+			return true;
+		}
+
+		$wp_data     = ! empty( $payload ) ? $payload : $this->load_wp_data( $entity_type, $wp_id );
+		$odoo_values = $this->map_to_odoo( $entity_type, $wp_data );
+
+		if ( empty( $odoo_values ) ) {
+			$this->logger->warning( 'No data to push.', compact( 'entity_type', 'wp_id' ) );
+			return false;
+		}
+
+		$new_hash = $this->generate_sync_hash( $odoo_values );
+
+		// Check for existing mapping (might have been created since enqueue).
+		if ( 'create' === $action || 0 === $odoo_id ) {
+			$existing_odoo_id = $this->get_mapping( $entity_type, $wp_id );
+			if ( $existing_odoo_id ) {
+				$odoo_id = $existing_odoo_id;
+				$action  = 'update';
+			}
+		}
+
+		if ( 'update' === $action && $odoo_id > 0 ) {
+			$this->client()->write( $model, [ $odoo_id ], $odoo_values );
+			$this->save_mapping( $entity_type, $wp_id, $odoo_id, $new_hash );
+			$this->logger->info( 'Updated Odoo record.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
+		} else {
+			$odoo_id = $this->client()->create( $model, $odoo_values );
+			$this->save_mapping( $entity_type, $wp_id, $odoo_id, $new_hash );
+			$this->logger->info( 'Created Odoo record.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
+		}
+
+		return true;
+	}
+
+	/**
+	 * Pull an Odoo entity into WordPress.
+	 *
+	 * Called by the Sync_Engine when processing an odoo_to_wp job.
+	 *
+	 * @param string $entity_type The entity type.
+	 * @param string $action      'create', 'update', or 'delete'.
+	 * @param int    $odoo_id     Odoo entity ID.
+	 * @param int    $wp_id       WordPress ID (0 if creating).
+	 * @param array  $payload     Additional data from the queue.
+	 * @return bool True on success.
+	 */
+	public function pull_from_odoo( string $entity_type, string $action, int $odoo_id, int $wp_id = 0, array $payload = [] ): bool {
+		if ( ! defined( 'WP4ODOO_IMPORTING' ) ) {
+			define( 'WP4ODOO_IMPORTING', true );
+		}
+
+		$model = $this->get_odoo_model( $entity_type );
+
+		if ( 'delete' === $action ) {
+			if ( 0 === $wp_id ) {
+				$wp_id = $this->get_wp_mapping( $entity_type, $odoo_id ) ?? 0;
+			}
+			if ( $wp_id > 0 ) {
+				$this->delete_wp_data( $entity_type, $wp_id );
+				$this->remove_mapping( $entity_type, $wp_id );
+				$this->logger->info( 'Deleted WP entity from Odoo signal.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
+			}
+			return true;
+		}
+
+		// Fetch fresh data from Odoo.
+		$records = $this->client()->read( $model, [ $odoo_id ] );
+
+		if ( empty( $records ) ) {
+			$this->logger->warning( 'Odoo record not found during pull.', compact( 'entity_type', 'odoo_id' ) );
+			return false;
+		}
+
+		$odoo_data = $records[0];
+		$wp_data   = $this->map_from_odoo( $entity_type, $odoo_data );
+
+		/**
+		 * Filter WordPress data after mapping from Odoo.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param array  $wp_data     The mapped WordPress data.
+		 * @param array  $odoo_data   The raw Odoo record data.
+		 * @param string $entity_type The entity type.
+		 */
+		$wp_data = apply_filters( "wp4odoo_map_from_odoo_{$this->id}_{$entity_type}", $wp_data, $odoo_data, $entity_type );
+
+		// Find existing WP entity.
+		if ( 0 === $wp_id ) {
+			$wp_id = $this->get_wp_mapping( $entity_type, $odoo_id ) ?? 0;
+		}
+
+		$wp_id = $this->save_wp_data( $entity_type, $wp_data, $wp_id );
+
+		if ( $wp_id > 0 ) {
+			$new_hash = $this->generate_sync_hash( $odoo_data );
+			$this->save_mapping( $entity_type, $wp_id, $odoo_id, $new_hash );
+			$this->logger->info( 'Pulled from Odoo.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
+			return true;
+		}
+
+		$this->logger->error( 'Failed to save WP data during pull.', compact( 'entity_type', 'odoo_id' ) );
+		return false;
+	}
+
+	// -------------------------------------------------------------------------
+	// Entity Mapping (entity_map table)
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Get the Odoo ID mapped to a WordPress entity.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param int    $wp_id       WordPress ID.
+	 * @return int|null The Odoo ID, or null if not mapped.
+	 */
+	public function get_mapping( string $entity_type, int $wp_id ): ?int {
+		return Entity_Map_Repository::get_odoo_id( $this->id, $entity_type, $wp_id );
+	}
+
+	/**
+	 * Get the WordPress ID mapped to an Odoo entity.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param int    $odoo_id     Odoo ID.
+	 * @return int|null The WordPress ID, or null if not mapped.
+	 */
+	public function get_wp_mapping( string $entity_type, int $odoo_id ): ?int {
+		return Entity_Map_Repository::get_wp_id( $this->id, $entity_type, $odoo_id );
+	}
+
+	/**
+	 * Save a mapping between a WordPress entity and an Odoo record.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param int    $wp_id       WordPress ID.
+	 * @param int    $odoo_id     Odoo ID.
+	 * @param string $sync_hash   SHA-256 hash of synced data.
+	 * @return bool True on success.
+	 */
+	public function save_mapping( string $entity_type, int $wp_id, int $odoo_id, string $sync_hash = '' ): bool {
+		$odoo_model = $this->get_odoo_model( $entity_type );
+		return Entity_Map_Repository::save( $this->id, $entity_type, $wp_id, $odoo_id, $odoo_model, $sync_hash );
+	}
+
+	/**
+	 * Remove a mapping.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param int    $wp_id       WordPress ID.
+	 * @return bool True if a mapping was deleted.
+	 */
+	public function remove_mapping( string $entity_type, int $wp_id ): bool {
+		return Entity_Map_Repository::remove( $this->id, $entity_type, $wp_id );
+	}
+
+	// -------------------------------------------------------------------------
+	// Data Transformation
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Transform WordPress data to Odoo field values.
+	 *
+	 * Applies field mappings. Subclasses should override for entity-specific logic.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $wp_data     WordPress data (post fields, meta, etc.).
+	 * @return array Odoo-compatible field values.
+	 */
+	public function map_to_odoo( string $entity_type, array $wp_data ): array {
+		$mapping     = $this->get_field_mapping( $entity_type );
+		$odoo_values = [];
+
+		foreach ( $mapping as $wp_field => $odoo_field ) {
+			if ( array_key_exists( $wp_field, $wp_data ) ) {
+				$odoo_values[ $odoo_field ] = $wp_data[ $wp_field ];
+			}
+		}
+
+		/**
+		 * Filter the mapped Odoo values before push.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param array  $odoo_values Mapped values.
+		 * @param array  $wp_data     Original WP data.
+		 * @param string $entity_type Entity type.
+		 */
+		return apply_filters( "wp4odoo_map_to_odoo_{$this->id}_{$entity_type}", $odoo_values, $wp_data, $entity_type );
+	}
+
+	/**
+	 * Transform Odoo data to WordPress-compatible format.
+	 *
+	 * Applies field mappings in reverse. Subclasses should override for entity-specific logic.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_data   Odoo record data.
+	 * @return array WordPress-compatible data.
+	 */
+	public function map_from_odoo( string $entity_type, array $odoo_data ): array {
+		$mapping = $this->get_field_mapping( $entity_type );
+		$wp_data = [];
+
+		foreach ( $mapping as $wp_field => $odoo_field ) {
+			if ( array_key_exists( $odoo_field, $odoo_data ) ) {
+				$wp_data[ $wp_field ] = $odoo_data[ $odoo_field ];
+			}
+		}
+
+		return $wp_data;
+	}
+
+	/**
+	 * Generate a SHA-256 hash of entity data for change detection.
+	 *
+	 * @param array $data The data to hash.
+	 * @return string 64-character hex hash.
+	 */
+	public function generate_sync_hash( array $data ): string {
+		ksort( $data );
+		return hash( 'sha256', wp_json_encode( $data ) );
+	}
+
+	// -------------------------------------------------------------------------
+	// Protected hooks for subclasses
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Load WordPress data for an entity.
+	 *
+	 * Subclasses MUST override this to load actual data.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param int    $wp_id       WordPress ID.
+	 * @return array
+	 */
+	protected function load_wp_data( string $entity_type, int $wp_id ): array {
+		return [];
+	}
+
+	/**
+	 * Save data to WordPress.
+	 *
+	 * Subclasses MUST override this to create/update WP entities.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $data        Mapped data.
+	 * @param int    $wp_id       Existing WP ID (0 if new).
+	 * @return int The WordPress entity ID (0 on failure).
+	 */
+	protected function save_wp_data( string $entity_type, array $data, int $wp_id = 0 ): int {
+		return 0;
+	}
+
+	/**
+	 * Delete a WordPress entity.
+	 *
+	 * Subclasses should override this if they support delete syncs.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param int    $wp_id       WordPress ID.
+	 * @return bool
+	 */
+	protected function delete_wp_data( string $entity_type, int $wp_id ): bool {
+		return false;
+	}
+
+	// -------------------------------------------------------------------------
+	// Helpers
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Check if an import operation is in progress.
+	 *
+	 * Modules should call this at the top of every WP hook callback
+	 * to prevent re-enqueuing during a pull operation (anti-loop).
+	 *
+	 * @return bool True if a pull/import is in progress.
+	 */
+	protected function is_importing(): bool {
+		return defined( 'WP4ODOO_IMPORTING' ) && WP4ODOO_IMPORTING;
+	}
+
+	/**
+	 * Resolve a single field from an Odoo Many2one value.
+	 *
+	 * Reads the related record and returns the requested field value.
+	 * Useful for converting Many2one [id, "Name"] references to scalar values
+	 * (e.g., country_id → ISO code, state_id → name).
+	 *
+	 * @param mixed  $many2one_value The Many2one value from Odoo ([id, "Name"] or false).
+	 * @param string $model          The Odoo model to read from (e.g., 'res.country').
+	 * @param string $field          The field to extract (e.g., 'code').
+	 * @return string|null The field value, or null if unresolvable.
+	 */
+	protected function resolve_many2one_field( mixed $many2one_value, string $model, string $field ): ?string {
+		$id = Field_Mapper::many2one_to_id( $many2one_value );
+
+		if ( null === $id ) {
+			return null;
+		}
+
+		$records = $this->client()->read( $model, [ $id ], [ $field ] );
+
+		if ( ! empty( $records[0][ $field ] ) ) {
+			return (string) $records[0][ $field ];
+		}
+
+		return null;
+	}
+
+	/**
+	 * Get the Odoo client instance.
+	 *
+	 * @return Odoo_Client
+	 */
+	protected function client(): Odoo_Client {
+		return \WP4Odoo_Plugin::instance()->client();
+	}
+
+	/**
+	 * Get the Odoo model name for an entity type.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @return string Odoo model name.
+	 * @throws \InvalidArgumentException If entity type is not registered.
+	 */
+	protected function get_odoo_model( string $entity_type ): string {
+		if ( ! isset( $this->odoo_models[ $entity_type ] ) ) {
+			throw new \InvalidArgumentException(
+				sprintf(
+					/* translators: 1: entity type, 2: module identifier */
+					__( 'Entity type "%1$s" is not registered in module "%2$s".', 'wp4odoo' ),
+					$entity_type,
+					$this->id
+				)
+			);
+		}
+
+		return $this->odoo_models[ $entity_type ];
+	}
+
+	/**
+	 * Get the active field mapping for an entity type.
+	 *
+	 * Returns custom mapping from wp_options if set, otherwise default_mappings.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @return array<string, string> wp_field => odoo_field.
+	 */
+	protected function get_field_mapping( string $entity_type ): array {
+		$custom = get_option( "wp4odoo_module_{$this->id}_mappings", [] );
+
+		if ( ! empty( $custom[ $entity_type ] ) && is_array( $custom[ $entity_type ] ) ) {
+			return $custom[ $entity_type ];
+		}
+
+		return $this->default_mappings[ $entity_type ] ?? [];
+	}
+
+	/**
+	 * Get module settings from wp_options.
+	 *
+	 * @return array
+	 */
+	public function get_settings(): array {
+		$settings = get_option( "wp4odoo_module_{$this->id}_settings", [] );
+
+		if ( ! is_array( $settings ) ) {
+			$settings = [];
+		}
+
+		return array_merge( $this->get_default_settings(), $settings );
+	}
+
+	/**
+	 * Get settings field definitions for the admin UI.
+	 *
+	 * Subclasses should override this to expose configurable settings.
+	 * Each field is an array with keys: label, type, description, options (for select).
+	 *
+	 * @return array<string, array> Field key => definition.
+	 */
+	public function get_settings_fields(): array {
+		return [];
+	}
+
+	/**
+	 * Get the module ID.
+	 *
+	 * @return string
+	 */
+	public function get_id(): string {
+		return $this->id;
+	}
+
+	/**
+	 * Get the module name.
+	 *
+	 * @return string
+	 */
+	public function get_name(): string {
+		return $this->name;
+	}
+
+	/**
+	 * Get the registered Odoo models.
+	 *
+	 * @return array<string, string>
+	 */
+	public function get_odoo_models(): array {
+		return $this->odoo_models;
+	}
+}

@@ -1,0 +1,241 @@
+/**
+ * WordPress For Odoo — Admin Styles
+ *
+ * Minimal custom CSS. Leverages WordPress admin styles for everything else.
+ */
+
+/* --- Stats grid (Queue tab) --- */
+.wp4odoo-stats-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 16px;
+	margin: 20px 0;
+}
+
+.wp4odoo-stat-card {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-left-width: 4px;
+	padding: 16px 20px;
+}
+
+.wp4odoo-stat-pending    { border-left-color: #2271b1; }
+.wp4odoo-stat-processing { border-left-color: #dba617; }
+.wp4odoo-stat-completed  { border-left-color: #00a32a; }
+.wp4odoo-stat-failed     { border-left-color: #d63638; }
+
+.wp4odoo-stat-number {
+	display: block;
+	font-size: 28px;
+	font-weight: 600;
+	line-height: 1.2;
+	color: #1d2327;
+}
+
+.wp4odoo-stat-label {
+	display: block;
+	font-size: 13px;
+	color: #50575e;
+	margin-top: 4px;
+}
+
+/* --- Status badges --- */
+.wp4odoo-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 3px;
+	font-size: 12px;
+	font-weight: 500;
+	line-height: 1.5;
+}
+
+.wp4odoo-badge-pending    { background: #e7f0f8; color: #2271b1; }
+.wp4odoo-badge-processing { background: #fef3cd; color: #856404; }
+.wp4odoo-badge-completed  { background: #d4edda; color: #155724; }
+.wp4odoo-badge-failed     { background: #f8d7da; color: #721c24; }
+
+/* Log level badges */
+.wp4odoo-badge-debug    { background: #f0f0f1; color: #50575e; }
+.wp4odoo-badge-info     { background: #e7f0f8; color: #2271b1; }
+.wp4odoo-badge-warning  { background: #fef3cd; color: #856404; }
+.wp4odoo-badge-error    { background: #f8d7da; color: #721c24; }
+.wp4odoo-badge-critical { background: #721c24; color: #fff; }
+
+/* --- Module cards --- */
+.wp4odoo-modules-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	gap: 16px;
+	margin: 20px 0;
+}
+
+.wp4odoo-module-card {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	padding: 20px;
+}
+
+.wp4odoo-module-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.wp4odoo-module-header h3 {
+	margin: 0;
+}
+
+.wp4odoo-module-models {
+	font-family: monospace;
+	font-size: 12px;
+	color: #50575e;
+	margin-top: 8px;
+}
+
+/* --- Module settings panel --- */
+.wp4odoo-module-settings {
+	margin-top: 10px;
+}
+
+.wp4odoo-module-settings hr {
+	border: 0;
+	border-top: 1px solid #e0e0e0;
+	margin: 10px 0;
+}
+
+.wp4odoo-module-settings-table {
+	margin: 0;
+}
+
+.wp4odoo-module-settings-table th {
+	padding: 8px 10px 8px 0;
+	font-weight: 500;
+	font-size: 13px;
+	width: 40%;
+}
+
+.wp4odoo-module-settings-table td {
+	padding: 8px 0;
+}
+
+.wp4odoo-module-settings-table .description {
+	margin-top: 4px;
+	font-size: 12px;
+}
+
+.wp4odoo-module-save-feedback {
+	margin-left: 8px;
+	font-size: 13px;
+}
+
+.wp4odoo-module-save-feedback.success {
+	color: #00a32a;
+}
+
+.wp4odoo-module-save-feedback.error {
+	color: #d63638;
+}
+
+/* --- Toggle switch --- */
+.wp4odoo-toggle {
+	position: relative;
+	display: inline-block;
+	width: 40px;
+	height: 22px;
+}
+
+.wp4odoo-toggle input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+.wp4odoo-toggle-slider {
+	position: absolute;
+	cursor: pointer;
+	inset: 0;
+	background-color: #c3c4c7;
+	border-radius: 22px;
+	transition: background-color 0.2s;
+}
+
+.wp4odoo-toggle-slider::before {
+	content: "";
+	position: absolute;
+	height: 16px;
+	width: 16px;
+	left: 3px;
+	bottom: 3px;
+	background-color: #fff;
+	border-radius: 50%;
+	transition: transform 0.2s;
+}
+
+.wp4odoo-toggle input:checked + .wp4odoo-toggle-slider {
+	background-color: #2271b1;
+}
+
+.wp4odoo-toggle input:checked + .wp4odoo-toggle-slider::before {
+	transform: translateX(18px);
+}
+
+/* --- Log context (expandable) --- */
+.wp4odoo-log-context {
+	max-width: 300px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	cursor: pointer;
+	font-family: monospace;
+	font-size: 12px;
+}
+
+.wp4odoo-log-context.expanded {
+	white-space: pre-wrap;
+	word-break: break-all;
+	max-width: none;
+}
+
+/* --- Webhook token --- */
+#wp4odoo-webhook-token {
+	display: inline-block;
+	padding: 4px 8px;
+	background: #f0f0f1;
+	font-size: 13px;
+	word-break: break-all;
+	max-width: 400px;
+	user-select: all;
+}
+
+/* --- Test connection result --- */
+#wp4odoo-test-result {
+	margin-left: 10px;
+	vertical-align: middle;
+}
+
+#wp4odoo-test-result .dashicons {
+	vertical-align: middle;
+	margin-right: 4px;
+}
+
+#wp4odoo-test-result.success { color: #00a32a; }
+#wp4odoo-test-result.error   { color: #d63638; }
+
+/* --- Filters spacing --- */
+.wp4odoo-filters select,
+.wp4odoo-filters input[type="date"] {
+	margin-right: 6px;
+}
+
+/* --- Action buttons row --- */
+.wp4odoo-actions {
+	margin: 16px 0;
+}
+
+.wp4odoo-actions .button {
+	margin-right: 8px;
+}
+
+/* --- Direction badges --- */
+.wp4odoo-dir-wp2odoo { color: #2271b1; }
+.wp4odoo-dir-odoo2wp { color: #7c3aed; }

@@ -1,0 +1,176 @@
+/* Customer portal — WordPress For Odoo */
+
+.wp4odoo-portal {
+	max-width: 900px;
+	margin: 0 auto;
+}
+
+/* Tabs */
+.wp4odoo-portal-tabs {
+	display: flex;
+	gap: 0;
+	border-bottom: 2px solid #ddd;
+	margin-bottom: 1.5em;
+}
+
+.wp4odoo-tab {
+	background: none;
+	border: none;
+	border-bottom: 2px solid transparent;
+	padding: 0.75em 1.25em;
+	margin-bottom: -2px;
+	cursor: pointer;
+	font-size: 1em;
+	font-weight: 500;
+	color: #555;
+	transition: color 0.2s, border-color 0.2s;
+}
+
+.wp4odoo-tab:hover {
+	color: #0073aa;
+}
+
+.wp4odoo-tab.active {
+	color: #0073aa;
+	border-bottom-color: #0073aa;
+}
+
+.wp4odoo-tab-count {
+	font-weight: 400;
+	color: #999;
+	margin-left: 0.25em;
+}
+
+/* Panels */
+.wp4odoo-panel {
+	display: none;
+}
+
+.wp4odoo-panel.active {
+	display: block;
+}
+
+/* Table */
+.wp4odoo-portal-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-bottom: 1em;
+}
+
+.wp4odoo-portal-table th,
+.wp4odoo-portal-table td {
+	padding: 0.6em 0.8em;
+	text-align: left;
+	border-bottom: 1px solid #eee;
+}
+
+.wp4odoo-portal-table th {
+	font-weight: 600;
+	color: #333;
+	background: #f9f9f9;
+	border-bottom: 2px solid #ddd;
+}
+
+.wp4odoo-portal-table tbody tr:hover {
+	background: #f7f7f7;
+}
+
+/* Status badges */
+.wp4odoo-status,
+.wp4odoo-payment {
+	display: inline-block;
+	padding: 0.2em 0.6em;
+	border-radius: 3px;
+	font-size: 0.85em;
+	font-weight: 500;
+}
+
+.wp4odoo-status--sale,
+.wp4odoo-status--posted,
+.wp4odoo-payment--paid {
+	background: #d4edda;
+	color: #155724;
+}
+
+.wp4odoo-status--draft {
+	background: #e2e3e5;
+	color: #383d41;
+}
+
+.wp4odoo-status--cancel,
+.wp4odoo-payment--not_paid {
+	background: #f8d7da;
+	color: #721c24;
+}
+
+.wp4odoo-status--sent,
+.wp4odoo-payment--partial {
+	background: #fff3cd;
+	color: #856404;
+}
+
+/* Pagination */
+.wp4odoo-pagination {
+	display: flex;
+	gap: 0.3em;
+	justify-content: center;
+	margin-top: 1em;
+}
+
+.wp4odoo-page {
+	background: #f0f0f0;
+	border: 1px solid #ddd;
+	padding: 0.4em 0.75em;
+	border-radius: 3px;
+	cursor: pointer;
+	font-size: 0.9em;
+	transition: background 0.15s;
+}
+
+.wp4odoo-page:hover {
+	background: #e0e0e0;
+}
+
+.wp4odoo-page.active {
+	background: #0073aa;
+	color: #fff;
+	border-color: #0073aa;
+}
+
+/* Empty state */
+.wp4odoo-empty {
+	text-align: center;
+	color: #888;
+	padding: 2em 0;
+}
+
+/* Login / no link messages */
+.wp4odoo-portal-login,
+.wp4odoo-portal-nolink {
+	text-align: center;
+	padding: 2em;
+	background: #f9f9f9;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+}
+
+/* Loading state */
+.wp4odoo-portal-loading {
+	text-align: center;
+	padding: 2em 0;
+	color: #888;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+	.wp4odoo-portal-table th,
+	.wp4odoo-portal-table td {
+		padding: 0.4em;
+		font-size: 0.9em;
+	}
+
+	.wp4odoo-tab {
+		padding: 0.5em 0.75em;
+		font-size: 0.9em;
+	}
+}

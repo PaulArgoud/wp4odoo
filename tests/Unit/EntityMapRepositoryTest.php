@@ -1,0 +1,134 @@
+<?php
+declare( strict_types=1 );
+
+namespace WP4Odoo\Tests\Unit;
+
+use WP4Odoo\Entity_Map_Repository;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Unit tests for Entity_Map_Repository.
+ *
+ * Verifies correct delegation to $wpdb and return type handling.
+ */
+class EntityMapRepositoryTest extends TestCase {
+
+	private \WP_DB_Stub $wpdb;
+
+	protected function setUp(): void {
+		global $wpdb;
+		$this->wpdb = new \WP_DB_Stub();
+		$wpdb       = $this->wpdb;
+	}
+
+	// ─── get_odoo_id() ─────────────────────────────────────
+
+	public function test_get_odoo_id_returns_int_when_found(): void {
+		$this->wpdb->get_var_return = '42';
+
+		$result = Entity_Map_Repository::get_odoo_id( 'crm', 'contact', 10 );
+
+		$this->assertSame( 42, $result );
+	}
+
+	public function test_get_odoo_id_returns_null_when_not_found(): void {
+		$this->wpdb->get_var_return = null;
+
+		$result = Entity_Map_Repository::get_odoo_id( 'crm', 'contact', 999 );
+
+		$this->assertNull( $result );
+	}
+
+	public function test_get_odoo_id_queries_correct_table(): void {
+		$this->wpdb->get_var_return = null;
+
+		Entity_Map_Repository::get_odoo_id( 'crm', 'contact', 10 );
+
+		$prepare = $this->get_calls( 'prepare' );
+		$this->assertNotEmpty( $prepare );
+		$this->assertStringContainsString( 'wp_wp4odoo_entity_map', $prepare[0]['args'][0] );
+	}
+
+	// ─── get_wp_id() ───────────────────────────────────────
+
+	public function test_get_wp_id_returns_int_when_found(): void {
+		$this->wpdb->get_var_return = '7';
+
+		$result = Entity_Map_Repository::get_wp_id( 'sales', 'order', 100 );
+
+		$this->assertSame( 7, $result );
+	}
+
+	public function test_get_wp_id_returns_null_when_not_found(): void {
+		$this->wpdb->get_var_return = null;
+
+		$result = Entity_Map_Repository::get_wp_id( 'sales', 'order', 999 );
+
+		$this->assertNull( $result );
+	}
+
+	// ─── save() ────────────────────────────────────────────
+
+	public function test_save_calls_replace_with_correct_data(): void {
+		Entity_Map_Repository::save( 'crm', 'contact', 10, 42, 'res.partner', 'abc123' );
+
+		$replace = $this->get_last_call( 'replace' );
+		$this->assertNotNull( $replace );
+
+		$data = $replace['args'][1];
+		$this->assertSame( 'crm', $data['module'] );
+		$this->assertSame( 'contact', $data['entity_type'] );
+		$this->assertSame( 10, $data['wp_id'] );
+		$this->assertSame( 42, $data['odoo_id'] );
+		$this->assertSame( 'res.partner', $data['odoo_model'] );
+		$this->assertSame( 'abc123', $data['sync_hash'] );
+		$this->assertArrayHasKey( 'last_synced_at', $data );
+	}
+
+	public function test_save_returns_true_on_success(): void {
+		$result = Entity_Map_Repository::save( 'crm', 'contact', 10, 42, 'res.partner' );
+		$this->assertTrue( $result );
+	}
+
+	// ─── remove() ──────────────────────────────────────────
+
+	public function test_remove_returns_true_when_deleted(): void {
+		$this->wpdb->delete_return = 1;
+
+		$result = Entity_Map_Repository::remove( 'crm', 'contact', 10 );
+		$this->assertTrue( $result );
+	}
+
+	public function test_remove_returns_false_when_not_found(): void {
+		$this->wpdb->delete_return = 0;
+
+		$result = Entity_Map_Repository::remove( 'crm', 'contact', 999 );
+		$this->assertFalse( $result );
+	}
+
+	public function test_remove_passes_correct_where_clause(): void {
+		$this->wpdb->delete_return = 1;
+
+		Entity_Map_Repository::remove( 'sales', 'order', 77 );
+
+		$delete = $this->get_last_call( 'delete' );
+		$this->assertNotNull( $delete );
+		$this->assertSame(
+			[ 'module' => 'sales', 'entity_type' => 'order', 'wp_id' => 77 ],
+			$delete['args'][1]
+		);
+	}
+
+	// ─── Helpers ───────────────────────────────────────────
+
+	private function get_last_call( string $method ): ?array {
+		$calls = $this->get_calls( $method );
+		return $calls ? end( $calls ) : null;
+	}
+
+	private function get_calls( string $method ): array {
+		return array_values(
+			array_filter( $this->wpdb->calls, fn( $c ) => $c['method'] === $method )
+		);
+	}
+}

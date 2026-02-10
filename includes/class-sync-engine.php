@@ -1,0 +1,241 @@
+<?php
+declare( strict_types=1 );
+
+namespace WP4Odoo;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Queue processor for synchronization jobs.
+ *
+ * Reads pending jobs from {prefix}wp4odoo_sync_queue, processes them
+ * in batches with transient-based locking and exponential backoff.
+ *
+ * @package WP4Odoo
+ * @since   1.0.0
+ */
+class Sync_Engine {
+
+	/**
+	 * Transient name used for process lock.
+	 */
+	private const LOCK_TRANSIENT = 'wp4odoo_sync_lock';
+
+	/**
+	 * Lock duration in seconds.
+	 */
+	private const LOCK_TIMEOUT = 300;
+
+	/**
+	 * Logger instance.
+	 *
+	 * @var Logger
+	 */
+	private Logger $logger;
+
+	/**
+	 * Constructor.
+	 */
+	public function __construct() {
+		$this->logger = new Logger( 'sync' );
+	}
+
+	/**
+	 * Process the sync queue.
+	 *
+	 * Acquires a transient lock, fetches pending jobs ordered by priority
+	 * and scheduled_at, processes them in batches, releases the lock.
+	 *
+	 * @return int Number of jobs processed successfully.
+	 */
+	public function process_queue(): int {
+		if ( ! $this->acquire_lock() ) {
+			$this->logger->info( 'Queue processing skipped: another process is running.' );
+			return 0;
+		}
+
+		$settings = get_option( 'wp4odoo_sync_settings', [] );
+		$batch    = (int) ( $settings['batch_size'] ?? 50 );
+		$now      = current_time( 'mysql', true );
+
+		$jobs      = Sync_Queue_Repository::fetch_pending( $batch, $now );
+		$processed = 0;
+
+		foreach ( $jobs as $job ) {
+			Sync_Queue_Repository::update_status( (int) $job->id, 'processing' );
+
+			try {
+				$success = $this->process_job( $job );
+
+				if ( $success ) {
+					Sync_Queue_Repository::update_status( (int) $job->id, 'completed', [
+						'processed_at' => current_time( 'mysql', true ),
+					] );
+					++$processed;
+				}
+			} catch ( \Throwable $e ) {
+				$this->handle_failure( $job, $e->getMessage() );
+			}
+		}
+
+		$this->release_lock();
+
+		if ( $processed > 0 ) {
+			$this->logger->info( 'Queue processing completed.', [
+				'processed' => $processed,
+				'total'     => count( $jobs ),
+			] );
+		}
+
+		return $processed;
+	}
+
+	/**
+	 * Enqueue a sync job with deduplication.
+	 *
+	 * If a pending job already exists for the same module/entity_type/direction
+	 * and wp_id or odoo_id, update it instead of creating a duplicate.
+	 *
+	 * @param array $args {
+	 *     @type string   $module      Module identifier.
+	 *     @type string   $direction   'wp_to_odoo' or 'odoo_to_wp'.
+	 *     @type string   $entity_type Entity type (e.g., 'product', 'order').
+	 *     @type int|null $wp_id       WordPress entity ID.
+	 *     @type int|null $odoo_id     Odoo entity ID.
+	 *     @type string   $action      'create', 'update', or 'delete'.
+	 *     @type array    $payload     Data payload.
+	 *     @type int      $priority    Priority (1-10, lower = higher priority).
+	 * }
+	 * @return int|false The job ID, or false on failure.
+	 */
+	public static function enqueue( array $args ): int|false {
+		return Sync_Queue_Repository::enqueue( $args );
+	}
+
+	/**
+	 * Get queue statistics.
+	 *
+	 * @return array{pending: int, processing: int, completed: int, failed: int, total: int}
+	 */
+	public static function get_stats(): array {
+		return Sync_Queue_Repository::get_stats();
+	}
+
+	/**
+	 * Clean up completed and old failed jobs.
+	 *
+	 * @param int $days_old Delete completed/failed jobs older than this many days.
+	 * @return int Number of deleted rows.
+	 */
+	public static function cleanup( int $days_old = 7 ): int {
+		return Sync_Queue_Repository::cleanup( $days_old );
+	}
+
+	/**
+	 * Retry all failed jobs by resetting their status to pending.
+	 *
+	 * @return int Number of jobs reset.
+	 */
+	public static function retry_failed(): int {
+		return Sync_Queue_Repository::retry_failed();
+	}
+
+	/**
+	 * Process a single queue job.
+	 *
+	 * @param object $job The queue row object.
+	 * @return bool True if processed successfully.
+	 */
+	private function process_job( object $job ): bool {
+		$plugin = \WP4Odoo_Plugin::instance();
+		$module = $plugin->get_module( $job->module );
+
+		if ( null === $module ) {
+			throw new \RuntimeException(
+				sprintf(
+					/* translators: %s: module identifier */
+					__( 'Module "%s" not found or not registered.', 'wp4odoo' ),
+					$job->module
+				)
+			);
+		}
+
+		$payload = ! empty( $job->payload ) ? json_decode( $job->payload, true ) : [];
+		$wp_id   = (int) ( $job->wp_id ?? 0 );
+		$odoo_id = (int) ( $job->odoo_id ?? 0 );
+
+		if ( 'wp_to_odoo' === $job->direction ) {
+			return $module->push_to_odoo( $job->entity_type, $job->action, $wp_id, $odoo_id, $payload );
+		}
+
+		return $module->pull_from_odoo( $job->entity_type, $job->action, $odoo_id, $wp_id, $payload );
+	}
+
+	/**
+	 * Handle a failed job: increment attempts, apply backoff or mark as failed.
+	 *
+	 * @param object $job           The job row.
+	 * @param string $error_message The error description.
+	 * @return void
+	 */
+	private function handle_failure( object $job, string $error_message ): void {
+		$attempts      = (int) $job->attempts + 1;
+		$error_trimmed = sanitize_text_field( mb_substr( $error_message, 0, 65535 ) );
+
+		if ( $attempts >= (int) $job->max_attempts ) {
+			Sync_Queue_Repository::update_status( (int) $job->id, 'failed', [
+				'attempts'      => $attempts,
+				'error_message' => $error_trimmed,
+				'processed_at'  => current_time( 'mysql', true ),
+			] );
+
+			$this->logger->error( 'Sync job permanently failed.', [
+				'job_id'      => $job->id,
+				'module'      => $job->module,
+				'entity_type' => $job->entity_type,
+				'error'       => $error_message,
+			] );
+		} else {
+			$delay     = $attempts * 60;
+			$scheduled = gmdate( 'Y-m-d H:i:s', time() + $delay );
+
+			Sync_Queue_Repository::update_status( (int) $job->id, 'pending', [
+				'attempts'      => $attempts,
+				'error_message' => $error_trimmed,
+				'scheduled_at'  => $scheduled,
+			] );
+
+			$this->logger->warning( 'Sync job failed, will retry.', [
+				'job_id'   => $job->id,
+				'attempt'  => $attempts,
+				'retry_at' => $scheduled,
+				'error'    => $error_message,
+			] );
+		}
+	}
+
+	/**
+	 * Acquire the processing lock.
+	 *
+	 * @return bool True if lock acquired.
+	 */
+	private function acquire_lock(): bool {
+		if ( get_transient( self::LOCK_TRANSIENT ) ) {
+			return false;
+		}
+
+		set_transient( self::LOCK_TRANSIENT, time(), self::LOCK_TIMEOUT );
+		return true;
+	}
+
+	/**
+	 * Release the processing lock.
+	 *
+	 * @return void
+	 */
+	private function release_lock(): void {
+		delete_transient( self::LOCK_TRANSIENT );
+	}
+}
