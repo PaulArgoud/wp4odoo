@@ -67,8 +67,11 @@ class Sync_Engine {
 			return 0;
 		}
 
-		$settings = get_option( 'wp4odoo_sync_settings', [] );
-		$batch    = (int) ( $settings['batch_size'] ?? 50 );
+		static $settings = null;
+		if ( null === $settings ) {
+			$settings = get_option( 'wp4odoo_sync_settings', [] );
+		}
+		$batch = (int) ( $settings['batch_size'] ?? 50 );
 		$now      = current_time( 'mysql', true );
 
 		$jobs       = Sync_Queue_Repository::fetch_pending( $batch, $now );

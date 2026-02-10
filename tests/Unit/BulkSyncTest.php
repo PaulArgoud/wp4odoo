@@ -119,6 +119,61 @@ class BulkSyncTest extends TestCase {
 		$this->assertSame( 'update', $action );
 	}
 
+	// ─── Batch entity_map lookups (used by Bulk_Handler) ──
+
+	public function test_batch_wp_ids_returns_map_for_bulk_import(): void {
+		$this->wpdb->get_results_return = [
+			(object) [ 'odoo_id' => '100', 'wp_id' => '10' ],
+			(object) [ 'odoo_id' => '200', 'wp_id' => '20' ],
+		];
+
+		$map = Entity_Map_Repository::get_wp_ids_batch( 'woocommerce', 'product', [ 100, 200, 300 ] );
+
+		$this->assertSame( 10, $map[100] );
+		$this->assertSame( 20, $map[200] );
+		$this->assertArrayNotHasKey( 300, $map );
+	}
+
+	public function test_batch_wp_ids_empty_returns_empty_map(): void {
+		$result = Entity_Map_Repository::get_wp_ids_batch( 'woocommerce', 'product', [] );
+		$this->assertSame( [], $result );
+	}
+
+	public function test_batch_odoo_ids_returns_map_for_bulk_export(): void {
+		$this->wpdb->get_results_return = [
+			(object) [ 'wp_id' => '42', 'odoo_id' => '200' ],
+		];
+
+		$map = Entity_Map_Repository::get_odoo_ids_batch( 'woocommerce', 'product', [ 42, 99 ] );
+
+		$this->assertSame( 200, $map[42] );
+		$this->assertArrayNotHasKey( 99, $map );
+	}
+
+	public function test_bulk_import_determines_action_from_batch_map(): void {
+		$this->wpdb->get_results_return = [
+			(object) [ 'odoo_id' => '100', 'wp_id' => '10' ],
+		];
+
+		$odoo_ids = [ 100, 200 ];
+		$map      = Entity_Map_Repository::get_wp_ids_batch( 'woocommerce', 'product', $odoo_ids );
+
+		$this->assertSame( 'update', ( $map[100] ?? 0 ) ? 'update' : 'create' );
+		$this->assertSame( 'create', ( $map[200] ?? 0 ) ? 'update' : 'create' );
+	}
+
+	public function test_bulk_export_determines_action_from_batch_map(): void {
+		$this->wpdb->get_results_return = [
+			(object) [ 'wp_id' => '42', 'odoo_id' => '200' ],
+		];
+
+		$wp_ids = [ 42, 99 ];
+		$map    = Entity_Map_Repository::get_odoo_ids_batch( 'woocommerce', 'product', $wp_ids );
+
+		$this->assertSame( 'update', ( $map[42] ?? 0 ) ? 'update' : 'create' );
+		$this->assertSame( 'create', ( $map[99] ?? 0 ) ? 'update' : 'create' );
+	}
+
 	// ─── Variant entity mapping ───────────────────────────
 
 	public function test_variant_entity_map_lookup(): void {

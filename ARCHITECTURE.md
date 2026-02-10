@@ -112,13 +112,16 @@ WordPress For Odoo/
 ├── assets/                            # Frontend assets
 │   ├── css/frontend.css              #   Lead form styling
 │   ├── css/portal.css                #   Customer portal styling
+│   ├── images/
+│   │   ├── architecture.svg          #   Architecture diagram (referenced in README)
+│   │   └── logo.avif                 #   Plugin logo (referenced in README)
 │   ├── js/lead-form.js              #   Lead form AJAX submission
 │   └── js/portal.js                 #   Portal tab switching + AJAX pagination
 │
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # PHPUnit tests (356 tests, 704 assertions, 41 files analysed)
+├── tests/                             # PHPUnit tests (416 tests, 811 assertions, 41 files analysed)
 │   ├── bootstrap.php                 #   Constants, stub loading, plugin class requires
 │   ├── stubs/
 │   │   ├── wp-classes.php            #   WP_Error, WP_REST_*, WP_User, WP_CLI, AJAX test helpers
@@ -128,15 +131,16 @@ WordPress For Odoo/
 │   │   ├── plugin-stub.php           #   WP4Odoo_Plugin test singleton
 │   │   └── wp-cli-utils.php          #   WP_CLI\Utils\format_items stub
 │   └── Unit/
-│       ├── EntityMapRepositoryTest.php  #   10 tests for Entity_Map_Repository
+│       ├── AdminAjaxTest.php             #   33 tests for Admin_Ajax (15 handlers)
+│       ├── EntityMapRepositoryTest.php  #   19 tests for Entity_Map_Repository
 │       ├── FieldMapperTest.php          #   30 tests for Field_Mapper
 │       ├── ModuleBaseHashTest.php       #   4 tests for generate_sync_hash()
 │       ├── PartnerServiceTest.php       #   10 tests for Partner_Service
 │       ├── QueueManagerTest.php         #   7 tests for Queue_Manager
-│       ├── SyncQueueRepositoryTest.php  #   18 tests for Sync_Queue_Repository
+│       ├── SyncQueueRepositoryTest.php  #   30 tests for Sync_Queue_Repository
 │       ├── WooCommerceModuleTest.php    #   22 tests for WooCommerce_Module
 │       ├── VariantHandlerTest.php       #   7 tests for Variant_Handler
-│       ├── BulkSyncTest.php             #   12 tests for bulk import/export
+│       ├── BulkSyncTest.php             #   17 tests for bulk import/export
 │       ├── ImageHandlerTest.php         #   9 tests for Image_Handler
 │       ├── CurrencyTest.php             #   9 tests for multi-currency support
 │       ├── LoggerTest.php               #   9 tests for Logger

@@ -34,8 +34,15 @@ class PartnerServiceTest extends TestCase {
 			/** @var int Return value for create(). */
 			public int $create_return = 0;
 
+			/** @var bool Return value for is_connected(). */
+			public bool $connected = true;
+
 			/** @var array<int, array{method: string, args: array}> Recorded calls. */
 			public array $calls = [];
+
+			public function is_connected(): bool {
+				return $this->connected;
+			}
 
 			public function search( string $model, array $domain = [], int $offset = 0, int $limit = 0 ): array {
 				$this->calls[] = [ 'method' => 'search', 'args' => [ $model, $domain, $offset, $limit ] ];

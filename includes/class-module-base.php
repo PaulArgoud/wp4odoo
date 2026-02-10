@@ -62,6 +62,13 @@ abstract class Module_Base {
 	protected Logger $logger;
 
 	/**
+	 * In-memory cache for field mappings (avoids repeated get_option calls).
+	 *
+	 * @var array<string, array<string, string>>
+	 */
+	private array $mapping_cache = [];
+
+	/**
 	 * Constructor.
 	 */
 	public function __construct() {
@@ -415,6 +422,10 @@ abstract class Module_Base {
 
 		$records = $this->client()->read( $model, [ $id ], [ $field ] );
 
+		if ( empty( $records ) || ! isset( $records[0] ) ) {
+			return null;
+		}
+
 		if ( ! empty( $records[0][ $field ] ) ) {
 			return (string) $records[0][ $field ];
 		}
@@ -462,13 +473,19 @@ abstract class Module_Base {
 	 * @return array<string, string> wp_field => odoo_field.
 	 */
 	protected function get_field_mapping( string $entity_type ): array {
+		if ( isset( $this->mapping_cache[ $entity_type ] ) ) {
+			return $this->mapping_cache[ $entity_type ];
+		}
+
 		$custom = get_option( "wp4odoo_module_{$this->id}_mappings", [] );
 
 		if ( ! empty( $custom[ $entity_type ] ) && is_array( $custom[ $entity_type ] ) ) {
-			return $custom[ $entity_type ];
+			$this->mapping_cache[ $entity_type ] = $custom[ $entity_type ];
+			return $this->mapping_cache[ $entity_type ];
 		}
 
-		return $this->default_mappings[ $entity_type ] ?? [];
+		$this->mapping_cache[ $entity_type ] = $this->default_mappings[ $entity_type ] ?? [];
+		return $this->mapping_cache[ $entity_type ];
 	}
 
 	/**

@@ -6,6 +6,8 @@ Modular WordPress plugin providing comprehensive, bidirectional integration betw
 
 **Target users:** WordPress agencies and businesses running Odoo as their ERP who need seamless data flow between their website and back-office.
 
+![WordPress For Odoo (WP4Odoo)](assets/images/logo.avif)
+
 ## Features
 
 - **CRM Module** — Bidirectional contact sync (WP users <-> `res.partner`), lead capture form with shortcode, email deduplication, archive-on-delete, role-based filtering, country/state resolution
@@ -138,7 +140,7 @@ wp wp4odoo module disable crm        # Disable a module
 # Install dependencies
 php composer.phar install
 
-# Run PHPUnit tests (356 tests, 704 assertions)
+# Run PHPUnit tests (416 tests, 811 assertions)
 php vendor/bin/phpunit
 
 # Run PHPStan static analysis (level 5, 0 errors on 41 files)

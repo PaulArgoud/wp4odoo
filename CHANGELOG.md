@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.4] - 2026-02-10
+
+### Added
+
+#### Tests — Admin_Ajax Coverage (33 tests)
+- `AdminAjaxTest` — 33 tests covering all 15 AJAX handlers: permission denial (403), dismiss/confirm onboarding actions, retry_failed, cleanup_queue, cancel_job, purge_logs, queue_stats, toggle_module, fetch_logs (pagination + filters + serialization), fetch_queue (pagination + serialization), save_module_settings (sanitization per field type: checkbox, number, select, text), test_connection (missing credentials, POST fields, stored API key fallback), bulk_import/export (WC module guard)
+- Fake module helper (`register_fake_module`) for testing `save_module_settings` with 4 field types
+
+#### Tests — Repository & Bulk Coverage (27 tests)
+- `SyncQueueRepositoryTest` — 12 new tests: fetch_pending, update_status (with extra fields), cleanup (prepare + status filter), retry_failed, get_pending (module filter, entity_type filter)
+- `EntityMapRepositoryTest` — 9 new tests: get_wp_ids_batch (empty, map, no matches, placeholders, single), get_odoo_ids_batch (empty, map, no matches, placeholders)
+- `BulkSyncTest` — 5 new tests: batch wp_ids/odoo_ids map lookups, action determination from batch maps (import + export)
+
+### Changed
+
+#### Performance — `get_option()` Caching
+- `Logger` — static `$settings_cache` + `get_log_settings()` method; eliminates repeated `get_option('wp4odoo_log_settings')` calls across Logger instances; `reset_cache()` for test isolation
+- `Module_Base` — instance `$mapping_cache` for `get_field_mapping()`; avoids re-reading `get_option()` for the same entity type within a request
+- `Sync_Engine` — static local `$settings` cache in `process_queue()` for sync settings
+
+#### Robustness
+- `Module_Base::resolve_many2one_field()` — empty records guard before accessing `$records[0][$field]`
+- `Partner_Service::get_or_create()` — `is_connected()` check before Odoo API calls; returns null with error log when client is disconnected
+- `Webhook_Handler` — added `args` schema (module, entity_type, odoo_id, action) to `/webhook` POST route for REST API validation
+
+#### Assets
+- Added `assets/images/logo.avif` — plugin logo displayed in README
+
+#### Documentation
+- `ARCHITECTURE.md` — added AdminAjaxTest (33 tests) to directory tree, updated test counts for SyncQueueRepository (30), EntityMapRepository (19), BulkSync (17), total (416/811); added `assets/images/` listing (architecture.svg, logo.avif)
+- `README.md` — updated test counts (416/811), added plugin logo image
+
+#### Verification
+- PHPUnit: 416 tests, 811 assertions — all green (was 356/704)
+- PHPStan: 0 errors on 41 files
+- Translations: 252 strings, 0 fuzzy, 0 untranslated (unchanged)
+- Plugin version bumped from 1.9.3 to 1.9.4
+
 ## [1.9.3] - 2026-02-10
 
 ### Fixed
@@ -23,7 +61,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `CLAUDE.md` — updated version, Entity_Map_Repository and Bulk_Handler descriptions
 - `ARCHITECTURE.md` — updated directory tree comments for Entity_Map_Repository and Bulk_Handler
 - PHPUnit: 356 tests, 704 assertions — all green
 - PHPStan: 0 errors on 41 files

@@ -61,6 +61,28 @@ class Webhook_Handler {
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'handle_webhook' ],
 				'permission_callback' => [ $this, 'validate_webhook_token' ],
+				'args'                => [
+					'module'      => [
+						'required'          => true,
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+					],
+					'entity_type' => [
+						'required'          => true,
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+					],
+					'odoo_id'     => [
+						'required'          => true,
+						'type'              => 'integer',
+						'sanitize_callback' => 'absint',
+					],
+					'action'      => [
+						'type'              => 'string',
+						'default'           => 'update',
+						'sanitize_callback' => 'sanitize_text_field',
+					],
+				],
 			]
 		);
 

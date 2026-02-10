@@ -87,6 +87,13 @@ class Partner_Service {
 
 		$client = ( $this->client_getter )();
 
+		if ( ! $client->is_connected() ) {
+			$this->logger->error( 'Cannot resolve partner: Odoo client not connected.', [
+				'email' => $email,
+			] );
+			return null;
+		}
+
 		// 2. Search Odoo by email.
 		$ids = $client->search( 'res.partner', [ [ 'email', '=', $email ] ], 0, 1 );
 

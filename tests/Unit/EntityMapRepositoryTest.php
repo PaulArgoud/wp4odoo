@@ -119,6 +119,88 @@ class EntityMapRepositoryTest extends TestCase {
 		);
 	}
 
+	// ─── get_wp_ids_batch() ───────────────────────────────
+
+	public function test_get_wp_ids_batch_returns_empty_for_empty_input(): void {
+		$result = Entity_Map_Repository::get_wp_ids_batch( 'woocommerce', 'product', [] );
+		$this->assertSame( [], $result );
+	}
+
+	public function test_get_wp_ids_batch_returns_map_of_odoo_to_wp(): void {
+		$this->wpdb->get_results_return = [
+			(object) [ 'odoo_id' => '100', 'wp_id' => '10' ],
+			(object) [ 'odoo_id' => '200', 'wp_id' => '20' ],
+		];
+
+		$result = Entity_Map_Repository::get_wp_ids_batch( 'woocommerce', 'product', [ 100, 200, 300 ] );
+
+		$this->assertSame( [ 100 => 10, 200 => 20 ], $result );
+	}
+
+	public function test_get_wp_ids_batch_returns_empty_when_no_matches(): void {
+		$this->wpdb->get_results_return = [];
+
+		$result = Entity_Map_Repository::get_wp_ids_batch( 'woocommerce', 'product', [ 999 ] );
+
+		$this->assertSame( [], $result );
+	}
+
+	public function test_get_wp_ids_batch_generates_correct_placeholders(): void {
+		$this->wpdb->get_results_return = [];
+
+		Entity_Map_Repository::get_wp_ids_batch( 'woocommerce', 'product', [ 1, 2, 3 ] );
+
+		$prepare = $this->get_calls( 'prepare' );
+		$this->assertNotEmpty( $prepare );
+		$this->assertStringContainsString( '%d,%d,%d', $prepare[0]['args'][0] );
+	}
+
+	public function test_get_wp_ids_batch_single_id(): void {
+		$this->wpdb->get_results_return = [
+			(object) [ 'odoo_id' => '42', 'wp_id' => '7' ],
+		];
+
+		$result = Entity_Map_Repository::get_wp_ids_batch( 'woocommerce', 'product', [ 42 ] );
+
+		$this->assertSame( [ 42 => 7 ], $result );
+	}
+
+	// ─── get_odoo_ids_batch() ──────────────────────────────
+
+	public function test_get_odoo_ids_batch_returns_empty_for_empty_input(): void {
+		$result = Entity_Map_Repository::get_odoo_ids_batch( 'woocommerce', 'product', [] );
+		$this->assertSame( [], $result );
+	}
+
+	public function test_get_odoo_ids_batch_returns_map_of_wp_to_odoo(): void {
+		$this->wpdb->get_results_return = [
+			(object) [ 'wp_id' => '10', 'odoo_id' => '100' ],
+			(object) [ 'wp_id' => '20', 'odoo_id' => '200' ],
+		];
+
+		$result = Entity_Map_Repository::get_odoo_ids_batch( 'woocommerce', 'product', [ 10, 20, 30 ] );
+
+		$this->assertSame( [ 10 => 100, 20 => 200 ], $result );
+	}
+
+	public function test_get_odoo_ids_batch_returns_empty_when_no_matches(): void {
+		$this->wpdb->get_results_return = [];
+
+		$result = Entity_Map_Repository::get_odoo_ids_batch( 'woocommerce', 'product', [ 999 ] );
+
+		$this->assertSame( [], $result );
+	}
+
+	public function test_get_odoo_ids_batch_generates_correct_placeholders(): void {
+		$this->wpdb->get_results_return = [];
+
+		Entity_Map_Repository::get_odoo_ids_batch( 'woocommerce', 'product', [ 5, 6 ] );
+
+		$prepare = $this->get_calls( 'prepare' );
+		$this->assertNotEmpty( $prepare );
+		$this->assertStringContainsString( '%d,%d', $prepare[0]['args'][0] );
+	}
+
 	// ─── Helpers ───────────────────────────────────────────
 
 	private function get_last_call( string $method ): ?array {

@@ -21,6 +21,8 @@ class LoggerTest extends TestCase {
 		$wpdb       = $this->wpdb;
 		// Reset options for each test.
 		$GLOBALS['_wp_options'] = [];
+		// Clear the static settings cache so each test starts fresh.
+		Logger::reset_cache();
 	}
 
 	// ─── log() with invalid level ──────────────────────────

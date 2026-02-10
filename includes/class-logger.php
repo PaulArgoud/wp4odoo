@@ -39,6 +39,13 @@ class Logger {
 	private ?string $module;
 
 	/**
+	 * Cached log settings (shared across all Logger instances).
+	 *
+	 * @var array|null
+	 */
+	private static ?array $settings_cache = null;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string|null $module Optional module identifier to tag all log entries.
@@ -173,7 +180,7 @@ class Logger {
 			return true;
 		}
 
-		$settings = get_option( 'wp4odoo_log_settings', [] );
+		$settings = $this->get_log_settings();
 
 		if ( empty( $settings['enabled'] ) ) {
 			return false;
@@ -186,5 +193,28 @@ class Logger {
 		}
 
 		return self::LEVELS[ $level ] >= self::LEVELS[ $configured_level ];
+	}
+
+	/**
+	 * Get log settings from cache or wp_options.
+	 *
+	 * @return array
+	 */
+	private function get_log_settings(): array {
+		if ( null === self::$settings_cache ) {
+			self::$settings_cache = get_option( 'wp4odoo_log_settings', [] );
+		}
+		return self::$settings_cache;
+	}
+
+	/**
+	 * Reset the in-memory settings cache.
+	 *
+	 * Useful in tests or when options change at runtime.
+	 *
+	 * @return void
+	 */
+	public static function reset_cache(): void {
+		self::$settings_cache = null;
 	}
 }
