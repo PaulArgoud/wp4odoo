@@ -13,6 +13,7 @@ Modular WordPress plugin providing comprehensive, bidirectional integration betw
 - **CRM Module** — Bidirectional contact sync (WP users <-> `res.partner`), lead capture form with shortcode, email deduplication, archive-on-delete, role-based filtering, country/state resolution
 - **Sales Module** — Order and invoice sync from Odoo, custom post types for local storage, customer portal with tabbed UI and currency display (`[wp4odoo_customer_portal]`)
 - **WooCommerce Module** — WC-native product, order, and stock sync with Odoo status mapping, HPOS compatible, product variant import from Odoo, product image pull, multi-currency guard (skips price if currency mismatch), bulk product import/export (mutually exclusive with Sales module)
+- **Memberships Module** — Push WooCommerce Memberships (plans + user memberships) to Odoo's native `membership` module, with status mapping and automatic plan sync
 - **Async Queue** — No API calls during user requests; all sync jobs go through a persistent database queue with exponential backoff, deduplication, and configurable batch size
 - **Dual Transport** — JSON-RPC 2.0 (default for Odoo 17+) and XML-RPC (legacy), swappable via settings, shared retry logic via `Retryable_Http` trait (3 attempts, exponential backoff + jitter)
 - **Webhooks** — REST API endpoints for real-time notifications from Odoo, with per-IP rate limiting
@@ -21,15 +22,16 @@ Modular WordPress plugin providing comprehensive, bidirectional integration betw
 - **Onboarding** — Post-activation redirect, setup notice, 3-step checklist with progress bar, inline Odoo documentation (API keys, webhooks)
 - **WP-CLI** — Full command suite: `wp wp4odoo status|test|sync|queue|module` for headless management
 - **Extensible** — Register custom modules via `wp4odoo_register_modules` action hook; filter data with `wp4odoo_map_to_odoo_*` / `wp4odoo_map_from_odoo_*`
-- **Multilingual (3 languages)** — Fully internationalized with WordPress standard Gettext i18n. Ships with English (source), French, and Spanish translations (256 strings). Translation-ready for additional languages via `.po`/`.mo` files
-- **Code Quality** — WordPress Coding Standards (PHPCS), PHPStan level 5 static analysis, 436 unit tests + 26 integration tests, CI/CD with GitHub Actions
+- **Multilingual (3 languages)** — Fully internationalized with WordPress standard Gettext i18n. Ships with English (source), French, and Spanish translations (262 strings). Translation-ready for additional languages via `.po`/`.mo` files
+- **Code Quality** — WordPress Coding Standards (PHPCS), PHPStan level 5 static analysis, 494 unit tests + 26 integration tests, CI/CD with GitHub Actions
 
 ## Requirements
 
 - PHP 8.2+
-- WordPress 6.0+
 - Odoo 17+ (JSON-RPC) or Odoo 14+ (XML-RPC)
-- WooCommerce (optional, for WooCommerce module)
+- WordPress 6.0+
+- WooCommerce 7.1+ (optional, for WooCommerce and Memberships modules)
+- WooCommerce Memberships 1.12+ (optional, for Memberships module)
 
 ## Compatibility
 
@@ -39,8 +41,8 @@ Modular WordPress plugin providing comprehensive, bidirectional integration betw
 | version | On-Premise |          | Online  | One App Free |
 |:--------|:----------:|:---------:|:------:|:------------:|
 | 17 – 19 | ✅ Full³   | ✅ Full³ | ✅ Full | ⚠️ Partial² |
-| 14 – 16 | ✅ Full³   | ✅ Full³ | N/A¹    | N/A¹        |
-| < 14    | ❌         | ❌       | N/A¹    | N/A¹        |
+| 14 – 16 | ✅ Full³   | ✅ Full³ | N/A¹    | N/A¹         |
+| < 14    | ❌         | ❌       | N/A¹    | N/A¹         |
 
 > ¹ Odoo Online always runs the latest stable version (currently 17+), so older versions do not apply.
 >
@@ -63,8 +65,9 @@ The plugin automatically detects missing Odoo apps at connection test and module
 | **CRM**         | Contacts, CRM                         | ⚠️⁴          |
 | **Sales**       | Contacts, Sales, Invoicing            | ❌           |
 | **WooCommerce** | Contacts, Sales, Inventory, Invoicing | ❌           |
+| **Memberships** | Contacts, Members                     | ❌           |
 
-> ⁴ With CRM as your free app, contact sync and lead capture work. Sales and WooCommerce modules require 3–4 apps and are not available on the free plan.
+> ⁴ With CRM as your free app, contact sync and lead capture work. Sales, WooCommerce, and Memberships modules require 2–4 apps and are not available on the free plan.
 
 ## Installation
 
@@ -88,6 +91,7 @@ Each Odoo domain is encapsulated in an independent module extending `Module_Base
 | **CRM**         | `res.partner`, `crm.lead`                                                          | Contact sync, lead form shortcode, email dedup, archive-on-delete                                                                  |
 | **Sales**       | `product.template`, `sale.order`, `account.move`                                   | Order/invoice CPTs, customer portal shortcode, currency display                                                                    |
 | **WooCommerce** | `product.template`, `product.product`, `sale.order`, `stock.quant`, `account.move` | WC-native product/order/stock sync, product variants, product image pull, multi-currency guard, bulk import/export, status mapping |
+| **Memberships** | `product.product`, `membership.membership_line`                                    | WC Memberships → Odoo push sync, plan auto-sync, status mapping, filterable via `wp4odoo_membership_status_map`                    |
 
 Third-party modules can be registered:
 

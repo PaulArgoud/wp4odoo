@@ -68,4 +68,16 @@ class ModuleBaseHashTest extends TestCase {
 		$this->assertSame( 64, strlen( $hash ) );
 		$this->assertMatchesRegularExpression( '/^[a-f0-9]{64}$/', $hash );
 	}
+
+	// ─── Dependency Status (default) ──────────────────────
+
+	public function test_default_dependency_status_is_available(): void {
+		$status = $this->module->get_dependency_status();
+		$this->assertTrue( $status['available'] );
+	}
+
+	public function test_default_dependency_status_has_no_notices(): void {
+		$status = $this->module->get_dependency_status();
+		$this->assertEmpty( $status['notices'] );
+	}
 }

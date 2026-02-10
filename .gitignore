@@ -28,5 +28,9 @@ Thumbs.db
 # wp-env
 .wp-env.override.json
 
+# Gettext artifacts
+messages.mo
+messages.po
+
 # Environment / Secrets
 .env

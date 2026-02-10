@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.9] - 2026-02-10
+
+### Added
+
+#### Memberships Module — WC Memberships → Odoo Push Sync
+- New module: `Memberships_Module` (`includes/modules/class-memberships-module.php`) — push-only sync from WooCommerce Memberships to Odoo's native `membership` module
+- `Membership_Handler` (`includes/modules/class-membership-handler.php`) — loads plan and membership data from WC, maps 8 WC membership statuses to Odoo `membership.membership_line` states (active→paid, free_trial→free, complimentary→free, delayed→waiting, pending-cancel→paid, paused→waiting, cancelled→cancelled, expired→none)
+- `Membership_Hooks` trait (`includes/modules/trait-membership-hooks.php`) — 3 WC hook callbacks with anti-loop guards: `on_membership_created`, `on_membership_status_changed`, `on_membership_saved`
+- Entity types: `plan` → `product.product` (membership products), `membership` → `membership.membership_line`
+- Plan auto-sync: `ensure_plan_synced()` automatically pushes the membership plan to Odoo before any membership line sync
+- Status mapping filterable via `apply_filters('wp4odoo_membership_status_map', $map)`
+- Partner resolution via `Partner_Service` (WP user → Odoo `res.partner`)
+- Admin UI: WC Memberships detection in Modules tab with disabled toggle + warning when plugin not active
+- Settings: `sync_plans` and `sync_memberships` checkboxes (both default: enabled)
+
+#### Tests
+- `MembershipsModuleTest` — 17 tests: module identity, Odoo model declarations, default settings, settings fields, field mappings (plan + membership), boot guard
+- `MembershipHandlerTest` — 18 tests: load_plan, load_membership, all 8 status mappings, unknown status default, filterable status map
+- WC Memberships stubs: `wc_memberships()`, `wc_memberships_get_user_membership()`, `wc_memberships_get_membership_plan()`, `WC_Memberships_User_Membership`, `WC_Memberships_Membership_Plan`
+
+### Changed
+
+- Plugin version bumped from 1.9.8 to 1.9.9
+- PHPUnit: 471 unit tests, 899 assertions — all green (was 436/855)
+- PHPStan: 0 errors on 50 files (was 47 — added 3 module files)
+- `README.md` — added Memberships module to features, module table, Required Odoo apps table; added WooCommerce 7.1+ and WC Memberships 1.12+ to Requirements
+- `Dependency_Loader` — added 3 `require_once` for membership module files
+- `Module_Registry` — registers `Memberships_Module` when WooCommerce is active
+- `tab-modules.php` — WC Memberships detection and disabled toggle with warning notice
+- `tests/bootstrap.php` — added WC Memberships globals and 3 new source file requires
+- `phpstan-bootstrap.php` — added WC Memberships function and class stubs
+
 ## [1.9.8] - 2026-02-10
 
 ### Added

@@ -164,6 +164,20 @@ class WooCommerceModuleTest extends TestCase {
 		$this->assertSame( 'sale', $wp_data['status'] );
 	}
 
+	// ─── Dependency Status ────────────────────────────────
+
+	public function test_dependency_status_unavailable_without_woocommerce(): void {
+		// WooCommerce class does not exist in test env.
+		$status = $this->module->get_dependency_status();
+		$this->assertFalse( $status['available'] );
+	}
+
+	public function test_dependency_status_has_warning_without_woocommerce(): void {
+		$status = $this->module->get_dependency_status();
+		$this->assertNotEmpty( $status['notices'] );
+		$this->assertSame( 'warning', $status['notices'][0]['type'] );
+	}
+
 	// ─── Boot without WooCommerce ──────────────────────────
 
 	public function test_boot_does_not_crash_without_woocommerce(): void {

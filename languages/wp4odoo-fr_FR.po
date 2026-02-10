@@ -4,9 +4,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: WordPress For Odoo 1.9.8\n"
+"Project-Id-Version: WordPress For Odoo 1.9.9\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-10 20:14+0100\n"
+"POT-Creation-Date: 2026-02-10 22:16+0100\n"
 "PO-Revision-Date: 2026-02-09 22:31+0100\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
@@ -223,7 +223,8 @@ msgstr "Aucun produit trouvé dans Odoo."
 #: includes/admin/class-bulk-handler.php:93
 #, php-format
 msgid "%1$d product(s) enqueued for import (%2$d found in Odoo)."
-msgstr "%1$d produit(s) mis en file d'attente pour l'import (%2$d trouvés dans Odoo)."
+msgstr ""
+"%1$d produit(s) mis en file d'attente pour l'import (%2$d trouvés dans Odoo)."
 
 #: includes/admin/class-bulk-handler.php:144
 msgid "No WooCommerce products found."
@@ -513,6 +514,26 @@ msgstr "Adresse e-mail invalide."
 #: includes/modules/class-lead-manager.php:172
 msgid "Failed to save lead."
 msgstr "Échec de l'enregistrement du lead."
+
+#: includes/modules/class-memberships-module.php:99
+msgid "Memberships module enabled but WooCommerce Memberships is not active."
+msgstr "Module Memberships activé mais WooCommerce Memberships n'est pas actif."
+
+#: includes/modules/class-memberships-module.php:137
+msgid "Sync membership plans"
+msgstr "Synchroniser les plans d'adhésion"
+
+#: includes/modules/class-memberships-module.php:139
+msgid "Push WooCommerce membership plans to Odoo."
+msgstr "Envoyer les plans d'adhésion WooCommerce vers Odoo."
+
+#: includes/modules/class-memberships-module.php:142
+msgid "Sync user memberships"
+msgstr "Synchroniser les adhésions utilisateur"
+
+#: includes/modules/class-memberships-module.php:144
+msgid "Push user memberships to Odoo membership lines."
+msgstr "Envoyer les adhésions utilisateur vers les lignes d'adhésion Odoo."
 
 #: includes/modules/class-portal-manager.php:76
 #, php-format
@@ -994,11 +1015,17 @@ msgstr "Aucun journal."
 msgid "Enable or disable synchronization modules."
 msgstr "Activez ou désactivez les modules de synchronisation."
 
-#: admin/views/tab-modules.php:44
+#: admin/views/tab-modules.php:46
+msgid ""
+"WooCommerce Memberships must be installed and activated to use this module."
+msgstr ""
+"WooCommerce Memberships doit être installé et activé pour utiliser ce module."
+
+#: admin/views/tab-modules.php:50
 msgid "WooCommerce must be installed and activated to use this module."
 msgstr "WooCommerce doit être installé et activé pour utiliser ce module."
 
-#: admin/views/tab-modules.php:48
+#: admin/views/tab-modules.php:54
 msgid ""
 "Enabling the WooCommerce module replaces the Sales module. Both cannot be "
 "active simultaneously."
@@ -1006,11 +1033,11 @@ msgstr ""
 "L'activation du module WooCommerce remplace le module Sales. Les deux ne "
 "peuvent pas être actifs simultanément."
 
-#: admin/views/tab-modules.php:158
+#: admin/views/tab-modules.php:164
 msgid "Save settings"
 msgstr "Enregistrer les paramètres"
 
-#: admin/views/tab-modules.php:168
+#: admin/views/tab-modules.php:174
 msgid "No modules registered."
 msgstr "Aucun module enregistré."
 

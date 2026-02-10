@@ -3,7 +3,6 @@ declare( strict_types=1 );
 
 namespace WP4Odoo\Modules;
 
-use WP4Odoo\CPT_Helper;
 use WP4Odoo\Field_Mapper;
 use WP4Odoo\Module_Base;
 use WP4Odoo\Partner_Service;
@@ -35,18 +34,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WooCommerce_Module extends Module_Base {
 
 	use WooCommerce_Hooks;
-
-	/**
-	 * Invoice meta fields: data key => post meta key.
-	 */
-	private const INVOICE_META = [
-		'_invoice_total'      => '_invoice_total',
-		'_invoice_date'       => '_invoice_date',
-		'_invoice_state'      => '_invoice_state',
-		'_payment_state'      => '_payment_state',
-		'_wp4odoo_partner_id' => '_wp4odoo_partner_id',
-		'_invoice_currency'   => '_invoice_currency',
-	];
 
 	protected string $id   = 'woocommerce';
 	protected string $name = 'WooCommerce';
@@ -176,7 +163,7 @@ class WooCommerce_Module extends Module_Base {
 		// Stock: pull-only (Odoo → WC), no WC hooks needed.
 
 		// Invoices: CPT (WC has no native invoice type).
-		add_action( 'init', [ $this, 'register_invoice_cpt' ] );
+		add_action( 'init', [ Invoice_Helper::class, 'register_cpt' ] );
 	}
 
 	/**
@@ -225,6 +212,35 @@ class WooCommerce_Module extends Module_Base {
 				'label'       => __( 'Auto-confirm orders', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Automatically confirm orders in Odoo when created from WooCommerce.', 'wp4odoo' ),
+			],
+		];
+	}
+
+	/**
+	 * Get external dependency status for WooCommerce.
+	 *
+	 * @return array{available: bool, notices: array<array{type: string, message: string}>}
+	 */
+	public function get_dependency_status(): array {
+		if ( ! class_exists( 'WooCommerce' ) ) {
+			return [
+				'available' => false,
+				'notices'   => [
+					[
+						'type'    => 'warning',
+						'message' => __( 'WooCommerce must be installed and activated to use this module.', 'wp4odoo' ),
+					],
+				],
+			];
+		}
+
+		return [
+			'available' => true,
+			'notices'   => [
+				[
+					'type'    => 'info',
+					'message' => __( 'Enabling the WooCommerce module replaces the Sales module. Both cannot be active simultaneously.', 'wp4odoo' ),
+				],
 			],
 		];
 	}
@@ -383,29 +399,6 @@ class WooCommerce_Module extends Module_Base {
 		);
 	}
 
-	// ─── Invoice CPT ─────────────────────────────────────────
-
-	/**
-	 * Register the wp4odoo_invoice custom post type.
-	 *
-	 * @return void
-	 */
-	public function register_invoice_cpt(): void {
-		CPT_Helper::register(
-			'wp4odoo_invoice',
-			[
-				'name'               => __( 'Invoices', 'wp4odoo' ),
-				'singular_name'      => __( 'Invoice', 'wp4odoo' ),
-				'add_new_item'       => __( 'Add New Invoice', 'wp4odoo' ),
-				'edit_item'          => __( 'Edit Invoice', 'wp4odoo' ),
-				'view_item'          => __( 'View Invoice', 'wp4odoo' ),
-				'search_items'       => __( 'Search Invoices', 'wp4odoo' ),
-				'not_found'          => __( 'No invoices found.', 'wp4odoo' ),
-				'not_found_in_trash' => __( 'No invoices found in Trash.', 'wp4odoo' ),
-			]
-		);
-	}
-
 	// ─── Data Loading (delegates to handlers) ───────────────
 
 	/**
@@ -432,7 +425,7 @@ class WooCommerce_Module extends Module_Base {
 	 * @return array
 	 */
 	private function load_invoice_data( int $wp_id ): array {
-		return CPT_Helper::load( $wp_id, 'wp4odoo_invoice', self::INVOICE_META );
+		return Invoice_Helper::load( $wp_id );
 	}
 
 	// ─── Data Saving (delegates to handlers) ────────────────
@@ -510,11 +503,7 @@ class WooCommerce_Module extends Module_Base {
 	 * @return int Post ID or 0 on failure.
 	 */
 	private function save_invoice_data( array $data, int $wp_id = 0 ): int {
-		// Resolve currency_id Many2one to code string.
-		if ( isset( $data['_invoice_currency'] ) ) {
-			$data['_invoice_currency'] = Field_Mapper::many2one_to_name( $data['_invoice_currency'] ) ?? '';
-		}
-		return CPT_Helper::save( $data, $wp_id, 'wp4odoo_invoice', self::INVOICE_META, __( 'Invoice', 'wp4odoo' ), $this->logger );
+		return Invoice_Helper::save( $data, $wp_id, $this->logger );
 	}
 
 	// ─── Delete (delegates to handler) ──────────────────────

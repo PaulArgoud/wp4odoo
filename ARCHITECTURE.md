@@ -2,7 +2,7 @@
 
 ## Overview
 
-Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers three domains: CRM, Sales & Invoicing, and WooCommerce.
+Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers four domains: CRM, Sales & Invoicing, WooCommerce, and Memberships.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -69,7 +69,8 @@ WordPress For Odoo/
 │   │   ├── class-contact-manager.php  # CRM: contact data load/save/sync-check
 │   │   ├── class-lead-manager.php     # CRM: lead CPT, shortcode, form, data load/save
 │   │   ├── class-contact-refiner.php  # CRM: name/country/state refinement filters
-│   │   ├── class-sales-module.php     # Sales: orders, invoices (delegates CPT ops to CPT_Helper)
+│   │   ├── class-invoice-helper.php    # Shared: invoice CPT registration, load, save (used by Sales + WooCommerce)
+│   │   ├── class-sales-module.php     # Sales: orders, invoices (delegates invoice ops to Invoice_Helper)
 │   │   ├── class-portal-manager.php   # Sales: customer portal shortcode, AJAX, queries
 │   │   ├── class-currency-guard.php      # WooCommerce: static currency mismatch detection utility
 │   │   ├── class-variant-handler.php    # WooCommerce: variant import (product.product → WC variations)
@@ -77,7 +78,10 @@ WordPress For Odoo/
 │   │   ├── class-product-handler.php    # WooCommerce: product CRUD with currency guard
 │   │   ├── class-order-handler.php      # WooCommerce: order CRUD + Odoo status mapping
 │   │   ├── trait-woocommerce-hooks.php  # WooCommerce: WC hook callbacks (product save/delete, order)
-│   │   └── class-woocommerce-module.php  # WooCommerce: sync coordinator (uses WooCommerce_Hooks trait)
+│   │   ├── class-woocommerce-module.php  # WooCommerce: sync coordinator (uses WooCommerce_Hooks trait)
+│   │   ├── trait-membership-hooks.php  # Memberships: WC Memberships hook callbacks (created, status, saved)
+│   │   ├── class-membership-handler.php  # Memberships: plan/membership data load, status mapping
+│   │   └── class-memberships-module.php  # Memberships: push sync coordinator (uses Membership_Hooks trait)
 │   │
 │   ├── admin/
 │   │   ├── class-admin.php            # Admin menu, assets, activation redirect, setup notice
@@ -129,13 +133,13 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # 436 unit tests (855 assertions) + 26 integration tests (wp-env)
+├── tests/                             # 494 unit tests (923 assertions) + 26 integration tests (wp-env)
 │   ├── bootstrap.php                 #   Unit test bootstrap: constants, stub loading, plugin class requires
 │   ├── bootstrap-integration.php     #   Integration test bootstrap: loads WP test framework (wp-env)
 │   ├── stubs/
 │   │   ├── wp-classes.php            #   WP_Error, WP_REST_*, WP_User, WP_CLI, AJAX test helpers
 │   │   ├── wp-functions.php          #   WordPress function stubs (~60 functions)
-│   │   ├── wc-classes.php            #   WC_Product, WC_Order, WC_Product_Variable/Variation/Attribute
+│   │   ├── wc-classes.php            #   WC_Product, WC_Order, WC_Product_Variable/Variation/Attribute, WC_Memberships stubs
 │   │   ├── wp-db-stub.php            #   WP_DB_Stub ($wpdb mock with call recording)
 │   │   ├── plugin-stub.php           #   WP4Odoo_Plugin test singleton
 │   │   └── wp-cli-utils.php          #   WP_CLI\Utils\format_items stub
@@ -148,12 +152,12 @@ WordPress For Odoo/
 │       ├── AdminAjaxTest.php             #   36 tests for Admin_Ajax (15 handlers)
 │       ├── EntityMapRepositoryTest.php  #   19 tests for Entity_Map_Repository
 │       ├── FieldMapperTest.php          #   49 tests for Field_Mapper
-│       ├── ModuleBaseHashTest.php       #   4 tests for generate_sync_hash()
+│       ├── ModuleBaseHashTest.php       #   6 tests for generate_sync_hash() + dependency status
 │       ├── PartnerServiceTest.php       #   10 tests for Partner_Service
 │       ├── QueueManagerTest.php         #   7 tests for Queue_Manager
 │       ├── SyncQueueRepositoryTest.php  #   31 tests for Sync_Queue_Repository
 │       ├── WebhookHandlerTest.php       #   16 tests for Webhook_Handler
-│       ├── WooCommerceModuleTest.php    #   22 tests for WooCommerce_Module
+│       ├── WooCommerceModuleTest.php    #   24 tests for WooCommerce_Module
 │       ├── VariantHandlerTest.php       #   7 tests for Variant_Handler
 │       ├── BulkSyncTest.php             #   17 tests for bulk import/export
 │       ├── ImageHandlerTest.php         #   9 tests for Image_Handler
@@ -169,7 +173,10 @@ WordPress For Odoo/
 │       ├── OrderHandlerTest.php         #   9 tests for Order_Handler
 │       ├── ProductHandlerTest.php       #   7 tests for Product_Handler
 │       ├── ContactManagerTest.php       #   12 tests for Contact_Manager
-│       └── LeadManagerTest.php          #   10 tests for Lead_Manager
+│       ├── LeadManagerTest.php          #   10 tests for Lead_Manager
+│       ├── InvoiceHelperTest.php        #   14 tests for Invoice_Helper
+│       ├── MembershipsModuleTest.php    #   19 tests for Memberships_Module
+│       └── MembershipHandlerTest.php    #   18 tests for Membership_Handler
 │
 ├── uninstall.php                      # Cleanup on plugin uninstall
 │
@@ -211,6 +218,7 @@ Module_Base (abstract)
 ├── CRM_Module          → res.partner, crm.lead         [COMPLETE]
 ├── Sales_Module        → product.template, sale.order, account.move  [COMPLETE]
 ├── WooCommerce_Module  → + stock.quant, woocommerce hooks  [COMPLETE]
+├── Memberships_Module  → product.product, membership.membership_line  [COMPLETE]
 └── [Custom_Module]     → extensible via action hook
 ```
 
@@ -218,7 +226,7 @@ Module_Base (abstract)
 - Push/Pull orchestration: `push_to_odoo()`, `pull_from_odoo()`
 - Entity mapping CRUD: `get_mapping()`, `save_mapping()`, `get_wp_mapping()`, `remove_mapping()` (delegates to `Entity_Map_Repository`)
 - Data transformation: `map_to_odoo()`, `map_from_odoo()`, `generate_sync_hash()`
-- Settings: `get_settings()`, `get_settings_fields()`, `get_default_settings()`
+- Settings: `get_settings()`, `get_settings_fields()`, `get_default_settings()`, `get_dependency_status()` (external dependency check for admin UI)
 - Helpers: `is_importing()` (anti-loop guard), `resolve_many2one_field()` (Many2one → scalar), `client()`
 - Subclass hooks: `boot()`, `load_wp_data()`, `save_wp_data()`, `delete_wp_data()`
 
@@ -529,7 +537,7 @@ company → partner_name, description → description, source → x_wp_source
 
 ### Sales — COMPLETE
 
-**Files:** `class-sales-module.php` (order/invoice sync, CPTs), `class-portal-manager.php` (portal shortcode, AJAX, queries)
+**Files:** `class-sales-module.php` (order/invoice sync, delegates invoices to `Invoice_Helper`), `class-portal-manager.php` (portal shortcode, AJAX, queries), `class-invoice-helper.php` (shared invoice CPT: registration, load, save with currency resolution — used by Sales + WooCommerce)
 
 **Odoo models:** `product.template`, `sale.order`, `account.move`
 
@@ -560,7 +568,7 @@ currency_id → _invoice_currency (Many2one → code string)
 
 ### WooCommerce — COMPLETE
 
-**Files:** `class-woocommerce-module.php` (sync coordinator, uses `WooCommerce_Hooks` trait), `trait-woocommerce-hooks.php` (WC hook callbacks), `class-product-handler.php` (product CRUD), `class-order-handler.php` (order CRUD + status mapping), `class-variant-handler.php` (variant import), `class-image-handler.php` (product image pull), `class-currency-guard.php` (currency mismatch detection)
+**Files:** `class-woocommerce-module.php` (sync coordinator, uses `WooCommerce_Hooks` trait), `trait-woocommerce-hooks.php` (WC hook callbacks), `class-product-handler.php` (product CRUD), `class-order-handler.php` (order CRUD + status mapping), `class-variant-handler.php` (variant import), `class-image-handler.php` (product image pull), `class-currency-guard.php` (currency mismatch detection), `class-invoice-helper.php` (shared with Sales)
 
 **Odoo models:** `product.template`, `product.product`, `sale.order`, `stock.quant`, `account.move`
 
@@ -605,11 +613,50 @@ $map = [
 
 **Settings:** `sync_products`, `sync_orders`, `sync_stock`, `sync_product_images`, `auto_confirm_orders`
 
+### Memberships — COMPLETE
+
+**Files:** `class-memberships-module.php` (push sync coordinator, uses `Membership_Hooks` trait), `trait-membership-hooks.php` (WC Memberships hook callbacks), `class-membership-handler.php` (plan/membership data load, status mapping)
+
+**Odoo models:** `product.product` (membership plans), `membership.membership_line` (user memberships)
+
+| Direction | Source | Destination | Matching |
+|-----------|--------|-------------|----------|
+| WP → Odoo | `wc_memberships_user_membership_created` | `membership.membership_line` create | — |
+| WP → Odoo | `wc_memberships_user_membership_status_changed` | `membership.membership_line` update | Mapping |
+| WP → Odoo | `wc_memberships_user_membership_saved` | `membership.membership_line` create/update | Mapping |
+| WP → Odoo | Auto-sync (before membership push) | `product.product` create (membership plan) | Entity map |
+
+**Key features:**
+- Push-only (WC → Odoo) — no pull support
+- Requires WooCommerce Memberships plugin (SkyVerge/Woo); `boot()` guards with `function_exists('wc_memberships')`
+- Plan auto-sync: `ensure_plan_synced()` pushes the plan to Odoo as a `product.product` with `membership: true` before any membership line push
+- Uses `Partner_Service` for WP user → Odoo `res.partner` resolution (lazy initialization)
+- Handler initialized in `__construct()` (not `boot()`) for residual queue job safety
+
+**Membership status mapping (WC → Odoo):**
+
+```php
+$map = [
+    'wcm-active'         => 'paid',
+    'wcm-free_trial'     => 'free',
+    'wcm-complimentary'  => 'free',
+    'wcm-delayed'        => 'waiting',
+    'wcm-pending-cancel' => 'paid',
+    'wcm-paused'         => 'waiting',
+    'wcm-cancelled'      => 'cancelled',
+    'wcm-expired'        => 'none',
+];
+```
+
+Filterable via `apply_filters('wp4odoo_membership_status_map', $map)`.
+
+**Settings:** `sync_plans`, `sync_memberships`
+
 ### Partner Service
 
 **File:** `class-partner-service.php`
 
-Shared service for managing WP user ↔ Odoo `res.partner` relationships. Used by `Portal_Manager` and `WooCommerce_Module`.
+Shared service for managing WP user ↔ Odoo `res.partner` relationships. Used by `Portal_Manager`, `WooCommerce_Module`, and `Memberships_Module`.
 
 **Resolution flow (3-step):**
 1. Check `wp4odoo_entity_map` for existing mapping

@@ -6,7 +6,7 @@
  * @package WP4Odoo
  */
 
-define( 'WP4ODOO_VERSION', '1.9.8' );
+define( 'WP4ODOO_VERSION', '1.9.9' );
 define( 'WP4ODOO_PLUGIN_FILE', __DIR__ . '/wp4odoo.php' );
 define( 'WP4ODOO_PLUGIN_DIR', __DIR__ . '/' );
 define( 'WP4ODOO_PLUGIN_URL', 'https://example.com/wp-content/plugins/wp4odoo/' );
@@ -150,6 +150,62 @@ if ( ! function_exists( 'wc_get_products' ) ) {
 
 if ( ! class_exists( 'WC_DateTime' ) ) {
 	class WC_DateTime extends \DateTime {
+	}
+}
+
+// ─── WC Memberships stubs ───────────────────────────────
+
+if ( ! function_exists( 'wc_memberships' ) ) {
+	/** @return object */
+	function wc_memberships() {
+		return new stdClass();
+	}
+}
+
+if ( ! function_exists( 'wc_memberships_get_user_membership' ) ) {
+	/**
+	 * @param int $membership_id
+	 * @return WC_Memberships_User_Membership|false
+	 */
+	function wc_memberships_get_user_membership( $membership_id = 0 ) {
+		return false;
+	}
+}
+
+if ( ! function_exists( 'wc_memberships_get_membership_plan' ) ) {
+	/**
+	 * @param int $plan_id
+	 * @return WC_Memberships_Membership_Plan|false
+	 */
+	function wc_memberships_get_membership_plan( $plan_id = 0 ) {
+		return false;
+	}
+}
+
+if ( ! class_exists( 'WC_Memberships_User_Membership' ) ) {
+	class WC_Memberships_User_Membership {
+		public function get_id(): int { return 0; }
+		public function get_plan_id(): int { return 0; }
+		public function get_plan(): ?WC_Memberships_Membership_Plan { return null; }
+		public function get_user_id(): int { return 0; }
+		public function get_status(): string { return ''; }
+		public function get_start_date( string $format = 'Y-m-d H:i:s' ): string { return ''; }
+		public function get_end_date( string $format = 'Y-m-d H:i:s' ): string { return ''; }
+		public function get_cancelled_date( string $format = 'Y-m-d H:i:s' ): string { return ''; }
+		public function get_paused_date( string $format = 'Y-m-d H:i:s' ): string { return ''; }
+		public function get_order_id(): int { return 0; }
+		public function get_product_id(): int { return 0; }
+	}
+}
+
+if ( ! class_exists( 'WC_Memberships_Membership_Plan' ) ) {
+	class WC_Memberships_Membership_Plan {
+		public function get_id(): int { return 0; }
+		public function get_name(): string { return ''; }
+		/** @return int[] */
+		public function get_product_ids(): array { return []; }
+		public function get_access_length_amount(): int { return 0; }
+		public function get_access_length_period(): string { return ''; }
 	}
 }
 

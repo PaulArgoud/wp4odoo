@@ -55,6 +55,7 @@ final class Dependency_Loader {
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-contact-refiner.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-contact-manager.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-crm-module.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-invoice-helper.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-portal-manager.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-sales-module.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-currency-guard.php';
@@ -63,6 +64,9 @@ final class Dependency_Loader {
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-product-handler.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-order-handler.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-woocommerce-module.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-membership-hooks.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-membership-handler.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-memberships-module.php';
 
 		// Admin
 		if ( is_admin() ) {

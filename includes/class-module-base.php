@@ -517,6 +517,22 @@ abstract class Module_Base {
 	}
 
 	/**
+	 * Get the dependency status for this module.
+	 *
+	 * Returns whether the module's external dependencies are met and
+	 * any notices to display in the admin UI. Subclasses should override
+	 * this to declare their plugin dependencies.
+	 *
+	 * @return array{available: bool, notices: array<array{type: string, message: string}>}
+	 */
+	public function get_dependency_status(): array {
+		return [
+			'available' => true,
+			'notices'   => [],
+		];
+	}
+
+	/**
 	 * Get the module ID.
 	 *
 	 * @return string

@@ -94,6 +94,69 @@ if ( ! class_exists( 'WC_Product_Attribute' ) ) {
 	}
 }
 
+// ─── WC Memberships functions ───────────────────────────
+
+if ( ! function_exists( 'wc_memberships' ) ) {
+	function wc_memberships() {
+		return new stdClass();
+	}
+}
+
+if ( ! function_exists( 'wc_memberships_get_user_membership' ) ) {
+	function wc_memberships_get_user_membership( $membership_id = 0 ) {
+		return $GLOBALS['_wc_memberships'][ $membership_id ] ?? false;
+	}
+}
+
+if ( ! function_exists( 'wc_memberships_get_membership_plan' ) ) {
+	function wc_memberships_get_membership_plan( $plan_id = 0 ) {
+		return $GLOBALS['_wc_membership_plans'][ $plan_id ] ?? false;
+	}
+}
+
+// ─── WC Memberships classes ─────────────────────────────
+
+if ( ! class_exists( 'WC_Memberships_User_Membership' ) ) {
+	class WC_Memberships_User_Membership {
+		protected int $id = 0;
+		protected array $data = [];
+		public function __construct( int $id = 0 ) { $this->id = $id; }
+		public function get_id(): int { return $this->id; }
+		public function get_plan_id(): int { return $this->data['plan_id'] ?? 0; }
+		public function get_plan(): ?WC_Memberships_Membership_Plan {
+			return $GLOBALS['_wc_membership_plans'][ $this->get_plan_id() ] ?? null;
+		}
+		public function get_user_id(): int { return $this->data['user_id'] ?? 0; }
+		public function get_status(): string { return $this->data['status'] ?? 'wcm-active'; }
+		public function get_start_date( string $format = 'Y-m-d H:i:s' ): string { return $this->data['start_date'] ?? ''; }
+		public function get_end_date( string $format = 'Y-m-d H:i:s' ): string { return $this->data['end_date'] ?? ''; }
+		public function get_cancelled_date( string $format = 'Y-m-d H:i:s' ): string { return $this->data['cancelled_date'] ?? ''; }
+		public function get_paused_date( string $format = 'Y-m-d H:i:s' ): string { return $this->data['paused_date'] ?? ''; }
+		public function get_order_id(): int { return $this->data['order_id'] ?? 0; }
+		public function get_product_id(): int { return $this->data['product_id'] ?? 0; }
+		/** @param array<string, mixed> $data */
+		public function set_data( array $data ): void { $this->data = $data; }
+	}
+}
+
+if ( ! class_exists( 'WC_Memberships_Membership_Plan' ) ) {
+	class WC_Memberships_Membership_Plan {
+		protected int $id = 0;
+		protected array $data = [];
+		public function __construct( int $id = 0 ) { $this->id = $id; }
+		public function get_id(): int { return $this->id; }
+		public function get_name(): string { return $this->data['name'] ?? ''; }
+		/** @return int[] */
+		public function get_product_ids(): array { return $this->data['product_ids'] ?? []; }
+		public function get_access_length_amount(): int { return $this->data['access_length_amount'] ?? 0; }
+		public function get_access_length_period(): string { return $this->data['access_length_period'] ?? ''; }
+		/** @param array<string, mixed> $data */
+		public function set_data( array $data ): void { $this->data = $data; }
+	}
+}
+
+// ─── WC Order ───────────────────────────────────────────
+
 if ( ! class_exists( 'WC_Order' ) ) {
 	class WC_Order {
 		protected int $id = 0;

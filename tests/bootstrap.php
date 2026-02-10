@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'WP4ODOO_PLUGIN_DIR', dirname( __DIR__ ) . '/' );
-define( 'WP4ODOO_VERSION', '1.9.8' );
+define( 'WP4ODOO_VERSION', '1.9.9' );
 
 if ( ! defined( 'DAY_IN_SECONDS' ) ) {
 	define( 'DAY_IN_SECONDS', 86400 );
@@ -46,9 +46,11 @@ if ( ! defined( 'WP4ODOO_PLUGIN_URL' ) ) {
 
 // ─── Global test stores ─────────────────────────────────
 
-$GLOBALS['_wp_options']    = [];
-$GLOBALS['_wp_transients'] = [];
-$GLOBALS['_wp_mail_calls'] = [];
+$GLOBALS['_wp_options']          = [];
+$GLOBALS['_wp_transients']       = [];
+$GLOBALS['_wp_mail_calls']       = [];
+$GLOBALS['_wc_memberships']      = [];
+$GLOBALS['_wc_membership_plans'] = [];
 
 // ─── Load stubs ─────────────────────────────────────────
 
@@ -95,12 +97,16 @@ require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-variant-handler.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-image-handler.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-product-handler.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-order-handler.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-invoice-helper.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-woocommerce-module.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-contact-manager.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-lead-manager.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-crm-module.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-portal-manager.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-sales-module.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-membership-hooks.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-membership-handler.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-memberships-module.php';
 
 // Webhook handler.
 require_once WP4ODOO_PLUGIN_DIR . 'includes/class-webhook-handler.php';

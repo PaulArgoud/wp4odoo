@@ -65,6 +65,11 @@ class Module_Registry {
 			}
 		}
 
+		// Memberships module (requires WooCommerce + WC Memberships).
+		if ( $wc_active ) {
+			$this->register( 'memberships', new Modules\Memberships_Module() );
+		}
+
 		// Allow third-party modules.
 		do_action( 'wp4odoo_register_modules', $this->plugin );
 	}

@@ -23,8 +23,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 		$odoo_models     = $module->get_odoo_models();
 		$settings_fields = $module->get_settings_fields();
 		$settings        = $module->get_settings();
-		$is_woo          = ( 'woocommerce' === $module_id );
-		$woo_active      = class_exists( 'WooCommerce' );
+		$dep_status      = $module->get_dependency_status();
+		$dep_available   = $dep_status['available'];
+		$dep_notices     = $dep_status['notices'];
 		?>
 		<div class="wp4odoo-module-card" data-module="<?php echo esc_attr( $module_id ); ?>">
 			<div class="wp4odoo-module-header">
@@ -34,20 +35,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 						class="wp4odoo-module-toggle"
 						data-module="<?php echo esc_attr( $module_id ); ?>"
 						<?php checked( $enabled ); ?>
-						<?php disabled( $is_woo && ! $woo_active ); ?> />
+						<?php disabled( ! $dep_available ); ?> />
 					<span class="wp4odoo-toggle-slider"></span>
 				</label>
 			</div>
 
-			<?php if ( $is_woo && ! $woo_active ) : ?>
-				<p class="notice notice-warning" style="margin: 10px 0 0; padding: 8px 12px;">
-					<?php esc_html_e( 'WooCommerce must be installed and activated to use this module.', 'wp4odoo' ); ?>
+			<?php foreach ( $dep_notices as $notice ) : ?>
+				<p class="notice notice-<?php echo esc_attr( $notice['type'] ); ?>" style="margin: 10px 0 0; padding: 8px 12px;">
+					<?php echo esc_html( $notice['message'] ); ?>
 				</p>
-			<?php elseif ( $is_woo && $woo_active ) : ?>
-				<p class="notice notice-info" style="margin: 10px 0 0; padding: 8px 12px;">
-					<?php esc_html_e( 'Enabling the WooCommerce module replaces the Sales module. Both cannot be active simultaneously.', 'wp4odoo' ); ?>
-				</p>
-			<?php endif; ?>
+			<?php endforeach; ?>
 
 			<?php if ( ! empty( $odoo_models ) ) : ?>
 				<p class="wp4odoo-module-models">
