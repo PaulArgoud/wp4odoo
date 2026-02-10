@@ -209,6 +209,30 @@ if ( ! class_exists( 'WC_Memberships_Membership_Plan' ) ) {
 	}
 }
 
+// ─── Gravity Forms / WPForms stubs ──────────────────────
+
+if ( ! class_exists( 'GFAPI' ) ) {
+	class GFAPI {
+		/** @param int $entry_id */
+		public static function get_entry( int $entry_id ): array { return []; }
+		/** @param int $form_id */
+		public static function get_form( int $form_id ): array { return []; }
+	}
+}
+
+if ( ! class_exists( 'GF_Field' ) ) {
+	class GF_Field {
+		public string $type  = '';
+		public int    $id    = 0;
+		public string $label = '';
+	}
+}
+
+if ( ! function_exists( 'wpforms' ) ) {
+	/** @return object */
+	function wpforms() { return new stdClass(); }
+}
+
 // ─── WP-CLI stubs ───────────────────────────────────────
 
 if ( ! defined( 'WP_CLI' ) ) {

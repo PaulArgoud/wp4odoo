@@ -70,6 +70,13 @@ class Module_Registry {
 			$this->register( 'memberships', new Modules\Memberships_Module() );
 		}
 
+		// Forms module (requires Gravity Forms or WPForms).
+		$gf_active  = class_exists( 'GFAPI' );
+		$wpf_active = function_exists( 'wpforms' );
+		if ( $gf_active || $wpf_active ) {
+			$this->register( 'forms', new Modules\Forms_Module() );
+		}
+
 		// Allow third-party modules.
 		do_action( 'wp4odoo_register_modules', $this->plugin );
 	}

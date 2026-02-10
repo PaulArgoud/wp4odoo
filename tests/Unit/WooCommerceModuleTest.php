@@ -186,4 +186,10 @@ class WooCommerceModuleTest extends TestCase {
 		$this->module->boot();
 		$this->assertTrue( true ); // No exception thrown.
 	}
+
+	// ─── Sync Direction ─────────────────────────────────
+
+	public function test_sync_direction(): void {
+		$this->assertSame( 'bidirectional', $this->module->get_sync_direction() );
+	}
 }

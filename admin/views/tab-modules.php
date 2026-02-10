@@ -26,10 +26,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 		$dep_status      = $module->get_dependency_status();
 		$dep_available   = $dep_status['available'];
 		$dep_notices     = $dep_status['notices'];
+
+		$direction        = $module->get_sync_direction();
+		$direction_labels = [
+			'bidirectional' => __( 'Bidirectional', 'wp4odoo' ),
+			'wp_to_odoo'    => __( 'WP → Odoo', 'wp4odoo' ),
+			'odoo_to_wp'    => __( 'Odoo → WP', 'wp4odoo' ),
+		];
+		$direction_label  = $direction_labels[ $direction ] ?? $direction;
 		?>
 		<div class="wp4odoo-module-card" data-module="<?php echo esc_attr( $module_id ); ?>">
 			<div class="wp4odoo-module-header">
-				<h3><?php echo esc_html( $module->get_name() ); ?></h3>
+				<h3>
+					<?php echo esc_html( $module->get_name() ); ?>
+					<span class="wp4odoo-sync-direction wp4odoo-sync-direction--<?php echo esc_attr( $direction ); ?>">
+						<?php echo esc_html( $direction_label ); ?>
+					</span>
+				</h3>
 				<label class="wp4odoo-toggle">
 					<input type="checkbox"
 						class="wp4odoo-module-toggle"

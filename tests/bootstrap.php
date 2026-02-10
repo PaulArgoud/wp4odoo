@@ -107,6 +107,9 @@ require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-sales-module.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-membership-hooks.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-membership-handler.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-memberships-module.php';
+require_once __DIR__ . '/stubs/form-classes.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-form-handler.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-forms-module.php';
 
 // Webhook handler.
 require_once WP4ODOO_PLUGIN_DIR . 'includes/class-webhook-handler.php';

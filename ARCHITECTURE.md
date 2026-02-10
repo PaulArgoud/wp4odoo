@@ -81,7 +81,9 @@ WordPress For Odoo/
 │   │   ├── class-woocommerce-module.php  # WooCommerce: sync coordinator (uses WooCommerce_Hooks trait)
 │   │   ├── trait-membership-hooks.php  # Memberships: WC Memberships hook callbacks (created, status, saved)
 │   │   ├── class-membership-handler.php  # Memberships: plan/membership data load, status mapping
-│   │   └── class-memberships-module.php  # Memberships: push sync coordinator (uses Membership_Hooks trait)
+│   │   ├── class-memberships-module.php  # Memberships: push sync coordinator (uses Membership_Hooks trait)
+│   │   ├── class-form-handler.php       # Forms: field extraction from GF/WPForms submissions (auto-detection)
+│   │   └── class-forms-module.php       # Forms: push sync coordinator (GF/WPForms → crm.lead)
 │   │
 │   ├── admin/
 │   │   ├── class-admin.php            # Admin menu, assets, activation redirect, setup notice
@@ -133,7 +135,7 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # 494 unit tests (923 assertions) + 26 integration tests (wp-env)
+├── tests/                             # 587 unit tests (1041 assertions) + 26 integration tests (wp-env)
 │   ├── bootstrap.php                 #   Unit test bootstrap: constants, stub loading, plugin class requires
 │   ├── bootstrap-integration.php     #   Integration test bootstrap: loads WP test framework (wp-env)
 │   ├── stubs/
@@ -142,7 +144,8 @@ WordPress For Odoo/
 │   │   ├── wc-classes.php            #   WC_Product, WC_Order, WC_Product_Variable/Variation/Attribute, WC_Memberships stubs
 │   │   ├── wp-db-stub.php            #   WP_DB_Stub ($wpdb mock with call recording)
 │   │   ├── plugin-stub.php           #   WP4Odoo_Plugin test singleton
-│   │   └── wp-cli-utils.php          #   WP_CLI\Utils\format_items stub
+│   │   ├── wp-cli-utils.php          #   WP_CLI\Utils\format_items stub
+│   │   └── form-classes.php          #   GFAPI, GF_Field, wpforms() stubs
 │   ├── Integration/                       #   wp-env integration tests (real WordPress + MySQL)
 │   │   ├── DatabaseMigrationTest.php     #   7 tests for table creation, options seeding
 │   │   ├── EntityMapRepositoryTest.php   #   7 tests for entity map CRUD
@@ -176,7 +179,12 @@ WordPress For Odoo/
 │       ├── LeadManagerTest.php          #   10 tests for Lead_Manager
 │       ├── InvoiceHelperTest.php        #   14 tests for Invoice_Helper
 │       ├── MembershipsModuleTest.php    #   19 tests for Memberships_Module
-│       └── MembershipHandlerTest.php    #   18 tests for Membership_Handler
+│       ├── MembershipHandlerTest.php    #   18 tests for Membership_Handler
+│       ├── FailureNotifierTest.php      #   12 tests for Failure_Notifier
+│       ├── CPTHelperTest.php            #   11 tests for CPT_Helper
+│       ├── SalesModuleTest.php          #   23 tests for Sales_Module
+│       ├── FormHandlerTest.php         #   27 tests for Form_Handler
+│       └── FormsModuleTest.php         #   16 tests for Forms_Module
 │
 ├── uninstall.php                      # Cleanup on plugin uninstall
 │
@@ -219,6 +227,7 @@ Module_Base (abstract)
 ├── Sales_Module        → product.template, sale.order, account.move  [COMPLETE]
 ├── WooCommerce_Module  → + stock.quant, woocommerce hooks  [COMPLETE]
 ├── Memberships_Module  → product.product, membership.membership_line  [COMPLETE]
+├── Forms_Module        → crm.lead  [COMPLETE]
 └── [Custom_Module]     → extensible via action hook
 ```
 
@@ -227,7 +236,7 @@ Module_Base (abstract)
 - Entity mapping CRUD: `get_mapping()`, `save_mapping()`, `get_wp_mapping()`, `remove_mapping()` (delegates to `Entity_Map_Repository`)
 - Data transformation: `map_to_odoo()`, `map_from_odoo()`, `generate_sync_hash()`
 - Settings: `get_settings()`, `get_settings_fields()`, `get_default_settings()`, `get_dependency_status()` (external dependency check for admin UI)
-- Helpers: `is_importing()` (anti-loop guard), `resolve_many2one_field()` (Many2one → scalar), `client()`
+- Helpers: `is_importing()` (anti-loop guard), `mark_importing()` (define guard constant), `resolve_many2one_field()` (Many2one → scalar), `delete_wp_post()` (safe post deletion), `log_unsupported_entity()` (centralized warning), `client()`
 - Subclass hooks: `boot()`, `load_wp_data()`, `save_wp_data()`, `delete_wp_data()`
 
 **Module lifecycle:**

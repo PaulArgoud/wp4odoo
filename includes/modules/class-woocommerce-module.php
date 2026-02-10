@@ -323,9 +323,7 @@ class WooCommerce_Module extends Module_Base {
 	 * @return bool True on success.
 	 */
 	private function pull_variant( int $odoo_id, int $wp_id, array $payload ): bool {
-		if ( ! defined( 'WP4ODOO_IMPORTING' ) ) {
-			define( 'WP4ODOO_IMPORTING', true );
-		}
+		self::mark_importing();
 
 		$parent_wp_id     = (int) ( $payload['parent_wp_id'] ?? 0 );
 		$template_odoo_id = (int) ( $payload['template_odoo_id'] ?? 0 );
@@ -521,17 +519,11 @@ class WooCommerce_Module extends Module_Base {
 		}
 
 		if ( 'invoice' === $entity_type ) {
-			$result = wp_delete_post( $wp_id, true );
-			return false !== $result && null !== $result;
+			return $this->delete_wp_post( $wp_id );
 		}
 
 		// Orders and stock are not deleted via sync.
-		$this->logger->warning(
-			"WooCommerce: delete not supported for entity type '{$entity_type}'.",
-			[
-				'entity_type' => $entity_type,
-			]
-		);
+		$this->log_unsupported_entity( $entity_type, 'delete' );
 		return false;
 	}
 
@@ -545,12 +537,7 @@ class WooCommerce_Module extends Module_Base {
 	 * @return array Empty array.
 	 */
 	private function unsupported_entity( string $entity_type, string $operation ): array {
-		$this->logger->warning(
-			"WooCommerce: {$operation} not implemented for entity type '{$entity_type}'.",
-			[
-				'entity_type' => $entity_type,
-			]
-		);
+		$this->log_unsupported_entity( $entity_type, $operation );
 		return [];
 	}
 
@@ -561,12 +548,7 @@ class WooCommerce_Module extends Module_Base {
 	 * @return int Always 0.
 	 */
 	private function unsupported_entity_save( string $entity_type ): int {
-		$this->logger->warning(
-			"WooCommerce: save not implemented for entity type '{$entity_type}'.",
-			[
-				'entity_type' => $entity_type,
-			]
-		);
+		$this->log_unsupported_entity( $entity_type, 'save' );
 		return 0;
 	}
 }

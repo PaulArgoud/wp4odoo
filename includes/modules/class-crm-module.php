@@ -275,8 +275,7 @@ class CRM_Module extends Module_Base {
 		}
 
 		if ( 'lead' === $entity_type ) {
-			$result = wp_delete_post( $wp_id, true );
-			return false !== $result && null !== $result;
+			return $this->delete_wp_post( $wp_id );
 		}
 
 		return false;

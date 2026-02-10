@@ -286,9 +286,7 @@ class Webhook_Handler {
 	 * @return bool|\WP_Error True if valid, WP_Error otherwise.
 	 */
 	public function validate_webhook_token( \WP_REST_Request $request ): bool|\WP_Error {
-		$ip = sanitize_text_field(
-			$request->get_header( 'X-Forwarded-For' ) ?: ( $_SERVER['REMOTE_ADDR'] ?? 'unknown' )
-		);
+		$ip = $this->get_client_ip( $request );
 
 		// Rate limiting (before token check to protect against brute-force).
 		$rate_check = $this->check_rate_limit( $ip );
@@ -355,6 +353,32 @@ class Webhook_Handler {
 			$token = wp_generate_password( 48, false );
 			update_option( 'wp4odoo_webhook_token', $token );
 		}
+	}
+
+	/**
+	 * Extract the client IP address from a REST request.
+	 *
+	 * Parses X-Forwarded-For (takes the first/leftmost IP only)
+	 * and validates it before falling back to REMOTE_ADDR.
+	 *
+	 * @param \WP_REST_Request $request The incoming request.
+	 * @return string Sanitized client IP address.
+	 */
+	private function get_client_ip( \WP_REST_Request $request ): string {
+		$forwarded = $request->get_header( 'X-Forwarded-For' );
+
+		if ( ! empty( $forwarded ) ) {
+			// X-Forwarded-For may contain: client, proxy1, proxy2. Take the first.
+			$parts = explode( ',', $forwarded );
+			$ip    = trim( $parts[0] );
+
+			if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+				return sanitize_text_field( $ip );
+			}
+		}
+
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated
+		return sanitize_text_field( $_SERVER['REMOTE_ADDR'] ?? 'unknown' );
 	}
 
 	/**

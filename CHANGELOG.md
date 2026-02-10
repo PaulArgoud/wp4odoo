@@ -24,12 +24,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `MembershipsModuleTest` — 17 tests: module identity, Odoo model declarations, default settings, settings fields, field mappings (plan + membership), boot guard
 - `MembershipHandlerTest` — 18 tests: load_plan, load_membership, all 8 status mappings, unknown status default, filterable status map
 - WC Memberships stubs: `wc_memberships()`, `wc_memberships_get_user_membership()`, `wc_memberships_get_membership_plan()`, `WC_Memberships_User_Membership`, `WC_Memberships_Membership_Plan`
+- `FailureNotifierTest` — 12 tests: counter reset/increment, email dispatch at threshold, cooldown, edge cases
+- `CPTHelperTest` — 11 tests: register, load (various states), save (new/update, Many2one, scalar, with logger)
+- `SalesModuleTest` — 23 tests: identity, Odoo models, settings, field mappings, reverse mappings, dependency status, boot
+
+#### Forms Module — Gravity Forms + WPForms → Odoo CRM Leads
+- New module: `Forms_Module` (`includes/modules/class-forms-module.php`) — push-only sync from Gravity Forms and WPForms to Odoo `crm.lead`
+- `Form_Handler` (`includes/modules/class-form-handler.php`) — stateless field extraction with auto-detection by type (name, email, phone, textarea) and multilingual label matching for company detection (EN/FR/ES)
+- Field auto-detection: GF name sub-fields (`.3` first + `.6` last), email as name fallback, source auto-set to `"Gravity Forms: {title}"` / `"WPForms: {title}"`
+- Filterable via `apply_filters('wp4odoo_form_lead_data', $data, $source_type, $raw_data)` — return empty array to skip
+- Action hook: `do_action('wp4odoo_form_lead_created', $wp_id, $lead_data)`
+- Dependency status: requires at least one form plugin (GF or WPForms), info notices for missing plugin
+- Settings: `sync_gravity_forms` and `sync_wpforms` checkboxes (both default: enabled)
+- Reuses `Lead_Manager` for CPT persistence (shared with CRM module)
+- `FormsModuleTest` — 16 tests: identity, models, settings, field mappings, dependency status, boot
+- `FormHandlerTest` — 27 tests: GF extraction (12), WPForms extraction (8), label detection (7)
+- GF/WPForms stubs: `GFAPI`, `GF_Field`, `wpforms()`
+
+#### Admin UX — Sync Direction Badges
+- `Module_Base::get_sync_direction()` — new method declaring each module's sync capability (`bidirectional`, `wp_to_odoo`, or `odoo_to_wp`)
+- Module card in Modules tab now displays a color-coded direction badge (green=bidirectional, blue=WP→Odoo, orange=Odoo→WP)
+- CRM and WooCommerce: bidirectional; Sales: Odoo→WP; Memberships and Forms: WP→Odoo
+
+#### Refactoring
+- `Module_Base`: 3 new shared helpers — `mark_importing()` (replaces inline `define()`), `delete_wp_post()` (safe post deletion with null/false check), `log_unsupported_entity()` (centralized warning logging)
+- `CRM_Module`, `Sales_Module`, `WooCommerce_Module`: refactored to use new `Module_Base` helpers, removed duplicated code
+- `uninstall.php`: added CPT cleanup — deletes all `wp4odoo_lead`, `wp4odoo_order`, `wp4odoo_invoice` posts on plugin uninstall
+
+#### Security
+- `Webhook_Handler`: hardened `get_client_ip()` — parses only first IP from X-Forwarded-For, validates with `filter_var(FILTER_VALIDATE_IP)`, falls back to REMOTE_ADDR
 
 ### Changed
 
 - Plugin version bumped from 1.9.8 to 1.9.9
-- PHPUnit: 471 unit tests, 899 assertions — all green (was 436/855)
-- PHPStan: 0 errors on 50 files (was 47 — added 3 module files)
+- PHPUnit: 587 unit tests, 1041 assertions — all green (was 436/855)
+- PHPStan: 0 errors on 53 files (was 47 — added 3 module files + 2 forms files)
+- `Dependency_Loader` — added 2 `require_once` for forms module files
+- `Module_Registry` — registers `Forms_Module` when Gravity Forms or WPForms is active
+- `tests/bootstrap.php` — added forms stubs and 2 new source file requires
+- `phpstan-bootstrap.php` — added GFAPI, GF_Field, and wpforms() stubs
 - `README.md` — added Memberships module to features, module table, Required Odoo apps table; added WooCommerce 7.1+ and WC Memberships 1.12+ to Requirements
 - `Dependency_Loader` — added 3 `require_once` for membership module files
 - `Module_Registry` — registers `Memberships_Module` when WooCommerce is active

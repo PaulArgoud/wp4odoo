@@ -164,9 +164,7 @@ abstract class Module_Base {
 	 * @return bool True on success.
 	 */
 	public function pull_from_odoo( string $entity_type, string $action, int $odoo_id, int $wp_id = 0, array $payload = [] ): bool {
-		if ( ! defined( 'WP4ODOO_IMPORTING' ) ) {
-			define( 'WP4ODOO_IMPORTING', true );
-		}
+		self::mark_importing();
 
 		$model = $this->get_odoo_model( $entity_type );
 
@@ -402,6 +400,42 @@ abstract class Module_Base {
 	}
 
 	/**
+	 * Set the WP4ODOO_IMPORTING constant to prevent hook re-entry.
+	 *
+	 * @return void
+	 */
+	protected static function mark_importing(): void {
+		if ( ! defined( 'WP4ODOO_IMPORTING' ) ) {
+			define( 'WP4ODOO_IMPORTING', true );
+		}
+	}
+
+	/**
+	 * Delete a WordPress post (force delete, bypass Trash).
+	 *
+	 * @param int $wp_id Post ID.
+	 * @return bool True on success.
+	 */
+	protected function delete_wp_post( int $wp_id ): bool {
+		$result = wp_delete_post( $wp_id, true );
+		return false !== $result && null !== $result;
+	}
+
+	/**
+	 * Log a warning for an unsupported entity type operation.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param string $operation   Operation attempted (load, save, delete).
+	 * @return void
+	 */
+	protected function log_unsupported_entity( string $entity_type, string $operation ): void {
+		$this->logger->warning(
+			"{$this->name}: {$operation} not implemented for entity type '{$entity_type}'.",
+			[ 'entity_type' => $entity_type ]
+		);
+	}
+
+	/**
 	 * Resolve a single field from an Odoo Many2one value.
 	 *
 	 * Reads the related record and returns the requested field value.
@@ -530,6 +564,18 @@ abstract class Module_Base {
 			'available' => true,
 			'notices'   => [],
 		];
+	}
+
+	/**
+	 * Get the sync direction supported by this module.
+	 *
+	 * Returns one of: 'bidirectional', 'wp_to_odoo', 'odoo_to_wp'.
+	 * Subclasses should override this to declare their actual sync capability.
+	 *
+	 * @return string
+	 */
+	public function get_sync_direction(): string {
+		return 'bidirectional';
 	}
 
 	/**

@@ -149,4 +149,10 @@ class MembershipsModuleTest extends TestCase {
 		$this->module->boot();
 		$this->assertTrue( true ); // No exception thrown.
 	}
+
+	// ─── Sync Direction ─────────────────────────────────
+
+	public function test_sync_direction(): void {
+		$this->assertSame( 'wp_to_odoo', $this->module->get_sync_direction() );
+	}
 }

@@ -37,6 +37,15 @@ class Sales_Module extends Module_Base {
 	protected string $id   = 'sales';
 	protected string $name = 'Sales';
 
+	/**
+	 * Sync direction: Sales module only pulls from Odoo.
+	 *
+	 * @return string
+	 */
+	public function get_sync_direction(): string {
+		return 'odoo_to_wp';
+	}
+
 	protected array $odoo_models = [
 		'product' => 'product.template',
 		'order'   => 'sale.order',
@@ -165,10 +174,14 @@ class Sales_Module extends Module_Base {
 	 * @return array
 	 */
 	protected function load_wp_data( string $entity_type, int $wp_id ): array {
+		if ( ! in_array( $entity_type, [ 'order', 'invoice' ], true ) ) {
+			$this->log_unsupported_entity( $entity_type, 'load' );
+			return [];
+		}
+
 		return match ( $entity_type ) {
 			'order'   => $this->load_order_data( $wp_id ),
 			'invoice' => $this->load_invoice_data( $wp_id ),
-			default   => $this->unsupported_entity( $entity_type, 'load' ),
 		};
 	}
 
@@ -204,7 +217,7 @@ class Sales_Module extends Module_Base {
 	 */
 	protected function save_wp_data( string $entity_type, array $data, int $wp_id = 0 ): int {
 		if ( ! in_array( $entity_type, [ 'order', 'invoice' ], true ) ) {
-			$this->unsupported_entity( $entity_type, 'save' );
+			$this->log_unsupported_entity( $entity_type, 'save' );
 			return 0;
 		}
 
@@ -249,30 +262,10 @@ class Sales_Module extends Module_Base {
 	 */
 	protected function delete_wp_data( string $entity_type, int $wp_id ): bool {
 		if ( in_array( $entity_type, [ 'order', 'invoice' ], true ) ) {
-			$result = wp_delete_post( $wp_id, true );
-			return false !== $result && null !== $result;
+			return $this->delete_wp_post( $wp_id );
 		}
 
-		$this->unsupported_entity( $entity_type, 'delete' );
+		$this->log_unsupported_entity( $entity_type, 'delete' );
 		return false;
-	}
-
-	/**
-	 * Log a warning for an unsupported entity type.
-	 *
-	 * Product sync is declared in $odoo_models but not yet implemented.
-	 *
-	 * @param string $entity_type Entity type.
-	 * @param string $operation   Operation attempted (load, save, delete).
-	 * @return array Empty array (convenience return for load_wp_data match).
-	 */
-	private function unsupported_entity( string $entity_type, string $operation ): array {
-		$this->logger->warning(
-			"Sales: {$operation} not implemented for entity type '{$entity_type}'.",
-			[
-				'entity_type' => $entity_type,
-			]
-		);
-		return [];
 	}
 }

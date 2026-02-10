@@ -83,6 +83,32 @@
 
 .wp4odoo-module-header h3 {
 	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.wp4odoo-sync-direction {
+	font-size: 11px;
+	font-weight: normal;
+	padding: 2px 8px;
+	border-radius: 3px;
+	white-space: nowrap;
+}
+
+.wp4odoo-sync-direction--bidirectional {
+	background: #e7f5e7;
+	color: #1e7e1e;
+}
+
+.wp4odoo-sync-direction--wp_to_odoo {
+	background: #e8f0fe;
+	color: #1a56db;
+}
+
+.wp4odoo-sync-direction--odoo_to_wp {
+	background: #fef3e2;
+	color: #b45309;
 }
 
 .wp4odoo-module-models {

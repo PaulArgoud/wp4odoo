@@ -30,6 +30,15 @@ class Memberships_Module extends Module_Base {
 	protected string $name = 'Memberships';
 
 	/**
+	 * Sync direction: Memberships module only pushes to Odoo.
+	 *
+	 * @return string
+	 */
+	public function get_sync_direction(): string {
+		return 'wp_to_odoo';
+	}
+
+	/**
 	 * Odoo models by entity type.
 	 *
 	 * Plans are pushed as Odoo product.product with membership: True.

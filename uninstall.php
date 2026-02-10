@@ -23,5 +23,21 @@ $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wp4odoo_logs" );
 // Remove all plugin options.
 $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wp4odoo\_%'" );
 
+// Delete custom post type posts (leads, orders, invoices).
+$cpt_types = [ 'wp4odoo_lead', 'wp4odoo_order', 'wp4odoo_invoice' ];
+foreach ( $cpt_types as $cpt ) {
+	$cpt_ids = get_posts(
+		[
+			'post_type'      => $cpt,
+			'post_status'    => 'any',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+		]
+	);
+	foreach ( $cpt_ids as $cpt_post_id ) {
+		wp_delete_post( $cpt_post_id, true );
+	}
+}
+
 // Clear scheduled cron events.
 wp_clear_scheduled_hook( 'wp4odoo_scheduled_sync' );

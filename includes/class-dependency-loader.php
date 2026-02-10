@@ -67,6 +67,8 @@ final class Dependency_Loader {
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-membership-hooks.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-membership-handler.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-memberships-module.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-form-handler.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-forms-module.php';
 
 		// Admin
 		if ( is_admin() ) {
