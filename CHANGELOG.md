@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-02-10
+
+### Added
+
+#### Security — Webhook Rate Limiting
+- Per-IP rate limiting on `/wp4odoo/v1/webhook` endpoint: 100 requests per 60-second window
+- Returns HTTP 429 (Too Many Requests) when limit exceeded
+- Rate check runs before token validation to protect against brute-force
+
+#### WooCommerce HPOS Compatibility
+- `declare_hpos_compatibility()` method via `before_woocommerce_init` hook
+- Declares compatibility with WooCommerce Custom Order Tables (High-Performance Order Storage)
+
+#### CI/CD — GitHub Actions
+- `.github/workflows/ci.yml` — automated testing on push/PR to main
+- Matrix: PHP 8.2 + 8.3, PHPUnit + PHPStan
+- CI badge added to README.md
+
+### Fixed
+
+#### CI/CD — Permission denied
+- `ci.yml`: prefixed `vendor/bin/phpunit` and `vendor/bin/phpstan` with `php` to avoid executable permission issues on GitHub Actions runners
+
+### Changed
+
+#### Sync Engine — MySQL Advisory Locking
+- Replaced transient-based locking with MySQL `GET_LOCK()` / `RELEASE_LOCK()` in `Sync_Engine`
+- Atomic, server-level locking — eliminates race conditions with object caching plugins
+- Lock timeout reduced from 300s to 1s (non-blocking check: skip if already locked)
+
+#### Plugin Metadata
+- Plugin URI: `https://github.com/PaulArgoud/wordpress-for-odoo`
+- Author: Paul ARGOUD, Author URI: `https://paul.argoud.net`
+
+#### Documentation
+- `ARCHITECTURE.md` — 8 corrections: Partner_Service added, WooCommerce marked COMPLETE, test files updated (7 of 7), locking/rate limiting/HPOS documented, filters no longer marked "planned"
+- `README.md` — CI badge, HPOS mention, rate limiting, `/sync` endpoint added
+- `CLAUDE.md` — version bump, locking/rate limiting/HPOS/CI updated, workspace filename fixed
+
+#### Cleanup
+- Deleted orphan `messages.mo` at project root
+- Added `index.php` in `tests/` and `tests/Unit/`
+- Fixed `.gitignore`: removed duplicate `composer.phar` entry
+- Plugin version bumped from 1.3.0 to 1.3.1
+
 ## [1.3.0] - 2026-02-10
 
 ### Added

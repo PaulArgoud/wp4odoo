@@ -32,7 +32,7 @@ jobs:
         run: composer install --no-interaction --prefer-dist
 
       - name: Run PHPUnit
-        run: vendor/bin/phpunit
+        run: php vendor/bin/phpunit
 
       - name: Run PHPStan
-        run: vendor/bin/phpstan analyse --memory-limit=1G
+        run: php vendor/bin/phpstan analyse --memory-limit=1G
