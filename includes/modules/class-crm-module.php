@@ -22,23 +22,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class CRM_Module extends Module_Base {
 
-	/**
-	 * Billing/address meta fields with WooCommerce fallback keys.
-	 *
-	 * Keys are the canonical data keys; values are arrays of user meta
-	 * keys to try (first match wins on load).
-	 */
-	private const CONTACT_META_FIELDS = [
-		'billing_phone'     => [ 'billing_phone', 'phone' ],
-		'billing_company'   => [ 'billing_company', 'company' ],
-		'billing_address_1' => [ 'billing_address_1' ],
-		'billing_address_2' => [ 'billing_address_2' ],
-		'billing_city'      => [ 'billing_city' ],
-		'billing_postcode'  => [ 'billing_postcode' ],
-		'billing_country'   => [ 'billing_country' ],
-		'billing_state'     => [ 'billing_state' ],
-	];
-
 	protected string $id   = 'crm';
 	protected string $name = 'CRM';
 
@@ -87,6 +70,24 @@ class CRM_Module extends Module_Base {
 	 * @var Contact_Refiner
 	 */
 	private Contact_Refiner $contact_refiner;
+
+	/**
+	 * Contact data operations delegate.
+	 *
+	 * Initialized in __construct() (not boot()) because Sync_Engine can
+	 * call push/pull on non-booted modules for residual queue jobs.
+	 *
+	 * @var Contact_Manager
+	 */
+	private Contact_Manager $contact_manager;
+
+	/**
+	 * Constructor.
+	 */
+	public function __construct() {
+		parent::__construct();
+		$this->contact_manager = new Contact_Manager( $this->logger, fn() => $this->get_settings() );
+	}
 
 	/**
 	 * Boot the module: register WordPress hooks, CPT, shortcode, filters.
@@ -190,7 +191,7 @@ class CRM_Module extends Module_Base {
 			return;
 		}
 
-		if ( ! $this->should_sync_user( $user_id ) ) {
+		if ( ! $this->contact_manager->should_sync_user( $user_id ) ) {
 			return;
 		}
 
@@ -211,7 +212,7 @@ class CRM_Module extends Module_Base {
 			return;
 		}
 
-		if ( ! $this->should_sync_user( $user_id ) ) {
+		if ( ! $this->contact_manager->should_sync_user( $user_id ) ) {
 			return;
 		}
 
@@ -309,46 +310,10 @@ class CRM_Module extends Module_Base {
 	 */
 	protected function load_wp_data( string $entity_type, int $wp_id ): array {
 		return match ( $entity_type ) {
-			'contact' => $this->load_contact_data( $wp_id ),
+			'contact' => $this->contact_manager->load_contact_data( $wp_id ),
 			'lead'    => $this->lead_manager->load_lead_data( $wp_id ),
 			default   => [],
 		};
-	}
-
-	/**
-	 * Load contact data from a WordPress user.
-	 *
-	 * @param int $wp_id User ID.
-	 * @return array
-	 */
-	private function load_contact_data( int $wp_id ): array {
-		$user = get_userdata( $wp_id );
-		if ( ! $user ) {
-			return [];
-		}
-
-		$data = [
-			'display_name' => $user->display_name,
-			'user_email'   => $user->user_email,
-			'first_name'   => $user->first_name,
-			'last_name'    => $user->last_name,
-			'description'  => $user->description,
-			'user_url'     => $user->user_url,
-		];
-
-		// WooCommerce billing fields (fallback to generic meta).
-		foreach ( self::CONTACT_META_FIELDS as $key => $meta_keys ) {
-			$value = '';
-			foreach ( $meta_keys as $meta_key ) {
-				$value = get_user_meta( $wp_id, $meta_key, true );
-				if ( '' !== $value ) {
-					break;
-				}
-			}
-			$data[ $key ] = $value;
-		}
-
-		return $data;
 	}
 
 	// ─── Data Saving ─────────────────────────────────────────
@@ -363,98 +328,10 @@ class CRM_Module extends Module_Base {
 	 */
 	protected function save_wp_data( string $entity_type, array $data, int $wp_id = 0 ): int {
 		return match ( $entity_type ) {
-			'contact' => $this->save_contact_data( $data, $wp_id ),
+			'contact' => $this->contact_manager->save_contact_data( $data, $wp_id ),
 			'lead'    => $this->lead_manager->save_lead_data( $data, $wp_id ),
 			default   => 0,
 		};
-	}
-
-	/**
-	 * Save contact data as a WordPress user.
-	 *
-	 * Handles email deduplication and user meta updates.
-	 *
-	 * @param array $data  Mapped contact data.
-	 * @param int   $wp_id Existing user ID (0 to create).
-	 * @return int User ID or 0 on failure.
-	 */
-	private function save_contact_data( array $data, int $wp_id = 0 ): int {
-		$email = $data['user_email'] ?? '';
-
-		if ( empty( $email ) || ! is_email( $email ) ) {
-			$this->logger->warning( 'Cannot save contact without valid email.', compact( 'data', 'wp_id' ) );
-			return 0;
-		}
-
-		// Email dedup: check if a user with this email already exists.
-		if ( 0 === $wp_id ) {
-			$existing = get_user_by( 'email', $email );
-			if ( $existing ) {
-				$wp_id = $existing->ID;
-				$this->logger->info( 'Pull dedup: matched existing WP user by email.', [ 'email' => $email, 'wp_id' => $wp_id ] );
-			}
-		}
-
-		$settings = $this->get_settings();
-
-		if ( $wp_id > 0 ) {
-			// Update existing user.
-			$userdata = [
-				'ID'           => $wp_id,
-				'display_name' => $data['display_name'] ?? '',
-				'first_name'   => $data['first_name'] ?? '',
-				'last_name'    => $data['last_name'] ?? '',
-				'description'  => $data['description'] ?? '',
-				'user_url'     => $data['user_url'] ?? '',
-			];
-
-			$userdata = array_filter( $userdata, fn( $v ) => '' !== $v );
-			$userdata['ID'] = $wp_id;
-
-			$result = wp_update_user( $userdata );
-			if ( is_wp_error( $result ) ) {
-				$this->logger->error( 'Failed to update WP user.', [ 'wp_id' => $wp_id, 'error' => $result->get_error_message() ] );
-				return 0;
-			}
-		} else {
-			// Create new user.
-			if ( empty( $settings['create_users_on_pull'] ) ) {
-				$this->logger->info( 'User creation on pull is disabled.', compact( 'email' ) );
-				return 0;
-			}
-
-			$username = strstr( $email, '@', true );
-			if ( username_exists( $username ) ) {
-				$username .= '_' . wp_rand( 100, 999 );
-			}
-
-			$userdata = [
-				'user_login'   => $username,
-				'user_email'   => $email,
-				'user_pass'    => wp_generate_password(),
-				'display_name' => $data['display_name'] ?? $username,
-				'first_name'   => $data['first_name'] ?? '',
-				'last_name'    => $data['last_name'] ?? '',
-				'description'  => $data['description'] ?? '',
-				'user_url'     => $data['user_url'] ?? '',
-				'role'         => $settings['default_user_role'] ?: 'subscriber',
-			];
-
-			$wp_id = wp_insert_user( $userdata );
-			if ( is_wp_error( $wp_id ) ) {
-				$this->logger->error( 'Failed to create WP user.', [ 'email' => $email, 'error' => $wp_id->get_error_message() ] );
-				return 0;
-			}
-		}
-
-		// Save billing / meta fields.
-		foreach ( self::CONTACT_META_FIELDS as $key => $meta_keys ) {
-			if ( isset( $data[ $key ] ) && '' !== $data[ $key ] ) {
-				update_user_meta( $wp_id, $meta_keys[0], $data[ $key ] );
-			}
-		}
-
-		return $wp_id;
 	}
 
 	/**
@@ -478,33 +355,4 @@ class CRM_Module extends Module_Base {
 		return false;
 	}
 
-	// ─── Utility ─────────────────────────────────────────────
-
-	/**
-	 * Check whether a user should be synced based on role settings.
-	 *
-	 * @param int $user_id The user ID to check.
-	 * @return bool True if the user should be synced.
-	 */
-	private function should_sync_user( int $user_id ): bool {
-		$settings = $this->get_settings();
-
-		if ( empty( $settings['sync_users_as_contacts'] ) ) {
-			return false;
-		}
-
-		$sync_role = $settings['sync_role'] ?? '';
-
-		// Empty = sync all roles.
-		if ( '' === $sync_role ) {
-			return true;
-		}
-
-		$user = get_userdata( $user_id );
-		if ( ! $user ) {
-			return false;
-		}
-
-		return in_array( $sync_role, $user->roles, true );
-	}
 }

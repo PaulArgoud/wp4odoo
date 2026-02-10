@@ -6,12 +6,12 @@
  * @package WP4Odoo
  */
 
-define( 'WP4ODOO_VERSION', '1.4.0' );
+define( 'WP4ODOO_VERSION', '1.5.0' );
 define( 'WP4ODOO_PLUGIN_FILE', __DIR__ . '/wp4odoo.php' );
 define( 'WP4ODOO_PLUGIN_DIR', __DIR__ . '/' );
 define( 'WP4ODOO_PLUGIN_URL', 'https://example.com/wp-content/plugins/wp4odoo/' );
 define( 'WP4ODOO_PLUGIN_BASENAME', 'wp4odoo/wp4odoo.php' );
-define( 'WP4ODOO_MIN_ODOO_VERSION', 17 );
+define( 'WP4ODOO_MIN_ODOO_VERSION', 14 );
 define( 'WPINC', 'wp-includes' );
 
 /**

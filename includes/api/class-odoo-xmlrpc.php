@@ -114,10 +114,10 @@ class Odoo_XmlRPC implements Transport {
 	 *
 	 * Same interface as Odoo_JsonRPC::execute_kw().
 	 *
-	 * @param string $model  Model name.
-	 * @param string $method Method name.
-	 * @param array  $args   Positional arguments.
-	 * @param array  $kwargs Keyword arguments.
+	 * @param string               $model  Model name.
+	 * @param string               $method Method name.
+	 * @param array<int, mixed>    $args   Positional arguments.
+	 * @param array<string, mixed> $kwargs Keyword arguments.
 	 * @return mixed
 	 * @throws \RuntimeException On failure or if not authenticated.
 	 */
@@ -155,9 +155,9 @@ class Odoo_XmlRPC implements Transport {
 	/**
 	 * Send an XML-RPC request.
 	 *
-	 * @param string $endpoint URL path.
-	 * @param string $method   XML-RPC method name.
-	 * @param array  $params   Method parameters.
+	 * @param string               $endpoint URL path.
+	 * @param string               $method   XML-RPC method name.
+	 * @param array<int, mixed>    $params   Method parameters.
 	 * @return mixed
 	 * @throws \RuntimeException On HTTP or XML-RPC error.
 	 */

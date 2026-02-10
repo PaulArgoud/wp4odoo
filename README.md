@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/PaulArgoud/wordpress-for-odoo/actions/workflows/ci.yml/badge.svg)](https://github.com/PaulArgoud/wordpress-for-odoo/actions/workflows/ci.yml)
 
-Modular WordPress plugin providing comprehensive, bidirectional integration between WordPress/WooCommerce and Odoo ERP (v17+). Covers CRM, Sales & Invoicing, and WooCommerce synchronization through a clean, extensible architecture.
+Modular WordPress plugin providing comprehensive, bidirectional integration between WordPress/WooCommerce and Odoo ERP (v14+). Covers CRM, Sales & Invoicing, and WooCommerce synchronization through a clean, extensible architecture.
 
 **Target users:** WordPress agencies and businesses running Odoo as their ERP who need seamless data flow between their website and back-office.
 
@@ -70,7 +70,7 @@ Modular WordPress plugin providing comprehensive, bidirectional integration betw
                               ▼
                     ┌──────────────────┐
                     │    Odoo ERP      │
-                    │     (v17+)       │
+                    │     (v14+)       │
                     └──────────────────┘
 ```
 

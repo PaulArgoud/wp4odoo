@@ -279,6 +279,7 @@ namespace {
 
 	// Plugin classes (WordPress-convention filenames, not PSR-4).
 	require_once WP4ODOO_PLUGIN_DIR . 'includes/class-field-mapper.php';
+	require_once WP4ODOO_PLUGIN_DIR . 'includes/class-cpt-helper.php';
 	require_once WP4ODOO_PLUGIN_DIR . 'includes/class-entity-map-repository.php';
 	require_once WP4ODOO_PLUGIN_DIR . 'includes/class-sync-queue-repository.php';
 	require_once WP4ODOO_PLUGIN_DIR . 'includes/class-partner-service.php';

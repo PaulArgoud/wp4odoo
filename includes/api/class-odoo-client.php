@@ -99,11 +99,11 @@ class Odoo_Client {
 	/**
 	 * Search for record IDs matching a domain.
 	 *
-	 * @param string $model  Odoo model name.
-	 * @param array  $domain Search domain (Odoo Polish notation).
-	 * @param int    $offset Offset for pagination.
-	 * @param int    $limit  Maximum records to return (0 = no limit).
-	 * @param string $order  Sort order (e.g., "name asc").
+	 * @param string             $model  Odoo model name.
+	 * @param array<int, mixed> $domain Search domain (Odoo Polish notation).
+	 * @param int               $offset Offset for pagination.
+	 * @param int               $limit  Maximum records to return (0 = no limit).
+	 * @param string            $order  Sort order (e.g., "name asc").
 	 * @return array<int> Array of matching record IDs.
 	 */
 	public function search( string $model, array $domain = [], int $offset = 0, int $limit = 0, string $order = '' ): array {
@@ -127,13 +127,13 @@ class Odoo_Client {
 	/**
 	 * Search and read records in one call.
 	 *
-	 * @param string $model  Odoo model name.
-	 * @param array  $domain Search domain.
-	 * @param array  $fields Fields to read (empty = all).
-	 * @param int    $offset Offset for pagination.
-	 * @param int    $limit  Maximum records.
-	 * @param string $order  Sort order.
-	 * @return array Array of record arrays.
+	 * @param string              $model  Odoo model name.
+	 * @param array<int, mixed>  $domain Search domain.
+	 * @param array<int, string> $fields Fields to read (empty = all).
+	 * @param int                $offset Offset for pagination.
+	 * @param int                $limit  Maximum records.
+	 * @param string             $order  Sort order.
+	 * @return array<int, array<string, mixed>> Array of record arrays.
 	 */
 	public function search_read( string $model, array $domain = [], array $fields = [], int $offset = 0, int $limit = 0, string $order = '' ): array {
 		$kwargs = [];
@@ -159,10 +159,10 @@ class Odoo_Client {
 	/**
 	 * Read specific records by IDs.
 	 *
-	 * @param string     $model  Odoo model name.
-	 * @param array<int> $ids    Record IDs to read.
-	 * @param array      $fields Fields to read.
-	 * @return array Array of record arrays.
+	 * @param string              $model  Odoo model name.
+	 * @param array<int>          $ids    Record IDs to read.
+	 * @param array<int, string>  $fields Fields to read.
+	 * @return array<int, array<string, mixed>> Array of record arrays.
 	 */
 	public function read( string $model, array $ids, array $fields = [] ): array {
 		$kwargs = [];
@@ -179,8 +179,8 @@ class Odoo_Client {
 	/**
 	 * Create a new record.
 	 *
-	 * @param string $model  Odoo model name.
-	 * @param array  $values Field values.
+	 * @param string               $model  Odoo model name.
+	 * @param array<string, mixed> $values Field values.
 	 * @return int The new record ID.
 	 */
 	public function create( string $model, array $values ): int {
@@ -192,9 +192,9 @@ class Odoo_Client {
 	/**
 	 * Update existing records.
 	 *
-	 * @param string     $model  Odoo model name.
-	 * @param array<int> $ids    Record IDs to update.
-	 * @param array      $values Field values to update.
+	 * @param string               $model  Odoo model name.
+	 * @param array<int>           $ids    Record IDs to update.
+	 * @param array<string, mixed> $values Field values to update.
 	 * @return bool True on success.
 	 */
 	public function write( string $model, array $ids, array $values ): bool {
@@ -219,8 +219,8 @@ class Odoo_Client {
 	/**
 	 * Count records matching a domain.
 	 *
-	 * @param string $model  Odoo model name.
-	 * @param array  $domain Search domain.
+	 * @param string             $model  Odoo model name.
+	 * @param array<int, mixed> $domain Search domain.
 	 * @return int
 	 */
 	public function search_count( string $model, array $domain = [] ): int {
@@ -232,9 +232,9 @@ class Odoo_Client {
 	/**
 	 * Get field definitions for a model.
 	 *
-	 * @param string $model      Odoo model name.
-	 * @param array  $attributes Optional list of attributes to return.
-	 * @return array
+	 * @param string              $model      Odoo model name.
+	 * @param array<int, string> $attributes Optional list of attributes to return.
+	 * @return array<string, mixed>
 	 */
 	public function fields_get( string $model, array $attributes = [] ): array {
 		$kwargs = [];
@@ -251,10 +251,10 @@ class Odoo_Client {
 	/**
 	 * Execute an arbitrary method on a model.
 	 *
-	 * @param string $model  Odoo model name.
-	 * @param string $method Method name.
-	 * @param array  $args   Positional arguments.
-	 * @param array  $kwargs Keyword arguments.
+	 * @param string               $model  Odoo model name.
+	 * @param string               $method Method name.
+	 * @param array<int, mixed>    $args   Positional arguments.
+	 * @param array<string, mixed> $kwargs Keyword arguments.
 	 * @return mixed
 	 */
 	public function execute( string $model, string $method, array $args = [], array $kwargs = [] ): mixed {
@@ -273,10 +273,10 @@ class Odoo_Client {
 	/**
 	 * Internal call wrapper: ensures connection, delegates to transport, fires action, handles errors.
 	 *
-	 * @param string $model  Odoo model name.
-	 * @param string $method Method name.
-	 * @param array  $args   Positional arguments.
-	 * @param array  $kwargs Keyword arguments.
+	 * @param string               $model  Odoo model name.
+	 * @param string               $method Method name.
+	 * @param array<int, mixed>    $args   Positional arguments.
+	 * @param array<string, mixed> $kwargs Keyword arguments.
 	 * @return mixed
 	 * @throws \RuntimeException On failure.
 	 */
@@ -291,10 +291,10 @@ class Odoo_Client {
 			 *
 			 * @since 1.0.0
 			 *
-			 * @param string $model  The Odoo model.
-			 * @param string $method The method called.
-			 * @param array  $args   Positional arguments.
-			 * @param array  $kwargs Keyword arguments.
+			 * @param string               $model  The Odoo model.
+			 * @param string               $method The method called.
+			 * @param array<int, mixed>    $args   Positional arguments.
+			 * @param array<string, mixed> $kwargs Keyword arguments.
 			 * @param mixed  $result The API response.
 			 */
 			do_action( 'wp4odoo_api_call', $model, $method, $args, $kwargs, $result );

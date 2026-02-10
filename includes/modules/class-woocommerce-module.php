@@ -3,6 +3,7 @@ declare( strict_types=1 );
 
 namespace WP4Odoo\Modules;
 
+use WP4Odoo\CPT_Helper;
 use WP4Odoo\Entity_Map_Repository;
 use WP4Odoo\Field_Mapper;
 use WP4Odoo\Module_Base;
@@ -386,23 +387,15 @@ class WooCommerce_Module extends Module_Base {
 	 * @return void
 	 */
 	public function register_invoice_cpt(): void {
-		register_post_type( 'wp4odoo_invoice', [
-			'labels'          => [
-				'name'               => __( 'Invoices', 'wp4odoo' ),
-				'singular_name'      => __( 'Invoice', 'wp4odoo' ),
-				'add_new_item'       => __( 'Add New Invoice', 'wp4odoo' ),
-				'edit_item'          => __( 'Edit Invoice', 'wp4odoo' ),
-				'view_item'          => __( 'View Invoice', 'wp4odoo' ),
-				'search_items'       => __( 'Search Invoices', 'wp4odoo' ),
-				'not_found'          => __( 'No invoices found.', 'wp4odoo' ),
-				'not_found_in_trash' => __( 'No invoices found in Trash.', 'wp4odoo' ),
-			],
-			'public'          => false,
-			'show_ui'         => true,
-			'show_in_menu'    => 'wp4odoo',
-			'supports'        => [ 'title' ],
-			'capability_type' => 'post',
-			'map_meta_cap'    => true,
+		CPT_Helper::register( 'wp4odoo_invoice', [
+			'name'               => __( 'Invoices', 'wp4odoo' ),
+			'singular_name'      => __( 'Invoice', 'wp4odoo' ),
+			'add_new_item'       => __( 'Add New Invoice', 'wp4odoo' ),
+			'edit_item'          => __( 'Edit Invoice', 'wp4odoo' ),
+			'view_item'          => __( 'View Invoice', 'wp4odoo' ),
+			'search_items'       => __( 'Search Invoices', 'wp4odoo' ),
+			'not_found'          => __( 'No invoices found.', 'wp4odoo' ),
+			'not_found_in_trash' => __( 'No invoices found in Trash.', 'wp4odoo' ),
 		] );
 	}
 
@@ -507,18 +500,7 @@ class WooCommerce_Module extends Module_Base {
 	 * @return array
 	 */
 	private function load_invoice_data( int $wp_id ): array {
-		$post = get_post( $wp_id );
-		if ( ! $post || 'wp4odoo_invoice' !== $post->post_type ) {
-			return [];
-		}
-
-		$data = [ 'post_title' => $post->post_title ];
-
-		foreach ( self::INVOICE_META as $key => $meta_key ) {
-			$data[ $key ] = get_post_meta( $wp_id, $meta_key, true );
-		}
-
-		return $data;
+		return CPT_Helper::load( $wp_id, 'wp4odoo_invoice', self::INVOICE_META );
 	}
 
 	// ─── Data Saving ─────────────────────────────────────────
@@ -705,38 +687,7 @@ class WooCommerce_Module extends Module_Base {
 	 * @return int Post ID or 0 on failure.
 	 */
 	private function save_invoice_data( array $data, int $wp_id = 0 ): int {
-		// Resolve partner_id from Many2one.
-		if ( isset( $data['_wp4odoo_partner_id'] ) && is_array( $data['_wp4odoo_partner_id'] ) ) {
-			$data['_wp4odoo_partner_id'] = Field_Mapper::many2one_to_id( $data['_wp4odoo_partner_id'] );
-		}
-
-		$post_data = [
-			'post_type'   => 'wp4odoo_invoice',
-			'post_title'  => $data['post_title'] ?? __( 'Invoice', 'wp4odoo' ),
-			'post_status' => 'publish',
-		];
-
-		if ( $wp_id > 0 ) {
-			$post_data['ID'] = $wp_id;
-			$result = wp_update_post( $post_data, true );
-		} else {
-			$result = wp_insert_post( $post_data, true );
-		}
-
-		if ( is_wp_error( $result ) ) {
-			$this->logger->error( 'Failed to save invoice post.', [ 'error' => $result->get_error_message() ] );
-			return 0;
-		}
-
-		$post_id = (int) $result;
-
-		foreach ( self::INVOICE_META as $key => $meta_key ) {
-			if ( isset( $data[ $key ] ) ) {
-				update_post_meta( $post_id, $meta_key, $data[ $key ] );
-			}
-		}
-
-		return $post_id;
+		return CPT_Helper::save( $data, $wp_id, 'wp4odoo_invoice', self::INVOICE_META, __( 'Invoice', 'wp4odoo' ), $this->logger );
 	}
 
 	// ─── Delete ──────────────────────────────────────────────

@@ -113,7 +113,7 @@ class Odoo_Auth {
 	/**
 	 * Save credentials to wp_options with API key encrypted.
 	 *
-	 * @param array $credentials Array with url, database, username, api_key, protocol, timeout.
+	 * @param array<string, mixed> $credentials Array with url, database, username, api_key, protocol, timeout.
 	 * @return bool True on success.
 	 */
 	public static function save_credentials( array $credentials ): bool {

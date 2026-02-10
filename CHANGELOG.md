@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-02-10
+
+### Added
+
+#### Core — Extracted Classes for Single Responsibility
+- `Dependency_Loader` (`includes/class-dependency-loader.php`) — centralized `require_once` for all 30+ plugin class files, extracted from `WP4Odoo_Plugin::load_dependencies()`
+- `Database_Migration` (`includes/class-database-migration.php`) — `create_tables()` (SQL DDL via `dbDelta`) and `set_default_options()`, extracted from `WP4Odoo_Plugin`
+- `Module_Registry` (`includes/class-module-registry.php`) — module registration, WooCommerce/Sales mutual exclusivity rules, lifecycle (`register_all()`, `register()`, `get()`, `all()`), extracted from `WP4Odoo_Plugin`
+- `CPT_Helper` (`includes/class-cpt-helper.php`) — shared static helpers for Custom Post Type registration, loading, and saving with Many2one resolution; used by Sales_Module and WooCommerce_Module
+- `Bulk_Handler` (`includes/admin/class-bulk-handler.php`) — encapsulates bulk product import/export logic (fetch IDs, check mappings, enqueue jobs), extracted from `Admin_Ajax`
+- `Contact_Manager` (`includes/modules/class-contact-manager.php`) — contact data load/save, email dedup on pull, role-based sync check, billing meta field handling; extracted from `CRM_Module`
+
+### Changed
+
+#### Refactoring — Deduplication and SRP
+- `wp4odoo.php` — reduced from ~440 to ~270 lines; constructor delegates to `Dependency_Loader::load()` + `Module_Registry`; `activate()` delegates to `Database_Migration`; removed `load_dependencies()`, `create_tables()`, `set_default_options()`, `register_modules()`
+- `class-sales-module.php` — reduced from ~380 to ~295 lines; `register_order_cpt()`/`register_invoice_cpt()` delegate to `CPT_Helper::register()`; load/save methods delegate to `CPT_Helper::load()`/`CPT_Helper::save()`; removed private `register_cpt()`, `load_cpt_data()`, `save_cpt_data()`
+- `class-woocommerce-module.php` — reduced from ~818 to ~770 lines; invoice CPT registration/load/save delegate to `CPT_Helper`
+- `class-crm-module.php` — reduced from ~510 to ~320 lines; contact data ops delegate to `Contact_Manager`; `CONTACT_META_FIELDS` constant moved to `Contact_Manager`; removed `load_contact_data()`, `save_contact_data()`, `should_sync_user()`
+- `class-admin-ajax.php` — reduced from ~454 to ~390 lines; `bulk_import_products()`/`bulk_export_products()` are thin wrappers delegating to `Bulk_Handler`
+- `admin/js/admin.js` — generic `bindBulkAction(selector, action, confirmKey)` replaces duplicate `bindBulkImport()`/`bindBulkExport()` methods
+- PHPStan: 0 errors on 35 files (was 29)
+- Plugin version bumped from 1.4.0 to 1.5.0
+
 ## [1.4.0] - 2026-02-10
 
 ### Added
@@ -50,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 118 tests, 186 assertions — all green (was 95 tests, 154 assertions)
 - PHPStan: 0 errors on 29 files (was 28)
 - Plugin version bumped from 1.3.1 to 1.4.0
+- Minimum Odoo version lowered from 17 to 14 (XML-RPC transport supports Odoo 14-16; JSON-RPC requires 17+)
 
 ## [1.3.1] - 2026-02-10
 

@@ -2,8 +2,8 @@
 /**
  * Plugin Name: WordPress For Odoo
  * Plugin URI: https://github.com/PaulArgoud/wordpress-for-odoo
- * Description: A comprehensive, modular WordPress connector for Odoo ERP. Supports CRM, Sales & Invoicing, and WooCommerce synchronization across multiple Odoo versions (17+).
- * Version: 1.4.0
+ * Description: A comprehensive, modular WordPress connector for Odoo ERP. Supports CRM, Sales & Invoicing, and WooCommerce synchronization across multiple Odoo versions (14+).
+ * Version: 1.5.0
  * Requires at least: 6.0
  * Requires PHP: 8.2
  * Author: Paul ARGOUD
@@ -21,12 +21,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'WP4ODOO_VERSION', '1.4.0' );
+define( 'WP4ODOO_VERSION', '1.5.0' );
 define( 'WP4ODOO_PLUGIN_FILE', __FILE__ );
 define( 'WP4ODOO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WP4ODOO_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'WP4ODOO_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
-define( 'WP4ODOO_MIN_ODOO_VERSION', 17 );
+define( 'WP4ODOO_MIN_ODOO_VERSION', 14 );
 
 /**
  * Autoloader for plugin classes.
@@ -60,11 +60,11 @@ final class WP4Odoo_Plugin {
     private static ?WP4Odoo_Plugin $instance = null;
 
     /**
-     * Plugin modules registry.
+     * Module registry.
      *
-     * @var array
+     * @var WP4Odoo\Module_Registry
      */
-    private array $modules = [];
+    private WP4Odoo\Module_Registry $module_registry;
 
     /**
      * Get singleton instance.
@@ -80,48 +80,12 @@ final class WP4Odoo_Plugin {
      * Constructor.
      */
     private function __construct() {
-        $this->load_dependencies();
+        // Bootstrap: Dependency_Loader must be loaded directly (not via autoload).
+        require_once WP4ODOO_PLUGIN_DIR . 'includes/class-dependency-loader.php';
+        WP4Odoo\Dependency_Loader::load();
+
+        $this->module_registry = new WP4Odoo\Module_Registry( $this );
         $this->register_hooks();
-    }
-
-    /**
-     * Load required files.
-     */
-    private function load_dependencies(): void {
-        // Core API
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/api/interface-transport.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/api/class-odoo-client.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/api/class-odoo-jsonrpc.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/api/class-odoo-xmlrpc.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/api/class-odoo-auth.php';
-
-        // Core classes
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/class-logger.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/class-entity-map-repository.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/class-sync-queue-repository.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/class-partner-service.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/class-module-base.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/class-sync-engine.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/class-field-mapper.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/class-queue-manager.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/class-query-service.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/class-webhook-handler.php';
-
-        // Modules
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-lead-manager.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-contact-refiner.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-crm-module.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-portal-manager.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-sales-module.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-variant-handler.php';
-        require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-woocommerce-module.php';
-
-        // Admin
-        if ( is_admin() ) {
-            require_once WP4ODOO_PLUGIN_DIR . 'includes/admin/class-admin.php';
-            require_once WP4ODOO_PLUGIN_DIR . 'includes/admin/class-admin-ajax.php';
-            require_once WP4ODOO_PLUGIN_DIR . 'includes/admin/class-settings-page.php';
-        }
     }
 
     /**
@@ -147,8 +111,8 @@ final class WP4Odoo_Plugin {
      * Plugin activation.
      */
     public function activate(): void {
-        $this->create_tables();
-        $this->set_default_options();
+        WP4Odoo\Database_Migration::create_tables();
+        WP4Odoo\Database_Migration::set_default_options();
 
         if ( ! wp_next_scheduled( 'wp4odoo_scheduled_sync' ) ) {
             wp_schedule_event( time(), 'wp4odoo_five_minutes', 'wp4odoo_scheduled_sync' );
@@ -171,7 +135,7 @@ final class WP4Odoo_Plugin {
     public function init(): void {
         load_plugin_textdomain( 'wp4odoo', false, dirname( WP4ODOO_PLUGIN_BASENAME ) . '/languages' );
 
-        $this->register_modules();
+        $this->module_registry->register_all();
 
         do_action( 'wp4odoo_init', $this );
     }
@@ -187,46 +151,16 @@ final class WP4Odoo_Plugin {
         do_action( 'wp4odoo_loaded' );
     }
 
-    /**
-     * Register built-in modules.
-     */
-    private function register_modules(): void {
-        $this->register_module( 'crm', new WP4Odoo\Modules\CRM_Module() );
-
-        // WooCommerce and Sales are mutually exclusive.
-        // When WooCommerce is active and the woocommerce module is enabled,
-        // Sales_Module is not loaded (WooCommerce_Module replaces it).
-        $wc_active  = class_exists( 'WooCommerce' );
-        $wc_enabled = get_option( 'wp4odoo_module_woocommerce_enabled', false );
-
-        if ( $wc_active && $wc_enabled ) {
-            $this->register_module( 'woocommerce', new WP4Odoo\Modules\WooCommerce_Module() );
-        } else {
-            $this->register_module( 'sales', new WP4Odoo\Modules\Sales_Module() );
-
-            if ( $wc_active ) {
-                // Register WC module (disabled) so it appears in admin UI.
-                $this->register_module( 'woocommerce', new WP4Odoo\Modules\WooCommerce_Module() );
-            }
-        }
-
-        // Allow third-party modules
-        do_action( 'wp4odoo_register_modules', $this );
-    }
+    // ─── Module Delegates ───────────────────────────────────
 
     /**
      * Register a module.
      *
-     * @param string                      $id     Module identifier.
+     * @param string              $id     Module identifier.
      * @param WP4Odoo\Module_Base $module Module instance.
      */
     public function register_module( string $id, WP4Odoo\Module_Base $module ): void {
-        $this->modules[ $id ] = $module;
-
-        $enabled = get_option( 'wp4odoo_module_' . $id . '_enabled', false );
-        if ( $enabled ) {
-            $module->boot();
-        }
+        $this->module_registry->register( $id, $module );
     }
 
     /**
@@ -236,7 +170,7 @@ final class WP4Odoo_Plugin {
      * @return WP4Odoo\Module_Base|null
      */
     public function get_module( string $id ): ?WP4Odoo\Module_Base {
-        return $this->modules[ $id ] ?? null;
+        return $this->module_registry->get( $id );
     }
 
     /**
@@ -245,8 +179,10 @@ final class WP4Odoo_Plugin {
      * @return array
      */
     public function get_modules(): array {
-        return $this->modules;
+        return $this->module_registry->all();
     }
+
+    // ─── Infrastructure ─────────────────────────────────────
 
     /**
      * Get the Odoo API client.
@@ -307,109 +243,6 @@ final class WP4Odoo_Plugin {
                 WP4ODOO_PLUGIN_FILE,
                 true
             );
-        }
-    }
-
-    /**
-     * Create database tables.
-     */
-    private function create_tables(): void {
-        global $wpdb;
-
-        $charset_collate = $wpdb->get_charset_collate();
-
-        $sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}wp4odoo_sync_queue (
-            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-            module VARCHAR(50) NOT NULL,
-            direction ENUM('wp_to_odoo','odoo_to_wp') NOT NULL,
-            entity_type VARCHAR(100) NOT NULL,
-            wp_id BIGINT(20) UNSIGNED DEFAULT NULL,
-            odoo_id BIGINT(20) UNSIGNED DEFAULT NULL,
-            action ENUM('create','update','delete') NOT NULL DEFAULT 'update',
-            payload LONGTEXT DEFAULT NULL,
-            priority TINYINT(3) UNSIGNED NOT NULL DEFAULT 5,
-            status ENUM('pending','processing','completed','failed') NOT NULL DEFAULT 'pending',
-            attempts TINYINT(3) UNSIGNED NOT NULL DEFAULT 0,
-            max_attempts TINYINT(3) UNSIGNED NOT NULL DEFAULT 3,
-            error_message TEXT DEFAULT NULL,
-            scheduled_at DATETIME DEFAULT NULL,
-            processed_at DATETIME DEFAULT NULL,
-            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            KEY idx_status_priority (status, priority, scheduled_at),
-            KEY idx_module_entity (module, entity_type),
-            KEY idx_wp_id (wp_id),
-            KEY idx_odoo_id (odoo_id)
-        ) $charset_collate;
-
-        CREATE TABLE IF NOT EXISTS {$wpdb->prefix}wp4odoo_entity_map (
-            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-            module VARCHAR(50) NOT NULL,
-            entity_type VARCHAR(100) NOT NULL,
-            wp_id BIGINT(20) UNSIGNED NOT NULL,
-            odoo_id BIGINT(20) UNSIGNED NOT NULL,
-            odoo_model VARCHAR(100) NOT NULL,
-            sync_hash VARCHAR(64) DEFAULT NULL,
-            last_synced_at DATETIME DEFAULT NULL,
-            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            UNIQUE KEY idx_unique_mapping (module, entity_type, wp_id, odoo_id),
-            KEY idx_wp_lookup (entity_type, wp_id),
-            KEY idx_odoo_lookup (odoo_model, odoo_id)
-        ) $charset_collate;
-
-        CREATE TABLE IF NOT EXISTS {$wpdb->prefix}wp4odoo_logs (
-            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-            level ENUM('debug','info','warning','error','critical') NOT NULL DEFAULT 'info',
-            module VARCHAR(50) DEFAULT NULL,
-            message TEXT NOT NULL,
-            context LONGTEXT DEFAULT NULL,
-            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            KEY idx_level_date (level, created_at),
-            KEY idx_module (module)
-        ) $charset_collate;";
-
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        dbDelta( $sql );
-
-        update_option( 'wp4odoo_db_version', WP4ODOO_VERSION );
-    }
-
-    /**
-     * Set default plugin options.
-     */
-    private function set_default_options(): void {
-        $defaults = [
-            'wp4odoo_connection' => [
-                'url'      => '',
-                'database' => '',
-                'username' => '',
-                'api_key'  => '',
-                'protocol' => 'jsonrpc', // jsonrpc or xmlrpc
-                'timeout'  => 30,
-            ],
-            'wp4odoo_sync_settings' => [
-                'direction'      => 'bidirectional', // wp_to_odoo, odoo_to_wp, bidirectional
-                'conflict_rule'  => 'newest_wins',   // newest_wins, odoo_wins, wp_wins
-                'batch_size'     => 50,
-                'sync_interval'  => 'wp4odoo_five_minutes',
-                'auto_sync'      => false,
-            ],
-            'wp4odoo_log_settings' => [
-                'enabled'        => true,
-                'level'          => 'info',
-                'retention_days' => 30,
-            ],
-            'wp4odoo_module_crm_enabled'         => false,
-            'wp4odoo_module_sales_enabled'        => false,
-            'wp4odoo_module_woocommerce_enabled'  => false,
-        ];
-
-        foreach ( $defaults as $key => $value ) {
-            if ( false === get_option( $key ) ) {
-                update_option( $key, $value );
-            }
         }
     }
 

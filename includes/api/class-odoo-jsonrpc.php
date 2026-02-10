@@ -117,10 +117,10 @@ class Odoo_JsonRPC implements Transport {
 	/**
 	 * Execute a method on an Odoo model via execute_kw.
 	 *
-	 * @param string $model  Odoo model name (e.g., 'res.partner').
-	 * @param string $method Method name (e.g., 'search_read').
-	 * @param array  $args   Positional arguments.
-	 * @param array  $kwargs Keyword arguments.
+	 * @param string               $model  Odoo model name (e.g., 'res.partner').
+	 * @param string               $method Method name (e.g., 'search_read').
+	 * @param array<int, mixed>    $args   Positional arguments.
+	 * @param array<string, mixed> $kwargs Keyword arguments.
 	 * @return mixed The Odoo response result.
 	 * @throws \RuntimeException On RPC error or if not authenticated.
 	 */
@@ -160,8 +160,8 @@ class Odoo_JsonRPC implements Transport {
 	/**
 	 * Send a JSON-RPC request to Odoo.
 	 *
-	 * @param string $endpoint The URL path (e.g., '/jsonrpc' or '/web/session/authenticate').
-	 * @param array  $params   The params object for the JSON-RPC call.
+	 * @param string               $endpoint The URL path (e.g., '/jsonrpc' or '/web/session/authenticate').
+	 * @param array<string, mixed> $params   The params object for the JSON-RPC call.
 	 * @return mixed The 'result' field from the JSON-RPC response.
 	 * @throws \RuntimeException On HTTP or RPC error.
 	 */

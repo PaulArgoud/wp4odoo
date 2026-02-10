@@ -20,8 +20,8 @@
 			this.bindCleanupQueue();
 			this.bindRefreshStats();
 			this.bindCancelJob();
-			this.bindBulkImport();
-			this.bindBulkExport();
+			this.bindBulkAction( '#wp4odoo-bulk-import', 'wp4odoo_bulk_import_products', 'confirmBulkImport' );
+			this.bindBulkAction( '#wp4odoo-bulk-export', 'wp4odoo_bulk_export_products', 'confirmBulkExport' );
 			this.bindFilterLogs();
 			this.bindPurgeLogs();
 			this.bindLogPagination();
@@ -250,23 +250,19 @@
 
 		// ─── Bulk Operations ──────────────────────────────────────
 
-		bindBulkImport: function() {
-			$( '#wp4odoo-bulk-import' ).on( 'click', function() {
-				if ( ! confirm( wp4odooAdmin.i18n.confirmBulkImport ) ) {
+		/**
+		 * Bind a bulk action button with confirm dialog.
+		 *
+		 * @param {string} selector   jQuery selector for the button.
+		 * @param {string} action     WP AJAX action name.
+		 * @param {string} confirmKey Key in wp4odooAdmin.i18n for the confirm message.
+		 */
+		bindBulkAction: function( selector, action, confirmKey ) {
+			$( selector ).on( 'click', function() {
+				if ( ! confirm( wp4odooAdmin.i18n[ confirmKey ] ) ) {
 					return;
 				}
-				WP4Odoo.ajax( 'wp4odoo_bulk_import_products', {}, function( data ) {
-					WP4Odoo.showNotice( 'success', data.message );
-				}, $( this ) );
-			} );
-		},
-
-		bindBulkExport: function() {
-			$( '#wp4odoo-bulk-export' ).on( 'click', function() {
-				if ( ! confirm( wp4odooAdmin.i18n.confirmBulkExport ) ) {
-					return;
-				}
-				WP4Odoo.ajax( 'wp4odoo_bulk_export_products', {}, function( data ) {
+				WP4Odoo.ajax( action, {}, function( data ) {
 					WP4Odoo.showNotice( 'success', data.message );
 				}, $( this ) );
 			} );

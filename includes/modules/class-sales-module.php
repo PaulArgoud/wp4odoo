@@ -3,7 +3,7 @@ declare( strict_types=1 );
 
 namespace WP4Odoo\Modules;
 
-use WP4Odoo\Field_Mapper;
+use WP4Odoo\CPT_Helper;
 use WP4Odoo\Module_Base;
 use WP4Odoo\Partner_Service;
 
@@ -147,7 +147,7 @@ class Sales_Module extends Module_Base {
 	 * @return void
 	 */
 	public function register_order_cpt(): void {
-		$this->register_cpt( 'wp4odoo_order', [
+		CPT_Helper::register( 'wp4odoo_order', [
 			'name'               => __( 'Orders', 'wp4odoo' ),
 			'singular_name'      => __( 'Order', 'wp4odoo' ),
 			'add_new_item'       => __( 'Add New Order', 'wp4odoo' ),
@@ -165,7 +165,7 @@ class Sales_Module extends Module_Base {
 	 * @return void
 	 */
 	public function register_invoice_cpt(): void {
-		$this->register_cpt( 'wp4odoo_invoice', [
+		CPT_Helper::register( 'wp4odoo_invoice', [
 			'name'               => __( 'Invoices', 'wp4odoo' ),
 			'singular_name'      => __( 'Invoice', 'wp4odoo' ),
 			'add_new_item'       => __( 'Add New Invoice', 'wp4odoo' ),
@@ -174,25 +174,6 @@ class Sales_Module extends Module_Base {
 			'search_items'       => __( 'Search Invoices', 'wp4odoo' ),
 			'not_found'          => __( 'No invoices found.', 'wp4odoo' ),
 			'not_found_in_trash' => __( 'No invoices found in Trash.', 'wp4odoo' ),
-		] );
-	}
-
-	/**
-	 * Register a custom post type with standard settings.
-	 *
-	 * @param string $post_type CPT slug.
-	 * @param array  $labels    CPT labels.
-	 * @return void
-	 */
-	private function register_cpt( string $post_type, array $labels ): void {
-		register_post_type( $post_type, [
-			'labels'          => $labels,
-			'public'          => false,
-			'show_ui'         => true,
-			'show_in_menu'    => 'wp4odoo',
-			'supports'        => [ 'title' ],
-			'capability_type' => 'post',
-			'map_meta_cap'    => true,
 		] );
 	}
 
@@ -220,7 +201,7 @@ class Sales_Module extends Module_Base {
 	 * @return array
 	 */
 	private function load_order_data( int $wp_id ): array {
-		return $this->load_cpt_data( $wp_id, 'wp4odoo_order', self::ORDER_META );
+		return CPT_Helper::load( $wp_id, 'wp4odoo_order', self::ORDER_META );
 	}
 
 	/**
@@ -230,30 +211,7 @@ class Sales_Module extends Module_Base {
 	 * @return array
 	 */
 	private function load_invoice_data( int $wp_id ): array {
-		return $this->load_cpt_data( $wp_id, 'wp4odoo_invoice', self::INVOICE_META );
-	}
-
-	/**
-	 * Load CPT data by post type and meta fields.
-	 *
-	 * @param int    $wp_id       Post ID.
-	 * @param string $post_type   Expected post type.
-	 * @param array  $meta_fields Meta field map: data key => meta key.
-	 * @return array
-	 */
-	private function load_cpt_data( int $wp_id, string $post_type, array $meta_fields ): array {
-		$post = get_post( $wp_id );
-		if ( ! $post || $post_type !== $post->post_type ) {
-			return [];
-		}
-
-		$data = [ 'post_title' => $post->post_title ];
-
-		foreach ( $meta_fields as $key => $meta_key ) {
-			$data[ $key ] = get_post_meta( $wp_id, $meta_key, true );
-		}
-
-		return $data;
+		return CPT_Helper::load( $wp_id, 'wp4odoo_invoice', self::INVOICE_META );
 	}
 
 	// ─── Data Saving ─────────────────────────────────────────
@@ -286,7 +244,7 @@ class Sales_Module extends Module_Base {
 	 * @return int Post ID or 0 on failure.
 	 */
 	private function save_order_data( array $data, int $wp_id = 0 ): int {
-		return $this->save_cpt_data( $data, $wp_id, 'wp4odoo_order', self::ORDER_META, __( 'Order', 'wp4odoo' ) );
+		return CPT_Helper::save( $data, $wp_id, 'wp4odoo_order', self::ORDER_META, __( 'Order', 'wp4odoo' ), $this->logger );
 	}
 
 	/**
@@ -297,52 +255,7 @@ class Sales_Module extends Module_Base {
 	 * @return int Post ID or 0 on failure.
 	 */
 	private function save_invoice_data( array $data, int $wp_id = 0 ): int {
-		return $this->save_cpt_data( $data, $wp_id, 'wp4odoo_invoice', self::INVOICE_META, __( 'Invoice', 'wp4odoo' ) );
-	}
-
-	/**
-	 * Save CPT data with Many2one resolution and meta fields.
-	 *
-	 * @param array  $data          Mapped data.
-	 * @param int    $wp_id         Existing post ID (0 to create).
-	 * @param string $post_type     CPT slug.
-	 * @param array  $meta_fields   Meta field map: data key => meta key.
-	 * @param string $default_title Fallback post title.
-	 * @return int Post ID or 0 on failure.
-	 */
-	private function save_cpt_data( array $data, int $wp_id, string $post_type, array $meta_fields, string $default_title ): int {
-		// Resolve partner_id from Many2one.
-		if ( isset( $data['_wp4odoo_partner_id'] ) && is_array( $data['_wp4odoo_partner_id'] ) ) {
-			$data['_wp4odoo_partner_id'] = Field_Mapper::many2one_to_id( $data['_wp4odoo_partner_id'] );
-		}
-
-		$post_data = [
-			'post_type'   => $post_type,
-			'post_title'  => $data['post_title'] ?? $default_title,
-			'post_status' => 'publish',
-		];
-
-		if ( $wp_id > 0 ) {
-			$post_data['ID'] = $wp_id;
-			$result = wp_update_post( $post_data, true );
-		} else {
-			$result = wp_insert_post( $post_data, true );
-		}
-
-		if ( is_wp_error( $result ) ) {
-			$this->logger->error( "Failed to save {$post_type} post.", [ 'error' => $result->get_error_message() ] );
-			return 0;
-		}
-
-		$post_id = (int) $result;
-
-		foreach ( $meta_fields as $key => $meta_key ) {
-			if ( isset( $data[ $key ] ) ) {
-				update_post_meta( $post_id, $meta_key, $data[ $key ] );
-			}
-		}
-
-		return $post_id;
+		return CPT_Helper::save( $data, $wp_id, 'wp4odoo_invoice', self::INVOICE_META, __( 'Invoice', 'wp4odoo' ), $this->logger );
 	}
 
 	/**

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v17+). The plugin covers three domains: CRM, Sales & Invoicing, and WooCommerce.
+Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers three domains: CRM, Sales & Invoicing, and WooCommerce.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -39,7 +39,7 @@ Modular WordPress plugin providing bidirectional synchronization between WordPre
                               ▼
                     ┌──────────────────┐
                     │    Odoo ERP      │
-                    │     (v17+)       │
+                    │     (v14+)       │
                     └──────────────────┘
 ```
 
@@ -47,7 +47,7 @@ Modular WordPress plugin providing bidirectional synchronization between WordPre
 
 ```
 WordPress For Odoo/
-├── wp4odoo.php              # Entry point, singleton, autoloader, hooks
+├── wp4odoo.php              # Entry point, singleton, autoloader, hooks (~270 lines)
 ├── CLAUDE.md                          # Instructions for Claude Code
 ├── ARCHITECTURE.md                    # This file
 ├── CHANGELOG.md                       # Version history
@@ -61,19 +61,24 @@ WordPress For Odoo/
 │   │   └── class-odoo-auth.php        # Auth, API key encryption, connection testing
 │   │
 │   ├── modules/
-│   │   ├── class-crm-module.php       # CRM: contact sync (WP users ↔ res.partner)
+│   │   ├── class-crm-module.php       # CRM: contact sync orchestration (delegates to Contact_Manager)
+│   │   ├── class-contact-manager.php  # CRM: contact data load/save/sync-check
 │   │   ├── class-lead-manager.php     # CRM: lead CPT, shortcode, form, data load/save
 │   │   ├── class-contact-refiner.php  # CRM: name/country/state refinement filters
-│   │   ├── class-sales-module.php     # Sales: orders, invoices, products (~350 lines, 12 methods)
+│   │   ├── class-sales-module.php     # Sales: orders, invoices (delegates CPT ops to CPT_Helper)
 │   │   ├── class-portal-manager.php   # Sales: customer portal shortcode, AJAX, queries
 │   │   ├── class-variant-handler.php    # WooCommerce: variant import (product.product → WC variations)
 │   │   └── class-woocommerce-module.php  # WooCommerce: products/orders/stock/variants sync
 │   │
 │   ├── admin/
 │   │   ├── class-admin.php            # Admin menu, asset enqueuing, plugin action link
+│   │   ├── class-bulk-handler.php     # Bulk product import/export operations
 │   │   ├── class-admin-ajax.php       # 11 AJAX handlers (test, retry, cleanup, logs, module settings, bulk import/export, etc.)
 │   │   └── class-settings-page.php    # Settings API, 5-tab rendering, sanitize callbacks
 │   │
+│   ├── class-dependency-loader.php    # Loads all plugin class files (require_once)
+│   ├── class-database-migration.php   # Table creation (dbDelta) and default options
+│   ├── class-module-registry.php      # Module registration, mutual exclusivity, lifecycle
 │   ├── class-module-base.php          # Abstract base class for modules
 │   ├── class-entity-map-repository.php # Static DB access for wp4odoo_entity_map
 │   ├── class-sync-queue-repository.php # Static DB access for wp4odoo_sync_queue
@@ -82,6 +87,7 @@ WordPress For Odoo/
 │   ├── class-queue-manager.php        # Helpers for enqueuing sync jobs
 │   ├── class-query-service.php        # Paginated queries (queue jobs, log entries)
 │   ├── class-field-mapper.php         # Type conversions (Many2one, dates, HTML)
+│   ├── class-cpt-helper.php           # Shared CPT register/load/save helpers
 │   ├── class-webhook-handler.php      # REST API endpoints for Odoo webhooks, rate limiting
 │   └── class-logger.php              # DB-backed logger with level filtering
 │
@@ -105,7 +111,7 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # PHPUnit tests (118 tests, 186 assertions)
+├── tests/                             # PHPUnit tests (118 tests, 186 assertions, 35 files analysed)
 │   ├── bootstrap.php                 #   WP function stubs + class loading
 │   └── Unit/
 │       ├── EntityMapRepositoryTest.php  #   10 tests for Entity_Map_Repository
@@ -145,7 +151,7 @@ function wp4odoo(): WP4Odoo_Plugin {
 }
 ```
 
-The singleton loads dependencies, registers WordPress hooks, and exposes access to the API client and modules.
+The singleton delegates to `Dependency_Loader` (class loading), `Database_Migration` (table DDL + defaults), and `Module_Registry` (module registration/lifecycle). It keeps hooks, cron, REST, and API client access.
 
 ### 2. Module System
 
@@ -168,8 +174,8 @@ Module_Base (abstract)
 - Subclass hooks: `boot()`, `load_wp_data()`, `save_wp_data()`, `delete_wp_data()`
 
 **Module lifecycle:**
-1. Instantiated in `register_modules()` on the `init` hook
-2. Registered via `register_module($id, $module)`
+1. `Module_Registry::register_all()` is called on the `init` hook
+2. Modules instantiated and registered via `register($id, $module)`
 3. If `wp4odoo_module_{id}_enabled` is true → `$module->boot()` is called
 4. `boot()` registers module-specific WordPress hooks
 
@@ -284,7 +290,7 @@ Used by both `Settings_Page` (server-side rendering) and `Admin_Ajax` (AJAX endp
 
 ### Tables Created on Activation
 
-Managed via `dbDelta()` in `create_tables()`:
+Managed via `dbDelta()` in `Database_Migration::create_tables()`:
 
 **`{prefix}wp4odoo_sync_queue`** — Sync queue
 - Primary index: `(status, priority, scheduled_at)` for efficient polling
@@ -402,7 +408,7 @@ All user inputs are sanitized with:
 
 ### CRM — COMPLETE
 
-**Files:** `class-crm-module.php` (contact sync), `class-lead-manager.php` (leads), `class-contact-refiner.php` (field refinement)
+**Files:** `class-crm-module.php` (contact sync orchestration), `class-contact-manager.php` (contact data load/save/sync-check), `class-lead-manager.php` (leads), `class-contact-refiner.php` (field refinement)
 
 **Odoo models:** `res.partner`, `crm.lead`
 

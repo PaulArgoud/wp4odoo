@@ -79,7 +79,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 						JSON-RPC (Odoo 17+)
 					</option>
 					<option value="xmlrpc" <?php selected( $credentials['protocol'], 'xmlrpc' ); ?>>
-						XML-RPC
+						XML-RPC (Odoo 14+)
 					</option>
 				</select>
 			</td>
