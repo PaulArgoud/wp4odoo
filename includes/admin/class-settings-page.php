@@ -20,17 +20,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Settings_Page {
 
 	/**
-	 * Available tabs.
+	 * Tab slug whitelist.
 	 *
-	 * @var array<string, string>
+	 * @var array<int, string>
 	 */
-	private const TABS = [
-		'connection' => 'Connection',
-		'sync'       => 'Synchronization',
-		'modules'    => 'Modules',
-		'queue'      => 'Queue',
-		'logs'       => 'Logs',
-	];
+	private const TAB_SLUGS = [ 'connection', 'sync', 'modules', 'queue', 'logs' ];
+
+	/**
+	 * Get available tabs with translated labels.
+	 *
+	 * @return array<string, string>
+	 */
+	private function get_tabs(): array {
+		return [
+			'connection' => __( 'Connection', 'wp4odoo' ),
+			'sync'       => __( 'Synchronization', 'wp4odoo' ),
+			'modules'    => __( 'Modules', 'wp4odoo' ),
+			'queue'      => __( 'Queue', 'wp4odoo' ),
+			'logs'       => __( 'Logs', 'wp4odoo' ),
+		];
+	}
 
 	/**
 	 * Constructor.
@@ -84,7 +93,7 @@ class Settings_Page {
 		}
 
 		$active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'connection'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( ! array_key_exists( $active_tab, self::TABS ) ) {
+		if ( ! in_array( $active_tab, self::TAB_SLUGS, true ) ) {
 			$active_tab = 'connection';
 		}
 
@@ -160,7 +169,7 @@ class Settings_Page {
 	 */
 	public function render_tabs( string $active_tab ): void {
 		echo '<nav class="nav-tab-wrapper">';
-		foreach ( self::TABS as $slug => $label ) {
+		foreach ( $this->get_tabs() as $slug => $label ) {
 			$url   = admin_url( 'admin.php?page=wp4odoo&tab=' . $slug );
 			$class = ( $slug === $active_tab ) ? 'nav-tab nav-tab-active' : 'nav-tab';
 			printf(

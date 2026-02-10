@@ -69,6 +69,80 @@ class Entity_Map_Repository {
 	}
 
 	/**
+	 * Batch-fetch WordPress IDs for multiple Odoo IDs.
+	 *
+	 * @param string       $module      Module identifier.
+	 * @param string       $entity_type Entity type.
+	 * @param array<int>   $odoo_ids    Odoo IDs to look up.
+	 * @return array<int, int> Map of odoo_id => wp_id for existing mappings.
+	 */
+	public static function get_wp_ids_batch( string $module, string $entity_type, array $odoo_ids ): array {
+		if ( empty( $odoo_ids ) ) {
+			return [];
+		}
+
+		global $wpdb;
+
+		$table        = $wpdb->prefix . 'wp4odoo_entity_map';
+		$placeholders = implode( ',', array_fill( 0, count( $odoo_ids ), '%d' ) );
+
+		$prepare_args = array_merge( [ $module, $entity_type ], array_map( 'intval', $odoo_ids ) );
+
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT odoo_id, wp_id FROM {$table} WHERE module = %s AND entity_type = %s AND odoo_id IN ({$placeholders})", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+				$prepare_args
+			)
+		);
+
+		$map = [];
+		if ( $rows ) {
+			foreach ( $rows as $row ) {
+				$map[ (int) $row->odoo_id ] = (int) $row->wp_id;
+			}
+		}
+
+		return $map;
+	}
+
+	/**
+	 * Batch-fetch Odoo IDs for multiple WordPress IDs.
+	 *
+	 * @param string       $module      Module identifier.
+	 * @param string       $entity_type Entity type.
+	 * @param array<int>   $wp_ids      WordPress IDs to look up.
+	 * @return array<int, int> Map of wp_id => odoo_id for existing mappings.
+	 */
+	public static function get_odoo_ids_batch( string $module, string $entity_type, array $wp_ids ): array {
+		if ( empty( $wp_ids ) ) {
+			return [];
+		}
+
+		global $wpdb;
+
+		$table        = $wpdb->prefix . 'wp4odoo_entity_map';
+		$placeholders = implode( ',', array_fill( 0, count( $wp_ids ), '%d' ) );
+
+		$prepare_args = array_merge( [ $module, $entity_type ], array_map( 'intval', $wp_ids ) );
+
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT wp_id, odoo_id FROM {$table} WHERE module = %s AND entity_type = %s AND wp_id IN ({$placeholders})", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+				$prepare_args
+			)
+		);
+
+		$map = [];
+		if ( $rows ) {
+			foreach ( $rows as $row ) {
+				$map[ (int) $row->wp_id ] = (int) $row->odoo_id;
+			}
+		}
+
+		return $map;
+	}
+
+	/**
 	 * Save a mapping between a WordPress entity and an Odoo record.
 	 *
 	 * Uses REPLACE INTO to insert or update the mapping.

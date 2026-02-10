@@ -77,7 +77,7 @@ WordPress For Odoo/
 │   │
 │   ├── admin/
 │   │   ├── class-admin.php            # Admin menu, assets, activation redirect, setup notice
-│   │   ├── class-bulk-handler.php     # Bulk product import/export operations
+│   │   ├── class-bulk-handler.php     # Bulk product import/export (paginated, batch lookups)
 │   │   ├── class-admin-ajax.php       # 15 AJAX handlers (test, retry, cleanup, logs, module settings, bulk, onboarding, checklist)
 │   │   └── class-settings-page.php    # Settings API, 5-tab rendering, setup checklist, sanitize callbacks
 │   │
@@ -85,7 +85,7 @@ WordPress For Odoo/
 │   ├── class-database-migration.php   # Table creation (dbDelta) and default options
 │   ├── class-module-registry.php      # Module registration, mutual exclusivity, lifecycle
 │   ├── class-module-base.php          # Abstract base class for modules
-│   ├── class-entity-map-repository.php # Static DB access for wp4odoo_entity_map
+│   ├── class-entity-map-repository.php # Static DB access for wp4odoo_entity_map (incl. batch lookups)
 │   ├── class-sync-queue-repository.php # Static DB access for wp4odoo_sync_queue
 │   ├── class-partner-service.php       # Shared res.partner lookup/creation service
 │   ├── class-sync-engine.php          # Queue processor, batch operations, advisory locking

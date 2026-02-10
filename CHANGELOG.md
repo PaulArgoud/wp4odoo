@@ -5,36 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.9.2] - 2026-02-10
+## [1.9.3] - 2026-02-10
+
+### Fixed
+
+#### Uninstall — Option Cleanup
+- `uninstall.php` — fixed stale prefix `odoo_wpc_%` (from pre-rebrand era) → `wp4odoo_%`; plugin options were not being deleted on uninstall
+
+#### i18n — Untranslatable Admin Labels
+- `Settings_Page` — tab labels were hardcoded in a PHP `const` (cannot contain function calls); replaced `TABS` constant with `TAB_SLUGS` array + `get_tabs()` method using `__()` for runtime translation
+- `tab-connection.php` — protocol `<option>` labels ("JSON-RPC (Odoo 17+)", "XML-RPC (Odoo 14+)") now wrapped with `esc_html_e()`
+
+#### Performance — Bulk Import/Export
+- `Bulk_Handler` — import and export now paginated in chunks of 500 (was loading all IDs into memory at once); uses `do/while` with offset/page to prevent memory exhaustion on large catalogs
+- `Entity_Map_Repository` — 2 new batch methods `get_wp_ids_batch()` and `get_odoo_ids_batch()` for single-query lookups of multiple IDs; eliminates N+1 pattern in bulk operations (was 1 query per product)
+- `Bulk_Handler` — import/export now use batch entity_map lookups instead of per-product queries
 
 ### Changed
 
-#### Refactoring — Test Bootstrap Split
-- `tests/bootstrap.php` reduced from ~988 lines to ~100 lines (slim orchestrator: constants, global stores, stub loading, plugin class requires)
-- Stub code extracted into 6 dedicated files in `tests/stubs/`:
-  - `wp-classes.php` — WP_Error, WP_REST_Request, WP_REST_Response, WP_User, WP_CLI, AJAX test exception classes
-  - `wp-functions.php` — ~60 WordPress function stubs (options, hooks, sanitization, users, posts, media, HTTP)
-  - `wc-classes.php` — WC_Product, WC_Order, WC_Product_Variable, WC_Product_Variation, WC_Product_Attribute + 5 WC function stubs
-  - `wp-db-stub.php` — WP_DB_Stub ($wpdb mock with call recording)
-  - `plugin-stub.php` — WP4Odoo_Plugin test singleton with module registration and reset
-  - `wp-cli-utils.php` — WP_CLI\Utils\format_items namespace stub
+- `CLAUDE.md` — updated version, Entity_Map_Repository and Bulk_Handler descriptions
+- `ARCHITECTURE.md` — updated directory tree comments for Entity_Map_Repository and Bulk_Handler
+- PHPUnit: 356 tests, 704 assertions — all green
+- PHPStan: 0 errors on 41 files
+- Plugin version bumped from 1.9.2 to 1.9.3
 
-#### Refactoring — Retryable_Http Trait Extraction
-- New file: `includes/api/trait-retryable-http.php` — `Retryable_Http` trait providing `http_post_with_retry()` with 3 attempts, exponential backoff (2^attempt × 500ms), and random jitter (0-1000ms)
-- `Odoo_JsonRPC` — now `use Retryable_Http`; removed inline retry loop and `MAX_RETRIES` constant from `rpc_call()`
-- `Odoo_XmlRPC` — now `use Retryable_Http`; removed inline retry loop and `MAX_RETRIES` constant from `xmlrpc_call()`
-- `Dependency_Loader` — added `require_once` for `trait-retryable-http.php` before transport classes
+#### Translations
+- Regenerated `.pot`, merged `.po`, recompiled `.mo` — 252 translated strings, 0 fuzzy, 0 untranslated (was 249)
+- 3 new French translations: Connection tab label, JSON-RPC and XML-RPC protocol labels
 
-#### Documentation
-- `ARCHITECTURE.md` — updated directory tree (6 stub files, trait file, 12 new test files), updated transport pattern section with Retryable_Http, updated test counts (356/704), PHPStan file count (41)
-- `README.md` — updated PHPStan count (41), added retry trait mention in Dual Transport feature
-
-#### Verification
-- PHPUnit: 356 tests, 704 assertions — all green (unchanged)
-- PHPStan: 0 errors on 41 files (was 40 — added trait file)
-- Plugin version bumped from 1.9.1 to 1.9.2
-
-## [1.9.1] - 2026-02-10
+## [1.9.2] - 2026-02-10
 
 ### Added
 
@@ -53,14 +52,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ProductHandlerTest` — 7 tests for Product_Handler (load, save, currency guard, delete)
 - `ContactManagerTest` — 12 tests for Contact_Manager (load, save, dedup, role sync check)
 - `LeadManagerTest` — 10 tests for Lead_Manager (load, save, render, AJAX submission)
+- `WebhookHandlerTest` — new test file
 - Extensive new stubs in `tests/bootstrap.php`: WP_User, get_userdata, get_user_by, user meta, post functions, WC_Order, wp_remote_post, and more (~40 new function/class stubs)
 
 ### Changed
 
-#### Transport — HTTP Retry with Exponential Backoff
-- `Odoo_JsonRPC` — added `MAX_RETRIES = 3` constant and retry loop with exponential backoff (2^attempt × 500ms) + random jitter (0-1000ms) around `wp_remote_post()` in `rpc_call()`
-- `Odoo_XmlRPC` — same retry logic added to `xmlrpc_call()`
-- Both transports now log warnings on retry and errors after exhaustion with attempt count
+#### Transport — Retryable_Http Trait Extraction
+- New file: `includes/api/trait-retryable-http.php` — `Retryable_Http` trait providing `http_post_with_retry()` with 3 attempts, exponential backoff (2^attempt × 500ms), and random jitter (0-1000ms)
+- `Odoo_JsonRPC` — now `use Retryable_Http`; retry logic extracted from inline loop in `rpc_call()`
+- `Odoo_XmlRPC` — now `use Retryable_Http`; retry logic extracted from inline loop in `xmlrpc_call()`
+- `Dependency_Loader` — added `require_once` for `trait-retryable-http.php` before transport classes
+- Both transports log warnings on retry and errors after exhaustion with attempt count
 
 #### Sync_Engine — Dynamic Batch Timeout
 - Added `BATCH_TIME_LIMIT = 55` constant — queue processing breaks when elapsed time exceeds 55 seconds, deferring remaining jobs to the next cron tick (prevents WP-Cron timeout)
@@ -75,13 +77,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Odoo_JsonRPC` — RPC error logs now include `model` and `method` context from execute_kw calls; `debug` field truncated to 500 chars
 - `Odoo_XmlRPC` — XML-RPC fault logs now include `model` and `method` context from execute_kw calls
 
-#### Verification
-- PHPUnit: 356 tests, 704 assertions — all green (was 138/215)
-- PHPStan: 0 errors on 40 files (unchanged)
-- Plugin version bumped from 1.9.0 to 1.9.1
+#### Refactoring — Test Bootstrap Split
+- `tests/bootstrap.php` reduced from ~988 lines to ~100 lines (slim orchestrator: constants, global stores, stub loading, plugin class requires)
+- Stub code extracted into 6 dedicated files in `tests/stubs/`:
+  - `wp-classes.php` — WP_Error, WP_REST_Request, WP_REST_Response, WP_User, WP_CLI, AJAX test exception classes
+  - `wp-functions.php` — ~60 WordPress function stubs (options, hooks, sanitization, users, posts, media, HTTP)
+  - `wc-classes.php` — WC_Product, WC_Order, WC_Product_Variable, WC_Product_Variation, WC_Product_Attribute + 5 WC function stubs
+  - `wp-db-stub.php` — WP_DB_Stub ($wpdb mock with call recording)
+  - `plugin-stub.php` — WP4Odoo_Plugin test singleton with module registration and reset
+  - `wp-cli-utils.php` — WP_CLI\Utils\format_items namespace stub
+
+#### Documentation
+- `ARCHITECTURE.md` — updated directory tree (6 stub files, trait file, 13 new test files), updated transport pattern section with Retryable_Http, updated test counts (356/704), PHPStan file count (41)
+- `README.md` — updated PHPStan count (41), added retry trait mention in Dual Transport feature
 
 #### Translations
 - Regenerated `.pot`, merged `.po`, recompiled `.mo`
+
+#### Verification
+- PHPUnit: 356 tests, 704 assertions — all green (was 138/215)
+- PHPStan: 0 errors on 41 files (was 40 — added trait file)
+- Plugin version bumped from 1.9.0 to 1.9.2
 
 ## [1.9.0] - 2026-02-10
 
@@ -144,6 +160,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Documentation
 - `ARCHITECTURE.md` — updated with CLI, onboarding, checklist, inline help sections; updated file counts and handler counts
 - `README.md` — updated with WP-CLI commands, onboarding mention, new file/handler counts
+
+## [1.8.1] - 2026-02-10
+
+### Changed
+
+#### Documentation
+- `README.md` — removed ASCII architecture diagram (replaced by `assets/images/architecture.svg` image)
 
 ## [1.8.0] - 2026-02-10
 

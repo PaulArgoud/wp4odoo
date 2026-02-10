@@ -21,7 +21,7 @@ $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wp4odoo_entity_map" );
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wp4odoo_logs" );
 
 // Remove all plugin options.
-$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'odoo\_wpc\_%'" );
+$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wp4odoo\_%'" );
 
 // Clear scheduled cron events.
 wp_clear_scheduled_hook( 'wp4odoo_scheduled_sync' );

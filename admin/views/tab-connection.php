@@ -119,10 +119,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<td>
 				<select id="wp4odoo_protocol" name="wp4odoo_connection[protocol]">
 					<option value="jsonrpc" <?php selected( $credentials['protocol'], 'jsonrpc' ); ?>>
-						JSON-RPC (Odoo 17+)
+						<?php esc_html_e( 'JSON-RPC (Odoo 17+)', 'wp4odoo' ); ?>
 					</option>
 					<option value="xmlrpc" <?php selected( $credentials['protocol'], 'xmlrpc' ); ?>>
-						XML-RPC (Odoo 14+)
+						<?php esc_html_e( 'XML-RPC (Odoo 14+)', 'wp4odoo' ); ?>
 					</option>
 				</select>
 			</td>
