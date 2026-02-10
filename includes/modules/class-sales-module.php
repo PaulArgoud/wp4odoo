@@ -4,6 +4,7 @@ declare( strict_types=1 );
 namespace WP4Odoo\Modules;
 
 use WP4Odoo\CPT_Helper;
+use WP4Odoo\Field_Mapper;
 use WP4Odoo\Module_Base;
 use WP4Odoo\Partner_Service;
 
@@ -26,21 +27,23 @@ class Sales_Module extends Module_Base {
 	 * Order meta fields: data key => post meta key.
 	 */
 	private const ORDER_META = [
-		'_order_total'      => '_order_total',
-		'_order_date'       => '_order_date',
-		'_order_state'      => '_order_state',
+		'_order_total'         => '_order_total',
+		'_order_date'          => '_order_date',
+		'_order_state'         => '_order_state',
 		'_wp4odoo_partner_id'  => '_wp4odoo_partner_id',
+		'_order_currency'      => '_order_currency',
 	];
 
 	/**
 	 * Invoice meta fields: data key => post meta key.
 	 */
 	private const INVOICE_META = [
-		'_invoice_total'    => '_invoice_total',
-		'_invoice_date'     => '_invoice_date',
-		'_invoice_state'    => '_invoice_state',
-		'_payment_state'    => '_payment_state',
+		'_invoice_total'       => '_invoice_total',
+		'_invoice_date'        => '_invoice_date',
+		'_invoice_state'       => '_invoice_state',
+		'_payment_state'       => '_payment_state',
 		'_wp4odoo_partner_id'  => '_wp4odoo_partner_id',
+		'_invoice_currency'    => '_invoice_currency',
 	];
 
 	protected string $id   = 'sales';
@@ -60,19 +63,21 @@ class Sales_Module extends Module_Base {
 			'_sku'         => 'default_code',
 		],
 		'order' => [
-			'post_title'        => 'name',
-			'_order_total'      => 'amount_total',
-			'_order_date'       => 'date_order',
-			'_order_state'      => 'state',
+			'post_title'           => 'name',
+			'_order_total'         => 'amount_total',
+			'_order_date'          => 'date_order',
+			'_order_state'         => 'state',
 			'_wp4odoo_partner_id'  => 'partner_id',
+			'_order_currency'      => 'currency_id',
 		],
 		'invoice' => [
-			'post_title'        => 'name',
-			'_invoice_total'    => 'amount_total',
-			'_invoice_date'     => 'invoice_date',
-			'_invoice_state'    => 'state',
-			'_payment_state'    => 'payment_state',
+			'post_title'           => 'name',
+			'_invoice_total'       => 'amount_total',
+			'_invoice_date'        => 'invoice_date',
+			'_invoice_state'       => 'state',
+			'_payment_state'       => 'payment_state',
 			'_wp4odoo_partner_id'  => 'partner_id',
+			'_invoice_currency'    => 'currency_id',
 		],
 	];
 
@@ -244,6 +249,10 @@ class Sales_Module extends Module_Base {
 	 * @return int Post ID or 0 on failure.
 	 */
 	private function save_order_data( array $data, int $wp_id = 0 ): int {
+		// Resolve currency_id Many2one to code string.
+		if ( isset( $data['_order_currency'] ) ) {
+			$data['_order_currency'] = Field_Mapper::many2one_to_name( $data['_order_currency'] ) ?? '';
+		}
 		return CPT_Helper::save( $data, $wp_id, 'wp4odoo_order', self::ORDER_META, __( 'Order', 'wp4odoo' ), $this->logger );
 	}
 
@@ -255,6 +264,10 @@ class Sales_Module extends Module_Base {
 	 * @return int Post ID or 0 on failure.
 	 */
 	private function save_invoice_data( array $data, int $wp_id = 0 ): int {
+		// Resolve currency_id Many2one to code string.
+		if ( isset( $data['_invoice_currency'] ) ) {
+			$data['_invoice_currency'] = Field_Mapper::many2one_to_name( $data['_invoice_currency'] ) ?? '';
+		}
 		return CPT_Helper::save( $data, $wp_id, 'wp4odoo_invoice', self::INVOICE_META, __( 'Invoice', 'wp4odoo' ), $this->logger );
 	}
 

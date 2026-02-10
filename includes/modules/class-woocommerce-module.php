@@ -37,6 +37,7 @@ class WooCommerce_Module extends Module_Base {
 		'_invoice_state'       => '_invoice_state',
 		'_payment_state'       => '_payment_state',
 		'_wp4odoo_partner_id'  => '_wp4odoo_partner_id',
+		'_invoice_currency'    => '_invoice_currency',
 	];
 
 	protected string $id   = 'woocommerce';
@@ -52,19 +53,21 @@ class WooCommerce_Module extends Module_Base {
 
 	protected array $default_mappings = [
 		'product' => [
-			'name'          => 'name',
-			'sku'           => 'default_code',
-			'regular_price' => 'list_price',
-			'stock_quantity' => 'qty_available',
-			'weight'        => 'weight',
-			'description'   => 'description_sale',
+			'name'              => 'name',
+			'sku'               => 'default_code',
+			'regular_price'     => 'list_price',
+			'stock_quantity'    => 'qty_available',
+			'weight'            => 'weight',
+			'description'       => 'description_sale',
+			'_wp4odoo_currency' => 'currency_id',
 		],
 		'variant' => [
-			'sku'            => 'default_code',
-			'regular_price'  => 'lst_price',
-			'stock_quantity' => 'qty_available',
-			'weight'         => 'weight',
-			'display_name'   => 'display_name',
+			'sku'               => 'default_code',
+			'regular_price'     => 'lst_price',
+			'stock_quantity'    => 'qty_available',
+			'weight'            => 'weight',
+			'display_name'      => 'display_name',
+			'_wp4odoo_currency' => 'currency_id',
 		],
 		'order' => [
 			'total'      => 'amount_total',
@@ -83,6 +86,7 @@ class WooCommerce_Module extends Module_Base {
 			'_invoice_state'       => 'state',
 			'_payment_state'       => 'payment_state',
 			'_wp4odoo_partner_id'  => 'partner_id',
+			'_invoice_currency'    => 'currency_id',
 		],
 	];
 
@@ -604,13 +608,28 @@ class WooCommerce_Module extends Module_Base {
 			return 0;
 		}
 
+		// Currency guard: skip price if Odoo currency ≠ WC shop currency.
+		$odoo_currency     = isset( $data['_wp4odoo_currency'] )
+			? ( Field_Mapper::many2one_to_name( $data['_wp4odoo_currency'] ) ?? '' )
+			: '';
+		$wc_currency       = function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : '';
+		$currency_mismatch = '' !== $odoo_currency && '' !== $wc_currency && $odoo_currency !== $wc_currency;
+
+		if ( $currency_mismatch ) {
+			$this->logger->warning( 'Product currency mismatch, skipping price update.', [
+				'wp_product_id' => $wp_id,
+				'odoo_currency' => $odoo_currency,
+				'wc_currency'   => $wc_currency,
+			] );
+		}
+
 		if ( isset( $data['name'] ) ) {
 			$product->set_name( $data['name'] );
 		}
 		if ( isset( $data['sku'] ) ) {
 			$product->set_sku( $data['sku'] );
 		}
-		if ( isset( $data['regular_price'] ) ) {
+		if ( isset( $data['regular_price'] ) && ! $currency_mismatch ) {
 			$product->set_regular_price( (string) $data['regular_price'] );
 		}
 		if ( isset( $data['weight'] ) ) {
@@ -625,6 +644,11 @@ class WooCommerce_Module extends Module_Base {
 		}
 
 		$saved_id = $product->save();
+
+		// Store Odoo currency code in product meta.
+		if ( $saved_id > 0 && '' !== $odoo_currency ) {
+			update_post_meta( $saved_id, '_wp4odoo_currency', $odoo_currency );
+		}
 
 		return $saved_id > 0 ? $saved_id : 0;
 	}
@@ -647,10 +671,17 @@ class WooCommerce_Module extends Module_Base {
 				return 0;
 			}
 
+			// Currency guard: skip price if Odoo currency ≠ WC shop currency.
+			$odoo_currency     = isset( $data['_wp4odoo_currency'] )
+				? ( Field_Mapper::many2one_to_name( $data['_wp4odoo_currency'] ) ?? '' )
+				: '';
+			$wc_currency       = function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : '';
+			$currency_mismatch = '' !== $odoo_currency && '' !== $wc_currency && $odoo_currency !== $wc_currency;
+
 			if ( isset( $data['sku'] ) && '' !== $data['sku'] ) {
 				$variation->set_sku( $data['sku'] );
 			}
-			if ( isset( $data['regular_price'] ) ) {
+			if ( isset( $data['regular_price'] ) && ! $currency_mismatch ) {
 				$variation->set_regular_price( (string) $data['regular_price'] );
 			}
 			if ( isset( $data['stock_quantity'] ) ) {
@@ -748,6 +779,10 @@ class WooCommerce_Module extends Module_Base {
 	 * @return int Post ID or 0 on failure.
 	 */
 	private function save_invoice_data( array $data, int $wp_id = 0 ): int {
+		// Resolve currency_id Many2one to code string.
+		if ( isset( $data['_invoice_currency'] ) ) {
+			$data['_invoice_currency'] = Field_Mapper::many2one_to_name( $data['_invoice_currency'] ) ?? '';
+		}
 		return CPT_Helper::save( $data, $wp_id, 'wp4odoo_invoice', self::INVOICE_META, __( 'Invoice', 'wp4odoo' ), $this->logger );
 	}
 

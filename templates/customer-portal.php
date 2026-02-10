@@ -46,7 +46,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 						<tr>
 							<td><?php echo esc_html( $order['title'] ); ?></td>
 							<td><?php echo esc_html( $order['_order_date'] ?? '—' ); ?></td>
-							<td><?php echo esc_html( $order['_order_total'] ?? '—' ); ?></td>
+							<td>
+								<?php echo esc_html( $order['_order_total'] ?? '—' ); ?>
+								<?php if ( ! empty( $order['_order_currency'] ) ) : ?>
+									<?php echo esc_html( $order['_order_currency'] ); ?>
+								<?php endif; ?>
+							</td>
 							<td>
 								<span class="wp4odoo-status wp4odoo-status--<?php echo esc_attr( $order['_order_state'] ?? 'draft' ); ?>">
 									<?php echo esc_html( $order['_order_state'] ?? '—' ); ?>
@@ -87,7 +92,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 						<tr>
 							<td><?php echo esc_html( $invoice['title'] ); ?></td>
 							<td><?php echo esc_html( $invoice['_invoice_date'] ?? '—' ); ?></td>
-							<td><?php echo esc_html( $invoice['_invoice_total'] ?? '—' ); ?></td>
+							<td>
+								<?php echo esc_html( $invoice['_invoice_total'] ?? '—' ); ?>
+								<?php if ( ! empty( $invoice['_invoice_currency'] ) ) : ?>
+									<?php echo esc_html( $invoice['_invoice_currency'] ); ?>
+								<?php endif; ?>
+							</td>
 							<td>
 								<span class="wp4odoo-status wp4odoo-status--<?php echo esc_attr( $invoice['_invoice_state'] ?? 'draft' ); ?>">
 									<?php echo esc_html( $invoice['_invoice_state'] ?? '—' ); ?>

@@ -116,6 +116,12 @@ namespace {
 		}
 	}
 
+	if ( ! function_exists( 'get_woocommerce_currency' ) ) {
+		function get_woocommerce_currency() {
+			return 'EUR';
+		}
+	}
+
 	// ─── WordPress post meta / media stubs ──────────────────
 
 	if ( ! function_exists( 'get_post_meta' ) ) {
@@ -377,5 +383,7 @@ namespace {
 	require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-variant-handler.php';
 	require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-image-handler.php';
 	require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-woocommerce-module.php';
+	require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-portal-manager.php';
+	require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-sales-module.php';
 
 }

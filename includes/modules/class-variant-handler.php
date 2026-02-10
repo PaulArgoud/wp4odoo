@@ -4,6 +4,7 @@ declare( strict_types=1 );
 namespace WP4Odoo\Modules;
 
 use WP4Odoo\Entity_Map_Repository;
+use WP4Odoo\Field_Mapper;
 use WP4Odoo\Logger;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -65,7 +66,7 @@ class Variant_Handler {
 		$variants = $client->search_read(
 			'product.product',
 			[ [ 'product_tmpl_id', '=', $template_odoo_id ] ],
-			[ 'id', 'default_code', 'lst_price', 'qty_available', 'weight', 'display_name', 'product_template_attribute_value_ids' ]
+			[ 'id', 'default_code', 'lst_price', 'qty_available', 'weight', 'display_name', 'product_template_attribute_value_ids', 'currency_id' ]
 		);
 
 		if ( empty( $variants ) ) {
@@ -110,12 +111,28 @@ class Variant_Handler {
 			// Check existing mapping.
 			$existing_wp_id = Entity_Map_Repository::get_wp_id( 'woocommerce', 'variant', $variant_odoo_id );
 
+			// Currency guard: skip price if Odoo currency ≠ WC shop currency.
+			$odoo_currency = Field_Mapper::many2one_to_name( $variant['currency_id'] ?? false ) ?? '';
+			$wc_currency   = function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : '';
+			$skip_price    = '' !== $odoo_currency && '' !== $wc_currency && $odoo_currency !== $wc_currency;
+
+			if ( $skip_price ) {
+				$this->logger->warning( 'Variant currency mismatch, skipping price.', [
+					'variant_odoo_id' => $variant_odoo_id,
+					'odoo_currency'   => $odoo_currency,
+					'wc_currency'     => $wc_currency,
+				] );
+			}
+
 			$variation_data = [
 				'sku'            => $variant['default_code'] ?? '',
-				'regular_price'  => $variant['lst_price'] ?? 0,
 				'stock_quantity' => $variant['qty_available'] ?? 0,
 				'weight'         => $variant['weight'] ?? 0,
 			];
+
+			if ( ! $skip_price ) {
+				$variation_data['regular_price'] = $variant['lst_price'] ?? 0;
+			}
 
 			// Resolve attribute values for this variant.
 			$attr_value_ids = $variant['product_template_attribute_value_ids'] ?? [];

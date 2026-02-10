@@ -112,19 +112,20 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # PHPUnit tests (127 tests, 196 assertions, 36 files analysed)
+├── tests/                             # PHPUnit tests (136 tests, 209 assertions, 36 files analysed)
 │   ├── bootstrap.php                 #   WP function stubs + class loading
 │   └── Unit/
 │       ├── EntityMapRepositoryTest.php  #   10 tests for Entity_Map_Repository
 │       ├── FieldMapperTest.php          #   30 tests for Field_Mapper
 │       ├── ModuleBaseHashTest.php       #   4 tests for generate_sync_hash()
-│       ├── PartnerServiceTest.php       #   11 tests for Partner_Service
+│       ├── PartnerServiceTest.php       #   10 tests for Partner_Service
 │       ├── QueueManagerTest.php         #   7 tests for Queue_Manager
 │       ├── SyncQueueRepositoryTest.php  #   16 tests for Sync_Queue_Repository
-│       ├── WooCommerceModuleTest.php    #   21 tests for WooCommerce_Module
+│       ├── WooCommerceModuleTest.php    #   22 tests for WooCommerce_Module
 │       ├── VariantHandlerTest.php       #   7 tests for Variant_Handler
-│       ├── BulkSyncTest.php             #   10 tests for bulk import/export
-│       └── ImageHandlerTest.php         #   9 tests for Image_Handler
+│       ├── BulkSyncTest.php             #   12 tests for bulk import/export
+│       ├── ImageHandlerTest.php         #   9 tests for Image_Handler
+│       └── CurrencyTest.php             #   9 tests for multi-currency support
 │
 ├── uninstall.php                      # Cleanup on plugin uninstall
 │
@@ -463,20 +464,22 @@ company → partner_name, description → description, source → x_wp_source
 | Odoo → WP | Webhook `sale.order` | `wp4odoo_order` CPT | Mapping |
 | Odoo → WP | Webhook `account.move` | `wp4odoo_invoice` CPT | Mapping |
 
-**Customer portal:** `[wp4odoo_customer_portal]` shortcode renders a tabbed interface (Orders / Invoices) with pagination. Links WP users to Odoo partners via CRM entity_map, then queries `wp4odoo_order` / `wp4odoo_invoice` CPTs by `_wp4odoo_partner_id` meta.
+**Customer portal:** `[wp4odoo_customer_portal]` shortcode renders a tabbed interface (Orders / Invoices) with pagination and currency display. Links WP users to Odoo partners via CRM entity_map, then queries `wp4odoo_order` / `wp4odoo_invoice` CPTs by `_wp4odoo_partner_id` meta.
 
 **Field mappings:**
 
 Order (Odoo `sale.order` → `wp4odoo_order` CPT):
 ```
 name → post_title, amount_total → _order_total, date_order → _order_date,
-state → _order_state, partner_id → _wp4odoo_partner_id (Many2one → ID)
+state → _order_state, partner_id → _wp4odoo_partner_id (Many2one → ID),
+currency_id → _order_currency (Many2one → code string)
 ```
 
 Invoice (Odoo `account.move` → `wp4odoo_invoice` CPT):
 ```
 name → post_title, amount_total → _invoice_total, invoice_date → _invoice_date,
-state → _invoice_state, payment_state → _payment_state, partner_id → _wp4odoo_partner_id
+state → _invoice_state, payment_state → _payment_state, partner_id → _wp4odoo_partner_id,
+currency_id → _invoice_currency (Many2one → code string)
 ```
 
 **Settings:** `import_products`, `portal_enabled`, `orders_per_page`
@@ -508,6 +511,7 @@ state → _invoice_state, payment_state → _payment_state, partner_id → _wp4o
 - `wp4odoo_invoice` CPT for invoices (WC has no native invoice type)
 - **Product variants**: auto-imports `product.product` variants as WC variations after a `product.template` pull; skips single-variant (simple) products; resolves attributes via `product.template.attribute.value`
 - **Bulk operations**: queue-based import/export of all products via admin UI (Sync tab), no synchronous API calls during requests
+- **Multi-currency guard**: skips price update when Odoo `currency_id` differs from WC shop currency (`get_woocommerce_currency()`); stores Odoo currency code in product meta; same guard applies to variants via `Variant_Handler`
 - `stock.quant` resolution: checks both `product` and `variant` entity mappings (since stock.quant references `product.product`)
 
 **Order status mapping (Odoo → WC):**
@@ -521,8 +525,6 @@ $map = [
     'cancel'  => 'cancelled',
 ];
 
-// Customizable via filter
-add_filter('wp4odoo_order_status_map', function($map) { /* ... */ });
 ```
 
 **Anti-loop protection:** The `WP4ODOO_IMPORTING` constant is defined during pull operations to prevent WooCommerce hooks from re-enqueuing a sync.
@@ -563,8 +565,6 @@ Shared service for managing WP user ↔ Odoo `res.partner` relationships. Used b
 |--------|-------|
 | `wp4odoo_map_to_odoo_{module}_{entity}` | Modify mapped Odoo values before push |
 | `wp4odoo_map_from_odoo_{module}_{entity}` | Modify mapped WP data during pull |
-| `wp4odoo_woo_product_to_odoo` | Modify product data before push |
-| `wp4odoo_order_status_map` | Customize WC ↔ Odoo order status mapping |
 | `wp4odoo_ssl_verify` | Enable/disable SSL verification |
 
 ## Cron

@@ -166,9 +166,10 @@ class Portal_Manager {
 	 */
 	public function get_orders( int $partner_id, int $page = 1, int $per_page = 10 ): array {
 		return $this->query_cpt( 'wp4odoo_order', $partner_id, $page, $per_page, [
-			'_order_total' => '_order_total',
-			'_order_date'  => '_order_date',
-			'_order_state' => '_order_state',
+			'_order_total'    => '_order_total',
+			'_order_date'     => '_order_date',
+			'_order_state'    => '_order_state',
+			'_order_currency' => '_order_currency',
 		] );
 	}
 
@@ -182,10 +183,11 @@ class Portal_Manager {
 	 */
 	public function get_invoices( int $partner_id, int $page = 1, int $per_page = 10 ): array {
 		return $this->query_cpt( 'wp4odoo_invoice', $partner_id, $page, $per_page, [
-			'_invoice_total'   => '_invoice_total',
-			'_invoice_date'    => '_invoice_date',
-			'_invoice_state'   => '_invoice_state',
-			'_payment_state'   => '_payment_state',
+			'_invoice_total'    => '_invoice_total',
+			'_invoice_date'     => '_invoice_date',
+			'_invoice_state'    => '_invoice_state',
+			'_payment_state'    => '_payment_state',
+			'_invoice_currency' => '_invoice_currency',
 		] );
 	}
 

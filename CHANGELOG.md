@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-02-10
+
+### Added
+
+#### Multi-Currency Support
+- Currency awareness across all monetary fields: Odoo `currency_id` (Many2one) is now extracted, resolved to ISO 4217 code, and stored
+- **WooCommerce products/variants**: currency guard skips price update when Odoo currency differs from WC shop currency (`get_woocommerce_currency()`), logs warning; stores Odoo currency code in `_wp4odoo_currency` product meta
+- **Invoices (both modules)**: `_invoice_currency` stored as CPT post meta from Odoo `currency_id`
+- **Orders (Sales module)**: `_order_currency` stored as CPT post meta from Odoo `currency_id`
+- **Customer portal**: currency code displayed after amounts (e.g., `1 500,00 EUR`)
+- PHPUnit tests for currency extraction and mapping (CurrencyTest)
+
+### Changed
+- `WooCommerce_Module` — added `currency_id` to product, variant, and invoice mappings; currency guard in `save_product_data()` and `save_variant_data()`; Many2one resolution in `save_invoice_data()`
+- `Variant_Handler` — added `currency_id` to `search_read` fields; currency guard in variant loop
+- `Sales_Module` — added `currency_id` to order and invoice mappings; `_order_currency` and `_invoice_currency` in meta constants; Many2one resolution in save methods
+- `Portal_Manager` — added currency meta keys to order and invoice queries
+- PHPStan: 0 errors on 36 files
+- PHPUnit: 136 tests, 209 assertions (was 127/196)
+- Plugin version bumped from 1.6.0 to 1.7.0
+
+#### Documentation
+- `README.md` — updated test counts (136/209), added multi-currency guard and product image pull to features and module table, removed 2 undocumented filters (`wp4odoo_order_status_map`, `wp4odoo_woo_product_to_odoo`)
+- `ARCHITECTURE.md` — updated test counts (136/209), added CurrencyTest to directory listing, fixed individual test counts (PartnerService 11→10, WooCommerceModule 21→22, BulkSync 10→12), added currency fields to Sales field mappings, added multi-currency guard to WooCommerce key features, removed same 2 ghost filters
+- `CLAUDE.md` — fixed Core Infrastructure file count (15→14)
+
 ## [1.6.0] - 2026-02-10
 
 ### Added
