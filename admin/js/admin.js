@@ -108,6 +108,11 @@
 							'<span class="dashicons dashicons-yes-alt"></span>' +
 							wp4odooAdmin.i18n.connectionOk + ' (UID: ' + data.uid + ')'
 						);
+
+						// Show missing Odoo modules warning if detected.
+						if ( data.model_warning ) {
+							WP4Odoo.showNotice( 'warning', data.model_warning );
+						}
 					} else {
 						$result.addClass( 'error' ).html(
 							'<span class="dashicons dashicons-dismiss"></span>' +
@@ -166,6 +171,11 @@
 					$toggle.prop( 'disabled', false );
 					if ( response.success ) {
 						WP4Odoo.showNotice( 'success', response.data.message );
+
+						// Show missing Odoo modules warning if detected.
+						if ( response.data.warning ) {
+							WP4Odoo.showNotice( 'warning', response.data.warning );
+						}
 					} else {
 						// Revert toggle on failure.
 						$toggle.prop( 'checked', ! enabled );

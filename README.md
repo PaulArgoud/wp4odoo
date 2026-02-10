@@ -34,15 +34,17 @@ Modular WordPress plugin providing comprehensive, bidirectional integration betw
 
 ### By Odoo version and hosting type
 
-| Odoo version | On-Premise | Odoo.sh | Odoo Online | One App Free |
-|:-------------|:----------:|:-------:|:-----------:|:------------:|
-| 17 – 19      | ✅ Full    | ✅ Full | ✅ Full     | ⚠️ Partial ² |
-| 14 – 16      | ✅ Full    | ✅ Full | N/A ¹       | N/A ¹        |
-| < 14          | ❌         | ❌      | N/A ¹       | N/A ¹        |
+| Odoo version | On-Premise    | Odoo.sh       | Odoo Online | One App Free |
+|:-------------|:-------------:|:-------------:|:-----------:|:------------:|
+| 17 – 19      | ✅ Full ³     | ✅ Full ³     | ✅ Full     | ⚠️ Partial ² |
+| 14 – 16      | ✅ Full ³     | ✅ Full ³     | N/A ¹       | N/A ¹        |
+| < 14          | ❌            | ❌            | N/A ¹       | N/A ¹        |
 
 > ¹ Odoo Online always runs the latest stable version (currently 17+), so older versions do not apply.
 >
 > ² **[One App Free](https://www.odoo.com/pricing)** is Odoo's free plan (one app, unlimited users). WP4Odoo modules require multiple Odoo apps (see table below), so only a subset of features will work. Upgrade to the Standard plan for full compatibility.
+>
+> ³ Works with both Odoo **Community** (free) and **Enterprise** editions — all required apps are included in Community.
 
 - **Odoo 17+** — uses JSON-RPC 2.0 (default, recommended)
 - **Odoo 14 – 16** — uses XML-RPC (legacy transport, select in plugin settings)
@@ -56,11 +58,11 @@ The plugin automatically detects missing Odoo apps at connection test and module
 
 | WP4Odoo Module  | Required Odoo Apps                    | One App Free |
 |:----------------|:--------------------------------------|:------------:|
-| **CRM**         | Contacts, CRM                         | ⚠️ ³        |
+| **CRM**         | Contacts, CRM                         | ⚠️ ⁴        |
 | **Sales**       | Contacts, Sales, Invoicing            | ❌           |
 | **WooCommerce** | Contacts, Sales, Inventory, Invoicing | ❌           |
 
-> ³ With CRM as your free app, contact sync and lead capture work. Sales and WooCommerce modules require 3–4 apps and are not available on the free plan.
+> ⁴ With CRM as your free app, contact sync and lead capture work. Sales and WooCommerce modules require 3–4 apps and are not available on the free plan.
 
 ## Installation
 

@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Admin_Ajax::format_missing_model_warning()` — WP_DEBUG-aware message: shows model names + Odoo module hints in debug mode, generic guidance in production
 - `Admin_Ajax::ODOO_MODULE_HINT` constant — maps Odoo model names to their parent module (e.g., `crm.lead` → CRM, `sale.order` → Sales)
 
+#### Admin JS — Warning display
+- `bindTestConnection` now shows `model_warning` as a yellow warning notice after successful connection test
+- `bindModuleToggles` now shows `warning` as a yellow warning notice after successful module toggle
+
 #### Tests
 - 9 new tests: 6 for `probe_models()` (OdooAuthTest) + 3 for model warning behaviour (AdminAjaxTest)
 - `wp_remote_post` stub enhanced with response queue (`$GLOBALS['_wp_remote_responses']`) for multi-call tests
@@ -27,6 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Plugin version bumped from 1.9.6 to 1.9.7
 - PHPUnit: 425 tests, 833 assertions — all green
 - PHPStan: 0 errors on 44 files
+
+#### Documentation
+- `README.md` — new Compatibility section: version × hosting type matrix (On-Premise, Odoo.sh, Odoo Online, One App Free), required Odoo apps per module table, Community/Enterprise note
 
 ## [1.9.6] - 2026-02-10
 
