@@ -239,3 +239,47 @@
 /* --- Direction badges --- */
 .wp4odoo-dir-wp2odoo { color: #2271b1; }
 .wp4odoo-dir-odoo2wp { color: #7c3aed; }
+
+/* --- Last sync indicator --- */
+.wp4odoo-last-sync {
+	color: #50575e;
+	font-size: 13px;
+	margin-left: 12px;
+	vertical-align: middle;
+}
+
+/* --- Responsive table wrapper --- */
+.wp4odoo-table-wrap {
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+/* --- Responsive --- */
+@media (max-width: 782px) {
+	.wp4odoo-stats-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	.wp4odoo-modules-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.wp4odoo-filters .alignleft.actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+
+	.wp4odoo-filters select,
+	.wp4odoo-filters input[type="date"] {
+		margin-right: 0;
+		width: 100%;
+	}
+
+	.wp4odoo-queue-table th:nth-child(4),
+	.wp4odoo-queue-table td:nth-child(4),
+	.wp4odoo-queue-table th:nth-child(7),
+	.wp4odoo-queue-table td:nth-child(7) {
+		display: none;
+	}
+}

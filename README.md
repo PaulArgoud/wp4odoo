@@ -37,41 +37,43 @@ Modular WordPress plugin providing comprehensive, bidirectional integration betw
 
 ## Architecture
 
+![WP4ODOO Architecture](assets/images/architecture.svg)
+
 ```
-┌───────────────────────────────────────────────────────────────┐
-│                        WordPress                              │
-│                                                               │
-│  ┌──────────┐  ┌──────────┐  ┌───────────────┐                │
-│  │   CRM    │  │  Sales   │  │  WooCommerce  │   Modules      │
-│  │  Module  │  │  Module  │  │    Module     │                │
-│  └────┬─────┘  └─────┬────┘  └──────┬────────┘                │
-│       │              │              │                         │
-│       └──────────────┼──────────────┘                         │
-│                      ▼                                        │
-│              ┌──────────────┐     ┌────────────────┐          │
-│              │  Sync Engine │◄────│ Queue Manager  │          │
-│              │  (cron job)  │     └────────────────┘          │
-│              └──────┬───────┘                                 │
-│                     │                                         │
-│              ┌──────▼───────┐     ┌────────────────┐          │
-│              │ Field Mapper │     │ Webhook Handler│◄── REST  │
-│              └──────┬───────┘     └────────┬───────┘    API   │
-│                     │                      │                  │
-│              ┌──────▼──────────────────────▼────┐             │
-│              │          Odoo Client             │             │
-│              │  ┌──────────┐  ┌──────────────┐  │             │
-│              │  │ JSON-RPC │  │   XML-RPC    │  │             │
-│              │  │Transport │  │  Transport   │  │             │
-│              │  └──────────┘  └──────────────┘  │             │
-│              └──────────────┬───────────────────┘             │
-│                             │                                 │
-└─────────────────────────────┼─────────────────────────────────┘
-                              │ HTTP
-                              ▼
-                    ┌──────────────────┐
-                    │     Odoo ERP     │
-                    │      (v14+)      │
-                    └──────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                         WordPress                        │
+│                                                          │
+│ ┌──────────┐ ┌──────────┐ ┌───────────────┐              │
+│ │   CRM    │ │  Sales   │ │  WooCommerce  │   Modules    │
+│ │  Module  │ │  Module  │ │    Module     │              │
+│ └────┬─────┘ └────┬─────┘ └──────┬────────┘              │
+│      │            │              │                       │
+│      └────────────┼──────────────┘                       │
+│                   ▼                                      │
+│           ┌──────────────┐     ┌────────────────┐        │
+│           │  Sync Engine │◄────│ Queue Manager  │        │
+│           │  (cron job)  │     └────────────────┘        │
+│           └──────┬───────┘                               │
+│                  │                                       │
+│           ┌──────▼───────┐     ┌────────────────┐        │
+│           │ Field Mapper │     │ Webhook Handler│◄─ REST │
+│           └──────┬───────┘     └────────┬───────┘   API  │
+│                  │                      │                │
+│           ┌──────▼──────────────────────▼────┐           │
+│           │          Odoo Client             │           │
+│           │  ┌──────────┐  ┌──────────────┐  │           │
+│           │  │ JSON-RPC │  │   XML-RPC    │  │           │
+│           │  │Transport │  │  Transport   │  │           │
+│           │  └──────────┘  └──────────────┘  │           │
+│           └──────────────┬───────────────────┘           │
+│                          │                               │
+└──────────────────────────┼───────────────────────────────┘
+                           │ HTTP
+                           ▼
+                 ┌──────────────────┐
+                 │     Odoo ERP     │
+                 │      (v14+)      │
+                 └──────────────────┘
 ```
 
 ### Module System
@@ -121,23 +123,23 @@ All synchronization goes through a persistent database queue — no Odoo API cal
 
 Namespace: `wp-json/wp4odoo/v1/`
 
-| Endpoint | Method | Auth | Description |
-|----------|--------|------|-------------|
-| `/webhook` | POST | Token + rate limit | Receives change notifications from Odoo |
-| `/webhook/test` | GET | Public | Health check |
-| `/sync/{module}/{entity}` | POST | WP Auth | Triggers sync for a specific module/entity |
+| Endpoint                  | Method  | Auth               | Description                                |
+|---------------------------|---------|--------------------|--------------------------------------------|
+| `/webhook`                | POST    | Token + rate limit | Receives change notifications from Odoo    |
+| `/webhook/test`           | GET     | Public             | Health check                               |
+| `/sync/{module}/{entity}` | POST    | WP Auth            | Triggers sync for a specific module/entity |
 
 ## Hooks
 
 ### Actions
 
 | Hook | Description |
-|------|-------------|
-| `wp4odoo_init` | Plugin initialized |
-| `wp4odoo_loaded` | All plugins loaded |
-| `wp4odoo_register_modules` | Register custom modules |
-| `wp4odoo_lead_created` | Lead form submitted |
-| `wp4odoo_api_call` | Every Odoo API call (model, method, args, result) |
+|----------------------------|---------------------------------------------------|
+| `wp4odoo_init`             | Plugin initialized                                |
+| `wp4odoo_loaded`           | All plugins loaded                                |
+| `wp4odoo_register_modules` | Register custom modules                           |
+| `wp4odoo_lead_created`     | Lead form submitted                               |
+| `wp4odoo_api_call`         | Every Odoo API call (model, method, args, result) |
 
 ### Filters
 
@@ -155,7 +157,7 @@ Namespace: `wp-json/wp4odoo/v1/`
 # Install dependencies
 php composer.phar install
 
-# Run PHPUnit tests (136 tests, 209 assertions)
+# Run PHPUnit tests (138 tests, 215 assertions)
 php vendor/bin/phpunit
 
 # Run PHPStan static analysis (level 5, 0 errors)

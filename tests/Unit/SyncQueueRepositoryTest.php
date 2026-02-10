@@ -210,6 +210,32 @@ class SyncQueueRepositoryTest extends TestCase {
 		$this->assertSame( '{"email":"test@example.com"}', $payload );
 	}
 
+	// ─── get_stats() ─────────────────────────────────────
+
+	public function test_get_stats_includes_last_completed_at_with_timestamp(): void {
+		$this->wpdb->get_results_return = [
+			(object) [ 'status' => 'completed', 'count' => '3' ],
+		];
+		$this->wpdb->get_var_return = '2025-06-15 14:30:00';
+
+		$stats = Sync_Queue_Repository::get_stats();
+
+		$this->assertArrayHasKey( 'last_completed_at', $stats );
+		$this->assertSame( '2025-06-15 14:30:00', $stats['last_completed_at'] );
+		$this->assertSame( 3, $stats['completed'] );
+	}
+
+	public function test_get_stats_returns_empty_last_completed_at_when_no_completed(): void {
+		$this->wpdb->get_results_return = [];
+		$this->wpdb->get_var_return     = null;
+
+		$stats = Sync_Queue_Repository::get_stats();
+
+		$this->assertArrayHasKey( 'last_completed_at', $stats );
+		$this->assertSame( '', $stats['last_completed_at'] );
+		$this->assertSame( 0, $stats['total'] );
+	}
+
 	// ─── cancel() ──────────────────────────────────────────
 
 	public function test_cancel_returns_true_when_deleted(): void {

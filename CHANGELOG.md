@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-02-10
+
+### Fixed
+
+#### Admin UI — Module Toggle Error Handling
+- `bindModuleToggles()` now reverts the toggle switch and settings panel on AJAX error or network failure (was silently failing)
+- Toggle is disabled during the request to prevent double-clicks
+
+#### Admin UI — Loading Feedback
+- `fetchLogs()` now shows a "Loading..." row before AJAX fetch (no visual feedback previously)
+- `fetchQueue()` shows the same loading state for queue table
+
+#### Admin UI — Queue Pagination Inconsistency
+- Queue tab now uses AJAX pagination matching the Logs tab pattern (was full page reload)
+- New `fetch_queue` AJAX handler in `Admin_Ajax` reusing `Query_Service::get_queue_jobs()`
+- New `fetchQueue()` and `bindQueuePagination()` JS methods for client-side table rendering
+
+### Added
+
+#### Admin UI — Responsive CSS
+- `@media (max-width: 782px)` breakpoint: stats grid 2-column, modules grid single-column, filters stacked, Direction/Attempts queue columns hidden on mobile
+- `.wp4odoo-table-wrap` horizontal scroll wrapper for queue table on narrow screens
+
+#### Admin UI — "Last sync" Timestamp
+- `Sync_Queue_Repository::get_stats()` now returns `last_completed_at` (`MAX(processed_at)` from completed jobs)
+- Timestamp displayed next to Refresh button on Queue tab, updated live via `refreshStats()`
+- 7 new i18n strings in `wp_localize_script`: `loading`, `lastSync`, `cancel`, `statusPending`, `statusProcessing`, `statusCompleted`, `statusFailed`
+
+#### Admin UI — Connection Form Validation
+- `required` attribute on URL, Database, and Username inputs (native HTML5 validation)
+- "Test connection" button disabled when any required field is empty (`bindConnectionValidation()`)
+
+#### Tests
+- `SyncQueueRepositoryTest` — 2 new tests for `get_stats()` `last_completed_at` (with timestamp, null case)
+
+### Changed
+- `Admin_Ajax` now has 12 handlers (added `fetch_queue`)
+- `admin.js` — `bindRetryFailed()` and `bindCleanupQueue()` now also call `fetchQueue(1)` after stats refresh
+- PHPStan: 0 errors on 36 files
+- PHPUnit: 138 tests, 215 assertions (was 136/209)
+- Plugin version bumped from 1.7.0 to 1.8.0
+
+#### Translations
+- Regenerated `.pot`, merged `.po`, recompiled `.mo` — 205 translated strings, 0 fuzzy, 0 untranslated
+- Translated 7 new strings + fixed 6 stale fuzzy entries from previous versions
+
+#### Documentation
+- `CLAUDE.md` — updated version (1.8.0), test counts (138/215), AJAX handler count (12)
+- `ARCHITECTURE.md` — updated test counts (138/215), SyncQueueRepositoryTest count (16→18), AJAX handler count (12), added `fetch_queue` to handler list
+- `README.md` — updated test counts (138/215)
+
 ## [1.7.0] - 2026-02-10
 
 ### Added
@@ -30,7 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `README.md` — updated test counts (136/209), added multi-currency guard and product image pull to features and module table, removed 2 undocumented filters (`wp4odoo_order_status_map`, `wp4odoo_woo_product_to_odoo`)
 - `ARCHITECTURE.md` — updated test counts (136/209), added CurrencyTest to directory listing, fixed individual test counts (PartnerService 11→10, WooCommerceModule 21→22, BulkSync 10→12), added currency fields to Sales field mappings, added multi-currency guard to WooCommerce key features, removed same 2 ghost filters
 - `CLAUDE.md` — fixed Core Infrastructure file count (15→14)
-
+Des fichie
 ## [1.6.0] - 2026-02-10
 
 ### Added

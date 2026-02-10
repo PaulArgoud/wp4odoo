@@ -32,6 +32,7 @@ class Admin_Ajax {
 			'wp4odoo_cancel_job',
 			'wp4odoo_purge_logs',
 			'wp4odoo_fetch_logs',
+			'wp4odoo_fetch_queue',
 			'wp4odoo_queue_stats',
 			'wp4odoo_toggle_module',
 			'wp4odoo_save_module_settings',
@@ -237,6 +238,44 @@ class Admin_Ajax {
 			'total' => $data['total'],
 			'page'  => $data['page'],
 			'pages' => $data['pages'],
+		] );
+	}
+
+	/**
+	 * Fetch queue jobs (for AJAX pagination).
+	 *
+	 * @return void
+	 */
+	public function fetch_queue(): void {
+		$this->verify_request();
+
+		$page     = max( 1, $this->get_post_field( 'page', 'int' ) ) ?: 1;
+		$per_page = $this->get_post_field( 'per_page', 'int' );
+		$per_page = ( $per_page > 0 ) ? min( 100, $per_page ) : 30;
+
+		$data = Query_Service::get_queue_jobs( $page, $per_page );
+
+		$items = [];
+		foreach ( $data['items'] as $job ) {
+			$items[] = [
+				'id'            => (int) $job->id,
+				'module'        => $job->module,
+				'entity_type'   => $job->entity_type,
+				'direction'     => $job->direction,
+				'action'        => $job->action,
+				'status'        => $job->status,
+				'attempts'      => $job->attempts,
+				'max_attempts'  => $job->max_attempts,
+				'error_message' => $job->error_message ?? '',
+				'created_at'    => $job->created_at,
+			];
+		}
+
+		wp_send_json_success( [
+			'items' => $items,
+			'total' => $data['total'],
+			'pages' => $data['pages'],
+			'page'  => $page,
 		] );
 	}
 

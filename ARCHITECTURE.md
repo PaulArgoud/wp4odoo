@@ -74,7 +74,7 @@ WordPress For Odoo/
 │   ├── admin/
 │   │   ├── class-admin.php            # Admin menu, asset enqueuing, plugin action link
 │   │   ├── class-bulk-handler.php     # Bulk product import/export operations
-│   │   ├── class-admin-ajax.php       # 11 AJAX handlers (test, retry, cleanup, logs, module settings, bulk import/export, etc.)
+│   │   ├── class-admin-ajax.php       # 12 AJAX handlers (test, retry, cleanup, logs, module settings, bulk import/export, etc.)
 │   │   └── class-settings-page.php    # Settings API, 5-tab rendering, sanitize callbacks
 │   │
 │   ├── class-dependency-loader.php    # Loads all plugin class files (require_once)
@@ -112,7 +112,7 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # PHPUnit tests (136 tests, 209 assertions, 36 files analysed)
+├── tests/                             # PHPUnit tests (138 tests, 215 assertions, 36 files analysed)
 │   ├── bootstrap.php                 #   WP function stubs + class loading
 │   └── Unit/
 │       ├── EntityMapRepositoryTest.php  #   10 tests for Entity_Map_Repository
@@ -120,7 +120,7 @@ WordPress For Odoo/
 │       ├── ModuleBaseHashTest.php       #   4 tests for generate_sync_hash()
 │       ├── PartnerServiceTest.php       #   10 tests for Partner_Service
 │       ├── QueueManagerTest.php         #   7 tests for Queue_Manager
-│       ├── SyncQueueRepositoryTest.php  #   16 tests for Sync_Queue_Repository
+│       ├── SyncQueueRepositoryTest.php  #   18 tests for Sync_Queue_Repository
 │       ├── WooCommerceModuleTest.php    #   22 tests for WooCommerce_Module
 │       ├── VariantHandlerTest.php       #   7 tests for Variant_Handler
 │       ├── BulkSyncTest.php             #   12 tests for bulk import/export
@@ -405,7 +405,7 @@ All user inputs are sanitized with:
 **Key classes:**
 - `Admin` — orchestrator: menu registration, asset enqueuing, plugin settings link
 - `Settings_Page` — Settings API registration, tab rendering, sanitize callbacks
-- `Admin_Ajax` — 11 handlers: test_connection, retry_failed, cleanup_queue, cancel_job, purge_logs, fetch_logs, queue_stats, toggle_module, save_module_settings, bulk_import_products, bulk_export_products
+- `Admin_Ajax` — 12 handlers: test_connection, retry_failed, cleanup_queue, cancel_job, purge_logs, fetch_logs, queue_stats, toggle_module, save_module_settings, bulk_import_products, bulk_export_products, fetch_queue
 
 ## Modules Detail
 

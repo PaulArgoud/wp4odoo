@@ -100,6 +100,13 @@ class Admin {
 				'settingsFailed'   => __( 'Failed to save settings.', 'wp4odoo' ),
 				'confirmBulkImport' => __( 'Import all products from Odoo? This will enqueue sync jobs for all Odoo products.', 'wp4odoo' ),
 				'confirmBulkExport' => __( 'Export all products to Odoo? This will enqueue sync jobs for all WooCommerce products.', 'wp4odoo' ),
+				'loading'           => __( 'Loading...', 'wp4odoo' ),
+				'lastSync'          => __( 'Last sync: %s', 'wp4odoo' ),
+				'cancel'            => __( 'Cancel', 'wp4odoo' ),
+				'statusPending'     => __( 'Pending', 'wp4odoo' ),
+				'statusProcessing'  => __( 'Processing', 'wp4odoo' ),
+				'statusCompleted'   => __( 'Completed', 'wp4odoo' ),
+				'statusFailed'      => __( 'Failed', 'wp4odoo' ),
 			],
 		] );
 	}

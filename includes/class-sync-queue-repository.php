@@ -123,7 +123,7 @@ class Sync_Queue_Repository {
 	/**
 	 * Get queue statistics.
 	 *
-	 * @return array{pending: int, processing: int, completed: int, failed: int, total: int}
+	 * @return array{pending: int, processing: int, completed: int, failed: int, total: int, last_completed_at: string}
 	 */
 	public static function get_stats(): array {
 		global $wpdb;
@@ -145,6 +145,11 @@ class Sync_Queue_Repository {
 			}
 			$stats['total'] += (int) $row->count;
 		}
+
+		// Last completed sync timestamp.
+		$stats['last_completed_at'] = $wpdb->get_var(
+			"SELECT MAX(processed_at) FROM {$table} WHERE status = 'completed'"
+		) ?? '';
 
 		return $stats;
 	}

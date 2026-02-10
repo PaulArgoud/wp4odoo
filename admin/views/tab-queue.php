@@ -59,9 +59,22 @@ $status_labels = [
 	<button type="button" id="wp4odoo-refresh-stats" class="button button-secondary">
 		<?php esc_html_e( 'Refresh', 'wp4odoo' ); ?>
 	</button>
+	<span class="wp4odoo-last-sync" id="wp4odoo-last-sync">
+		<?php
+		$last = $stats['last_completed_at'] ?? '';
+		if ( $last ) {
+			printf(
+				/* translators: %s: datetime string */
+				esc_html__( 'Last sync: %s', 'wp4odoo' ),
+				esc_html( $last )
+			);
+		}
+		?>
+	</span>
 </div>
 
 <!-- Jobs table -->
+<div class="wp4odoo-table-wrap">
 <table class="widefat striped wp4odoo-queue-table">
 	<thead>
 		<tr>
@@ -76,7 +89,7 @@ $status_labels = [
 			<th><?php esc_html_e( 'Actions', 'wp4odoo' ); ?></th>
 		</tr>
 	</thead>
-	<tbody>
+	<tbody id="wp4odoo-queue-tbody">
 		<?php if ( empty( $jobs['items'] ) ) : ?>
 			<tr>
 				<td colspan="9"><?php esc_html_e( 'No jobs in the queue.', 'wp4odoo' ); ?></td>
@@ -123,14 +136,12 @@ $status_labels = [
 		<?php endif; ?>
 	</tbody>
 </table>
+</div>
 
-<?php
-// Pagination.
-if ( $jobs['pages'] > 1 ) :
-	$base_url = admin_url( 'admin.php?page=wp4odoo&tab=queue' );
-	?>
-	<div class="tablenav bottom">
-		<div class="tablenav-pages">
+<!-- Pagination (AJAX-driven) -->
+<div class="tablenav bottom">
+	<div class="tablenav-pages" id="wp4odoo-queue-pagination">
+		<?php if ( $jobs['pages'] > 1 ) : ?>
 			<span class="displaying-num">
 				<?php
 				printf(
@@ -145,12 +156,12 @@ if ( $jobs['pages'] > 1 ) :
 					<?php if ( $i === $page ) : ?>
 						<span class="tablenav-pages-navspan button disabled"><?php echo esc_html( (string) $i ); ?></span>
 					<?php else : ?>
-						<a class="button" href="<?php echo esc_url( add_query_arg( 'paged', $i, $base_url ) ); ?>">
+						<a href="#" class="button wp4odoo-queue-page" data-page="<?php echo esc_attr( (string) $i ); ?>">
 							<?php echo esc_html( (string) $i ); ?>
 						</a>
 					<?php endif; ?>
 				<?php endfor; ?>
 			</span>
-		</div>
+		<?php endif; ?>
 	</div>
-<?php endif; ?>
+</div>

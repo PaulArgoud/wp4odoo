@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<td>
 				<input type="url" id="wp4odoo_url" name="wp4odoo_connection[url]"
 					value="<?php echo esc_attr( $credentials['url'] ); ?>"
-					class="regular-text" placeholder="https://mycompany.odoo.com" />
+					class="regular-text" placeholder="https://mycompany.odoo.com" required />
 			</td>
 		</tr>
 		<tr>
@@ -36,7 +36,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<td>
 				<input type="text" id="wp4odoo_database" name="wp4odoo_connection[database]"
 					value="<?php echo esc_attr( $credentials['database'] ); ?>"
-					class="regular-text" />
+					class="regular-text" required />
 			</td>
 		</tr>
 		<tr>
@@ -46,7 +46,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<td>
 				<input type="text" id="wp4odoo_username" name="wp4odoo_connection[username]"
 					value="<?php echo esc_attr( $credentials['username'] ); ?>"
-					class="regular-text" />
+					class="regular-text" required />
 			</td>
 		</tr>
 		<tr>

@@ -22,10 +22,12 @@
 			this.bindCancelJob();
 			this.bindBulkAction( '#wp4odoo-bulk-import', 'wp4odoo_bulk_import_products', 'confirmBulkImport' );
 			this.bindBulkAction( '#wp4odoo-bulk-export', 'wp4odoo_bulk_export_products', 'confirmBulkExport' );
+			this.bindQueuePagination();
 			this.bindFilterLogs();
 			this.bindPurgeLogs();
 			this.bindLogPagination();
 			this.bindLogContextExpand();
+			this.bindConnectionValidation();
 		},
 
 		/**
@@ -151,12 +153,39 @@
 					$panel.slideUp( 200 );
 				}
 
-				WP4Odoo.ajax( 'wp4odoo_toggle_module', {
+				$toggle.prop( 'disabled', true );
+
+				$.post( wp4odooAdmin.ajaxurl, {
+					action: 'wp4odoo_toggle_module',
+					_ajax_nonce: wp4odooAdmin.nonce,
 					module_id: moduleId,
-					enabled:   enabled ? 1 : 0
-				}, function( data ) {
-					WP4Odoo.showNotice( 'success', data.message );
-				}, null );
+					enabled: enabled ? 1 : 0
+				}, function( response ) {
+					$toggle.prop( 'disabled', false );
+					if ( response.success ) {
+						WP4Odoo.showNotice( 'success', response.data.message );
+					} else {
+						// Revert toggle on failure.
+						$toggle.prop( 'checked', ! enabled );
+						if ( enabled ) {
+							$panel.slideUp( 200 );
+						} else {
+							$panel.slideDown( 200 );
+						}
+						var msg = ( response.data && response.data.message ) ? response.data.message : 'Unknown error.';
+						WP4Odoo.showNotice( 'error', msg );
+					}
+				} ).fail( function() {
+					$toggle.prop( 'disabled', false );
+					// Revert toggle on network failure.
+					$toggle.prop( 'checked', ! enabled );
+					if ( enabled ) {
+						$panel.slideUp( 200 );
+					} else {
+						$panel.slideDown( 200 );
+					}
+					WP4Odoo.showNotice( 'error', 'Server communication error.' );
+				} );
 			} );
 		},
 
@@ -200,6 +229,7 @@
 				WP4Odoo.ajax( 'wp4odoo_retry_failed', {}, function( data ) {
 					WP4Odoo.showNotice( 'success', data.message );
 					WP4Odoo.refreshStats();
+					WP4Odoo.fetchQueue( 1 );
 				}, $( this ) );
 			} );
 		},
@@ -212,6 +242,7 @@
 				WP4Odoo.ajax( 'wp4odoo_cleanup_queue', { days: 7 }, function( data ) {
 					WP4Odoo.showNotice( 'success', data.message );
 					WP4Odoo.refreshStats();
+					WP4Odoo.fetchQueue( 1 );
 				}, $( this ) );
 			} );
 		},
@@ -228,6 +259,15 @@
 				$( '#stat-processing' ).text( data.processing );
 				$( '#stat-completed' ).text( data.completed );
 				$( '#stat-failed' ).text( data.failed );
+
+				// Update last sync timestamp.
+				var $lastSync = $( '#wp4odoo-last-sync' );
+				if ( $lastSync.length ) {
+					$lastSync.text( data.last_completed_at
+						? ( wp4odooAdmin.i18n.lastSync || 'Last sync: %s' ).replace( '%s', data.last_completed_at )
+						: ''
+					);
+				}
 			}, $btn || null );
 		},
 
@@ -278,6 +318,11 @@
 
 		fetchLogs: function( page ) {
 			var $btn   = $( '#wp4odoo-filter-logs' );
+			var $tbody = $( '#wp4odoo-logs-tbody' );
+
+			// Loading state.
+			$tbody.html( '<tr><td colspan="5">' + ( wp4odooAdmin.i18n.loading || 'Loading...' ) + '</td></tr>' );
+
 			var params = {
 				level:     $( '#wp4odoo-log-level' ).val(),
 				module:    $( '#wp4odoo-log-module' ).val(),
@@ -288,7 +333,6 @@
 			};
 
 			WP4Odoo.ajax( 'wp4odoo_fetch_logs', params, function( data ) {
-				var $tbody = $( '#wp4odoo-logs-tbody' );
 				$tbody.empty();
 
 				if ( ! data.items || data.items.length === 0 ) {
@@ -361,6 +405,109 @@
 					$el.addClass( 'expanded' ).text( $el.attr( 'title' ) || '' );
 				}
 			} );
+		},
+
+		// ─── Queue AJAX pagination ───────────────────────────────
+
+		fetchQueue: function( page ) {
+			var $tbody = $( '#wp4odoo-queue-tbody' );
+			if ( ! $tbody.length ) {
+				return;
+			}
+
+			// Loading state.
+			$tbody.html( '<tr><td colspan="9">' + ( wp4odooAdmin.i18n.loading || 'Loading...' ) + '</td></tr>' );
+
+			WP4Odoo.ajax( 'wp4odoo_fetch_queue', {
+				page: page || 1,
+				per_page: 30
+			}, function( data ) {
+				$tbody.empty();
+
+				if ( ! data.items || data.items.length === 0 ) {
+					$tbody.append( '<tr><td colspan="9">' + wp4odooAdmin.i18n.noResults + '</td></tr>' );
+					$( '#wp4odoo-queue-pagination' ).empty();
+					return;
+				}
+
+				var dirLabels = { wp_to_odoo: 'WP \u2192 Odoo', odoo_to_wp: 'Odoo \u2192 WP' };
+				var statusLabels = {
+					pending:    wp4odooAdmin.i18n.statusPending    || 'Pending',
+					processing: wp4odooAdmin.i18n.statusProcessing || 'Processing',
+					completed:  wp4odooAdmin.i18n.statusCompleted  || 'Completed',
+					failed:     wp4odooAdmin.i18n.statusFailed     || 'Failed'
+				};
+
+				$.each( data.items, function( _, job ) {
+					var dirClass = ( job.direction === 'wp_to_odoo' ) ? 'wp4odoo-dir-wp2odoo' : 'wp4odoo-dir-odoo2wp';
+					var dirLabel = dirLabels[ job.direction ] || job.direction;
+					var statusLabel = statusLabels[ job.status ] || job.status;
+					var titleAttr = ( job.status === 'failed' && job.error_message )
+						? ' title="' + $( '<span>' ).text( job.error_message ).html() + '"' : '';
+					var cancelCell = ( job.status === 'pending' )
+						? '<a href="#" class="wp4odoo-cancel-job" data-id="' + job.id + '">' + ( wp4odooAdmin.i18n.cancel || 'Cancel' ) + '</a>'
+						: '\u2014';
+
+					$tbody.append(
+						'<tr>' +
+						'<td>' + job.id + '</td>' +
+						'<td>' + $( '<span>' ).text( job.module ).html() + '</td>' +
+						'<td>' + $( '<span>' ).text( job.entity_type ).html() + '</td>' +
+						'<td><span class="' + dirClass + '">' + dirLabel + '</span></td>' +
+						'<td>' + $( '<span>' ).text( job.action ).html() + '</td>' +
+						'<td><span class="wp4odoo-badge wp4odoo-badge-' + job.status + '"' + titleAttr + '>' + statusLabel + '</span></td>' +
+						'<td>' + job.attempts + '/' + job.max_attempts + '</td>' +
+						'<td>' + $( '<span>' ).text( job.created_at ).html() + '</td>' +
+						'<td>' + cancelCell + '</td>' +
+						'</tr>'
+					);
+				} );
+
+				// Pagination.
+				var $pag = $( '#wp4odoo-queue-pagination' );
+				$pag.empty();
+				if ( data.pages > 1 ) {
+					for ( var i = 1; i <= data.pages; i++ ) {
+						if ( i === data.page ) {
+							$pag.append( '<span class="tablenav-pages-navspan button disabled">' + i + '</span> ' );
+						} else {
+							$pag.append( '<a href="#" class="button wp4odoo-queue-page" data-page="' + i + '">' + i + '</a> ' );
+						}
+					}
+				}
+			}, null );
+		},
+
+		bindQueuePagination: function() {
+			$( document ).on( 'click', '.wp4odoo-queue-page', function( e ) {
+				e.preventDefault();
+				WP4Odoo.fetchQueue( $( this ).data( 'page' ) );
+			} );
+		},
+
+		// ─── Connection form validation ──────────────────────────
+
+		bindConnectionValidation: function() {
+			var $btn = $( '#wp4odoo-test-connection' );
+			var $fields = $( '#wp4odoo_url, #wp4odoo_database, #wp4odoo_username' );
+
+			if ( ! $btn.length ) {
+				return;
+			}
+
+			function checkFields() {
+				var allFilled = true;
+				$fields.each( function() {
+					if ( ! $( this ).val().trim() ) {
+						allFilled = false;
+						return false; // break
+					}
+				} );
+				$btn.prop( 'disabled', ! allFilled );
+			}
+
+			$fields.on( 'input', checkFields );
+			checkFields(); // initial state
 		}
 	};
 
