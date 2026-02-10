@@ -66,7 +66,7 @@ jobs:
         run: composer install --no-interaction --prefer-dist
 
       - name: Install npm dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Start wp-env
         run: npx wp-env start
