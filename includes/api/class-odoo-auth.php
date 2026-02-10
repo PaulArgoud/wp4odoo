@@ -138,19 +138,24 @@ class Odoo_Auth {
 	/**
 	 * Test connection to an Odoo instance.
 	 *
-	 * @param string|null $url      Odoo URL (uses stored if null).
-	 * @param string|null $database Database name (uses stored if null).
-	 * @param string|null $username Username (uses stored if null).
-	 * @param string|null $api_key  API key in plaintext (uses stored if null).
-	 * @param string      $protocol 'jsonrpc' or 'xmlrpc'.
-	 * @return array{success: bool, uid: int|null, version: string|null, message: string}
+	 * When $check_models is provided and authentication succeeds, queries
+	 * the Odoo ir.model registry to verify which models are available.
+	 *
+	 * @param string|null        $url          Odoo URL (uses stored if null).
+	 * @param string|null        $database     Database name (uses stored if null).
+	 * @param string|null        $username     Username (uses stored if null).
+	 * @param string|null        $api_key      API key in plaintext (uses stored if null).
+	 * @param string             $protocol     'jsonrpc' or 'xmlrpc'.
+	 * @param array<int, string> $check_models Optional Odoo model names to verify after auth.
+	 * @return array{success: bool, uid: int|null, version: string|null, message: string, models?: array{available: string[], missing: string[]}}
 	 */
 	public static function test_connection(
 		?string $url = null,
 		?string $database = null,
 		?string $username = null,
 		?string $api_key = null,
-		string $protocol = 'jsonrpc'
+		string $protocol = 'jsonrpc',
+		array $check_models = []
 	): array {
 		$logger = new Logger( 'auth' );
 
@@ -190,6 +195,11 @@ class Odoo_Auth {
 			$result['uid']     = $uid;
 			$result['message'] = __( 'Connection successful.', 'wp4odoo' );
 
+			// Probe model availability if requested.
+			if ( ! empty( $check_models ) ) {
+				$result['models'] = self::probe_models( $transport, $check_models );
+			}
+
 			$logger->info( 'Connection test successful.', [
 				'url'      => $url,
 				'database' => $database,
@@ -206,6 +216,51 @@ class Odoo_Auth {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Check which Odoo models are available on a connected instance.
+	 *
+	 * Queries the ir.model registry (always available in Odoo) to determine
+	 * which of the given model names exist. Used to detect missing Odoo modules.
+	 *
+	 * @param Transport          $transport Authenticated transport instance.
+	 * @param array<int, string> $models    Model names to check (e.g., ['crm.lead', 'sale.order']).
+	 * @return array{available: string[], missing: string[]}
+	 */
+	public static function probe_models( Transport $transport, array $models ): array {
+		if ( empty( $models ) ) {
+			return [ 'available' => [], 'missing' => [] ];
+		}
+
+		try {
+			$records = $transport->execute_kw(
+				'ir.model',
+				'search_read',
+				[ [ [ 'model', 'in', $models ] ] ],
+				[ 'fields' => [ 'model' ] ]
+			);
+
+			$found   = is_array( $records ) ? array_column( $records, 'model' ) : [];
+			$missing = array_values( array_diff( $models, $found ) );
+
+			return [
+				'available' => $found,
+				'missing'   => $missing,
+			];
+		} catch ( \Throwable $e ) {
+			// Probe failed — don't report false missing models.
+			$logger = new Logger( 'auth' );
+			$logger->warning( 'Model availability check failed.', [
+				'error' => $e->getMessage(),
+			] );
+
+			return [
+				'available' => [],
+				'missing'   => [],
+				'error'     => $e->getMessage(),
+			];
+		}
 	}
 
 	/**

@@ -22,6 +22,10 @@ trait Ajax_Setup_Handlers {
 	/**
 	 * Test Odoo connection with provided credentials.
 	 *
+	 * When the connection succeeds, also probes Odoo for all models
+	 * required by registered plugin modules and reports any that are
+	 * missing (i.e., the corresponding Odoo app is not installed).
+	 *
 	 * @return void
 	 */
 	public function test_connection(): void {
@@ -39,9 +43,34 @@ trait Ajax_Setup_Handlers {
 			$api_key = $stored['api_key'] ?: null;
 		}
 
-		$result = Odoo_Auth::test_connection( $url, $database, $username, $api_key, $protocol );
+		// Collect all unique Odoo model names from registered modules.
+		$check_models = $this->collect_module_models();
+
+		$result = Odoo_Auth::test_connection( $url, $database, $username, $api_key, $protocol, $check_models );
+
+		// Add human-readable warning for missing models.
+		if ( ! empty( $result['models']['missing'] ) ) {
+			$result['model_warning'] = $this->format_missing_model_warning( $result['models']['missing'] );
+		}
 
 		wp_send_json_success( $result );
+	}
+
+	/**
+	 * Collect all unique Odoo model names from registered modules.
+	 *
+	 * @return array<int, string>
+	 */
+	private function collect_module_models(): array {
+		$models = [];
+
+		foreach ( \WP4Odoo_Plugin::instance()->get_modules() as $module ) {
+			foreach ( $module->get_odoo_models() as $model_name ) {
+				$models[] = $model_name;
+			}
+		}
+
+		return array_values( array_unique( $models ) );
 	}
 
 	/**

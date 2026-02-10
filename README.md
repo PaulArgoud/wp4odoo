@@ -21,7 +21,7 @@ Modular WordPress plugin providing comprehensive, bidirectional integration betw
 - **Onboarding** — Post-activation redirect, setup notice, 3-step checklist with progress bar, inline Odoo documentation (API keys, webhooks)
 - **WP-CLI** — Full command suite: `wp wp4odoo status|test|sync|queue|module` for headless management
 - **Extensible** — Register custom modules via `wp4odoo_register_modules` action hook; filter data with `wp4odoo_map_to_odoo_*` / `wp4odoo_map_from_odoo_*`
-- **Multilingual (3 languages)** — Fully internationalized with WordPress standard Gettext i18n. Ships with English (source), French, and Spanish translations (252 strings). Translation-ready for additional languages via `.po`/`.mo` files
+- **Multilingual (3 languages)** — Fully internationalized with WordPress standard Gettext i18n. Ships with English (source), French, and Spanish translations (254 strings). Translation-ready for additional languages via `.po`/`.mo` files
 
 ## Requirements
 
@@ -29,6 +29,38 @@ Modular WordPress plugin providing comprehensive, bidirectional integration betw
 - WordPress 6.0+
 - Odoo 17+ (JSON-RPC) or Odoo 14+ (XML-RPC)
 - WooCommerce (optional, for WooCommerce module)
+
+## Compatibility
+
+### By Odoo version and hosting type
+
+| Odoo version | On-Premise | Odoo.sh | Odoo Online | One App Free |
+|:-------------|:----------:|:-------:|:-----------:|:------------:|
+| 17 – 19      | ✅ Full    | ✅ Full | ✅ Full     | ⚠️ Partial ² |
+| 14 – 16      | ✅ Full    | ✅ Full | N/A ¹       | N/A ¹        |
+| < 14          | ❌         | ❌      | N/A ¹       | N/A ¹        |
+
+> ¹ Odoo Online always runs the latest stable version (currently 17+), so older versions do not apply.
+>
+> ² **[One App Free](https://www.odoo.com/pricing)** is Odoo's free plan (one app, unlimited users). WP4Odoo modules require multiple Odoo apps (see table below), so only a subset of features will work. Upgrade to the Standard plan for full compatibility.
+
+- **Odoo 17+** — uses JSON-RPC 2.0 (default, recommended)
+- **Odoo 14 – 16** — uses XML-RPC (legacy transport, select in plugin settings)
+- **Odoo < 14** — not supported (external API incompatibilities)
+
+All hosting types expose the standard Odoo external API used by the plugin. No custom Odoo modules are required — only the standard apps listed below.
+
+### Required Odoo apps per module
+
+The plugin automatically detects missing Odoo apps at connection test and module activation.
+
+| WP4Odoo Module  | Required Odoo Apps                    | One App Free |
+|:----------------|:--------------------------------------|:------------:|
+| **CRM**         | Contacts, CRM                         | ⚠️ ³        |
+| **Sales**       | Contacts, Sales, Invoicing            | ❌           |
+| **WooCommerce** | Contacts, Sales, Inventory, Invoicing | ❌           |
+
+> ³ With CRM as your free app, contact sync and lead capture work. Sales and WooCommerce modules require 3–4 apps and are not available on the free plan.
 
 ## Installation
 
@@ -140,10 +172,10 @@ wp wp4odoo module disable crm        # Disable a module
 # Install dependencies
 php composer.phar install
 
-# Run PHPUnit tests (416 tests, 811 assertions)
+# Run PHPUnit tests (425 tests, 833 assertions)
 php vendor/bin/phpunit
 
-# Run PHPStan static analysis (level 5, 0 errors on 41 files)
+# Run PHPStan static analysis (level 5, 0 errors on 44 files)
 php -d memory_limit=1G vendor/bin/phpstan analyse --memory-limit=1G
 ```
 

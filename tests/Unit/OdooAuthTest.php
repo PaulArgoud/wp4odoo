@@ -4,6 +4,7 @@ declare( strict_types=1 );
 namespace WP4Odoo\Tests\Unit;
 
 use WP4Odoo\API\Odoo_Auth;
+use WP4Odoo\API\Transport;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -267,5 +268,150 @@ class OdooAuthTest extends TestCase {
 		$this->assertNull( $result['version'] );
 		$this->assertNotEmpty( $result['message'] );
 		$this->assertStringContainsString( 'Missing', $result['message'] );
+	}
+
+	/**
+	 * Test test_connection does not include models key when check_models is empty.
+	 */
+	public function test_test_connection_without_check_models_has_no_models_key(): void {
+		$result = Odoo_Auth::test_connection( '', '', '', '' );
+
+		$this->assertArrayNotHasKey( 'models', $result );
+	}
+
+	// ─── probe_models ───────────────────────────────────
+
+	/**
+	 * Test probe_models returns available and missing models.
+	 */
+	public function test_probe_models_identifies_available_and_missing(): void {
+		$transport = $this->createMockTransport( [
+			[ 'id' => 1, 'model' => 'res.partner' ],
+			[ 'id' => 2, 'model' => 'account.move' ],
+		] );
+
+		$result = Odoo_Auth::probe_models( $transport, [
+			'res.partner',
+			'crm.lead',
+			'account.move',
+			'sale.order',
+		] );
+
+		$this->assertSame( [ 'res.partner', 'account.move' ], $result['available'] );
+		$this->assertSame( [ 'crm.lead', 'sale.order' ], $result['missing'] );
+	}
+
+	/**
+	 * Test probe_models returns all models as available when all exist.
+	 */
+	public function test_probe_models_all_available(): void {
+		$transport = $this->createMockTransport( [
+			[ 'id' => 1, 'model' => 'res.partner' ],
+			[ 'id' => 2, 'model' => 'crm.lead' ],
+		] );
+
+		$result = Odoo_Auth::probe_models( $transport, [ 'res.partner', 'crm.lead' ] );
+
+		$this->assertSame( [ 'res.partner', 'crm.lead' ], $result['available'] );
+		$this->assertSame( [], $result['missing'] );
+	}
+
+	/**
+	 * Test probe_models returns empty arrays for empty input.
+	 */
+	public function test_probe_models_empty_list(): void {
+		$transport = $this->createMockTransport( [] );
+
+		$result = Odoo_Auth::probe_models( $transport, [] );
+
+		$this->assertSame( [], $result['available'] );
+		$this->assertSame( [], $result['missing'] );
+	}
+
+	/**
+	 * Test probe_models handles transport exception gracefully.
+	 */
+	public function test_probe_models_handles_transport_error(): void {
+		$transport = new class implements Transport {
+			public function authenticate( string $username ): int {
+				return 1;
+			}
+			public function execute_kw( string $model, string $method, array $args = [], array $kwargs = [] ): mixed {
+				throw new \RuntimeException( 'Network timeout' );
+			}
+			public function get_uid(): ?int {
+				return 1;
+			}
+		};
+
+		$result = Odoo_Auth::probe_models( $transport, [ 'crm.lead', 'sale.order' ] );
+
+		// On error, both arrays are empty — no false warnings.
+		$this->assertSame( [], $result['available'] );
+		$this->assertSame( [], $result['missing'] );
+		$this->assertArrayHasKey( 'error', $result );
+		$this->assertStringContainsString( 'Network timeout', $result['error'] );
+	}
+
+	/**
+	 * Test probe_models correctly queries ir.model with 'in' domain.
+	 */
+	public function test_probe_models_queries_ir_model(): void {
+		$transport = new class implements Transport {
+			public array $last_call = [];
+			public function authenticate( string $username ): int {
+				return 1;
+			}
+			public function execute_kw( string $model, string $method, array $args = [], array $kwargs = [] ): mixed {
+				$this->last_call = [
+					'model'  => $model,
+					'method' => $method,
+					'args'   => $args,
+					'kwargs' => $kwargs,
+				];
+				return [];
+			}
+			public function get_uid(): ?int {
+				return 1;
+			}
+		};
+
+		Odoo_Auth::probe_models( $transport, [ 'crm.lead' ] );
+
+		$this->assertSame( 'ir.model', $transport->last_call['model'] );
+		$this->assertSame( 'search_read', $transport->last_call['method'] );
+		$this->assertSame( [ [ [ 'model', 'in', [ 'crm.lead' ] ] ] ], $transport->last_call['args'] );
+		$this->assertSame( [ 'fields' => [ 'model' ] ], $transport->last_call['kwargs'] );
+	}
+
+	// ─── Helpers ────────────────────────────────────────
+
+	/**
+	 * Create a mock Transport that returns fixed ir.model records.
+	 *
+	 * @param array<int, array{id: int, model: string}> $records
+	 * @return Transport
+	 */
+	private function createMockTransport( array $records ): Transport {
+		return new class( $records ) implements Transport {
+			/** @var array<int, array{id: int, model: string}> */
+			private array $records;
+
+			public function __construct( array $records ) {
+				$this->records = $records;
+			}
+
+			public function authenticate( string $username ): int {
+				return 1;
+			}
+
+			public function execute_kw( string $model, string $method, array $args = [], array $kwargs = [] ): mixed {
+				return $this->records;
+			}
+
+			public function get_uid(): ?int {
+				return 1;
+			}
+		};
 	}
 }

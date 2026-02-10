@@ -20,6 +20,10 @@ trait Ajax_Module_Handlers {
 	/**
 	 * Toggle a module's enabled state.
 	 *
+	 * When enabling a module, checks whether the Odoo models it requires
+	 * are available on the connected instance. Returns a warning (non-blocking)
+	 * if any required models are missing.
+	 *
 	 * @return void
 	 */
 	public function toggle_module(): void {
@@ -36,7 +40,7 @@ trait Ajax_Module_Handlers {
 
 		update_option( 'wp4odoo_module_' . $module_id . '_enabled', $enabled );
 
-		wp_send_json_success( [
+		$response = [
 			'module_id' => $module_id,
 			'enabled'   => $enabled,
 			'message'   => $enabled
@@ -50,7 +54,37 @@ trait Ajax_Module_Handlers {
 					__( 'Module "%s" disabled.', 'wp4odoo' ),
 					$module_id
 				),
-		] );
+		];
+
+		// When enabling, check if the required Odoo models are available.
+		if ( $enabled ) {
+			$module = \WP4Odoo_Plugin::instance()->get_module( $module_id );
+
+			if ( $module ) {
+				$required = array_values( array_unique( $module->get_odoo_models() ) );
+
+				if ( ! empty( $required ) ) {
+					try {
+						$client    = \WP4Odoo_Plugin::instance()->client();
+						$records   = $client->search_read(
+							'ir.model',
+							[ [ 'model', 'in', $required ] ],
+							[ 'model' ]
+						);
+						$available = array_column( $records, 'model' );
+						$missing   = array_values( array_diff( $required, $available ) );
+
+						if ( ! empty( $missing ) ) {
+							$response['warning'] = $this->format_missing_model_warning( $missing );
+						}
+					} catch ( \Throwable $e ) {
+						// Connection not configured or failed — skip model check.
+					}
+				}
+			}
+		}
+
+		wp_send_json_success( $response );
 	}
 
 	/**

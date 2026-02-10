@@ -37,6 +37,8 @@ class AdminAjaxTest extends TestCase {
 	protected function tearDown(): void {
 		$_POST = [];
 		unset( $GLOBALS['_wp_current_user_can'] );
+		unset( $GLOBALS['_wp_remote_response'] );
+		unset( $GLOBALS['_wp_remote_responses'] );
 	}
 
 	// ─── verify_request() — permission denied ────────────
@@ -270,6 +272,83 @@ class AdminAjaxTest extends TestCase {
 			$this->fail( 'Expected WP4Odoo_Test_JsonError was not thrown.' );
 		} catch ( \WP4Odoo_Test_JsonError $e ) {
 			$this->assertStringContainsString( 'module', strtolower( $e->data['message'] ) );
+		}
+	}
+
+	public function test_toggle_module_enable_skips_model_check_when_no_credentials(): void {
+		$this->register_module_with_models( 'testmod', [ 'contact' => 'res.partner' ] );
+
+		$_POST['module_id'] = 'testmod';
+		$_POST['enabled']   = '1';
+
+		// No Odoo credentials stored → model check silently skipped.
+		try {
+			$this->ajax->toggle_module();
+			$this->fail( 'Expected WP4Odoo_Test_JsonSuccess was not thrown.' );
+		} catch ( \WP4Odoo_Test_JsonSuccess $e ) {
+			$this->assertTrue( $e->data['enabled'] );
+			$this->assertArrayNotHasKey( 'warning', $e->data );
+		}
+	}
+
+	public function test_toggle_module_enable_returns_warning_when_models_missing(): void {
+		$this->register_module_with_models( 'testmod', [
+			'contact' => 'res.partner',
+			'lead'    => 'crm.lead',
+		] );
+
+		$_POST['module_id'] = 'testmod';
+		$_POST['enabled']   = '1';
+
+		// Configure stored credentials + HTTP response queue.
+		$GLOBALS['_wp_options']['wp4odoo_connection'] = [
+			'url'      => 'https://odoo.example.com',
+			'database' => 'testdb',
+			'username' => 'admin',
+			'api_key'  => \WP4Odoo\API\Odoo_Auth::encrypt( 'secret123' ),
+			'protocol' => 'jsonrpc',
+			'timeout'  => 15,
+		];
+
+		$GLOBALS['_wp_remote_responses'] = [
+			// Auth response (uid=2) — /web/session/authenticate returns {uid: 2}.
+			[
+				'body'     => json_encode( [ 'jsonrpc' => '2.0', 'result' => [ 'uid' => 2 ], 'id' => 1 ] ),
+				'response' => [ 'code' => 200 ],
+			],
+			// ir.model search_read: only res.partner found.
+			[
+				'body'     => json_encode( [
+					'jsonrpc' => '2.0',
+					'result'  => [ [ 'id' => 1, 'model' => 'res.partner' ] ],
+					'id'      => 2,
+				] ),
+				'response' => [ 'code' => 200 ],
+			],
+		];
+
+		try {
+			$this->ajax->toggle_module();
+			$this->fail( 'Expected WP4Odoo_Test_JsonSuccess was not thrown.' );
+		} catch ( \WP4Odoo_Test_JsonSuccess $e ) {
+			$this->assertTrue( $e->data['enabled'] );
+			$this->assertArrayHasKey( 'warning', $e->data );
+			$this->assertStringContainsString( 'Odoo', $e->data['warning'] );
+		}
+	}
+
+	public function test_toggle_module_disable_skips_model_check(): void {
+		$this->register_module_with_models( 'testmod', [ 'contact' => 'res.partner' ] );
+
+		$_POST['module_id'] = 'testmod';
+		$_POST['enabled']   = '';
+
+		try {
+			$this->ajax->toggle_module();
+			$this->fail( 'Expected WP4Odoo_Test_JsonSuccess was not thrown.' );
+		} catch ( \WP4Odoo_Test_JsonSuccess $e ) {
+			$this->assertFalse( $e->data['enabled'] );
+			$this->assertArrayNotHasKey( 'warning', $e->data );
 		}
 	}
 
@@ -599,6 +678,29 @@ class AdminAjaxTest extends TestCase {
 						'type'  => 'text',
 					],
 				];
+			}
+		};
+
+		\WP4Odoo_Plugin::instance()->register_module( $id, $module );
+	}
+
+	/**
+	 * Register a fake module with custom Odoo models.
+	 *
+	 * @param string               $id          Module identifier.
+	 * @param array<string, string> $odoo_models Entity type => Odoo model name.
+	 */
+	private function register_module_with_models( string $id, array $odoo_models ): void {
+		$module = new class( $id, $odoo_models ) extends \WP4Odoo\Module_Base {
+			public function __construct( string $id, array $odoo_models ) {
+				$this->id          = $id;
+				$this->odoo_models = $odoo_models;
+			}
+
+			public function boot(): void {}
+
+			public function get_default_settings(): array {
+				return [];
 			}
 		};
 

@@ -25,6 +25,21 @@ class Admin_Ajax {
 	use Ajax_Setup_Handlers;
 
 	/**
+	 * Mapping from Odoo model names to the Odoo app that provides them.
+	 *
+	 * Used in debug-mode warnings to help users identify which Odoo
+	 * modules need to be installed.
+	 */
+	private const ODOO_MODULE_HINT = [
+		'crm.lead'         => 'CRM',
+		'sale.order'       => 'Sales',
+		'product.template' => 'Inventory / Sales',
+		'product.product'  => 'Inventory / Sales',
+		'stock.quant'      => 'Inventory',
+		'account.move'     => 'Invoicing',
+	];
+
+	/**
 	 * Constructor — registers all AJAX hooks.
 	 */
 	public function __construct() {
@@ -65,6 +80,34 @@ class Admin_Ajax {
 				'message' => __( 'Permission denied.', 'wp4odoo' ),
 			], 403 );
 		}
+	}
+
+	/**
+	 * Format a human-readable warning for missing Odoo models.
+	 *
+	 * When WP_DEBUG is enabled, includes the exact model names and the
+	 * Odoo app that provides them. Otherwise returns a generic message
+	 * advising to enable debug mode.
+	 *
+	 * @param array<int, string> $missing Missing Odoo model names.
+	 * @return string Translated warning message.
+	 */
+	protected function format_missing_model_warning( array $missing ): string {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			$details = [];
+			foreach ( $missing as $model ) {
+				$hint      = self::ODOO_MODULE_HINT[ $model ] ?? '';
+				$details[] = $hint ? "{$model} ({$hint})" : $model;
+			}
+
+			return sprintf(
+				/* translators: %s: comma-separated list of Odoo model names with module hints */
+				__( 'Required Odoo models are not available: %s. Install the corresponding Odoo modules to use these features.', 'wp4odoo' ),
+				implode( ', ', $details )
+			);
+		}
+
+		return __( 'Some Odoo modules required by the enabled features are not installed on your Odoo instance. Enable WP_DEBUG for technical details.', 'wp4odoo' );
 	}
 
 	/**

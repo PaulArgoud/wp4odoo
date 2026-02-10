@@ -123,7 +123,7 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # PHPUnit tests (416 tests, 811 assertions, 41 files analysed)
+├── tests/                             # PHPUnit tests (425 tests, 833 assertions, 44 files analysed)
 │   ├── bootstrap.php                 #   Constants, stub loading, plugin class requires
 │   ├── stubs/
 │   │   ├── wp-classes.php            #   WP_Error, WP_REST_*, WP_User, WP_CLI, AJAX test helpers
@@ -133,7 +133,7 @@ WordPress For Odoo/
 │   │   ├── plugin-stub.php           #   WP4Odoo_Plugin test singleton
 │   │   └── wp-cli-utils.php          #   WP_CLI\Utils\format_items stub
 │   └── Unit/
-│       ├── AdminAjaxTest.php             #   33 tests for Admin_Ajax (15 handlers)
+│       ├── AdminAjaxTest.php             #   36 tests for Admin_Ajax (15 handlers)
 │       ├── EntityMapRepositoryTest.php  #   19 tests for Entity_Map_Repository
 │       ├── FieldMapperTest.php          #   49 tests for Field_Mapper
 │       ├── ModuleBaseHashTest.php       #   4 tests for generate_sync_hash()
@@ -148,7 +148,7 @@ WordPress For Odoo/
 │       ├── CurrencyTest.php             #   9 tests for multi-currency support
 │       ├── LoggerTest.php               #   33 tests for Logger
 │       ├── SyncEngineTest.php           #   15 tests for Sync_Engine
-│       ├── OdooAuthTest.php             #   14 tests for Odoo_Auth
+│       ├── OdooAuthTest.php             #   20 tests for Odoo_Auth
 │       ├── OdooClientTest.php           #   14 tests for Odoo_Client
 │       ├── QueryServiceTest.php         #   15 tests for Query_Service
 │       ├── ContactRefinerTest.php       #   19 tests for Contact_Refiner

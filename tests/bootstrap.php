@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'WP4ODOO_PLUGIN_DIR', dirname( __DIR__ ) . '/' );
-define( 'WP4ODOO_VERSION', '1.9.6' );
+define( 'WP4ODOO_VERSION', '1.9.7' );
 
 if ( ! defined( 'DAY_IN_SECONDS' ) ) {
 	define( 'DAY_IN_SECONDS', 86400 );
@@ -78,6 +78,8 @@ require_once WP4ODOO_PLUGIN_DIR . 'includes/class-queue-manager.php';
 // API layer.
 require_once WP4ODOO_PLUGIN_DIR . 'includes/api/interface-transport.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/api/trait-retryable-http.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/api/class-odoo-jsonrpc.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/api/class-odoo-xmlrpc.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/api/class-odoo-auth.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/api/class-odoo-client.php';
 

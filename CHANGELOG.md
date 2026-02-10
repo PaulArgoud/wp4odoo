@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.7] - 2026-02-10
+
+### Added
+
+#### Odoo module availability detection
+- `Odoo_Auth::probe_models()` — queries `ir.model` registry to check which Odoo models exist on the connected instance
+- `test_connection()` AJAX — now collects all enabled module models and reports available/missing after successful auth; returns `model_warning` in response
+- `toggle_module()` AJAX — when enabling a module, checks required Odoo models via `Odoo_Client::search_read()` on `ir.model`; returns non-blocking `warning` if models are missing
+- `Admin_Ajax::format_missing_model_warning()` — WP_DEBUG-aware message: shows model names + Odoo module hints in debug mode, generic guidance in production
+- `Admin_Ajax::ODOO_MODULE_HINT` constant — maps Odoo model names to their parent module (e.g., `crm.lead` → CRM, `sale.order` → Sales)
+
+#### Tests
+- 9 new tests: 6 for `probe_models()` (OdooAuthTest) + 3 for model warning behaviour (AdminAjaxTest)
+- `wp_remote_post` stub enhanced with response queue (`$GLOBALS['_wp_remote_responses']`) for multi-call tests
+- Test bootstrap now loads `Odoo_JsonRPC` and `Odoo_XmlRPC` (needed for `Odoo_Client::ensure_connected()` in end-to-end tests)
+
+### Changed
+
+- `Odoo_Auth::test_connection()` — new `$check_models` parameter (6th, optional `array`)
+- Plugin version bumped from 1.9.6 to 1.9.7
+- PHPUnit: 425 tests, 833 assertions — all green
+- PHPStan: 0 errors on 44 files
+
 ## [1.9.6] - 2026-02-10
 
 ### Changed

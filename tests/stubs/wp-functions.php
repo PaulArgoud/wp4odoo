@@ -506,6 +506,10 @@ if ( ! function_exists( 'wp_send_json_error' ) ) {
 
 if ( ! function_exists( 'wp_remote_post' ) ) {
 	function wp_remote_post( $url, $args = [] ) {
+		// Support sequential response queue for multi-call tests.
+		if ( ! empty( $GLOBALS['_wp_remote_responses'] ) ) {
+			return array_shift( $GLOBALS['_wp_remote_responses'] );
+		}
 		return $GLOBALS['_wp_remote_response'] ?? new \WP_Error( 'http_error', 'Stub: no response configured.' );
 	}
 }
