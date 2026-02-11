@@ -6,7 +6,7 @@
  * @package WP4Odoo
  */
 
-define( 'WP4ODOO_VERSION', '2.5.0' );
+define( 'WP4ODOO_VERSION', '2.6.0' );
 define( 'WP4ODOO_PLUGIN_FILE', __DIR__ . '/wp4odoo.php' );
 define( 'WP4ODOO_PLUGIN_DIR', __DIR__ . '/' );
 define( 'WP4ODOO_PLUGIN_URL', 'https://example.com/wp-content/plugins/wp4odoo/' );
@@ -342,6 +342,54 @@ if ( ! defined( 'AMELIA_VERSION' ) ) {
 
 // Bookly namespace stub loaded from separate file (PHP namespace rules).
 require_once __DIR__ . '/phpstan-bookly-stubs.php';
+
+// ─── LearnDash stubs ────────────────────────────────────
+
+if ( ! defined( 'LEARNDASH_VERSION' ) ) {
+	define( 'LEARNDASH_VERSION', '4.18.0' );
+}
+
+if ( ! function_exists( 'learndash_get_course_price' ) ) {
+	/**
+	 * @param int $course_id
+	 * @return array{type: string, price: string}
+	 */
+	function learndash_get_course_price( int $course_id = 0 ): array {
+		return [ 'type' => 'free', 'price' => '' ];
+	}
+}
+
+if ( ! function_exists( 'learndash_get_group_price' ) ) {
+	/**
+	 * @param int $group_id
+	 * @return array{type: string, price: string}
+	 */
+	function learndash_get_group_price( int $group_id = 0 ): array {
+		return [ 'type' => 'free', 'price' => '' ];
+	}
+}
+
+if ( ! function_exists( 'learndash_get_setting' ) ) {
+	/**
+	 * @param int    $post_id
+	 * @param string $key
+	 * @return mixed
+	 */
+	function learndash_get_setting( int $post_id = 0, string $key = '' ) {
+		return '';
+	}
+}
+
+if ( ! function_exists( 'learndash_user_get_course_date' ) ) {
+	/**
+	 * @param int $user_id
+	 * @param int $course_id
+	 * @return string
+	 */
+	function learndash_user_get_course_date( int $user_id = 0, int $course_id = 0 ): string {
+		return '';
+	}
+}
 
 // WP_CLI\Utils namespace stub loaded from separate file (PHP namespace rules).
 require_once __DIR__ . '/phpstan-wp-cli-stubs.php';

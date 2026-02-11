@@ -2,8 +2,8 @@
 /**
  * Plugin Name: WordPress For Odoo
  * Plugin URI: https://github.com/PaulArgoud/wordpress-for-odoo
- * Description: Modular WordPress/WooCommerce sync with Odoo ERP (v14+). 13 modules — CRM, Sales, WooCommerce, EDD, Memberships, MemberPress, GiveWP, Charitable, WP Simple Pay, WP Recipe Maker, Forms (GF/WPForms), Amelia, Bookly — covering contacts, leads, orders, invoices, products, donations, bookings, recipes, recurring subscriptions. Async queue, webhooks, customer portal, WP-CLI, encrypted credentials.
- * Version: 2.5.0
+ * Description: Modular WordPress/WooCommerce sync with Odoo ERP (v14+). 14 modules — CRM, Sales, WooCommerce, EDD, Memberships, MemberPress, GiveWP, Charitable, WP Simple Pay, WP Recipe Maker, Forms (GF/WPForms), Amelia, Bookly, LearnDash — covering contacts, leads, orders, invoices, products, donations, bookings, recipes, LMS courses, recurring subscriptions. Async queue, webhooks, customer portal, WP-CLI, encrypted credentials.
+ * Version: 2.6.0
  * Requires at least: 6.0
  * Requires PHP: 8.2
  * Author: Paul ARGOUD
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'WP4ODOO_VERSION', '2.5.0' );
+define( 'WP4ODOO_VERSION', '2.6.0' );
 define( 'WP4ODOO_PLUGIN_FILE', __FILE__ );
 define( 'WP4ODOO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WP4ODOO_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

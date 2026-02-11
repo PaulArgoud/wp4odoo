@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2026-02-11
+
+### Added
+- **LearnDash Module** — LearnDash LMS → Odoo push sync: courses and groups as service products (`product.product`), transactions as invoices (`account.move` with optional auto-posting), enrollments as sale orders (`sale.order`). Synthetic enrollment IDs (`user_id × 1M + course_id`), automatic parent course sync before dependent entities, partner resolution via `Partner_Service`. `LearnDash_Handler`, `LearnDash_Hooks` trait, 69 new unit tests
+
 ## [2.5.0] - 2026-02-11
 
 ### Fixed

@@ -49,6 +49,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<option value="forms">Forms</option>
 			<option value="amelia">Amelia</option>
 			<option value="bookly">Bookly</option>
+			<option value="learndash">LearnDash</option>
 		</select>
 
 		<input type="date" id="wp4odoo-log-date-from" placeholder="<?php esc_attr_e( 'From', 'wp4odoo' ); ?>" />

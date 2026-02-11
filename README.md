@@ -2,9 +2,13 @@
 
 [![CI](https://github.com/PaulArgoud/wordpress-for-odoo/actions/workflows/ci.yml/badge.svg)](https://github.com/PaulArgoud/wordpress-for-odoo/actions/workflows/ci.yml)
 
-Modular WordPress plugin providing comprehensive, bidirectional integration between WordPress/WooCommerce and Odoo ERP (v14+). Covers CRM, Sales & Invoicing, WooCommerce, EDD, Memberships, MemberPress, GiveWP donations, WP Charitable donations, WP Simple Pay (Stripe), WP Recipe Maker, Amelia Booking, Bookly Booking, and form leads through a clean, extensible architecture. Ships in **3 languages** (English, French, Spanish) and is fully translation-ready.
+Modular WordPress plugin that creates a seamless, bidirectional bridge between WordPress/WooCommerce and Odoo ERP (v14+).
 
-**Target users:** WordPress agencies and businesses running Odoo as their ERP who need seamless data flow between their website and back-office.
+Built on a clean, extensible architecture, it covers a wide range of integrations: CRM, Sales & Invoicing, WooCommerce, Easy Digital Downloads, Memberships, MemberPress, GiveWP, WP Charitable, WP Simple Pay (Stripe), WP Recipe Maker, Amelia Booking, Bookly Booking, and form-based lead capture.
+
+Ships in **3 languages** (English, French, Spanish) and is fully translation-ready.
+
+**Target users:** WordPress agencies and businesses running Odoo as their ERP who need reliable, real-time data flow between their website and back-office.
 
 ![WordPress For Odoo (WP4Odoo)](assets/images/logo-v2.avif)
 
@@ -62,21 +66,21 @@ All hosting types expose the standard Odoo external API used by the plugin. No c
 
 Each Odoo domain is encapsulated in an independent module extending `Module_Base`. The plugin automatically detects missing Odoo apps at connection test and module activation.
 
-| WP4Odoo Modules            | Synch. | Odoo Apps                             | Free⁴ | Key Features                                                                  |
-|----------------------------|:------:|---------------------------------------|:-----:|-------------------------------------------------------------------------------|
-| **CRM**                    |   ↔️   | Contacts, CRM                         |  ⚠️  | Contact sync, lead form shortcode, email dedup, archive-on-delete              |
-| **Sales**                  |   ⬅️   | Contacts, Sales, Invoicing            |  ❌  | Order/invoice CPTs, customer portal shortcode, currency display                |
-| **WooCommerce**            |   ↔️   | Contacts, Sales, Inventory, Invoicing |  ❌  | Product/order/stock sync, variants, image pull, exchange rates, bulk ops       |
-| **Easy Digital Downloads** |   ↔️   | Contacts, Sales, Invoicing            |  ❌  | Download/order sync, status mapping, invoice pull                              |
-| **WC Memberships**         |   ➡️   | Contacts, Members                     |  ❌  | Plan auto-sync, status mapping, filterable via `wp4odoo_membership_status_map` |
-| **MemberPress**            |   ➡️   | Contacts, Members, Invoicing          |  ❌  | Plan/txn/sub sync, auto-post invoices, status mapping                          |
-| **GiveWP**                 |   ➡️   | Contacts, Invoicing (+ OCA Donation)  |  ⚠️  | Form/donation sync, dual-model detection, auto-validate, recurring donations   |
-| **WP Charitable**          |   ➡️   | Contacts, Invoicing (+ OCA Donation)  |  ⚠️  | Campaign/donation sync, dual-model detection, auto-validate, recurring         |
-| **WP Simple Pay**          |   ➡️   | Contacts, Invoicing (+ OCA Donation)  |  ⚠️  | Stripe payment sync, webhook capture, dual-model, auto-validate, recurring     |
-| **WP Recipe Maker**        |   ➡️   | Products                              |  ❌  | Recipe sync as service products, structured descriptions, push-only            |
-| **Amelia Booking**         |   ➡️   | Contacts, Calendar                    |  ⚠️  | Service/appointment sync, calendar events, customer-to-partner resolution      |
-| **Bookly Booking**         |   ➡️   | Contacts, Calendar                    |  ⚠️  | Service/booking sync via WP-Cron polling, hash-based change detection          |
-| **Forms (GF & WPF)**       |   ➡️   | Contacts, CRM                         |  ⚠️  | GF + WPForms lead creation, field auto-detection, multilingual label matching  |
+| WP4Odoo Modules             | Synch. | Odoo Apps                             | Free⁴ | Key Features                                                                  |
+|-----------------------------|:------:|---------------------------------------|:-----:|-------------------------------------------------------------------------------|
+| **CRM**                     |   ↔️   | Contacts, CRM                         |  ⚠️  | Contact sync, lead form shortcode, email dedup, archive-on-delete              |
+| **Sales**                   |   ⬅️   | Contacts, Sales, Invoicing            |  ❌  | Order/invoice CPTs, customer portal shortcode, currency display                |
+| **Amelia Booking**          |   ➡️   | Contacts, Calendar                    |  ⚠️  | Service/appointment sync, calendar events, customer-to-partner resolution      |
+| **Bookly Booking**          |   ➡️   | Contacts, Calendar                    |  ⚠️  | Service/booking sync via WP-Cron polling, hash-based change detection          |
+| **Easy Digital Downloads**  |   ↔️   | Contacts, Sales, Invoicing            |  ❌  | Download/order sync, status mapping, invoice pull                              |
+| **Forms (GF & WPF)**        |   ➡️   | Contacts, CRM                         |  ⚠️  | GF + WPForms lead creation, field auto-detection, multilingual label matching  |
+| **GiveWP**                  |   ➡️   | Contacts, Invoicing (+ OCA Donation)  |  ⚠️  | Form/donation sync, dual-model detection, auto-validate, recurring donations   |
+| **MemberPress**             |   ➡️   | Contacts, Members, Invoicing          |  ❌  | Plan/txn/sub sync, auto-post invoices, status mapping                          |
+| **WP Charitable**           |   ➡️   | Contacts, Invoicing (+ OCA Donation)  |  ⚠️  | Campaign/donation sync, dual-model detection, auto-validate, recurring         |
+| **WP Recipe Maker**         |   ➡️   | Products                              |  ❌  | Recipe sync as service products, structured descriptions, push-only            |
+| **WP Simple Pay**           |   ➡️   | Contacts, Invoicing (+ OCA Donation)  |  ⚠️  | Stripe payment sync, webhook capture, dual-model, auto-validate, recurring     |
+| **WooCommerce**             |   ↔️   | Contacts, Sales, Inventory, Invoicing |  ❌  | Product/order/stock sync, variants, image pull, exchange rates, bulk ops       |
+| **WooCommerce Memberships** |   ➡️   | Contacts, Members                     |  ❌  | Plan auto-sync, status mapping, filterable via `wp4odoo_membership_status_map` |
 
 > ⁴ **[One App Free](https://www.odoo.com/pricing)**: with CRM as your free app, CRM and Forms modules work. With Invoicing as your free app, GiveWP, WP Charitable, and WP Simple Pay work. With Calendar as your free app, Amelia and Bookly work (partial — no Contacts). Sales, WooCommerce, Memberships, and WP Recipe Maker require 2–4 apps.
 

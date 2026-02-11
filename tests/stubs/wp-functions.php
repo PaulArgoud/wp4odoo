@@ -167,6 +167,20 @@ if ( ! function_exists( 'esc_html_e' ) ) {
 	}
 }
 
+// ─── Post revision / autosave ───────────────────────────
+
+if ( ! function_exists( 'wp_is_post_revision' ) ) {
+	function wp_is_post_revision( $post ) {
+		return false;
+	}
+}
+
+if ( ! function_exists( 'wp_is_post_autosave' ) ) {
+	function wp_is_post_autosave( $post ) {
+		return false;
+	}
+}
+
 // ─── Formatting ─────────────────────────────────────────
 
 if ( ! function_exists( 'wp_strip_all_tags' ) ) {
@@ -412,7 +426,11 @@ if ( ! function_exists( 'add_shortcode' ) ) {
 
 if ( ! function_exists( 'get_post_meta' ) ) {
 	function get_post_meta( $post_id, $key = '', $single = false ) {
-		if ( $key && isset( $GLOBALS['_wp_post_meta'][ $post_id ][ $key ] ) ) {
+		if ( '' === $key ) {
+			// Return all meta for this post (WP format: key => [values]).
+			return $GLOBALS['_wp_post_meta'][ $post_id ] ?? [];
+		}
+		if ( isset( $GLOBALS['_wp_post_meta'][ $post_id ][ $key ] ) ) {
 			return $single ? $GLOBALS['_wp_post_meta'][ $post_id ][ $key ] : [ $GLOBALS['_wp_post_meta'][ $post_id ][ $key ] ];
 		}
 		return $single ? '' : [];
