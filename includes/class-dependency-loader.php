@@ -92,6 +92,9 @@ final class Dependency_Loader {
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-wprm-module.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-form-handler.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-forms-module.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-amelia-hooks.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-amelia-handler.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-amelia-module.php';
 
 		// Admin
 		if ( is_admin() ) {

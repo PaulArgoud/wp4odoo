@@ -2,7 +2,7 @@
 
 ## Overview
 
-Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 11 modules across 7 domains: CRM, Sales & Invoicing, WooCommerce, Easy Digital Downloads, Memberships (WC Memberships + MemberPress), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (Gravity Forms + WPForms), and WP Recipe Maker.
+Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 12 modules across 8 domains: CRM, Sales & Invoicing, WooCommerce, Easy Digital Downloads, Memberships (WC Memberships + MemberPress), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (Gravity Forms + WPForms), WP Recipe Maker, and Amelia Booking.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -18,12 +18,12 @@ Modular WordPress plugin providing bidirectional synchronization between WordPre
 │  │  Module   │ │  Module   │ │   Module   │ │  Module  │  & Donation │
 │  └────┬──────┘ └────┬──────┘ └─────┬──────┘ └────┬─────┘  Modules    │
 │       │             │              │             │                   │
-│  ┌────┴──────┐ ┌────┴──────┐ ┌─────┴──────┐                          │
-│  │ SimplePay │ │   Forms   │ │    WPRM    │  Payment, Forms          │
-│  │  Module   │ │  Module   │ │   Module   │  & Content Modules       │
-│  └────┬──────┘ └────┬──────┘ └─────┬──────┘                          │
-│       │             │              │                                 │
-│       └─────────────┼──────────────┘                                 │
+│  ┌────┴──────┐ ┌────┴──────┐ ┌─────┴──────┐ ┌───────────┐             │
+│  │ SimplePay │ │   Forms   │ │    WPRM    │ │  Amelia   │  Payment,   │
+│  │  Module   │ │  Module   │ │   Module   │ │  Module   │  Forms,     │
+│  └────┬──────┘ └────┬──────┘ └─────┬──────┘ └─────┬─────┘  Content & │
+│       │             │              │              │        Booking    │
+│       └─────────────┼──────────────┴──────────────┘        Modules   │
 │                     ▼                                                │
 │  ┌─────────────────────────────────────────────────────────────────┐ │
 │  │  Shared Infrastructure                                          │ │
@@ -138,7 +138,12 @@ WordPress For Odoo/
 │   │   │
 │   │   ├── # ─── Forms ─────────────────────────────────────────
 │   │   ├── class-form-handler.php            # Forms: field extraction from GF/WPForms submissions (auto-detection)
-│   │   └── class-forms-module.php            # Forms: push sync coordinator (GF/WPForms → crm.lead)
+│   │   ├── class-forms-module.php            # Forms: push sync coordinator (GF/WPForms → crm.lead)
+│   │   │
+│   │   ├── # ─── Amelia Booking ───────────────────────────────
+│   │   ├── trait-amelia-hooks.php            # Amelia: hook callbacks (booking saved/canceled/rescheduled, service saved)
+│   │   ├── class-amelia-handler.php          # Amelia: $wpdb queries on amelia_* tables (no CPT)
+│   │   └── class-amelia-module.php           # Amelia: push sync coordinator (uses Amelia_Hooks trait)
 │   │
 │   ├── admin/
 │   │   ├── class-admin.php            # Admin menu, assets, activation redirect, setup notice
@@ -191,7 +196,7 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # 952 unit tests (1538 assertions) + 26 integration tests (wp-env)
+├── tests/                             # 991 unit tests (1599 assertions) + 26 integration tests (wp-env)
 │   ├── bootstrap.php                 #   Unit test bootstrap: constants, stub loading, plugin class requires
 │   ├── bootstrap-integration.php     #   Integration test bootstrap: loads WP test framework (wp-env)
 │   ├── stubs/
@@ -207,7 +212,8 @@ WordPress For Odoo/
 │   │   ├── givewp-classes.php        #   Give class, give() function, GIVE_VERSION
 │   │   ├── charitable-classes.php    #   Charitable class with instance()
 │   │   ├── simplepay-classes.php     #   SIMPLE_PAY_VERSION constant
-│   │   └── wprm-classes.php          #   WPRM_VERSION constant
+│   │   ├── wprm-classes.php          #   WPRM_VERSION constant
+│   │   └── amelia-classes.php        #   AMELIA_VERSION constant
 │   ├── Integration/                       #   wp-env integration tests (real WordPress + MySQL)
 │   │   ├── WP4Odoo_TestCase.php          #   Base test case for integration tests
 │   │   ├── DatabaseMigrationTest.php     #   7 tests for table creation, options seeding
@@ -262,7 +268,9 @@ WordPress For Odoo/
 │       ├── SimplePayModuleTest.php      #   22 tests for SimplePay_Module
 │       ├── SimplePayHandlerTest.php     #   30 tests for SimplePay_Handler
 │       ├── WPRMModuleTest.php           #   15 tests for WPRM_Module
-│       └── WPRMHandlerTest.php          #   12 tests for WPRM_Handler
+│       ├── WPRMHandlerTest.php          #   12 tests for WPRM_Handler
+│       ├── AmeliaModuleTest.php         #   24 tests for Amelia_Module
+│       └── AmeliaHandlerTest.php        #   15 tests for Amelia_Handler
 │
 ├── uninstall.php                      # Cleanup on plugin uninstall
 │
@@ -312,6 +320,7 @@ Module_Base (abstract)
 ├── SimplePay_Module       → product.product, donation.donation / account.move  [WP → Odoo]
 ├── WPRM_Module            → product.product                                    [WP → Odoo]
 ├── Forms_Module           → crm.lead                                           [WP → Odoo]
+├── Amelia_Module          → product.product, calendar.event                    [WP → Odoo]
 └── [Custom_Module]        → extensible via action hook
 ```
 

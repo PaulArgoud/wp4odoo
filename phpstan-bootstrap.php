@@ -334,5 +334,11 @@ if ( ! class_exists( 'WP_CLI' ) ) {
 	}
 }
 
+// ─── Amelia stubs ───────────────────────────────────────
+
+if ( ! defined( 'AMELIA_VERSION' ) ) {
+	define( 'AMELIA_VERSION', '1.2.37' );
+}
+
 // WP_CLI\Utils namespace stub loaded from separate file (PHP namespace rules).
 require_once __DIR__ . '/phpstan-wp-cli-stubs.php';

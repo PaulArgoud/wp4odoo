@@ -131,6 +131,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SimplePayHandlerTest` — 30 tests: load_form, extract_from_payment_intent, extract_from_invoice, find_existing_payment, create_tracking_post, load_payment (account.move + OCA formats), edge cases
 - SimplePay stubs: `SIMPLE_PAY_VERSION` constant
 
+#### Amelia Module — Bookings → Odoo Calendar + Products
+- New module: `Amelia_Module` (`includes/modules/class-amelia-module.php`) — push-only sync from Amelia Booking to Odoo: services as `product.product` (type service) and appointments as `calendar.event`
+- `Amelia_Handler` (`includes/modules/class-amelia-handler.php`) — data access via `$wpdb` queries on Amelia's custom tables (`amelia_services`, `amelia_appointments`, `amelia_customer_bookings`, `amelia_users`), since Amelia does not use WordPress CPTs
+- `Amelia_Hooks` trait (`includes/modules/trait-amelia-hooks.php`) — 4 hook callbacks with anti-loop guards: `on_booking_saved` (only approved bookings), `on_booking_canceled`, `on_booking_rescheduled`, `on_service_saved`
+- Entity types: `service` → `product.product`, `appointment` → `calendar.event`
+- Appointment data enrichment: service name + customer resolution via `Partner_Service` → Odoo `partner_ids` M2M command `[[4, id, 0]]`
+- Event naming: composed as "Service — Customer" (e.g., "Massage 60min — Jane Doe")
+- Service auto-sync: `ensure_service_synced()` pushes the service to Odoo before any dependent appointment sync
+- Partner resolution via `Partner_Service::get_or_create($email, $data, 0)` for Amelia customers
+- Settings: `sync_services` and `sync_appointments` checkboxes (both default: enabled)
+- Dependency detection: `defined('AMELIA_VERSION')` — module available only when Amelia Booking is active
+- No mutual exclusivity with any other module
+- `AmeliaModuleTest` — 24 tests: identity, Odoo models, settings, field mappings (service + appointment), map_to_odoo, dependency status, boot guard
+- `AmeliaHandlerTest` — 15 tests: load_service, load_appointment, get_customer_data, get_service_id_for_appointment, table name verification
+- Amelia stubs: `AMELIA_VERSION` constant
+
 #### WP Recipe Maker Module — Recipes → Odoo Products
 - New module: `WPRM_Module` (`includes/modules/class-wprm-module.php`) — push-only sync from WP Recipe Maker recipes to Odoo as service products (`product.product`)
 - `WPRM_Handler` (`includes/modules/class-wprm-handler.php`) — loads recipe data from `wprm_recipe` CPT and meta fields (`wprm_summary`, `wprm_prep_time`, `wprm_cook_time`, `wprm_total_time`, `wprm_servings`, `wprm_servings_unit`, `wprm_cost`), builds structured description with times and servings info

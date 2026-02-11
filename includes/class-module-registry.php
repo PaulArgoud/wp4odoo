@@ -110,6 +110,9 @@ class Module_Registry {
 		if ( $gf_active || $wpf_active ) {
 			$this->register( 'forms', new Modules\Forms_Module( $client_provider, $entity_map, $settings ) );
 		}
+		if ( defined( 'AMELIA_VERSION' ) ) {
+			$this->register( 'amelia', new Modules\Amelia_Module( $client_provider, $entity_map, $settings ) );
+		}
 
 		// Allow third-party modules (closures and shared entity map available as arguments).
 		do_action( 'wp4odoo_register_modules', $this->plugin, $client_provider, $entity_map );

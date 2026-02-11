@@ -147,6 +147,10 @@ require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-wprm-module.php';
 require_once __DIR__ . '/stubs/form-classes.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-form-handler.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-forms-module.php';
+require_once __DIR__ . '/stubs/amelia-classes.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-amelia-hooks.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-amelia-handler.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-amelia-module.php';
 
 // Webhook handler.
 require_once WP4ODOO_PLUGIN_DIR . 'includes/class-webhook-handler.php';
