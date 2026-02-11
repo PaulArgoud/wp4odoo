@@ -27,18 +27,6 @@ class WPRM_Module extends Module_Base {
 	use WPRM_Hooks;
 
 	/**
-	 * Module identifier.
-	 *
-	 * @var string
-	 */
-
-	/**
-	 * Human-readable module name.
-	 *
-	 * @var string
-	 */
-
-	/**
 	 * Sync direction: push-only (WP → Odoo).
 	 *
 	 * @return string

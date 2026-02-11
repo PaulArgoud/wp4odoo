@@ -30,18 +30,6 @@ class GiveWP_Module extends Dual_Accounting_Module_Base {
 	use GiveWP_Hooks;
 
 	/**
-	 * Module identifier.
-	 *
-	 * @var string
-	 */
-
-	/**
-	 * Human-readable module name.
-	 *
-	 * @var string
-	 */
-
-	/**
 	 * Odoo models by entity type.
 	 *
 	 * The donation model is resolved dynamically at push time:
