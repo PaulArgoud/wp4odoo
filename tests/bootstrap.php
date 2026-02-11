@@ -65,6 +65,7 @@ $GLOBALS['_rcp_payments']        = [];
 $GLOBALS['_rcp_memberships']     = [];
 $GLOBALS['_llms_orders']         = [];
 $GLOBALS['_llms_enrollments']    = [];
+$GLOBALS['_wc_subscriptions']    = [];
 
 // ─── Load stubs ─────────────────────────────────────────
 // Stubs must be loaded before the autoloader so that external
@@ -90,6 +91,7 @@ require_once __DIR__ . '/stubs/amelia-classes.php';
 require_once __DIR__ . '/stubs/bookly-classes.php';
 require_once __DIR__ . '/stubs/learndash-classes.php';
 require_once __DIR__ . '/stubs/lifterlms-classes.php';
+require_once __DIR__ . '/stubs/wc-subscriptions-classes.php';
 
 // ─── Composer autoloader ────────────────────────────────
 

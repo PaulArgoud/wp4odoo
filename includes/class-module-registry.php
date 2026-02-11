@@ -133,6 +133,9 @@ class Module_Registry {
 		if ( defined( 'LLMS_VERSION' ) ) {
 			$this->register( 'lifterlms', new Modules\LifterLMS_Module( $client_provider, $entity_map, $settings ) );
 		}
+		if ( class_exists( 'WC_Subscriptions' ) ) {
+			$this->register( 'wc_subscriptions', new Modules\WC_Subscriptions_Module( $client_provider, $entity_map, $settings ) );
+		}
 
 		// Allow third-party modules (closures and shared entity map available as arguments).
 		do_action( 'wp4odoo_register_modules', $this->plugin, $client_provider, $entity_map );

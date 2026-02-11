@@ -58,8 +58,11 @@ if ( ! function_exists( 'wc_update_product_stock' ) ) {
 
 if ( ! class_exists( 'WC_Product' ) ) {
 	class WC_Product {
+		public function get_id(): int { return 0; }
 		public function get_name(): string { return ''; }
 		public function set_name( string $name ): void {}
+		public function get_type(): string { return 'simple'; }
+		public function get_price(): string { return ''; }
 		public function get_sku(): string { return ''; }
 		public function set_sku( string $sku ): void {}
 		public function get_regular_price(): string { return ''; }
@@ -78,6 +81,7 @@ if ( ! class_exists( 'WC_Product' ) ) {
 
 if ( ! class_exists( 'WC_Order' ) ) {
 	class WC_Order {
+		public function get_id(): int { return 0; }
 		public function get_total(): string { return '0'; }
 		public function get_date_created(): ?\WC_DateTime { return null; }
 		public function get_status(): string { return ''; }
@@ -85,6 +89,8 @@ if ( ! class_exists( 'WC_Order' ) ) {
 		public function get_billing_email(): string { return ''; }
 		public function get_formatted_billing_full_name(): string { return ''; }
 		public function get_customer_id(): int { return 0; }
+		/** @return array<int, array<string, mixed>> */
+		public function get_items(): array { return []; }
 		public function save(): int { return 0; }
 	}
 }
@@ -594,6 +600,36 @@ if ( ! function_exists( 'learndash_user_get_course_date' ) ) {
 	 */
 	function learndash_user_get_course_date( int $user_id = 0, int $course_id = 0 ): string {
 		return '';
+	}
+}
+
+// ─── WC Subscriptions stubs ─────────────────────────────
+
+if ( ! class_exists( 'WC_Subscriptions' ) ) {
+	class WC_Subscriptions {
+		public static string $version = '6.0.0';
+	}
+}
+
+if ( ! class_exists( 'WC_Subscription' ) ) {
+	class WC_Subscription extends WC_Order {
+		public function get_billing_period(): string { return 'month'; }
+		public function get_billing_interval(): int { return 1; }
+		public function get_date( string $type ): string { return ''; }
+		public function get_parent_id(): int { return 0; }
+		/** @return array<int, array<string, mixed>> */
+		public function get_items(): array { return []; }
+		public function get_user_id(): int { return 0; }
+	}
+}
+
+if ( ! function_exists( 'wcs_get_subscription' ) ) {
+	/**
+	 * @param int $subscription_id
+	 * @return WC_Subscription|false
+	 */
+	function wcs_get_subscription( int $subscription_id = 0 ) {
+		return false;
 	}
 }
 

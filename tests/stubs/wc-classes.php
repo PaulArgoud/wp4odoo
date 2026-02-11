@@ -9,6 +9,11 @@
 
 if ( ! function_exists( 'wc_get_product' ) ) {
 	function wc_get_product( $product_id = 0 ) {
+		if ( isset( $GLOBALS['_wc_products'][ $product_id ] ) ) {
+			$product = new WC_Product( $product_id );
+			$product->set_data( $GLOBALS['_wc_products'][ $product_id ] );
+			return $product;
+		}
 		return false;
 	}
 }
@@ -33,7 +38,16 @@ if ( ! function_exists( 'get_woocommerce_currency' ) ) {
 
 if ( ! function_exists( 'wc_get_order' ) ) {
 	function wc_get_order( $order_id = 0 ) {
-		return $GLOBALS['_wc_orders'][ $order_id ] ?? false;
+		if ( isset( $GLOBALS['_wc_orders'][ $order_id ] ) ) {
+			$data = $GLOBALS['_wc_orders'][ $order_id ];
+			if ( $data instanceof WC_Order ) {
+				return $data;
+			}
+			$order = new WC_Order( $order_id );
+			$order->set_data( $data );
+			return $order;
+		}
+		return false;
 	}
 }
 
@@ -43,8 +57,12 @@ if ( ! class_exists( 'WC_Product' ) ) {
 	class WC_Product {
 		protected int $id = 0;
 		protected array $data = [];
+		public function __construct( int $id = 0 ) { $this->id = $id; }
+		public function get_id(): int { return $this->id; }
 		public function get_name(): string { return $this->data['name'] ?? ''; }
 		public function set_name( string $name ): void { $this->data['name'] = $name; }
+		public function get_type(): string { return $this->data['type'] ?? 'simple'; }
+		public function get_price(): string { return $this->data['price'] ?? ''; }
 		public function get_sku(): string { return $this->data['sku'] ?? ''; }
 		public function set_sku( string $sku ): void { $this->data['sku'] = $sku; }
 		public function get_regular_price(): string { return $this->data['regular_price'] ?? ''; }
@@ -58,6 +76,8 @@ if ( ! class_exists( 'WC_Product' ) ) {
 		public function set_description( string $description ): void { $this->data['description'] = $description; }
 		public function save(): int { return $this->id ?: 1; }
 		public function delete( bool $force = false ): bool { return true; }
+		/** @param array<string, mixed> $data */
+		public function set_data( array $data ): void { $this->data = $data; }
 	}
 }
 
@@ -174,6 +194,8 @@ if ( ! class_exists( 'WC_Order' ) ) {
 		public function get_billing_email(): string { return $this->data['billing_email'] ?? ''; }
 		public function get_formatted_billing_full_name(): string { return $this->data['billing_name'] ?? ''; }
 		public function get_customer_id(): int { return $this->data['customer_id'] ?? 0; }
+		/** @return array<int, array<string, mixed>> */
+		public function get_items(): array { return $this->data['items'] ?? []; }
 		public function save(): int { return $this->id ?: 1; }
 		/** @param array<string, mixed> $data */
 		public function set_data( array $data ): void { $this->data = $data; }
