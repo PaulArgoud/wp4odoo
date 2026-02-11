@@ -78,6 +78,7 @@ final class Dependency_Loader {
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-memberpress-module.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-dual-accounting-model.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-odoo-accounting-formatter.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-dual-accounting-module-base.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-givewp-hooks.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-givewp-handler.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-givewp-module.php';
@@ -92,6 +93,7 @@ final class Dependency_Loader {
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-wprm-module.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-form-handler.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-forms-module.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-booking-module-base.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-amelia-hooks.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-amelia-handler.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-amelia-module.php';

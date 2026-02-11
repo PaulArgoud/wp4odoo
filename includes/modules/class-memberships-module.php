@@ -4,7 +4,6 @@ declare( strict_types=1 );
 namespace WP4Odoo\Modules;
 
 use WP4Odoo\Module_Base;
-use WP4Odoo\Partner_Service;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -87,13 +86,6 @@ class Memberships_Module extends Module_Base {
 	private Membership_Handler $membership_handler;
 
 	/**
-	 * Lazy Partner_Service instance.
-	 *
-	 * @var Partner_Service|null
-	 */
-	private ?Partner_Service $partner_service = null;
-
-	/**
 	 * Constructor.
 	 */
 	public function __construct( \Closure $client_provider, \WP4Odoo\Entity_Map_Repository $entity_map, \WP4Odoo\Settings_Repository $settings ) {
@@ -164,22 +156,7 @@ class Memberships_Module extends Module_Base {
 	 * @return array{available: bool, notices: array<array{type: string, message: string}>}
 	 */
 	public function get_dependency_status(): array {
-		if ( ! function_exists( 'wc_memberships' ) ) {
-			return [
-				'available' => false,
-				'notices'   => [
-					[
-						'type'    => 'warning',
-						'message' => __( 'WooCommerce Memberships must be installed and activated to use this module.', 'wp4odoo' ),
-					],
-				],
-			];
-		}
-
-		return [
-			'available' => true,
-			'notices'   => [],
-		];
+		return $this->check_dependency( function_exists( 'wc_memberships' ), 'WooCommerce Memberships' );
 	}
 
 	// ─── Push override ──────────────────────────────────────
@@ -310,18 +287,5 @@ class Memberships_Module extends Module_Base {
 		// Plan not yet in Odoo — push it synchronously.
 		$this->logger->info( 'Auto-pushing membership plan before membership line.', [ 'plan_id' => $plan_id ] );
 		parent::push_to_odoo( 'plan', 'create', $plan_id );
-	}
-
-	/**
-	 * Get or create the Partner_Service instance.
-	 *
-	 * @return Partner_Service
-	 */
-	private function partner_service(): Partner_Service {
-		if ( null === $this->partner_service ) {
-			$this->partner_service = new Partner_Service( fn() => $this->client(), $this->entity_map() );
-		}
-
-		return $this->partner_service;
 	}
 }

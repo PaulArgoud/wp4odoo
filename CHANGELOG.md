@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-02-11
+
+### Refactoring
+- **Module_Base shared helpers**: `partner_service()` — lazy `Partner_Service` factory (was duplicated in 5 modules via trait + inline); `check_dependency()` — one-liner dependency status helper (was 10+ lines of boilerplate in every module's `get_dependency_status()`)
+- **Dual_Accounting_Module_Base**: new abstract base class (`includes/modules/class-dual-accounting-module-base.php`) for GiveWP, Charitable, and SimplePay modules — extracts shared `push_to_odoo()` (model resolution + parent sync + auto-validate), `map_to_odoo()`, `load_wp_data()`, and child data loading (CPT validation, email→partner, parent→Odoo product resolution). 10 abstract methods for subclass configuration. Each module reduced from ~300 to ~80 lines
+- **Booking_Module_Base**: new abstract base class (`includes/modules/class-booking-module-base.php`) for Amelia and Bookly modules — extracts shared `push_to_odoo()` (service auto-sync), `map_to_odoo()`, `load_wp_data()`, booking data loading (service name, customer→partner, event naming "Service — Customer"), and `ensure_service_synced()`. 11 abstract methods for subclass configuration. Each module reduced from ~340 to ~90 lines
+
 ## [2.0.0] - 2026-02-10
 
 ### Added

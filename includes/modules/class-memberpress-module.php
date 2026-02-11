@@ -4,7 +4,6 @@ declare( strict_types=1 );
 namespace WP4Odoo\Modules;
 
 use WP4Odoo\Module_Base;
-use WP4Odoo\Partner_Service;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -111,13 +110,6 @@ class MemberPress_Module extends Module_Base {
 	private MemberPress_Handler $handler;
 
 	/**
-	 * Lazy Partner_Service instance.
-	 *
-	 * @var Partner_Service|null
-	 */
-	private ?Partner_Service $partner_service = null;
-
-	/**
 	 * Constructor.
 	 */
 	public function __construct( \Closure $client_provider, \WP4Odoo\Entity_Map_Repository $entity_map, \WP4Odoo\Settings_Repository $settings ) {
@@ -201,22 +193,7 @@ class MemberPress_Module extends Module_Base {
 	 * @return array{available: bool, notices: array<array{type: string, message: string}>}
 	 */
 	public function get_dependency_status(): array {
-		if ( ! defined( 'MEPR_VERSION' ) ) {
-			return [
-				'available' => false,
-				'notices'   => [
-					[
-						'type'    => 'warning',
-						'message' => __( 'MemberPress must be installed and activated to use this module.', 'wp4odoo' ),
-					],
-				],
-			];
-		}
-
-		return [
-			'available' => true,
-			'notices'   => [],
-		];
+		return $this->check_dependency( defined( 'MEPR_VERSION' ), 'MemberPress' );
 	}
 
 	// ─── Push override ──────────────────────────────────────
@@ -464,18 +441,5 @@ class MemberPress_Module extends Module_Base {
 				]
 			);
 		}
-	}
-
-	/**
-	 * Get or create the Partner_Service instance.
-	 *
-	 * @return Partner_Service
-	 */
-	private function partner_service(): Partner_Service {
-		if ( null === $this->partner_service ) {
-			$this->partner_service = new Partner_Service( fn() => $this->client(), $this->entity_map() );
-		}
-
-		return $this->partner_service;
 	}
 }

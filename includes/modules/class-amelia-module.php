@@ -3,10 +3,6 @@ declare( strict_types=1 );
 
 namespace WP4Odoo\Modules;
 
-use WP4Odoo\Module_Base;
-use WP4Odoo\Partner_Service;
-use WP4Odoo\Queue_Manager;
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -28,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @package WP4Odoo
  * @since   2.0.0
  */
-class Amelia_Module extends Module_Base {
+class Amelia_Module extends Booking_Module_Base {
 
 	use Amelia_Hooks;
 
@@ -45,15 +41,6 @@ class Amelia_Module extends Module_Base {
 	 * @var string
 	 */
 	protected string $name = 'Amelia';
-
-	/**
-	 * Sync direction: push-only (WP → Odoo).
-	 *
-	 * @return string
-	 */
-	public function get_sync_direction(): string {
-		return 'wp_to_odoo';
-	}
 
 	/**
 	 * Odoo models by entity type.
@@ -157,184 +144,85 @@ class Amelia_Module extends Module_Base {
 	 * @return array{available: bool, notices: array<array{type: string, message: string}>}
 	 */
 	public function get_dependency_status(): array {
-		if ( ! defined( 'AMELIA_VERSION' ) ) {
-			return [
-				'available' => false,
-				'notices'   => [
-					[
-						'type'    => 'warning',
-						'message' => __( 'Amelia Booking must be installed and activated to use this module.', 'wp4odoo' ),
-					],
-				],
-			];
-		}
-
-		return [
-			'available' => true,
-			'notices'   => [],
-		];
+		return $this->check_dependency( defined( 'AMELIA_VERSION' ), 'Amelia Booking' );
 	}
 
-	// ─── Push override ──────────────────────────────────────
+	// ─── Booking_Module_Base abstracts ──────────────────────
 
 	/**
-	 * Push a WordPress entity to Odoo.
-	 *
-	 * For appointments: ensures the associated service is synced first,
-	 * and resolves the customer to an Odoo partner for calendar.event.
-	 *
-	 * @param string $entity_type The entity type.
-	 * @param string $action      'create', 'update', or 'delete'.
-	 * @param int    $wp_id       Amelia entity ID.
-	 * @param int    $odoo_id     Odoo ID (0 if creating).
-	 * @param array  $payload     Additional data.
-	 * @return bool True on success.
+	 * {@inheritDoc}
 	 */
-	public function push_to_odoo( string $entity_type, string $action, int $wp_id, int $odoo_id = 0, array $payload = [] ): bool {
-		if ( 'appointment' === $entity_type && 'delete' !== $action ) {
-			$this->ensure_service_synced( $wp_id );
-		}
-
-		return parent::push_to_odoo( $entity_type, $action, $wp_id, $odoo_id, $payload );
+	protected function get_booking_entity_type(): string {
+		return 'appointment';
 	}
 
 	/**
-	 * Map WP data to Odoo values.
-	 *
-	 * Appointments bypass standard mapping — the handler pre-formats
-	 * data for calendar.event (including partner_ids M2M commands).
-	 * Services use standard field mapping plus a hardcoded type.
-	 *
-	 * @param string $entity_type Entity type.
-	 * @param array  $wp_data     WordPress data from load_wp_data().
-	 * @return array<string, mixed> Odoo-ready data.
+	 * {@inheritDoc}
 	 */
-	public function map_to_odoo( string $entity_type, array $wp_data ): array {
-		if ( 'appointment' === $entity_type ) {
-			return $wp_data;
-		}
-
-		$mapped = parent::map_to_odoo( $entity_type, $wp_data );
-
-		if ( 'service' === $entity_type ) {
-			$mapped['type'] = 'service';
-		}
-
-		return $mapped;
-	}
-
-	// ─── Data access ────────────────────────────────────────
-
-	/**
-	 * Load WordPress data for an entity.
-	 *
-	 * For appointments, loads appointment data and enriches it with
-	 * service name and resolved partner ID for calendar.event creation.
-	 *
-	 * @param string $entity_type Entity type.
-	 * @param int    $wp_id       Amelia entity ID.
-	 * @return array<string, mixed>
-	 */
-	protected function load_wp_data( string $entity_type, int $wp_id ): array {
-		return match ( $entity_type ) {
-			'service'     => $this->handler->load_service( $wp_id ),
-			'appointment' => $this->load_appointment_data( $wp_id ),
-			default       => [],
-		};
+	protected function get_fallback_label(): string {
+		return __( 'Appointment', 'wp4odoo' );
 	}
 
 	/**
-	 * Load and resolve an appointment with Odoo references.
-	 *
-	 * Reads appointment data from Amelia tables, resolves the customer
-	 * to an Odoo partner, and formats as calendar.event data.
-	 *
-	 * @param int $appointment_id Amelia appointment ID.
-	 * @return array<string, mixed>
+	 * {@inheritDoc}
 	 */
-	private function load_appointment_data( int $appointment_id ): array {
-		$data = $this->handler->load_appointment( $appointment_id );
-		if ( empty( $data ) ) {
-			return [];
-		}
-
-		// Load service name for the event title.
-		$service_id   = $data['service_id'] ?? 0;
-		$service_data = $service_id > 0 ? $this->handler->load_service( $service_id ) : [];
-		$service_name = $service_data['name'] ?? __( 'Appointment', 'wp4odoo' );
-
-		// Resolve customer → Odoo partner.
-		$partner_ids = [];
-		$customer_id = $data['customer_id'] ?? 0;
-		if ( $customer_id > 0 ) {
-			$customer = $this->handler->get_customer_data( $customer_id );
-			if ( ! empty( $customer['email'] ) ) {
-				$full_name  = trim( $customer['firstName'] . ' ' . $customer['lastName'] );
-				$partner_id = $this->partner_service()->get_or_create(
-					$customer['email'],
-					[ 'name' => $full_name ?: $customer['email'] ],
-					0
-				);
-				if ( $partner_id ) {
-					$partner_ids = [ [ 4, $partner_id, 0 ] ];
-				}
-			}
-		}
-
-		// Compose event name: "Service — Customer".
-		$customer_name = '';
-		if ( ! empty( $customer['firstName'] ) || ! empty( $customer['lastName'] ) ) {
-			$customer_name = trim( $customer['firstName'] . ' ' . $customer['lastName'] );
-		}
-
-		$event_name = $customer_name
-			/* translators: %1$s: service name, %2$s: customer name */
-			? sprintf( __( '%1$s — %2$s', 'wp4odoo' ), $service_name, $customer_name )
-			: $service_name;
-
-		return [
-			'name'        => $event_name,
-			'start'       => $data['bookingStart'],
-			'stop'        => $data['bookingEnd'],
-			'partner_ids' => $partner_ids,
-			'description' => $data['internalNotes'] ?? '',
-		];
+	protected function resolve_customer_name( array $customer ): string {
+		return trim( ( $customer['firstName'] ?? '' ) . ' ' . ( $customer['lastName'] ?? '' ) );
 	}
 
 	/**
-	 * Ensure the Amelia service is synced to Odoo before pushing an appointment.
-	 *
-	 * Same pattern as ensure_parent_synced() in SimplePay: reads the
-	 * service_id from the appointment, checks if it is already mapped,
-	 * and does a synchronous push if not.
-	 *
-	 * @param int $appointment_id Amelia appointment ID.
-	 * @return void
+	 * {@inheritDoc}
 	 */
-	private function ensure_service_synced( int $appointment_id ): void {
-		$service_id = $this->handler->get_service_id_for_appointment( $appointment_id );
-		if ( $service_id <= 0 ) {
-			return;
-		}
-
-		$existing = $this->get_mapping( 'service', $service_id );
-		if ( $existing ) {
-			return;
-		}
-
-		// Synchronous push — parent::push_to_odoo handles create + mapping.
-		parent::push_to_odoo( 'service', 'create', $service_id );
+	protected function handler_load_service( int $service_id ): array {
+		return $this->handler->load_service( $service_id );
 	}
 
 	/**
-	 * Get the Partner_Service instance for customer resolution.
-	 *
-	 * @return Partner_Service
+	 * {@inheritDoc}
 	 */
-	private function partner_service(): Partner_Service {
-		return new Partner_Service(
-			fn() => $this->client(),
-			$this->entity_map()
-		);
+	protected function handler_load_booking( int $booking_id ): array {
+		return $this->handler->load_appointment( $booking_id );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function handler_get_customer_data( int $customer_id ): array {
+		return $this->handler->get_customer_data( $customer_id );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function handler_get_service_id( int $booking_id ): int {
+		return $this->handler->get_service_id_for_appointment( $booking_id );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_service_name( array $service_data ): string {
+		return $service_data['name'] ?? '';
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_booking_start( array $data ): string {
+		return $data['bookingStart'] ?? '';
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_booking_end( array $data ): string {
+		return $data['bookingEnd'] ?? '';
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_booking_notes( array $data ): string {
+		return $data['internalNotes'] ?? '';
 	}
 }

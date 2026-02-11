@@ -140,22 +140,7 @@ class WPRM_Module extends Module_Base {
 	 * @return array{available: bool, notices: array<array{type: string, message: string}>}
 	 */
 	public function get_dependency_status(): array {
-		if ( ! defined( 'WPRM_VERSION' ) ) {
-			return [
-				'available' => false,
-				'notices'   => [
-					[
-						'type'    => 'warning',
-						'message' => __( 'WP Recipe Maker must be installed and activated to use this module.', 'wp4odoo' ),
-					],
-				],
-			];
-		}
-
-		return [
-			'available' => true,
-			'notices'   => [],
-		];
+		return $this->check_dependency( defined( 'WPRM_VERSION' ), 'WP Recipe Maker' );
 	}
 
 	// ─── Data access ────────────────────────────────────────

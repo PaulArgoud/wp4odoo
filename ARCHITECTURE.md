@@ -117,23 +117,24 @@ WordPress For Odoo/
 │   │   ├── class-memberpress-module.php      # MemberPress: push sync coordinator (uses MemberPress_Hooks trait)
 │   │   │
 │   │   ├── # ─── Shared Accounting (GiveWP + Charitable + SimplePay) ─
-│   │   ├── trait-dual-accounting-model.php   # Shared: OCA donation detection, auto-validate, parent sync, Partner_Service
+│   │   ├── trait-dual-accounting-model.php   # Shared: OCA donation detection, auto-validate, parent sync
 │   │   ├── class-odoo-accounting-formatter.php # Shared: static formatting for donation.donation / account.move
+│   │   ├── class-dual-accounting-module-base.php # Shared: abstract base class for donation/payment modules
 │   │   │
 │   │   ├── # ─── GiveWP ───────────────────────────────────────
 │   │   ├── trait-givewp-hooks.php            # GiveWP: hook callbacks (form save, donation status)
 │   │   ├── class-givewp-handler.php          # GiveWP: form/donation data load, status mapping
-│   │   ├── class-givewp-module.php           # GiveWP: push sync coordinator (uses GiveWP_Hooks + Dual_Accounting_Model)
+│   │   ├── class-givewp-module.php           # GiveWP: extends Dual_Accounting_Module_Base (uses GiveWP_Hooks)
 │   │   │
 │   │   ├── # ─── WP Charitable ─────────────────────────────────
 │   │   ├── trait-charitable-hooks.php        # Charitable: hook callbacks (campaign save, donation status)
 │   │   ├── class-charitable-handler.php      # Charitable: campaign/donation data load, status mapping
-│   │   ├── class-charitable-module.php       # Charitable: push sync coordinator (uses Charitable_Hooks + Dual_Accounting_Model)
+│   │   ├── class-charitable-module.php       # Charitable: extends Dual_Accounting_Module_Base (uses Charitable_Hooks)
 │   │   │
 │   │   ├── # ─── WP Simple Pay ─────────────────────────────────
 │   │   ├── trait-simplepay-hooks.php         # SimplePay: hook callbacks (form save, payment/invoice webhooks)
 │   │   ├── class-simplepay-handler.php       # SimplePay: Stripe extraction, tracking CPT, data load
-│   │   ├── class-simplepay-module.php        # SimplePay: push sync coordinator (uses SimplePay_Hooks + Dual_Accounting_Model)
+│   │   ├── class-simplepay-module.php        # SimplePay: extends Dual_Accounting_Module_Base (uses SimplePay_Hooks)
 │   │   │
 │   │   ├── # ─── WP Recipe Maker ───────────────────────────────
 │   │   ├── trait-wprm-hooks.php              # WPRM: hook callback (recipe save)
@@ -144,13 +145,14 @@ WordPress For Odoo/
 │   │   ├── class-form-handler.php            # Forms: field extraction from GF/WPForms submissions (auto-detection)
 │   │   ├── class-forms-module.php            # Forms: push sync coordinator (GF/WPForms → crm.lead)
 │   │   │
-│   │   ├── # ─── Amelia Booking ───────────────────────────────
+│   │   ├── # ─── Booking (Amelia + Bookly) ────────────────────
+│   │   ├── class-booking-module-base.php     # Shared: abstract base class for booking/appointment modules
 │   │   ├── trait-amelia-hooks.php            # Amelia: hook callbacks (booking saved/canceled/rescheduled, service saved)
 │   │   ├── class-amelia-handler.php          # Amelia: $wpdb queries on amelia_* tables (no CPT)
-│   │   ├── class-amelia-module.php           # Amelia: push sync coordinator (uses Amelia_Hooks trait)
+│   │   ├── class-amelia-module.php           # Amelia: extends Booking_Module_Base (uses Amelia_Hooks trait)
 │   │   ├── trait-bookly-poller.php           # Bookly: WP-Cron polling (no hooks available)
 │   │   ├── class-bookly-handler.php          # Bookly: $wpdb queries on bookly_* tables (batch + individual)
-│   │   └── class-bookly-module.php           # Bookly: push sync coordinator (uses Bookly_Poller trait)
+│   │   └── class-bookly-module.php           # Bookly: extends Booking_Module_Base (uses Bookly_Poller trait)
 │   │
 │   ├── admin/
 │   │   ├── class-admin.php            # Admin menu, assets, activation redirect, setup notice
@@ -165,7 +167,7 @@ WordPress For Odoo/
 │   ├── class-database-migration.php   # Table creation (dbDelta) and default options
 │   ├── class-settings-repository.php  # Centralized option access: keys, defaults, typed accessors (DI)
 │   ├── class-module-registry.php      # Module registration, mutual exclusivity, lifecycle
-│   ├── class-module-base.php          # Abstract base class for modules
+│   ├── class-module-base.php          # Abstract base class for modules (partner_service, check_dependency)
 │   ├── class-entity-map-repository.php # Static DB access for wp4odoo_entity_map (incl. batch lookups)
 │   ├── class-sync-queue-repository.php # Static DB access for wp4odoo_sync_queue
 │   ├── class-partner-service.php       # Shared res.partner lookup/creation service
@@ -319,20 +321,22 @@ Each Odoo domain is encapsulated in an independent module extending `Module_Base
 
 ```
 Module_Base (abstract)
-├── CRM_Module             → res.partner, crm.lead                              [bidirectional]
-├── Sales_Module           → product.template, sale.order, account.move         [Odoo → WP]
-├── WooCommerce_Module     → + stock.quant, product.product (variants)          [bidirectional]
-├── EDD_Module             → product.template, sale.order, account.move         [bidirectional]
-├── Memberships_Module     → product.product, membership.membership_line        [WP → Odoo]
-├── MemberPress_Module     → product.product, account.move, membership.m_line   [WP → Odoo]
-├── GiveWP_Module          → product.product, donation.donation / account.move  [WP → Odoo]
-├── Charitable_Module      → product.product, donation.donation / account.move  [WP → Odoo]
-├── SimplePay_Module       → product.product, donation.donation / account.move  [WP → Odoo]
-├── WPRM_Module            → product.product                                    [WP → Odoo]
-├── Forms_Module           → crm.lead                                           [WP → Odoo]
-├── Amelia_Module          → product.product, calendar.event                    [WP → Odoo]
-├── Bookly_Module          → product.product, calendar.event                    [WP → Odoo]
-└── [Custom_Module]        → extensible via action hook
+├── CRM_Module                  → res.partner, crm.lead                              [bidirectional]
+├── Sales_Module                → product.template, sale.order, account.move         [Odoo → WP]
+├── WooCommerce_Module          → + stock.quant, product.product (variants)          [bidirectional]
+├── EDD_Module                  → product.template, sale.order, account.move         [bidirectional]
+├── Memberships_Module          → product.product, membership.membership_line        [WP → Odoo]
+├── MemberPress_Module          → product.product, account.move, membership.m_line   [WP → Odoo]
+├── Dual_Accounting_Module_Base (abstract, uses Dual_Accounting_Model trait)
+│   ├── GiveWP_Module           → product.product, donation.donation / account.move  [WP → Odoo]
+│   ├── Charitable_Module       → product.product, donation.donation / account.move  [WP → Odoo]
+│   └── SimplePay_Module        → product.product, donation.donation / account.move  [WP → Odoo]
+├── WPRM_Module                 → product.product                                    [WP → Odoo]
+├── Forms_Module                → crm.lead                                           [WP → Odoo]
+├── Booking_Module_Base (abstract)
+│   ├── Amelia_Module           → product.product, calendar.event                    [WP → Odoo]
+│   └── Bookly_Module           → product.product, calendar.event                    [WP → Odoo]
+└── [Custom_Module]             → extensible via action hook
 ```
 
 **Mutual exclusivity rules:**
@@ -345,7 +349,7 @@ Module_Base (abstract)
 - Entity mapping CRUD: `get_mapping()`, `save_mapping()`, `get_wp_mapping()`, `remove_mapping()` (delegates to `Entity_Map_Repository`)
 - Data transformation: `map_to_odoo()`, `map_from_odoo()`, `generate_sync_hash()`
 - Settings: `get_settings()`, `get_settings_fields()`, `get_default_settings()`, `get_dependency_status()` (external dependency check for admin UI) — delegates to injected `Settings_Repository`
-- Helpers: `is_importing()` (anti-loop guard), `mark_importing()` (define guard constant), `resolve_many2one_field()` (Many2one → scalar), `delete_wp_post()` (safe post deletion), `log_unsupported_entity()` (centralized warning), `client()`
+- Helpers: `is_importing()` (anti-loop guard), `mark_importing()` (define guard constant), `resolve_many2one_field()` (Many2one → scalar), `delete_wp_post()` (safe post deletion), `log_unsupported_entity()` (centralized warning), `partner_service()` (lazy `Partner_Service` factory), `check_dependency()` (one-liner dependency status), `client()`
 - Subclass hooks: `boot()`, `load_wp_data()`, `save_wp_data()`, `delete_wp_data()`
 
 **Module lifecycle:**
@@ -486,20 +490,38 @@ The codebase uses a tiered error-handling strategy. Each tier is appropriate for
 
 ### 8. Shared Accounting Infrastructure
 
-Three donation/payment modules (GiveWP, Charitable, SimplePay) share a common dual-model accounting pattern extracted into two shared components:
+Three donation/payment modules (GiveWP, Charitable, SimplePay) share a common dual-model accounting pattern extracted into three shared components:
 
 **`Dual_Accounting_Model` trait** (`trait-dual-accounting-model.php`):
 - `has_donation_model()` — probes Odoo `ir.model` for OCA `donation.donation`, caches in transient (1h TTL) + in-memory
 - `resolve_accounting_model(string $entity_key)` — sets `$this->odoo_models[$key]` to `donation.donation` or `account.move` based on detection
 - `ensure_parent_synced(int $wp_id, string $meta_key, string $parent_entity_type)` — auto-pushes parent entity (form/campaign) before child (donation/payment) if not yet mapped
 - `auto_validate(string $entity_key, int $wp_id, string $setting_key, ?string $required_status)` — validates entity in Odoo: OCA `validate` or core `action_post`
-- `partner_service()` — lazy `Partner_Service` factory
+
+**`Dual_Accounting_Module_Base`** (`class-dual-accounting-module-base.php`):
+- Abstract base class extending `Module_Base`, uses `Dual_Accounting_Model` trait
+- Shared `push_to_odoo()`: resolves accounting model, ensures parent synced, delegates to parent, then auto-validates
+- Shared `map_to_odoo()`: child entities bypass field mapping (handler pre-formats for target model)
+- Shared `load_wp_data()` / `load_child_data()`: CPT validation, email→partner resolution, parent→Odoo product resolution
+- 10 abstract methods for subclass configuration: `get_child_entity_type()`, `get_parent_entity_type()`, `get_child_cpt()`, `get_email_meta_key()`, `get_parent_meta_key()`, `get_validate_setting_key()`, `get_validate_status()`, `get_donor_name()`, `handler_load_parent()`, `handler_load_child()`
 
 **`Odoo_Accounting_Formatter`** (`class-odoo-accounting-formatter.php`):
 - `for_donation_model(partner_id, product_id, amount, date, ref)` — OCA `donation.donation` format with `line_ids`
 - `for_account_move(partner_id, product_id, amount, date, ref, line_name, fallback_name)` — core `account.move` format with `invoice_line_ids`
 
 Used by `GiveWP_Handler`, `Charitable_Handler`, and `SimplePay_Handler`.
+
+### 9. Shared Booking Infrastructure
+
+Two booking modules (Amelia, Bookly) share a common service/appointment sync pattern:
+
+**`Booking_Module_Base`** (`class-booking-module-base.php`):
+- Abstract base class extending `Module_Base`
+- Shared `push_to_odoo()`: ensures service synced before booking push
+- Shared `map_to_odoo()`: bookings bypass field mapping (pre-formatted for `calendar.event`), services get hardcoded `type=service`
+- Shared `load_wp_data()` / `load_booking_data()`: loads booking via handler, resolves service name for event title, resolves customer→Odoo partner, composes event name "Service — Customer"
+- Shared `ensure_service_synced()`: auto-pushes service to Odoo before dependent booking
+- 11 abstract methods for subclass configuration: `get_booking_entity_type()`, `get_fallback_label()`, `resolve_customer_name()`, `handler_load_service()`, `handler_load_booking()`, `handler_get_customer_data()`, `handler_get_service_id()`, `get_service_name()`, `get_booking_start()`, `get_booking_end()`, `get_booking_notes()`
 
 ## Database
 
@@ -740,16 +762,16 @@ All user inputs are sanitized with:
 
 ### GiveWP — COMPLETE
 
-**Files:** `class-givewp-module.php` (uses `GiveWP_Hooks` + `Dual_Accounting_Model` traits), `trait-givewp-hooks.php` (hook callbacks), `class-givewp-handler.php` (delegates formatting to `Odoo_Accounting_Formatter`)
+**Files:** `class-givewp-module.php` (extends `Dual_Accounting_Module_Base`, uses `GiveWP_Hooks` trait), `trait-givewp-hooks.php` (hook callbacks), `class-givewp-handler.php` (delegates formatting to `Odoo_Accounting_Formatter`)
 
 **Odoo models:** `product.product` (forms), `donation.donation` or `account.move` (donations — runtime detection)
 
 **Key features:**
 - Push-only (WP → Odoo) — full recurring donation support
 - Requires GiveWP; `boot()` guards with `defined('GIVE_VERSION')`
-- **Dual Odoo model** via `Dual_Accounting_Model` trait: probes `ir.model` for OCA `donation.donation` (cached 1h); falls back to `account.move`
-- Auto-validation via trait: OCA `validate` or core `action_post`
-- Form auto-sync via `ensure_parent_synced()` from trait
+- **Dual Odoo model** via `Dual_Accounting_Module_Base` (inherits `Dual_Accounting_Model` trait): probes `ir.model` for OCA `donation.donation` (cached 1h); falls back to `account.move`
+- Auto-validation via base class: OCA `validate` or core `action_post`
+- Form auto-sync via `ensure_parent_synced()` from base class
 - Guest donor support via `Partner_Service::get_or_create($email, $data, 0)`
 - Status mapping filterable via `apply_filters('wp4odoo_givewp_donation_status_map', ...)`
 
@@ -757,16 +779,16 @@ All user inputs are sanitized with:
 
 ### WP Charitable — COMPLETE
 
-**Files:** `class-charitable-module.php` (uses `Charitable_Hooks` + `Dual_Accounting_Model` traits), `trait-charitable-hooks.php` (hook callbacks), `class-charitable-handler.php` (delegates formatting to `Odoo_Accounting_Formatter`)
+**Files:** `class-charitable-module.php` (extends `Dual_Accounting_Module_Base`, uses `Charitable_Hooks` trait), `trait-charitable-hooks.php` (hook callbacks), `class-charitable-handler.php` (delegates formatting to `Odoo_Accounting_Formatter`)
 
 **Odoo models:** `product.product` (campaigns), `donation.donation` or `account.move` (donations — runtime detection)
 
 **Key features:**
 - Push-only (WP → Odoo) — full recurring donation support
 - Requires WP Charitable; `boot()` guards with `class_exists('Charitable')`
-- **Dual Odoo model** via `Dual_Accounting_Model` trait (shared transient `wp4odoo_has_donation_model`)
+- **Dual Odoo model** via `Dual_Accounting_Module_Base` (shared transient `wp4odoo_has_donation_model`)
 - Auto-validation: completed donations (`charitable-completed` status) auto-posted
-- Campaign auto-sync via `ensure_parent_synced()` from trait
+- Campaign auto-sync via `ensure_parent_synced()` from base class
 - Guest donor support via email/name from post meta
 - Status mapping filterable via `apply_filters('wp4odoo_charitable_donation_status_map', ...)`
 
@@ -774,7 +796,7 @@ All user inputs are sanitized with:
 
 ### WP Simple Pay — COMPLETE
 
-**Files:** `class-simplepay-module.php` (uses `SimplePay_Hooks` + `Dual_Accounting_Model` traits), `trait-simplepay-hooks.php` (hook callbacks), `class-simplepay-handler.php` (Stripe extraction, tracking CPT, delegates formatting to `Odoo_Accounting_Formatter`)
+**Files:** `class-simplepay-module.php` (extends `Dual_Accounting_Module_Base`, uses `SimplePay_Hooks` trait), `trait-simplepay-hooks.php` (hook callbacks), `class-simplepay-handler.php` (Stripe extraction, tracking CPT, delegates formatting to `Odoo_Accounting_Formatter`)
 
 **Odoo models:** `product.product` (forms), `donation.donation` or `account.move` (payments — runtime detection)
 
@@ -782,10 +804,10 @@ All user inputs are sanitized with:
 - Push-only (WP → Odoo) — full recurring subscription support via Stripe webhooks
 - Requires WP Simple Pay; `boot()` guards with `defined('SIMPLE_PAY_VERSION')`
 - **Hidden tracking CPT** (`wp4odoo_spay`): creates internal posts from Stripe webhook data
-- **Dual Odoo model** via `Dual_Accounting_Model` trait (shared transient)
+- **Dual Odoo model** via `Dual_Accounting_Module_Base` (shared transient)
 - **Deduplication by Stripe PaymentIntent ID**: prevents double-push
-- Auto-validation via trait (Stripe webhook = already succeeded)
-- Form auto-sync via `ensure_parent_synced()` from trait
+- Auto-validation via base class (Stripe webhook = already succeeded)
+- Form auto-sync via `ensure_parent_synced()` from base class
 
 **Settings:** `sync_forms`, `sync_payments`, `auto_validate_payments`
 
@@ -819,11 +841,44 @@ All user inputs are sanitized with:
 
 **Settings:** `sync_gravity_forms`, `sync_wpforms`
 
+### Amelia Booking — COMPLETE
+
+**Files:** `class-amelia-module.php` (extends `Booking_Module_Base`, uses `Amelia_Hooks` trait), `trait-amelia-hooks.php` (hook callbacks), `class-amelia-handler.php` ($wpdb queries on Amelia tables)
+
+**Odoo models:** `product.product` (services), `calendar.event` (appointments)
+
+**Key features:**
+- Push-only (WP → Odoo) — appointments as calendar events with partner resolution
+- Requires Amelia; `boot()` guards with `defined('AMELIA_VERSION')`
+- Data access via `$wpdb` on Amelia's custom tables (no CPTs)
+- Service auto-sync via `Booking_Module_Base::ensure_service_synced()`
+- Customer resolution via `Partner_Service` (from `Module_Base`)
+- Event naming: "Service — Customer"
+
+**Settings:** `sync_services`, `sync_appointments`
+
+### Bookly — COMPLETE
+
+**Files:** `class-bookly-module.php` (extends `Booking_Module_Base`, uses `Bookly_Poller` trait), `trait-bookly-poller.php` (WP-Cron polling), `class-bookly-handler.php` ($wpdb queries on Bookly tables)
+
+**Odoo models:** `product.product` (services), `calendar.event` (bookings)
+
+**Key features:**
+- Push-only (WP → Odoo) via **WP-Cron polling** (Bookly has no WP hooks)
+- Requires Bookly; `boot()` registers cron schedule
+- SHA-256 hash-based change detection via `entity_map`
+- Data access via `$wpdb` on Bookly's custom tables (no CPTs)
+- Service auto-sync via `Booking_Module_Base::ensure_service_synced()`
+- Customer resolution via `Partner_Service` (from `Module_Base`)
+- Event naming: "Service — Customer"
+
+**Settings:** `sync_services`, `sync_bookings`
+
 ### Partner Service
 
 **File:** `class-partner-service.php`
 
-Shared service for managing WP user ↔ Odoo `res.partner` relationships. Used by `Portal_Manager`, `WooCommerce_Module`, `EDD_Module`, `Memberships_Module`, `MemberPress_Module`, `GiveWP_Module`, `Charitable_Module`, and `SimplePay_Module` (last 3 via `Dual_Accounting_Model` trait).
+Shared service for managing WP user ↔ Odoo `res.partner` relationships. Accessible in all modules via `Module_Base::partner_service()` (lazy factory). Used by `Portal_Manager`, `WooCommerce_Module`, `EDD_Module`, `Memberships_Module`, `MemberPress_Module`, `Dual_Accounting_Module_Base` (GiveWP, Charitable, SimplePay), and `Booking_Module_Base` (Amelia, Bookly).
 
 **Resolution flow (3-step):**
 1. Check `wp4odoo_entity_map` for existing mapping

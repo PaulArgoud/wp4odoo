@@ -3,8 +3,6 @@ declare( strict_types=1 );
 
 namespace WP4Odoo\Modules;
 
-use WP4Odoo\Partner_Service;
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -12,9 +10,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Shared logic for modules using the dual Odoo accounting model.
  *
- * Provides OCA donation.donation detection, auto-validation, parent
- * entity sync, and Partner_Service access. Used by GiveWP, Charitable,
- * and SimplePay modules.
+ * Provides OCA donation.donation detection, auto-validation, and parent
+ * entity sync. Used by GiveWP, Charitable, and SimplePay modules.
+ *
+ * Partner_Service access is provided by Module_Base::partner_service().
  *
  * Expects the using class to extend Module_Base, providing:
  * - client(): Odoo_Client       (from Module_Base)
@@ -27,13 +26,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since   2.0.0
  */
 trait Dual_Accounting_Model {
-
-	/**
-	 * Lazy Partner_Service instance.
-	 *
-	 * @var Partner_Service|null
-	 */
-	private ?Partner_Service $partner_service = null;
 
 	/**
 	 * Cached OCA donation model detection result.
@@ -177,18 +169,5 @@ trait Dual_Accounting_Model {
 				]
 			);
 		}
-	}
-
-	/**
-	 * Get or create the Partner_Service instance.
-	 *
-	 * @return Partner_Service
-	 */
-	private function partner_service(): Partner_Service {
-		if ( null === $this->partner_service ) {
-			$this->partner_service = new Partner_Service( fn() => $this->client(), $this->entity_map() );
-		}
-
-		return $this->partner_service;
 	}
 }

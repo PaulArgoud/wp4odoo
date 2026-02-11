@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'WP4ODOO_PLUGIN_DIR', dirname( __DIR__ ) . '/' );
-define( 'WP4ODOO_VERSION', '2.0.0' );
+define( 'WP4ODOO_VERSION', '2.2.0' );
 
 if ( ! defined( 'DAY_IN_SECONDS' ) ) {
 	define( 'DAY_IN_SECONDS', 86400 );
@@ -132,6 +132,7 @@ require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-memberpress-handler.ph
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-memberpress-module.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-dual-accounting-model.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-odoo-accounting-formatter.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-dual-accounting-module-base.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-givewp-hooks.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-givewp-handler.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-givewp-module.php';
@@ -147,6 +148,7 @@ require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-wprm-module.php';
 require_once __DIR__ . '/stubs/form-classes.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-form-handler.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-forms-module.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-booking-module-base.php';
 require_once __DIR__ . '/stubs/amelia-classes.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-amelia-hooks.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-amelia-handler.php';

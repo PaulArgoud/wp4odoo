@@ -90,6 +90,13 @@ abstract class Module_Base {
 	private array $mapping_cache = [];
 
 	/**
+	 * Lazy Partner_Service instance.
+	 *
+	 * @var Partner_Service|null
+	 */
+	private ?Partner_Service $partner_service_instance = null;
+
+	/**
 	 * Closure that returns the Odoo_Client instance (lazy, injected by Module_Registry).
 	 *
 	 * @var \Closure(): Odoo_Client
@@ -514,6 +521,55 @@ abstract class Module_Base {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Get or create the Partner_Service instance (lazy).
+	 *
+	 * Used by any module that needs to resolve WordPress users or
+	 * guest emails to Odoo res.partner records.
+	 *
+	 * @return Partner_Service
+	 */
+	protected function partner_service(): Partner_Service {
+		if ( null === $this->partner_service_instance ) {
+			$this->partner_service_instance = new Partner_Service( fn() => $this->client(), $this->entity_map() );
+		}
+
+		return $this->partner_service_instance;
+	}
+
+	/**
+	 * Check whether an external plugin dependency is available.
+	 *
+	 * Helper for get_dependency_status() — returns a standard
+	 * available/notices array. Modules call this with their own check.
+	 *
+	 * @param bool   $is_available Whether the dependency is met.
+	 * @param string $plugin_name  Human-readable plugin name for the notice.
+	 * @return array{available: bool, notices: array<array{type: string, message: string}>}
+	 */
+	protected function check_dependency( bool $is_available, string $plugin_name ): array {
+		if ( ! $is_available ) {
+			return [
+				'available' => false,
+				'notices'   => [
+					[
+						'type'    => 'warning',
+						'message' => sprintf(
+							/* translators: %s: plugin name */
+							__( '%s must be installed and activated to use this module.', 'wp4odoo' ),
+							$plugin_name
+						),
+					],
+				],
+			];
+		}
+
+		return [
+			'available' => true,
+			'notices'   => [],
+		];
 	}
 
 	/**

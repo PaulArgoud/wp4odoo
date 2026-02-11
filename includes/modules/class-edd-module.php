@@ -163,22 +163,7 @@ class EDD_Module extends Module_Base {
 	 * @return array{available: bool, notices: array<array{type: string, message: string}>}
 	 */
 	public function get_dependency_status(): array {
-		if ( ! class_exists( 'Easy_Digital_Downloads' ) ) {
-			return [
-				'available' => false,
-				'notices'   => [
-					[
-						'type'    => 'warning',
-						'message' => __( 'Easy Digital Downloads must be installed and activated to use this module.', 'wp4odoo' ),
-					],
-				],
-			];
-		}
-
-		return [
-			'available' => true,
-			'notices'   => [],
-		];
+		return $this->check_dependency( class_exists( 'Easy_Digital_Downloads' ), 'Easy Digital Downloads' );
 	}
 
 	/**

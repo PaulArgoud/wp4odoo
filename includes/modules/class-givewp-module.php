@@ -3,8 +3,6 @@ declare( strict_types=1 );
 
 namespace WP4Odoo\Modules;
 
-use WP4Odoo\Module_Base;
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -27,10 +25,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @package WP4Odoo
  * @since   2.0.0
  */
-class GiveWP_Module extends Module_Base {
+class GiveWP_Module extends Dual_Accounting_Module_Base {
 
 	use GiveWP_Hooks;
-	use Dual_Accounting_Model;
 
 	/**
 	 * Module identifier.
@@ -45,15 +42,6 @@ class GiveWP_Module extends Module_Base {
 	 * @var string
 	 */
 	protected string $name = 'GiveWP';
-
-	/**
-	 * Sync direction: push-only (WP → Odoo).
-	 *
-	 * @return string
-	 */
-	public function get_sync_direction(): string {
-		return 'wp_to_odoo';
-	}
 
 	/**
 	 * Odoo models by entity type.
@@ -99,6 +87,10 @@ class GiveWP_Module extends Module_Base {
 
 	/**
 	 * Constructor.
+	 *
+	 * @param \Closure                      $client_provider Returns the shared Odoo_Client instance.
+	 * @param \WP4Odoo\Entity_Map_Repository $entity_map      Shared entity map repository.
+	 * @param \WP4Odoo\Settings_Repository   $settings        Settings repository.
 	 */
 	public function __construct( \Closure $client_provider, \WP4Odoo\Entity_Map_Repository $entity_map, \WP4Odoo\Settings_Repository $settings ) {
 		parent::__construct( $client_provider, $entity_map, $settings );
@@ -175,141 +167,78 @@ class GiveWP_Module extends Module_Base {
 	 * @return array{available: bool, notices: array<array{type: string, message: string}>}
 	 */
 	public function get_dependency_status(): array {
-		if ( ! defined( 'GIVE_VERSION' ) ) {
-			return [
-				'available' => false,
-				'notices'   => [
-					[
-						'type'    => 'warning',
-						'message' => __( 'GiveWP must be installed and activated to use this module.', 'wp4odoo' ),
-					],
-				],
-			];
-		}
-
-		return [
-			'available' => true,
-			'notices'   => [],
-		];
+		return $this->check_dependency( defined( 'GIVE_VERSION' ), 'GiveWP' );
 	}
 
-	// ─── Push override ──────────────────────────────────────
+	// ─── Dual_Accounting_Module_Base abstracts ──────────────
 
 	/**
-	 * Push a WordPress entity to Odoo.
-	 *
-	 * For donations: resolves the Odoo model dynamically (OCA donation
-	 * vs core invoice), ensures the form is synced, and auto-validates.
-	 *
-	 * @param string $entity_type The entity type.
-	 * @param string $action      'create', 'update', or 'delete'.
-	 * @param int    $wp_id       WordPress entity ID.
-	 * @param int    $odoo_id     Odoo ID (0 if creating).
-	 * @param array  $payload     Additional data.
-	 * @return bool True on success.
+	 * {@inheritDoc}
 	 */
-	public function push_to_odoo( string $entity_type, string $action, int $wp_id, int $odoo_id = 0, array $payload = [] ): bool {
-		if ( 'donation' === $entity_type && 'delete' !== $action ) {
-			$this->resolve_accounting_model( 'donation' );
-			$this->ensure_parent_synced( $wp_id, '_give_payment_form_id', 'form' );
-		}
-
-		$result = parent::push_to_odoo( $entity_type, $action, $wp_id, $odoo_id, $payload );
-
-		if ( $result && 'donation' === $entity_type && 'create' === $action ) {
-			$this->auto_validate( 'donation', $wp_id, 'auto_validate_donations', 'publish' );
-		}
-
-		return $result;
+	protected function get_child_entity_type(): string {
+		return 'donation';
 	}
 
 	/**
-	 * Map WP data to Odoo values.
-	 *
-	 * Donations bypass standard mapping — handler pre-formats for
-	 * the target Odoo model. Forms use standard field mapping.
-	 *
-	 * @param string $entity_type Entity type.
-	 * @param array  $wp_data     WordPress data from load_wp_data().
-	 * @return array<string, mixed> Odoo-ready data.
+	 * {@inheritDoc}
 	 */
-	public function map_to_odoo( string $entity_type, array $wp_data ): array {
-		if ( 'donation' === $entity_type ) {
-			return $wp_data;
-		}
-
-		return parent::map_to_odoo( $entity_type, $wp_data );
-	}
-
-	// ─── Data access ────────────────────────────────────────
-
-	/**
-	 * Load WordPress data for an entity.
-	 *
-	 * @param string $entity_type Entity type.
-	 * @param int    $wp_id       WordPress ID.
-	 * @return array<string, mixed>
-	 */
-	protected function load_wp_data( string $entity_type, int $wp_id ): array {
-		return match ( $entity_type ) {
-			'form'     => $this->handler->load_form( $wp_id ),
-			'donation' => $this->load_donation_data( $wp_id ),
-			default    => [],
-		};
+	protected function get_parent_entity_type(): string {
+		return 'form';
 	}
 
 	/**
-	 * Load and resolve a donation with Odoo references.
-	 *
-	 * Resolves donor email → partner and form → Odoo product ID.
-	 * Supports guest donors (no WP user account).
-	 *
-	 * @param int $payment_id GiveWP payment ID.
-	 * @return array<string, mixed>
+	 * {@inheritDoc}
 	 */
-	private function load_donation_data( int $payment_id ): array {
-		$post = get_post( $payment_id );
-		if ( ! $post || 'give_payment' !== $post->post_type ) {
-			return [];
-		}
+	protected function get_child_cpt(): string {
+		return 'give_payment';
+	}
 
-		// Resolve donor → partner via email.
-		$donor_email = (string) get_post_meta( $payment_id, '_give_payment_donor_email', true );
-		if ( empty( $donor_email ) ) {
-			$this->logger->warning( 'Donation has no donor email.', [ 'payment_id' => $payment_id ] );
-			return [];
-		}
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_email_meta_key(): string {
+		return '_give_payment_donor_email';
+	}
 
-		$donor_name = (string) get_post_meta( $payment_id, '_give_payment_donor_name', true );
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_parent_meta_key(): string {
+		return '_give_payment_form_id';
+	}
 
-		$partner_id = $this->partner_service()->get_or_create(
-			$donor_email,
-			[ 'name' => $donor_name ?: $donor_email ],
-			0
-		);
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_validate_setting_key(): string {
+		return 'auto_validate_donations';
+	}
 
-		if ( ! $partner_id ) {
-			$this->logger->warning( 'Cannot resolve partner for donation.', [ 'payment_id' => $payment_id ] );
-			return [];
-		}
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_validate_status(): ?string {
+		return 'publish';
+	}
 
-		// Resolve form → Odoo product ID.
-		$form_id      = (int) get_post_meta( $payment_id, '_give_payment_form_id', true );
-		$form_odoo_id = 0;
-		if ( $form_id > 0 ) {
-			$form_odoo_id = $this->get_mapping( 'form', $form_id ) ?? 0;
-		}
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_donor_name( int $wp_id ): string {
+		return (string) get_post_meta( $wp_id, '_give_payment_donor_name', true );
+	}
 
-		if ( ! $form_odoo_id ) {
-			$this->logger->warning(
-				'Cannot resolve Odoo product for donation form.',
-				[ 'form_id' => $form_id ]
-			);
-			return [];
-		}
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function handler_load_parent( int $wp_id ): array {
+		return $this->handler->load_form( $wp_id );
+	}
 
-		$use_donation_model = 'donation.donation' === $this->odoo_models['donation'];
-
-		return $this->handler->load_donation( $payment_id, $partner_id, $form_odoo_id, $use_donation_model );
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function handler_load_child( int $wp_id, int $partner_id, int $parent_odoo_id, bool $use_donation_model ): array {
+		return $this->handler->load_donation( $wp_id, $partner_id, $parent_odoo_id, $use_donation_model );
 	}
 }
