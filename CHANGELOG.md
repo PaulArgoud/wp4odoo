@@ -5,9 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.9.9] - 2026-02-10
+## [2.0.0] - 2026-02-10
 
 ### Added
+
+#### EDD Module — Easy Digital Downloads ↔ Odoo Bidirectional Sync
+- New module: `EDD_Module` (`includes/modules/class-edd-module.php`) — bidirectional sync between Easy Digital Downloads 3.0+ and Odoo (downloads, orders, invoices)
+- `EDD_Download_Handler` (`includes/modules/class-edd-download-handler.php`) — load/save/delete for EDD downloads (`download` post type), maps to Odoo `product.template`
+- `EDD_Order_Handler` (`includes/modules/class-edd-order-handler.php`) — load/save for EDD orders (`edd_get_order` / `edd_update_order_status`), bidirectional status mapping: pending→draft, complete→sale, failed/refunded/abandoned/revoked→cancel
+- `EDD_Hooks` trait (`includes/modules/trait-edd-hooks.php`) — 3 EDD hook callbacks with anti-loop guards: `on_download_save`, `on_download_delete`, `on_order_status_change` (with partner resolution on completion)
+- Entity types: `download` → `product.template`, `order` → `sale.order`, `invoice` → `account.move`
+- Mutual exclusivity: WC > EDD > Sales — only one commerce module active at a time (3-way priority in `Module_Registry`)
+- Status mapping filterable via `apply_filters('wp4odoo_edd_order_status_map', $map)` and `apply_filters('wp4odoo_edd_odoo_status_map', $map)`
+- Partner resolution via `Partner_Service` (EDD customer email → Odoo `res.partner`)
+- Invoices via shared `Invoice_Helper` (same CPT as WooCommerce and Sales)
+- Settings: `sync_downloads`, `sync_orders`, `auto_confirm_orders` checkboxes (all default: enabled)
+- Dependency detection: `class_exists('Easy_Digital_Downloads')` — module available only when EDD is active
+- `EDDModuleTest` — 22 tests: identity, Odoo models, settings, field mappings, reverse mappings, boot guard, dependency status
+- `EDDDownloadHandlerTest` — 10 tests: load (nonexistent, wrong type, valid, default price), save (create, update, price meta), delete
+- `EDDOrderHandlerTest` — 16 tests: load, save, 6 EDD→Odoo status mappings + unknown, 4 Odoo→EDD status mappings + unknown
+- EDD stubs: `tests/stubs/edd-classes.php` — `Easy_Digital_Downloads`, `EDD_Download`, `EDD_Customer`, `EDD\Orders\Order` (namespaced), `edd_get_download()`, `edd_get_order()`, `edd_update_order_status()`
 
 #### Exchange Rate Conversion — Multi-Currency Price Conversion
 - New class: `Exchange_Rate_Service` (`includes/modules/class-exchange-rate-service.php`) — fetches active exchange rates from Odoo's `res.currency` model, caches them in a WordPress transient (1-hour TTL), and converts prices between currencies
@@ -53,6 +70,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Module card in Modules tab now displays a color-coded direction badge (green=bidirectional, blue=WP→Odoo, orange=Odoo→WP)
 - CRM and WooCommerce: bidirectional; Sales: Odoo→WP; Memberships and Forms: WP→Odoo
 
+#### MemberPress Module — Recurring Subscriptions → Odoo Accounting
+- New module: `MemberPress_Module` (`includes/modules/class-memberpress-module.php`) — push-only sync from MemberPress to Odoo: plans, transactions (as invoices), and subscriptions (as membership lines)
+- `MemberPress_Handler` (`includes/modules/class-memberpress-handler.php`) — loads plans, transactions (pre-formatted as `account.move` with `invoice_line_ids` One2many tuples), and subscriptions; status mapping: txn (complete→posted, pending→draft, failed/refunded→cancel), sub (active→paid, suspended→waiting, cancelled→cancelled, expired→old, paused→waiting, stopped→cancelled)
+- `MemberPress_Hooks` trait (`includes/modules/trait-memberpress-hooks.php`) — 3 hook callbacks with anti-loop guards: `on_plan_save`, `on_transaction_store`, `on_subscription_status_change`
+- Entity types: `plan` → `product.product`, `transaction` → `account.move`, `subscription` → `membership.membership_line`
+- Invoice auto-posting: completed transactions optionally auto-posted via Odoo `action_post`
+- Status mapping filterable via `wp4odoo_mepr_txn_status_map` and `wp4odoo_mepr_sub_status_map`
+- Mutually exclusive with WC Memberships module (same Odoo models)
+- `MemberPressModuleTest` — 28 tests; `MemberPressHandlerTest` — 28 tests
+- MemberPress stubs: `MeprProduct`, `MeprTransaction`, `MeprSubscription`
+
 #### Refactoring
 - `Module_Base`: 3 new shared helpers — `mark_importing()` (replaces inline `define()`), `delete_wp_post()` (safe post deletion with null/false check), `log_unsupported_entity()` (centralized warning logging)
 - `CRM_Module`, `Sales_Module`, `WooCommerce_Module`: refactored to use new `Module_Base` helpers, removed duplicated code
@@ -63,13 +91,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Plugin version bumped from 1.9.8 to 1.9.9
-- PHPUnit: 601 unit tests, 1060 assertions — all green (was 436/855)
-- PHPStan: 0 errors on 54 files (was 47 — added 3 module files + 2 forms files + 1 exchange rate file)
-- `Dependency_Loader` — added 3 `require_once` (2 forms module files + 1 exchange rate service)
-- `Module_Registry` — registers `Forms_Module` when Gravity Forms or WPForms is active
-- `tests/bootstrap.php` — added forms stubs and 2 new source file requires
-- `phpstan-bootstrap.php` — added GFAPI, GF_Field, and wpforms() stubs
+- Plugin version bumped from 1.9.8 to 2.0.0
+- PHPUnit: 710 unit tests, 1200 assertions — all green (was 436/855)
+- PHPStan: 0 errors on 61 files (was 47 — added 3 module files + 2 forms files + 1 exchange rate file + 4 EDD files + 3 MemberPress files)
+- `Dependency_Loader` — added 10 `require_once` (2 forms + 1 exchange rate + 4 EDD + 3 MemberPress module files)
+- `Module_Registry` — registers `Forms_Module` when Gravity Forms or WPForms is active; extended mutual exclusivity from 2-way (WC/Sales) to 3-way (WC/EDD/Sales); registers `MemberPress_Module` when MemberPress is active (mutually exclusive with WC Memberships)
+- `tests/bootstrap.php` — added forms stubs and 2 new source file requires; added EDD stubs, global store, and 4 EDD source requires; added MemberPress stubs and 3 source requires
+- `phpstan-bootstrap.php` — added GFAPI, GF_Field, and wpforms() stubs; added EDD class/function stubs (separate `phpstan-edd-stubs.php` for namespace isolation); added MemberPress class stubs (MeprProduct, MeprTransaction, MeprSubscription)
+- `tests/stubs/wp-functions.php` — `get_post_meta()` and `update_post_meta()` now use `$GLOBALS['_wp_post_meta']` store for realistic test behavior
 - `README.md` — added Memberships module to features, module table, Required Odoo apps table; added WooCommerce 7.1+ and WC Memberships 1.12+ to Requirements
 - `Dependency_Loader` — added 3 `require_once` for membership module files
 - `Module_Registry` — registers `Memberships_Module` when WooCommerce is active

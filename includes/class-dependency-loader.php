@@ -65,9 +65,16 @@ final class Dependency_Loader {
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-product-handler.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-order-handler.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-woocommerce-module.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-edd-hooks.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-edd-download-handler.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-edd-order-handler.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-edd-module.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-membership-hooks.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-membership-handler.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-memberships-module.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-memberpress-hooks.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-memberpress-handler.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-memberpress-module.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-form-handler.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-forms-module.php';
 

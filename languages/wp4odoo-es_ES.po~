@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WordPress For Odoo 1.9.9\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-10 23:30+0100\n"
+"POT-Creation-Date: 2026-02-11 00:34+0100\n"
 "PO-Revision-Date: 2026-02-10 22:00+0100\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
@@ -427,6 +427,53 @@ msgstr "Activar formulario de oportunidades"
 msgid "Enable the [wp4odoo_lead_form] shortcode."
 msgstr "Activar el shortcode [wp4odoo_lead_form]."
 
+#: includes/modules/class-edd-download-handler.php:88
+msgid "Download"
+msgstr "Descarga"
+
+#: includes/modules/class-edd-module.php:140
+msgid "Sync downloads"
+msgstr "Sincronizar descargas"
+
+#: includes/modules/class-edd-module.php:142
+msgid "Synchronize EDD downloads with Odoo products."
+msgstr "Sincronizar las descargas EDD con los productos de Odoo."
+
+#: includes/modules/class-edd-module.php:145
+#: includes/modules/class-woocommerce-module.php:201
+msgid "Sync orders"
+msgstr "Sincronizar pedidos"
+
+#: includes/modules/class-edd-module.php:147
+msgid "Synchronize EDD orders with Odoo."
+msgstr "Sincronizar los pedidos EDD con Odoo."
+
+#: includes/modules/class-edd-module.php:150
+#: includes/modules/class-woocommerce-module.php:216
+msgid "Auto-confirm orders"
+msgstr "Confirmar pedidos automáticamente"
+
+#: includes/modules/class-edd-module.php:152
+msgid "Automatically confirm orders in Odoo when an EDD order is completed."
+msgstr ""
+"Confirmar automáticamente los pedidos en Odoo cuando se completa un pedido "
+"EDD."
+
+#: includes/modules/class-edd-module.php:169
+msgid ""
+"Easy Digital Downloads must be installed and activated to use this module."
+msgstr ""
+"Easy Digital Downloads debe estar instalado y activado para utilizar este "
+"módulo."
+
+#: includes/modules/class-edd-module.php:180
+msgid ""
+"Enabling the EDD module replaces the Sales module. It cannot be active "
+"simultaneously with the WooCommerce or Sales modules."
+msgstr ""
+"La activación del módulo EDD reemplaza al módulo Sales. No puede estar "
+"activo simultáneamente con los módulos WooCommerce o Sales."
+
 #: includes/modules/class-form-handler.php:88
 #, php-format
 msgid "Gravity Forms: %s"
@@ -699,53 +746,57 @@ msgstr "No se encontraron pedidos."
 msgid "No orders found in Trash."
 msgstr "No se encontraron pedidos en la papelera."
 
-#: includes/modules/class-woocommerce-module.php:192
+#: includes/modules/class-woocommerce-module.php:196
 msgid "Sync products"
 msgstr "Sincronizar productos"
 
-#: includes/modules/class-woocommerce-module.php:194
+#: includes/modules/class-woocommerce-module.php:198
 msgid "Synchronize WooCommerce products with Odoo."
 msgstr "Sincronizar productos de WooCommerce con Odoo."
 
-#: includes/modules/class-woocommerce-module.php:197
-msgid "Sync orders"
-msgstr "Sincronizar pedidos"
-
-#: includes/modules/class-woocommerce-module.php:199
+#: includes/modules/class-woocommerce-module.php:203
 msgid "Synchronize WooCommerce orders with Odoo."
 msgstr "Sincronizar pedidos de WooCommerce con Odoo."
 
-#: includes/modules/class-woocommerce-module.php:202
+#: includes/modules/class-woocommerce-module.php:206
 msgid "Sync stock"
 msgstr "Sincronizar stock"
 
-#: includes/modules/class-woocommerce-module.php:204
+#: includes/modules/class-woocommerce-module.php:208
 msgid "Pull stock levels from Odoo into WooCommerce products."
 msgstr ""
 "Obtener niveles de stock desde Odoo hacia los productos de WooCommerce."
 
-#: includes/modules/class-woocommerce-module.php:207
+#: includes/modules/class-woocommerce-module.php:211
 msgid "Sync product images"
 msgstr "Sincronizar imágenes de productos"
 
-#: includes/modules/class-woocommerce-module.php:209
+#: includes/modules/class-woocommerce-module.php:213
 msgid "Pull product featured images from Odoo."
 msgstr "Importar imágenes destacadas de productos desde Odoo."
 
-#: includes/modules/class-woocommerce-module.php:212
-msgid "Auto-confirm orders"
-msgstr "Confirmar pedidos automáticamente"
-
-#: includes/modules/class-woocommerce-module.php:214
+#: includes/modules/class-woocommerce-module.php:218
 msgid "Automatically confirm orders in Odoo when created from WooCommerce."
 msgstr ""
 "Confirmar automáticamente los pedidos en Odoo al crearlos desde WooCommerce."
 
-#: includes/modules/class-woocommerce-module.php:231
+#: includes/modules/class-woocommerce-module.php:221
+msgid "Convert currency"
+msgstr "Convertir divisa"
+
+#: includes/modules/class-woocommerce-module.php:223
+msgid ""
+"Convert prices using Odoo exchange rates when the product currency differs "
+"from the shop currency."
+msgstr ""
+"Convertir los precios usando los tipos de cambio de Odoo cuando la divisa "
+"del producto difiere de la de la tienda."
+
+#: includes/modules/class-woocommerce-module.php:240
 msgid "WooCommerce must be installed and activated to use this module."
 msgstr "WooCommerce debe estar instalado y activado para usar este módulo."
 
-#: includes/modules/class-woocommerce-module.php:242
+#: includes/modules/class-woocommerce-module.php:251
 msgid ""
 "Enabling the WooCommerce module replaces the Sales module. Both cannot be "
 "active simultaneously."

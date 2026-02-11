@@ -43,31 +43,45 @@ class Module_Registry {
 	/**
 	 * Register all built-in modules with mutual exclusivity rules.
 	 *
-	 * WooCommerce and Sales modules are mutually exclusive: when WooCommerce
-	 * is active and the woocommerce module is enabled, Sales_Module is not loaded.
+	 * WooCommerce, EDD, and Sales modules are mutually exclusive (all share
+	 * sale.order + product.template in Odoo). Priority: WC > EDD > Sales.
 	 *
 	 * @return void
 	 */
 	public function register_all(): void {
 		$this->register( 'crm', new Modules\CRM_Module() );
 
-		$wc_active  = class_exists( 'WooCommerce' );
-		$wc_enabled = get_option( 'wp4odoo_module_woocommerce_enabled', false );
+		$wc_active   = class_exists( 'WooCommerce' );
+		$wc_enabled  = get_option( 'wp4odoo_module_woocommerce_enabled', false );
+		$edd_active  = class_exists( 'Easy_Digital_Downloads' );
+		$edd_enabled = get_option( 'wp4odoo_module_edd_enabled', false );
 
 		if ( $wc_active && $wc_enabled ) {
 			$this->register( 'woocommerce', new Modules\WooCommerce_Module() );
+		} elseif ( $edd_active && $edd_enabled ) {
+			$this->register( 'edd', new Modules\EDD_Module() );
 		} else {
 			$this->register( 'sales', new Modules\Sales_Module() );
+		}
 
-			if ( $wc_active ) {
-				// Register WC module (disabled) so it appears in admin UI.
-				$this->register( 'woocommerce', new Modules\WooCommerce_Module() );
-			}
+		// Register inactive commerce modules for admin UI visibility.
+		if ( $wc_active && ! $wc_enabled ) {
+			$this->register( 'woocommerce', new Modules\WooCommerce_Module() );
+		}
+		if ( $edd_active && ! $edd_enabled ) {
+			$this->register( 'edd', new Modules\EDD_Module() );
 		}
 
 		// Memberships module (requires WooCommerce + WC Memberships).
 		if ( $wc_active ) {
 			$this->register( 'memberships', new Modules\Memberships_Module() );
+		}
+
+		// MemberPress module (mutually exclusive with WC Memberships — same Odoo models).
+		if ( defined( 'MEPR_VERSION' ) ) {
+			if ( ! isset( $this->modules['memberships'] ) || ! get_option( 'wp4odoo_module_memberships_enabled', false ) ) {
+				$this->register( 'memberpress', new Modules\MemberPress_Module() );
+			}
 		}
 
 		// Forms module (requires Gravity Forms or WPForms).

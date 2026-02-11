@@ -6,7 +6,7 @@
  * @package WP4Odoo
  */
 
-define( 'WP4ODOO_VERSION', '1.9.9' );
+define( 'WP4ODOO_VERSION', '2.0.0' );
 define( 'WP4ODOO_PLUGIN_FILE', __DIR__ . '/wp4odoo.php' );
 define( 'WP4ODOO_PLUGIN_DIR', __DIR__ . '/' );
 define( 'WP4ODOO_PLUGIN_URL', 'https://example.com/wp-content/plugins/wp4odoo/' );
@@ -235,6 +235,75 @@ if ( ! class_exists( 'GF_Field' ) ) {
 if ( ! function_exists( 'wpforms' ) ) {
 	/** @return object */
 	function wpforms() { return new stdClass(); }
+}
+
+// ─── EDD stubs ──────────────────────────────────────────
+
+if ( ! class_exists( 'Easy_Digital_Downloads' ) ) {
+	class Easy_Digital_Downloads {}
+}
+
+if ( ! class_exists( 'EDD_Download' ) ) {
+	class EDD_Download {
+		/** @var int */
+		public int $ID = 0;
+		public function get_price(): string { return ''; }
+		public function get_ID(): int { return 0; }
+	}
+}
+
+if ( ! class_exists( 'EDD_Customer' ) ) {
+	class EDD_Customer {
+		public int $id      = 0;
+		public string $email = '';
+		public string $name  = '';
+		public int $user_id  = 0;
+	}
+}
+
+// EDD\Orders namespace stub loaded from separate file (PHP namespace rules).
+require_once __DIR__ . '/phpstan-edd-stubs.php';
+
+// ─── MemberPress stubs ──────────────────────────────────
+
+if ( ! defined( 'MEPR_VERSION' ) ) {
+	define( 'MEPR_VERSION', '1.0.0' );
+}
+
+if ( ! class_exists( 'MeprProduct' ) ) {
+	class MeprProduct {
+		public int $ID = 0;
+		public string $post_title = '';
+		public string $price = '0.00';
+		public function __construct( int $id = 0 ) { $this->ID = $id; }
+		public function get_price(): string { return $this->price; }
+	}
+}
+
+if ( ! class_exists( 'MeprTransaction' ) ) {
+	class MeprTransaction {
+		public int $id = 0;
+		public int $user_id = 0;
+		public int $product_id = 0;
+		public float $amount = 0.0;
+		public string $trans_num = '';
+		public string $created_at = '';
+		public string $status = '';
+		public int $subscription_id = 0;
+		public function __construct( int $id = 0 ) { $this->id = $id; }
+	}
+}
+
+if ( ! class_exists( 'MeprSubscription' ) ) {
+	class MeprSubscription {
+		public int $id = 0;
+		public int $user_id = 0;
+		public int $product_id = 0;
+		public string $price = '0.00';
+		public string $status = '';
+		public string $created_at = '';
+		public function __construct( int $id = 0 ) { $this->id = $id; }
+	}
 }
 
 // ─── WP-CLI stubs ───────────────────────────────────────

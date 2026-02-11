@@ -369,12 +369,19 @@ if ( ! function_exists( 'add_shortcode' ) ) {
 
 if ( ! function_exists( 'get_post_meta' ) ) {
 	function get_post_meta( $post_id, $key = '', $single = false ) {
+		if ( $key && isset( $GLOBALS['_wp_post_meta'][ $post_id ][ $key ] ) ) {
+			return $single ? $GLOBALS['_wp_post_meta'][ $post_id ][ $key ] : [ $GLOBALS['_wp_post_meta'][ $post_id ][ $key ] ];
+		}
 		return $single ? '' : [];
 	}
 }
 
 if ( ! function_exists( 'update_post_meta' ) ) {
 	function update_post_meta( $post_id, $meta_key, $meta_value, $prev_value = '' ) {
+		if ( ! isset( $GLOBALS['_wp_post_meta'][ $post_id ] ) ) {
+			$GLOBALS['_wp_post_meta'][ $post_id ] = [];
+		}
+		$GLOBALS['_wp_post_meta'][ $post_id ][ $meta_key ] = $meta_value;
 		return true;
 	}
 }

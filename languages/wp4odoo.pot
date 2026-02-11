@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-11 00:05+0100\n"
+"POT-Creation-Date: 2026-02-11 01:03+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,59 +23,6 @@ msgstr ""
 
 #: wp4odoo.php:234
 msgid "Every 15 Minutes"
-msgstr ""
-
-#: includes/class-failure-notifier.php:104
-#, php-format
-msgid "[WP4Odoo] %d consecutive sync failures"
-msgstr ""
-
-#: includes/class-failure-notifier.php:110
-#, php-format
-msgid ""
-"The WordPress For Odoo sync queue has encountered %1$d consecutive "
-"failures.\n"
-"\n"
-"Please check the sync queue at %2$s"
-msgstr ""
-
-#: includes/class-module-base.php:492
-#, php-format
-msgid "Entity type \"%1$s\" is not registered in module \"%2$s\"."
-msgstr ""
-
-#: includes/class-sync-engine.php:243
-#, php-format
-msgid "Module \"%s\" not found or not registered."
-msgstr ""
-
-#: includes/class-webhook-handler.php:146
-msgid "Missing required fields: module, entity_type, odoo_id."
-msgstr ""
-
-#: includes/class-webhook-handler.php:237
-#, php-format
-msgid "Module \"%s\" not found."
-msgstr ""
-
-#: includes/class-webhook-handler.php:257
-msgid "Provide either wp_id (for push) or odoo_id (for pull)."
-msgstr ""
-
-#: includes/class-webhook-handler.php:303
-msgid "Webhook token not configured."
-msgstr ""
-
-#: includes/class-webhook-handler.php:318
-msgid "Invalid webhook token."
-msgstr ""
-
-#: includes/class-webhook-handler.php:339
-msgid "You do not have permission to perform this action."
-msgstr ""
-
-#: includes/class-webhook-handler.php:408
-msgid "Too many requests. Please try again later."
 msgstr ""
 
 #: includes/admin/class-admin-ajax.php:81
@@ -362,6 +309,59 @@ msgstr ""
 msgid "HTTP error: %s"
 msgstr ""
 
+#: includes/class-failure-notifier.php:104
+#, php-format
+msgid "[WP4Odoo] %d consecutive sync failures"
+msgstr ""
+
+#: includes/class-failure-notifier.php:110
+#, php-format
+msgid ""
+"The WordPress For Odoo sync queue has encountered %1$d consecutive "
+"failures.\n"
+"\n"
+"Please check the sync queue at %2$s"
+msgstr ""
+
+#: includes/class-module-base.php:492
+#, php-format
+msgid "Entity type \"%1$s\" is not registered in module \"%2$s\"."
+msgstr ""
+
+#: includes/class-sync-engine.php:243
+#, php-format
+msgid "Module \"%s\" not found or not registered."
+msgstr ""
+
+#: includes/class-webhook-handler.php:146
+msgid "Missing required fields: module, entity_type, odoo_id."
+msgstr ""
+
+#: includes/class-webhook-handler.php:237
+#, php-format
+msgid "Module \"%s\" not found."
+msgstr ""
+
+#: includes/class-webhook-handler.php:257
+msgid "Provide either wp_id (for push) or odoo_id (for pull)."
+msgstr ""
+
+#: includes/class-webhook-handler.php:303
+msgid "Webhook token not configured."
+msgstr ""
+
+#: includes/class-webhook-handler.php:318
+msgid "Invalid webhook token."
+msgstr ""
+
+#: includes/class-webhook-handler.php:339
+msgid "You do not have permission to perform this action."
+msgstr ""
+
+#: includes/class-webhook-handler.php:408
+msgid "Too many requests. Please try again later."
+msgstr ""
+
 #: includes/modules/class-crm-module.php:148
 msgid "Sync users as contacts"
 msgstr ""
@@ -412,6 +412,47 @@ msgstr ""
 
 #: includes/modules/class-crm-module.php:177
 msgid "Enable the [wp4odoo_lead_form] shortcode."
+msgstr ""
+
+#: includes/modules/class-edd-download-handler.php:88
+msgid "Download"
+msgstr ""
+
+#: includes/modules/class-edd-module.php:140
+msgid "Sync downloads"
+msgstr ""
+
+#: includes/modules/class-edd-module.php:142
+msgid "Synchronize EDD downloads with Odoo products."
+msgstr ""
+
+#: includes/modules/class-edd-module.php:145
+#: includes/modules/class-woocommerce-module.php:201
+msgid "Sync orders"
+msgstr ""
+
+#: includes/modules/class-edd-module.php:147
+msgid "Synchronize EDD orders with Odoo."
+msgstr ""
+
+#: includes/modules/class-edd-module.php:150
+#: includes/modules/class-woocommerce-module.php:216
+msgid "Auto-confirm orders"
+msgstr ""
+
+#: includes/modules/class-edd-module.php:152
+msgid "Automatically confirm orders in Odoo when an EDD order is completed."
+msgstr ""
+
+#: includes/modules/class-edd-module.php:169
+msgid ""
+"Easy Digital Downloads must be installed and activated to use this module."
+msgstr ""
+
+#: includes/modules/class-edd-module.php:180
+msgid ""
+"Enabling the EDD module replaces the Sales module. It cannot be active "
+"simultaneously with the WooCommerce or Sales modules."
 msgstr ""
 
 #: includes/modules/class-form-handler.php:88
@@ -576,12 +617,53 @@ msgstr ""
 msgid "Failed to save lead."
 msgstr ""
 
-#: includes/modules/class-memberships-module.php:108
-msgid "Memberships module enabled but WooCommerce Memberships is not active."
+#: includes/modules/class-memberpress-handler.php:133
+msgid "MemberPress subscription"
 msgstr ""
 
+#: includes/modules/class-memberpress-module.php:132
+msgid "MemberPress module enabled but MemberPress is not active."
+msgstr ""
+
+#: includes/modules/class-memberpress-module.php:173
 #: includes/modules/class-memberships-module.php:146
 msgid "Sync membership plans"
+msgstr ""
+
+#: includes/modules/class-memberpress-module.php:175
+msgid "Push MemberPress plans to Odoo as membership products."
+msgstr ""
+
+#: includes/modules/class-memberpress-module.php:178
+msgid "Sync transactions"
+msgstr ""
+
+#: includes/modules/class-memberpress-module.php:180
+msgid "Push completed transactions to Odoo as invoices."
+msgstr ""
+
+#: includes/modules/class-memberpress-module.php:183
+msgid "Sync subscriptions"
+msgstr ""
+
+#: includes/modules/class-memberpress-module.php:185
+msgid "Push subscription status to Odoo membership lines."
+msgstr ""
+
+#: includes/modules/class-memberpress-module.php:188
+msgid "Auto-post invoices"
+msgstr ""
+
+#: includes/modules/class-memberpress-module.php:190
+msgid "Automatically confirm invoices in Odoo for completed transactions."
+msgstr ""
+
+#: includes/modules/class-memberpress-module.php:207
+msgid "MemberPress must be installed and activated to use this module."
+msgstr ""
+
+#: includes/modules/class-memberships-module.php:108
+msgid "Memberships module enabled but WooCommerce Memberships is not active."
 msgstr ""
 
 #: includes/modules/class-memberships-module.php:148
@@ -681,10 +763,6 @@ msgstr ""
 msgid "Synchronize WooCommerce products with Odoo."
 msgstr ""
 
-#: includes/modules/class-woocommerce-module.php:201
-msgid "Sync orders"
-msgstr ""
-
 #: includes/modules/class-woocommerce-module.php:203
 msgid "Synchronize WooCommerce orders with Odoo."
 msgstr ""
@@ -703,10 +781,6 @@ msgstr ""
 
 #: includes/modules/class-woocommerce-module.php:213
 msgid "Pull product featured images from Odoo."
-msgstr ""
-
-#: includes/modules/class-woocommerce-module.php:216
-msgid "Auto-confirm orders"
 msgstr ""
 
 #: includes/modules/class-woocommerce-module.php:218

@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Extracted from Sync_Engine for single responsibility.
  *
  * @package WP4Odoo
- * @since   1.9.9
+ * @since   2.0.0
  */
 class Failure_Notifier {
 
