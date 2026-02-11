@@ -36,7 +36,7 @@ class MembershipsModuleTest extends TestCase {
 	}
 
 	public function test_module_name_is_memberships(): void {
-		$this->assertSame( 'Memberships', $this->module->get_name() );
+		$this->assertSame( 'WC Memberships', $this->module->get_name() );
 	}
 
 	public function test_exclusive_group(): void {

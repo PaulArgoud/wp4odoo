@@ -69,7 +69,7 @@ class Forms_Module extends Module_Base {
 	 * Constructor.
 	 */
 	public function __construct( \Closure $client_provider, \WP4Odoo\Entity_Map_Repository $entity_map, \WP4Odoo\Settings_Repository $settings ) {
-		parent::__construct( 'forms', 'Forms', $client_provider, $entity_map, $settings );
+		parent::__construct( 'forms', 'Gravity Forms / WPForms', $client_provider, $entity_map, $settings );
 		$this->lead_manager = new Lead_Manager( $this->logger, fn() => $this->get_settings() );
 		$this->form_handler = new Form_Handler( $this->logger );
 	}

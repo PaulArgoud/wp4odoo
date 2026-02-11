@@ -32,7 +32,7 @@ class FormsModuleTest extends TestCase {
 	}
 
 	public function test_module_name_is_forms(): void {
-		$this->assertSame( 'Forms', $this->module->get_name() );
+		$this->assertSame( 'Gravity Forms / WPForms', $this->module->get_name() );
 	}
 
 	public function test_exclusive_group(): void {
