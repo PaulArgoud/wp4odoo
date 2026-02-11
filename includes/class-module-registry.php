@@ -89,6 +89,11 @@ class Module_Registry {
 			$this->register( 'givewp', new Modules\GiveWP_Module() );
 		}
 
+		// WP Charitable module (donations → Odoo accounting).
+		if ( class_exists( 'Charitable' ) ) {
+			$this->register( 'charitable', new Modules\Charitable_Module() );
+		}
+
 		// Forms module (requires Gravity Forms or WPForms).
 		$gf_active  = class_exists( 'GFAPI' );
 		$wpf_active = function_exists( 'wpforms' );

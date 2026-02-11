@@ -4,9 +4,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: WordPress For Odoo 1.9.9\n"
+"Project-Id-Version: WordPress For Odoo 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-11 01:03+0100\n"
+"POT-Creation-Date: 2026-02-11 01:37+0100\n"
 "PO-Revision-Date: 2026-02-09 22:31+0100\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
@@ -528,6 +528,42 @@ msgstr ""
 "WPForms n'est pas actif. Seules les soumissions Gravity Forms seront "
 "synchronisées."
 
+#: includes/modules/class-givewp-handler.php:161
+msgid "Donation"
+msgstr "Don"
+
+#: includes/modules/class-givewp-module.php:129
+msgid "GiveWP module enabled but GiveWP is not active."
+msgstr "Module GiveWP activé mais GiveWP n'est pas actif."
+
+#: includes/modules/class-givewp-module.php:169
+msgid "Sync donation forms"
+msgstr "Synchroniser les formulaires de dons"
+
+#: includes/modules/class-givewp-module.php:171
+msgid "Push GiveWP donation forms to Odoo as service products."
+msgstr "Envoyer les formulaires de dons GiveWP vers Odoo en tant que produits de service."
+
+#: includes/modules/class-givewp-module.php:174
+msgid "Sync donations"
+msgstr "Synchroniser les dons"
+
+#: includes/modules/class-givewp-module.php:176
+msgid "Push completed donations to Odoo (includes recurring payments)."
+msgstr "Envoyer les dons finalisés vers Odoo (inclut les paiements récurrents)."
+
+#: includes/modules/class-givewp-module.php:179
+msgid "Auto-validate donations"
+msgstr "Valider automatiquement les dons"
+
+#: includes/modules/class-givewp-module.php:181
+msgid "Automatically validate donations in Odoo after creation."
+msgstr "Valider automatiquement les dons dans Odoo après leur création."
+
+#: includes/modules/class-givewp-module.php:198
+msgid "GiveWP must be installed and activated to use this module."
+msgstr "GiveWP doit être installé et activé pour utiliser ce module."
+
 #: includes/modules/class-invoice-helper.php:48
 #: templates/customer-portal.php:25
 msgid "Invoices"
@@ -661,7 +697,8 @@ msgstr "Synchroniser les plans d'adhésion"
 
 #: includes/modules/class-memberpress-module.php:175
 msgid "Push MemberPress plans to Odoo as membership products."
-msgstr "Envoyer les plans MemberPress vers Odoo en tant que produits d'adhésion."
+msgstr ""
+"Envoyer les plans MemberPress vers Odoo en tant que produits d'adhésion."
 
 #: includes/modules/class-memberpress-module.php:178
 msgid "Sync transactions"
@@ -685,7 +722,9 @@ msgstr "Valider automatiquement les factures"
 
 #: includes/modules/class-memberpress-module.php:190
 msgid "Automatically confirm invoices in Odoo for completed transactions."
-msgstr "Valider automatiquement les factures dans Odoo pour les transactions finalisées."
+msgstr ""
+"Valider automatiquement les factures dans Odoo pour les transactions "
+"finalisées."
 
 #: includes/modules/class-memberpress-module.php:207
 msgid "MemberPress must be installed and activated to use this module."

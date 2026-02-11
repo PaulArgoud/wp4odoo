@@ -97,6 +97,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `GiveWPHandlerTest` — 20 tests: load_form, load_donation (account.move + OCA formats), status mapping, edge cases
 - GiveWP stubs: `Give` class, `give()` function, `GIVE_VERSION` constant
 
+#### WP Charitable Module — Donations → Odoo Accounting
+- New module: `Charitable_Module` (`includes/modules/class-charitable-module.php`) — push-only sync from WP Charitable donations to Odoo accounting, with **full recurring donation support** (each recurring payment fires the same `transition_post_status` hook, so every instalment is pushed automatically)
+- `Charitable_Handler` (`includes/modules/class-charitable-handler.php`) — loads campaign and donation data from WP Charitable CPTs (`campaign`, `donation`), pre-formats for Odoo target model; 6-entry status mapping: charitable-completed→completed, charitable-pending→pending, charitable-failed→draft, charitable-refunded→refunded, charitable-cancelled→draft, charitable-preapproval→pending
+- `Charitable_Hooks` trait (`includes/modules/trait-charitable-hooks.php`) — 2 hook callbacks with anti-loop guards: `on_campaign_save` (`save_post_campaign`), `on_donation_status_change` (`transition_post_status` filtered for `donation` post type) — only syncs completed and refunded donations
+- **Dual Odoo model with runtime detection**: same as GiveWP — probes `ir.model` for OCA `donation.donation` (shared transient `wp4odoo_has_donation_model`, 1h TTL)
+- Auto-validation: completed donations (`charitable-completed` status) automatically posted in Odoo — OCA: `validate`, core: `action_post` (configurable via `auto_validate_donations` setting)
+- Campaign auto-sync: `ensure_campaign_synced()` pushes campaign to Odoo as `product.product` before any dependent donation sync
+- Guest donor support: donor email/name from post meta (`_charitable_donor_email`, `_charitable_donor_first_name`, `_charitable_donor_last_name`), resolved via `Partner_Service::get_or_create($email, $data, 0)`
+- WP Charitable Recurring add-on detected at boot (`class_exists('Charitable_Recurring')`) with info log
+- Status mapping filterable via `apply_filters('wp4odoo_charitable_donation_status_map', $map)`
+- Settings: `sync_campaigns`, `sync_donations`, `auto_validate_donations` checkboxes (all default: enabled)
+- Dependency detection: `class_exists('Charitable')` — module available only when WP Charitable is active
+- No mutual exclusivity with GiveWP or any other module (separate Odoo models)
+- `CharitableModuleTest` — 22 tests: identity, Odoo models, settings, field mappings, dependency status, boot guard
+- `CharitableHandlerTest` — 23 tests: load_campaign, load_donation (account.move + OCA formats), 6 status mappings, edge cases
+- Charitable stubs: `Charitable` class with `instance()` method
+
 #### Refactoring
 - `Module_Base`: 3 new shared helpers — `mark_importing()` (replaces inline `define()`), `delete_wp_post()` (safe post deletion with null/false check), `log_unsupported_entity()` (centralized warning logging)
 - `CRM_Module`, `Sales_Module`, `WooCommerce_Module`: refactored to use new `Module_Base` helpers, removed duplicated code
@@ -108,12 +125,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Plugin version bumped from 1.9.8 to 2.0.0
-- PHPUnit: 752 unit tests, 1261 assertions — all green (was 436/855)
-- PHPStan: 0 errors on 64 files (was 47 — added 3 module files + 2 forms files + 1 exchange rate file + 4 EDD files + 3 MemberPress files + 3 GiveWP files)
-- `Dependency_Loader` — added 13 `require_once` (2 forms + 1 exchange rate + 4 EDD + 3 MemberPress + 3 GiveWP module files)
-- `Module_Registry` — registers `Forms_Module` when Gravity Forms or WPForms is active; extended mutual exclusivity from 2-way (WC/Sales) to 3-way (WC/EDD/Sales); registers `MemberPress_Module` when MemberPress is active (mutually exclusive with WC Memberships); registers `GiveWP_Module` when GiveWP is active (no mutual exclusivity — separate Odoo models)
-- `tests/bootstrap.php` — added forms stubs and 2 new source file requires; added EDD stubs, global store, and 4 EDD source requires; added MemberPress stubs and 3 source requires; added GiveWP stubs and 3 source requires
-- `phpstan-bootstrap.php` — added GFAPI, GF_Field, and wpforms() stubs; added EDD class/function stubs (separate `phpstan-edd-stubs.php` for namespace isolation); added MemberPress class stubs (MeprProduct, MeprTransaction, MeprSubscription); added GiveWP stubs (Give class, give() function, GIVE_VERSION constant)
+- PHPUnit: 797 unit tests, 1322 assertions — all green (was 436/855)
+- PHPStan: 0 errors on 67 files (was 47 — added 3 module files + 2 forms files + 1 exchange rate file + 4 EDD files + 3 MemberPress files + 3 GiveWP files + 3 Charitable files)
+- `Dependency_Loader` — added 16 `require_once` (2 forms + 1 exchange rate + 4 EDD + 3 MemberPress + 3 GiveWP + 3 Charitable module files)
+- `Module_Registry` — registers `Forms_Module` when Gravity Forms or WPForms is active; extended mutual exclusivity from 2-way (WC/Sales) to 3-way (WC/EDD/Sales); registers `MemberPress_Module` when MemberPress is active (mutually exclusive with WC Memberships); registers `GiveWP_Module` when GiveWP is active; registers `Charitable_Module` when WP Charitable is active (no mutual exclusivity — separate Odoo models)
+- `tests/bootstrap.php` — added forms stubs and 2 new source file requires; added EDD stubs, global store, and 4 EDD source requires; added MemberPress stubs and 3 source requires; added GiveWP stubs and 3 source requires; added Charitable stubs and 3 source requires
+- `phpstan-bootstrap.php` — added GFAPI, GF_Field, and wpforms() stubs; added EDD class/function stubs (separate `phpstan-edd-stubs.php` for namespace isolation); added MemberPress class stubs (MeprProduct, MeprTransaction, MeprSubscription); added GiveWP stubs (Give class, give() function, GIVE_VERSION constant); added Charitable stub (Charitable class)
 - `tests/stubs/wp-functions.php` — `get_post_meta()` and `update_post_meta()` now use `$GLOBALS['_wp_post_meta']` store for realistic test behavior
 - `README.md` — added Memberships module to features, module table, Required Odoo apps table; added WooCommerce 7.1+ and WC Memberships 1.12+ to Requirements
 - `Dependency_Loader` — added 3 `require_once` for membership module files

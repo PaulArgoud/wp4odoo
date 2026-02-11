@@ -323,6 +323,14 @@ if ( ! function_exists( 'give' ) ) {
 	function give(): Give { return Give::instance(); }
 }
 
+// ─── WP Charitable stubs ────────────────────────────────
+
+if ( ! class_exists( 'Charitable' ) ) {
+	class Charitable {
+		public static function instance(): self { return new self(); }
+	}
+}
+
 // ─── WP-CLI stubs ───────────────────────────────────────
 
 if ( ! defined( 'WP_CLI' ) ) {

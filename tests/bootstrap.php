@@ -70,6 +70,7 @@ require_once __DIR__ . '/stubs/wp-cli-utils.php';
 require_once __DIR__ . '/stubs/edd-classes.php';
 require_once __DIR__ . '/stubs/memberpress-classes.php';
 require_once __DIR__ . '/stubs/givewp-classes.php';
+require_once __DIR__ . '/stubs/charitable-classes.php';
 
 // ─── Composer autoloader ────────────────────────────────
 
@@ -128,6 +129,9 @@ require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-memberpress-module.php
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-givewp-hooks.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-givewp-handler.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-givewp-module.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-charitable-hooks.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-charitable-handler.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-charitable-module.php';
 require_once __DIR__ . '/stubs/form-classes.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-form-handler.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-forms-module.php';

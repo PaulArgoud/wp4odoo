@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WordPress For Odoo 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-11 01:37+0100\n"
+"POT-Creation-Date: 2026-02-11 02:05+0100\n"
 "PO-Revision-Date: 2026-02-10 22:00+0100\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
@@ -23,6 +23,63 @@ msgstr "Cada 5 minutos"
 #: wp4odoo.php:234
 msgid "Every 15 Minutes"
 msgstr "Cada 15 minutos"
+
+#: includes/class-failure-notifier.php:104
+#, php-format
+msgid "[WP4Odoo] %d consecutive sync failures"
+msgstr "[WP4Odoo] %d fallos de sincronización consecutivos"
+
+#: includes/class-failure-notifier.php:110
+#, php-format
+msgid ""
+"The WordPress For Odoo sync queue has encountered %1$d consecutive "
+"failures.\n"
+"\n"
+"Please check the sync queue at %2$s"
+msgstr ""
+"La cola de sincronización de WordPress For Odoo ha encontrado %1$d fallos "
+"consecutivos.\n"
+"\n"
+"Por favor, revise la cola de sincronización en %2$s"
+
+#: includes/class-module-base.php:492
+#, php-format
+msgid "Entity type \"%1$s\" is not registered in module \"%2$s\"."
+msgstr "El tipo de entidad «%1$s» no está registrado en el módulo «%2$s»."
+
+#: includes/class-sync-engine.php:243
+#, php-format
+msgid "Module \"%s\" not found or not registered."
+msgstr "Módulo «%s» no encontrado o no registrado."
+
+#: includes/class-webhook-handler.php:146
+msgid "Missing required fields: module, entity_type, odoo_id."
+msgstr "Campos obligatorios faltantes: module, entity_type, odoo_id."
+
+#: includes/class-webhook-handler.php:237
+#, php-format
+msgid "Module \"%s\" not found."
+msgstr "Módulo «%s» no encontrado."
+
+#: includes/class-webhook-handler.php:257
+msgid "Provide either wp_id (for push) or odoo_id (for pull)."
+msgstr "Proporcione wp_id (para enviar) u odoo_id (para importar)."
+
+#: includes/class-webhook-handler.php:303
+msgid "Webhook token not configured."
+msgstr "Token de webhook no configurado."
+
+#: includes/class-webhook-handler.php:318
+msgid "Invalid webhook token."
+msgstr "Token de webhook no válido."
+
+#: includes/class-webhook-handler.php:339
+msgid "You do not have permission to perform this action."
+msgstr "No tiene permiso para realizar esta acción."
+
+#: includes/class-webhook-handler.php:408
+msgid "Too many requests. Please try again later."
+msgstr "Demasiadas solicitudes. Inténtelo de nuevo más tarde."
 
 #: includes/admin/class-admin-ajax.php:81
 #: includes/modules/class-portal-manager.php:138
@@ -317,62 +374,59 @@ msgstr "Error XML-RPC de Odoo: %s"
 msgid "HTTP error: %s"
 msgstr "Error HTTP: %s"
 
-#: includes/class-failure-notifier.php:104
-#, php-format
-msgid "[WP4Odoo] %d consecutive sync failures"
-msgstr "[WP4Odoo] %d fallos de sincronización consecutivos"
+#: includes/modules/class-charitable-handler.php:169
+#: includes/modules/class-givewp-handler.php:161
+msgid "Donation"
+msgstr "Donación"
 
-#: includes/class-failure-notifier.php:110
-#, php-format
+#: includes/modules/class-charitable-module.php:129
+msgid "WP Charitable module enabled but WP Charitable is not active."
+msgstr "Módulo WP Charitable activado pero WP Charitable no está activo."
+
+#: includes/modules/class-charitable-module.php:144
 msgid ""
-"The WordPress For Odoo sync queue has encountered %1$d consecutive "
-"failures.\n"
-"\n"
-"Please check the sync queue at %2$s"
+"WP Charitable Recurring add-on detected. Recurring payments will be synced "
+"automatically."
 msgstr ""
-"La cola de sincronización de WordPress For Odoo ha encontrado %1$d fallos "
-"consecutivos.\n"
-"\n"
-"Por favor, revise la cola de sincronización en %2$s"
+"Extensión WP Charitable Recurring detectada. Los pagos recurrentes se "
+"sincronizarán automáticamente."
 
-#: includes/class-module-base.php:492
-#, php-format
-msgid "Entity type \"%1$s\" is not registered in module \"%2$s\"."
-msgstr "El tipo de entidad «%1$s» no está registrado en el módulo «%2$s»."
+#: includes/modules/class-charitable-module.php:169
+msgid "Sync campaigns"
+msgstr "Sincronizar campañas"
 
-#: includes/class-sync-engine.php:243
-#, php-format
-msgid "Module \"%s\" not found or not registered."
-msgstr "Módulo «%s» no encontrado o no registrado."
+#: includes/modules/class-charitable-module.php:171
+msgid "Push WP Charitable campaigns to Odoo as service products."
+msgstr ""
+"Enviar las campañas de WP Charitable a Odoo como productos de servicio."
 
-#: includes/class-webhook-handler.php:146
-msgid "Missing required fields: module, entity_type, odoo_id."
-msgstr "Campos obligatorios faltantes: module, entity_type, odoo_id."
+#: includes/modules/class-charitable-module.php:174
+#: includes/modules/class-givewp-module.php:174
+msgid "Sync donations"
+msgstr "Sincronizar donaciones"
 
-#: includes/class-webhook-handler.php:237
-#, php-format
-msgid "Module \"%s\" not found."
-msgstr "Módulo «%s» no encontrado."
+#: includes/modules/class-charitable-module.php:176
+#: includes/modules/class-givewp-module.php:176
+msgid "Push completed donations to Odoo (includes recurring payments)."
+msgstr "Enviar las donaciones finalizadas a Odoo (incluye pagos recurrentes)."
 
-#: includes/class-webhook-handler.php:257
-msgid "Provide either wp_id (for push) or odoo_id (for pull)."
-msgstr "Proporcione wp_id (para enviar) u odoo_id (para importar)."
+#: includes/modules/class-charitable-module.php:179
+#: includes/modules/class-givewp-module.php:179
+msgid "Auto-validate donations"
+msgstr "Validar automáticamente las donaciones"
 
-#: includes/class-webhook-handler.php:303
-msgid "Webhook token not configured."
-msgstr "Token de webhook no configurado."
+#: includes/modules/class-charitable-module.php:181
+#: includes/modules/class-givewp-module.php:181
+msgid "Automatically validate donations in Odoo after creation."
+msgstr "Validar automáticamente las donaciones en Odoo después de su creación."
 
-#: includes/class-webhook-handler.php:318
-msgid "Invalid webhook token."
-msgstr "Token de webhook no válido."
+#: includes/modules/class-charitable-module.php:198
+msgid "WP Charitable must be installed and activated to use this module."
+msgstr "WP Charitable debe estar instalado y activado para usar este módulo."
 
-#: includes/class-webhook-handler.php:339
-msgid "You do not have permission to perform this action."
-msgstr "No tiene permiso para realizar esta acción."
-
-#: includes/class-webhook-handler.php:408
-msgid "Too many requests. Please try again later."
-msgstr "Demasiadas solicitudes. Inténtelo de nuevo más tarde."
+#: includes/modules/class-charitable-module.php:403
+msgid "Auto-pushing WP Charitable campaign before donation."
+msgstr "Envío automático de la campaña WP Charitable antes de la donación."
 
 #: includes/modules/class-crm-module.php:148
 msgid "Sync users as contacts"
@@ -522,10 +576,6 @@ msgid "WPForms is not active. Only Gravity Forms submissions will be synced."
 msgstr ""
 "WPForms no está activo. Solo se sincronizarán los envíos de Gravity Forms."
 
-#: includes/modules/class-givewp-handler.php:161
-msgid "Donation"
-msgstr "Donación"
-
 #: includes/modules/class-givewp-module.php:129
 msgid "GiveWP module enabled but GiveWP is not active."
 msgstr "Módulo GiveWP activado pero GiveWP no está activo."
@@ -536,23 +586,8 @@ msgstr "Sincronizar formularios de donación"
 
 #: includes/modules/class-givewp-module.php:171
 msgid "Push GiveWP donation forms to Odoo as service products."
-msgstr "Enviar los formularios de donación GiveWP a Odoo como productos de servicio."
-
-#: includes/modules/class-givewp-module.php:174
-msgid "Sync donations"
-msgstr "Sincronizar donaciones"
-
-#: includes/modules/class-givewp-module.php:176
-msgid "Push completed donations to Odoo (includes recurring payments)."
-msgstr "Enviar las donaciones finalizadas a Odoo (incluye pagos recurrentes)."
-
-#: includes/modules/class-givewp-module.php:179
-msgid "Auto-validate donations"
-msgstr "Validar automáticamente las donaciones"
-
-#: includes/modules/class-givewp-module.php:181
-msgid "Automatically validate donations in Odoo after creation."
-msgstr "Validar automáticamente las donaciones en Odoo después de su creación."
+msgstr ""
+"Enviar los formularios de donación GiveWP a Odoo como productos de servicio."
 
 #: includes/modules/class-givewp-module.php:198
 msgid "GiveWP must be installed and activated to use this module."
