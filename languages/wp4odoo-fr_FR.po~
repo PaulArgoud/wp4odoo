@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WordPress For Odoo 1.9.9\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-11 00:34+0100\n"
+"POT-Creation-Date: 2026-02-11 01:03+0100\n"
 "PO-Revision-Date: 2026-02-09 22:31+0100\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
@@ -646,14 +646,55 @@ msgstr "Adresse e-mail invalide."
 msgid "Failed to save lead."
 msgstr "Échec de l'enregistrement du lead."
 
+#: includes/modules/class-memberpress-handler.php:133
+msgid "MemberPress subscription"
+msgstr "Abonnement MemberPress"
+
+#: includes/modules/class-memberpress-module.php:132
+msgid "MemberPress module enabled but MemberPress is not active."
+msgstr "Module MemberPress activé mais MemberPress n'est pas actif."
+
+#: includes/modules/class-memberpress-module.php:173
+#: includes/modules/class-memberships-module.php:146
+msgid "Sync membership plans"
+msgstr "Synchroniser les plans d'adhésion"
+
+#: includes/modules/class-memberpress-module.php:175
+msgid "Push MemberPress plans to Odoo as membership products."
+msgstr "Envoyer les plans MemberPress vers Odoo en tant que produits d'adhésion."
+
+#: includes/modules/class-memberpress-module.php:178
+msgid "Sync transactions"
+msgstr "Synchroniser les transactions"
+
+#: includes/modules/class-memberpress-module.php:180
+msgid "Push completed transactions to Odoo as invoices."
+msgstr "Envoyer les transactions finalisées vers Odoo en tant que factures."
+
+#: includes/modules/class-memberpress-module.php:183
+msgid "Sync subscriptions"
+msgstr "Synchroniser les abonnements"
+
+#: includes/modules/class-memberpress-module.php:185
+msgid "Push subscription status to Odoo membership lines."
+msgstr "Envoyer le statut des abonnements vers les lignes d'adhésion Odoo."
+
+#: includes/modules/class-memberpress-module.php:188
+msgid "Auto-post invoices"
+msgstr "Valider automatiquement les factures"
+
+#: includes/modules/class-memberpress-module.php:190
+msgid "Automatically confirm invoices in Odoo for completed transactions."
+msgstr "Valider automatiquement les factures dans Odoo pour les transactions finalisées."
+
+#: includes/modules/class-memberpress-module.php:207
+msgid "MemberPress must be installed and activated to use this module."
+msgstr "MemberPress doit être installé et activé pour utiliser ce module."
+
 #: includes/modules/class-memberships-module.php:108
 msgid "Memberships module enabled but WooCommerce Memberships is not active."
 msgstr ""
 "Module Memberships activé mais WooCommerce Memberships n'est pas actif."
-
-#: includes/modules/class-memberships-module.php:146
-msgid "Sync membership plans"
-msgstr "Synchroniser les plans d'adhésion"
 
 #: includes/modules/class-memberships-module.php:148
 msgid "Push WooCommerce membership plans to Odoo."

@@ -338,6 +338,13 @@ if ( ! function_exists( 'get_post_type' ) ) {
 	}
 }
 
+if ( ! function_exists( 'get_post_status' ) ) {
+	function get_post_status( $post_id = null ) {
+		$post = $GLOBALS['_wp_posts'][ $post_id ] ?? null;
+		return $post ? ( $post->post_status ?? false ) : false;
+	}
+}
+
 if ( ! function_exists( 'wp_insert_post' ) ) {
 	function wp_insert_post( $args, $wp_error = false ) {
 		static $next_id = 500;

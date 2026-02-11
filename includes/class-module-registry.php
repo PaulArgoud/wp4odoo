@@ -84,6 +84,11 @@ class Module_Registry {
 			}
 		}
 
+		// GiveWP module (donations → Odoo accounting).
+		if ( defined( 'GIVE_VERSION' ) ) {
+			$this->register( 'givewp', new Modules\GiveWP_Module() );
+		}
+
 		// Forms module (requires Gravity Forms or WPForms).
 		$gf_active  = class_exists( 'GFAPI' );
 		$wpf_active = function_exists( 'wpforms' );

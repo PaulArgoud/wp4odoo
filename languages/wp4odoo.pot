@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-11 01:03+0100\n"
+"POT-Creation-Date: 2026-02-11 01:37+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -497,6 +497,42 @@ msgstr ""
 
 #: includes/modules/class-forms-module.php:242
 msgid "WPForms is not active. Only Gravity Forms submissions will be synced."
+msgstr ""
+
+#: includes/modules/class-givewp-handler.php:161
+msgid "Donation"
+msgstr ""
+
+#: includes/modules/class-givewp-module.php:129
+msgid "GiveWP module enabled but GiveWP is not active."
+msgstr ""
+
+#: includes/modules/class-givewp-module.php:169
+msgid "Sync donation forms"
+msgstr ""
+
+#: includes/modules/class-givewp-module.php:171
+msgid "Push GiveWP donation forms to Odoo as service products."
+msgstr ""
+
+#: includes/modules/class-givewp-module.php:174
+msgid "Sync donations"
+msgstr ""
+
+#: includes/modules/class-givewp-module.php:176
+msgid "Push completed donations to Odoo (includes recurring payments)."
+msgstr ""
+
+#: includes/modules/class-givewp-module.php:179
+msgid "Auto-validate donations"
+msgstr ""
+
+#: includes/modules/class-givewp-module.php:181
+msgid "Automatically validate donations in Odoo after creation."
+msgstr ""
+
+#: includes/modules/class-givewp-module.php:198
+msgid "GiveWP must be installed and activated to use this module."
 msgstr ""
 
 #: includes/modules/class-invoice-helper.php:48

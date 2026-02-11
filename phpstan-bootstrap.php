@@ -306,6 +306,23 @@ if ( ! class_exists( 'MeprSubscription' ) ) {
 	}
 }
 
+// ─── GiveWP stubs ───────────────────────────────────────
+
+if ( ! defined( 'GIVE_VERSION' ) ) {
+	define( 'GIVE_VERSION', '3.0.0' );
+}
+
+if ( ! class_exists( 'Give' ) ) {
+	class Give {
+		public static function instance(): self { return new self(); }
+	}
+}
+
+if ( ! function_exists( 'give' ) ) {
+	/** @return Give */
+	function give(): Give { return Give::instance(); }
+}
+
 // ─── WP-CLI stubs ───────────────────────────────────────
 
 if ( ! defined( 'WP_CLI' ) ) {

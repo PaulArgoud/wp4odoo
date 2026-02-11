@@ -75,6 +75,9 @@ final class Dependency_Loader {
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-memberpress-hooks.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-memberpress-handler.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-memberpress-module.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-givewp-hooks.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-givewp-handler.php';
+		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-givewp-module.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-form-handler.php';
 		require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-forms-module.php';
 

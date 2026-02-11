@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/PaulArgoud/wordpress-for-odoo/actions/workflows/ci.yml/badge.svg)](https://github.com/PaulArgoud/wordpress-for-odoo/actions/workflows/ci.yml)
 
-Modular WordPress plugin providing comprehensive, bidirectional integration between WordPress/WooCommerce and Odoo ERP (v14+). Covers CRM, Sales & Invoicing, and WooCommerce synchronization through a clean, extensible architecture. Ships in **3 languages** (English, French, Spanish) and is fully translation-ready.
+Modular WordPress plugin providing comprehensive, bidirectional integration between WordPress/WooCommerce and Odoo ERP (v14+). Covers CRM, Sales & Invoicing, WooCommerce, EDD, Memberships, MemberPress, GiveWP donations, and form leads through a clean, extensible architecture. Ships in **3 languages** (English, French, Spanish) and is fully translation-ready.
 
 **Target users:** WordPress agencies and businesses running Odoo as their ERP who need seamless data flow between their website and back-office.
 
@@ -16,6 +16,7 @@ Modular WordPress plugin providing comprehensive, bidirectional integration betw
 - **EDD Module** — Bidirectional sync for Easy Digital Downloads: downloads (`product.template`), orders (`sale.order`), invoices (`account.move`), EDD↔Odoo status mapping, partner resolution (mutually exclusive with WooCommerce and Sales modules)
 - **Memberships Module** — Push WooCommerce Memberships (plans + user memberships) to Odoo's native `membership` module, with status mapping and automatic plan sync
 - **MemberPress Module** — Push MemberPress recurring subscriptions to Odoo: plans as membership products, transactions as invoices (`account.move` with auto-posting), subscriptions as membership lines, with status mapping and filterable hooks (`wp4odoo_mepr_txn_status_map`, `wp4odoo_mepr_sub_status_map`)
+- **GiveWP Module** — Push GiveWP donations to Odoo accounting with **full recurring donation support**. Dual Odoo model: auto-detects OCA `donation.donation` module, falls back to `account.move` (invoices). Forms synced as products, donations with auto-validation, guest donor support, filterable status mapping (`wp4odoo_givewp_donation_status_map`)
 - **Forms Module** — Automatic lead creation in Odoo from Gravity Forms and WPForms submissions, with field auto-detection (name, email, phone, company, message), multilingual label matching, and filterable via `wp4odoo_form_lead_data`
 - **Async Queue** — No API calls during user requests; all sync jobs go through a persistent database queue with exponential backoff, deduplication, and configurable batch size
 - **Dual Transport** — JSON-RPC 2.0 (default for Odoo 17+) and XML-RPC (legacy), swappable via settings, shared retry logic via `Retryable_Http` trait (3 attempts, exponential backoff + jitter)
@@ -25,8 +26,8 @@ Modular WordPress plugin providing comprehensive, bidirectional integration betw
 - **Onboarding** — Post-activation redirect, setup notice, 3-step checklist with progress bar, inline Odoo documentation (API keys, webhooks)
 - **WP-CLI** — Full command suite: `wp wp4odoo status|test|sync|queue|module` for headless management
 - **Extensible** — Register custom modules via `wp4odoo_register_modules` action hook; filter data with `wp4odoo_map_to_odoo_*` / `wp4odoo_map_from_odoo_*`
-- **Multilingual (3 languages)** — Fully internationalized with WordPress standard Gettext i18n. Ships with English (source), French, and Spanish translations (293 strings). Translation-ready for additional languages via `.po`/`.mo` files
-- **Code Quality** — WordPress Coding Standards (PHPCS), PHPStan level 5 static analysis, 710 unit tests + 26 integration tests, CI/CD with GitHub Actions
+- **Multilingual (3 languages)** — Fully internationalized with WordPress standard Gettext i18n. Ships with English (source), French, and Spanish translations (302 strings). Translation-ready for additional languages via `.po`/`.mo` files
+- **Code Quality** — WordPress Coding Standards (PHPCS), PHPStan level 5 static analysis, 752 unit tests + 26 integration tests, CI/CD with GitHub Actions
 
 ## Requirements
 
@@ -37,16 +38,16 @@ Modular WordPress plugin providing comprehensive, bidirectional integration betw
 - WooCommerce Memberships 1.12+ (optional, for Memberships module)
 - Easy Digital Downloads 3.0+ (optional, for EDD module)
 - MemberPress 1.9+ (optional, for MemberPress module)
+- GiveWP 3.0+ (optional, for GiveWP module)
 - Gravity Forms 2.5+ or WPForms 1.7+ (optional, for Forms module)
 
 ## Compatibility
 
 ### By Odoo version and hosting type
 
-| Odoo    | Odoo        | Odoo.sh  | Odoo    | Odoo Online  |
-| version | On-Premise |          | Online  | One App Free |
-|:--------|:----------:|:---------:|:------:|:------------:|
-| 17 – 19 | ✅ Full³   | ✅ Full³ | ✅ Full | ⚠️ Partial² |
+| version | On-Premise | .sh       | Online  | One App Free |
+|:--------|:----------:|:---------:|:-------:|:------------:|
+| 17 – 19 | ✅ Full³   | ✅ Full³ | ✅ Full | ⚠️ Partial²  |
 | 14 – 16 | ✅ Full³   | ✅ Full³ | N/A¹    | N/A¹         |
 | < 14    | ❌         | ❌       | N/A¹    | N/A¹         |
 
@@ -75,19 +76,18 @@ All hosting types expose the standard Odoo external API used by the plugin. No c
 
 Each Odoo domain is encapsulated in an independent module extending `Module_Base`. The plugin automatically detects missing Odoo apps at connection test and module activation.
 
-| WP4Odoo Modules            | Sync | Odoo Apps                             | Free⁴ | Key Features                                                                   |
-|----------------------------|:----:|---------------------------------------|:-----:|--------------------------------------------------------------------------------|
-| **CRM**                    |  ↔   | Contacts, CRM                         |  ⚠️   | Contact sync, lead form shortcode, email dedup, archive-on-delete              |
-| **Sales**                  |  ←   | Contacts, Sales, Invoicing            |  ❌   | Order/invoice CPTs, customer portal shortcode, currency display                |
-| **WooCommerce**            |  ↔   | Contacts, Sales, Inventory, Invoicing |  ❌   | Product/order/stock sync, variants, image pull, exchange rates, bulk ops       |
-| **Easy Digital Downloads** |  ↔   | Contacts, Sales, Invoicing            |  ❌   | Download/order sync, status mapping, invoice pull                              |
-| **WC Memberships**         |  →   | Contacts, Members                     |  ❌   | Plan auto-sync, status mapping, filterable via `wp4odoo_membership_status_map` |
-| **MemberPress**            |  →   | Contacts, Members, Invoicing          |  ❌   | Plan/txn/sub sync, auto-post invoices, status mapping                          |
-| **Forms (GF & WPF)**       |  →   | Contacts, CRM                         |  ⚠️   | GF + WPForms lead creation, field auto-detection, multilingual label matching  |
+| WP4Odoo Modules            | Synch. | Odoo Apps                             | Free⁴  | Key Features                                                                   |
+|----------------------------|:------:|---------------------------------------|:------:|--------------------------------------------------------------------------------|
+| **CRM**                    |   ↔️   | Contacts, CRM                         |   ⚠️   | Contact sync, lead form shortcode, email dedup, archive-on-delete              |
+| **Sales**                  |   ⬅️   | Contacts, Sales, Invoicing            |   ❌   | Order/invoice CPTs, customer portal shortcode, currency display                |
+| **WooCommerce**            |   ↔️   | Contacts, Sales, Inventory, Invoicing |   ❌   | Product/order/stock sync, variants, image pull, exchange rates, bulk ops       |
+| **Easy Digital Downloads** |   ↔️   | Contacts, Sales, Invoicing            |   ❌   | Download/order sync, status mapping, invoice pull                              |
+| **WC Memberships**         |   ➡️   | Contacts, Members                     |   ❌   | Plan auto-sync, status mapping, filterable via `wp4odoo_membership_status_map` |
+| **MemberPress**            |   ➡️   | Contacts, Members, Invoicing          |   ❌   | Plan/txn/sub sync, auto-post invoices, status mapping                          |
+| **GiveWP**                 |   ➡️   | Contacts, Invoicing (+ OCA Donation)  |   ⚠️   | Form/donation sync, dual-model detection, auto-validate, recurring donations   |
+| **Forms (GF & WPF)**       |   ➡️   | Contacts, CRM                         |   ⚠️   | GF + WPForms lead creation, field auto-detection, multilingual label matching  |
 
-> ↔ Bidirectional — → WP to Odoo — ← Odoo to WP
->
-> ⁴ **[One App Free](https://www.odoo.com/pricing)**: with CRM as your free app, CRM and Forms modules work. Sales, WooCommerce, and Memberships require 2–4 apps.
+> ⁴ **[One App Free](https://www.odoo.com/pricing)**: with CRM as your free app, CRM and Forms modules work. With Invoicing as your free app, GiveWP works. Sales, WooCommerce, and Memberships require 2–4 apps.
 
 Third-party modules can be registered:
 

@@ -4,9 +4,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: WordPress For Odoo 1.9.9\n"
+"Project-Id-Version: WordPress For Odoo 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-11 01:03+0100\n"
+"POT-Creation-Date: 2026-02-11 01:37+0100\n"
 "PO-Revision-Date: 2026-02-10 22:00+0100\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
@@ -522,6 +522,42 @@ msgid "WPForms is not active. Only Gravity Forms submissions will be synced."
 msgstr ""
 "WPForms no está activo. Solo se sincronizarán los envíos de Gravity Forms."
 
+#: includes/modules/class-givewp-handler.php:161
+msgid "Donation"
+msgstr "Donación"
+
+#: includes/modules/class-givewp-module.php:129
+msgid "GiveWP module enabled but GiveWP is not active."
+msgstr "Módulo GiveWP activado pero GiveWP no está activo."
+
+#: includes/modules/class-givewp-module.php:169
+msgid "Sync donation forms"
+msgstr "Sincronizar formularios de donación"
+
+#: includes/modules/class-givewp-module.php:171
+msgid "Push GiveWP donation forms to Odoo as service products."
+msgstr "Enviar los formularios de donación GiveWP a Odoo como productos de servicio."
+
+#: includes/modules/class-givewp-module.php:174
+msgid "Sync donations"
+msgstr "Sincronizar donaciones"
+
+#: includes/modules/class-givewp-module.php:176
+msgid "Push completed donations to Odoo (includes recurring payments)."
+msgstr "Enviar las donaciones finalizadas a Odoo (incluye pagos recurrentes)."
+
+#: includes/modules/class-givewp-module.php:179
+msgid "Auto-validate donations"
+msgstr "Validar automáticamente las donaciones"
+
+#: includes/modules/class-givewp-module.php:181
+msgid "Automatically validate donations in Odoo after creation."
+msgstr "Validar automáticamente las donaciones en Odoo después de su creación."
+
+#: includes/modules/class-givewp-module.php:198
+msgid "GiveWP must be installed and activated to use this module."
+msgstr "GiveWP debe estar instalado y activado para usar este módulo."
+
 #: includes/modules/class-invoice-helper.php:48
 #: templates/customer-portal.php:25
 msgid "Invoices"
@@ -671,7 +707,8 @@ msgstr "Sincronizar suscripciones"
 
 #: includes/modules/class-memberpress-module.php:185
 msgid "Push subscription status to Odoo membership lines."
-msgstr "Enviar el estado de las suscripciones a las líneas de membresía de Odoo."
+msgstr ""
+"Enviar el estado de las suscripciones a las líneas de membresía de Odoo."
 
 #: includes/modules/class-memberpress-module.php:188
 msgid "Auto-post invoices"
