@@ -138,10 +138,10 @@ class LearnDash_Module extends Module_Base {
 	 */
 	public function get_default_settings(): array {
 		return [
-			'sync_courses'      => true,
-			'sync_groups'       => true,
-			'sync_transactions' => true,
-			'sync_enrollments'  => true,
+			'sync_courses'       => true,
+			'sync_groups'        => true,
+			'sync_transactions'  => true,
+			'sync_enrollments'   => true,
 			'auto_post_invoices' => true,
 		];
 	}
@@ -153,22 +153,22 @@ class LearnDash_Module extends Module_Base {
 	 */
 	public function get_settings_fields(): array {
 		return [
-			'sync_courses'      => [
+			'sync_courses'       => [
 				'label'       => __( 'Sync courses', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Push LearnDash courses to Odoo as service products.', 'wp4odoo' ),
 			],
-			'sync_groups'       => [
+			'sync_groups'        => [
 				'label'       => __( 'Sync groups', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Push LearnDash groups to Odoo as service products.', 'wp4odoo' ),
 			],
-			'sync_transactions' => [
+			'sync_transactions'  => [
 				'label'       => __( 'Sync transactions', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Push LearnDash payment transactions to Odoo as invoices.', 'wp4odoo' ),
 			],
-			'sync_enrollments'  => [
+			'sync_enrollments'   => [
 				'label'       => __( 'Sync enrollments', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Push course enrollments to Odoo as sale orders.', 'wp4odoo' ),

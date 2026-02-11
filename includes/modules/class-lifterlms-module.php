@@ -149,10 +149,10 @@ class LifterLMS_Module extends Module_Base {
 	 */
 	public function get_default_settings(): array {
 		return [
-			'sync_courses'      => true,
-			'sync_memberships'  => true,
-			'sync_orders'       => true,
-			'sync_enrollments'  => true,
+			'sync_courses'       => true,
+			'sync_memberships'   => true,
+			'sync_orders'        => true,
+			'sync_enrollments'   => true,
 			'auto_post_invoices' => true,
 		];
 	}
@@ -164,22 +164,22 @@ class LifterLMS_Module extends Module_Base {
 	 */
 	public function get_settings_fields(): array {
 		return [
-			'sync_courses'      => [
+			'sync_courses'       => [
 				'label'       => __( 'Sync courses', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Push LifterLMS courses to Odoo as service products.', 'wp4odoo' ),
 			],
-			'sync_memberships'  => [
+			'sync_memberships'   => [
 				'label'       => __( 'Sync memberships', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Push LifterLMS memberships to Odoo as service products.', 'wp4odoo' ),
 			],
-			'sync_orders'       => [
+			'sync_orders'        => [
 				'label'       => __( 'Sync orders', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Push completed orders to Odoo as invoices.', 'wp4odoo' ),
 			],
-			'sync_enrollments'  => [
+			'sync_enrollments'   => [
 				'label'       => __( 'Sync enrollments', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Push course enrollments to Odoo as sale orders.', 'wp4odoo' ),
