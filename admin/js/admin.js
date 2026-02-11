@@ -172,7 +172,17 @@
 					if ( response.success ) {
 						WP4Odoo.showNotice( 'success', response.data.message );
 
-						// Show missing Odoo modules warning if detected.
+						// Auto-disable conflicting modules in the UI.
+						if ( response.data.auto_disabled ) {
+							$.each( response.data.auto_disabled, function( _, conflictId ) {
+								var $conflictCard   = $( '.wp4odoo-module-card[data-module="' + conflictId + '"]' );
+								var $conflictToggle = $conflictCard.find( '.wp4odoo-module-toggle' );
+								$conflictToggle.prop( 'checked', false );
+								$conflictCard.find( '.wp4odoo-module-settings' ).slideUp( 200 );
+							} );
+						}
+
+						// Show warning (conflicts or missing Odoo models).
 						if ( response.data.warning ) {
 							WP4Odoo.showNotice( 'warning', response.data.warning );
 						}

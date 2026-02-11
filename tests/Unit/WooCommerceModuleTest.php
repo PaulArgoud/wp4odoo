@@ -35,6 +35,14 @@ class WooCommerceModuleTest extends TestCase {
 		$this->assertSame( 'WooCommerce', $this->module->get_name() );
 	}
 
+	public function test_exclusive_group(): void {
+		$this->assertSame( 'commerce', $this->module->get_exclusive_group() );
+	}
+
+	public function test_exclusive_priority(): void {
+		$this->assertSame( 30, $this->module->get_exclusive_priority() );
+	}
+
 	// ─── Odoo Models ───────────────────────────────────────
 
 	public function test_declares_product_model(): void {

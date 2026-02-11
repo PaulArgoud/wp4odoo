@@ -29,6 +29,14 @@ class CharitableModuleTest extends TestCase {
 		$this->assertSame( 'WP Charitable', $ref->getValue( $this->module ) );
 	}
 
+	public function test_exclusive_group(): void {
+		$this->assertSame( '', $this->module->get_exclusive_group() );
+	}
+
+	public function test_exclusive_priority(): void {
+		$this->assertSame( 0, $this->module->get_exclusive_priority() );
+	}
+
 	public function test_sync_direction_is_wp_to_odoo(): void {
 		$this->assertSame( 'wp_to_odoo', $this->module->get_sync_direction() );
 	}

@@ -37,6 +37,14 @@ class EDDModuleTest extends TestCase {
 		$this->assertSame( 'Easy Digital Downloads', $this->module->get_name() );
 	}
 
+	public function test_exclusive_group(): void {
+		$this->assertSame( 'commerce', $this->module->get_exclusive_group() );
+	}
+
+	public function test_exclusive_priority(): void {
+		$this->assertSame( 20, $this->module->get_exclusive_priority() );
+	}
+
 	public function test_sync_direction_is_bidirectional(): void {
 		$this->assertSame( 'bidirectional', $this->module->get_sync_direction() );
 	}
@@ -175,9 +183,8 @@ class EDDModuleTest extends TestCase {
 		$this->assertTrue( $status['available'] );
 	}
 
-	public function test_dependency_status_has_info_notice(): void {
+	public function test_dependency_status_has_no_notices_when_available(): void {
 		$status = $this->module->get_dependency_status();
-		$this->assertNotEmpty( $status['notices'] );
-		$this->assertSame( 'info', $status['notices'][0]['type'] );
+		$this->assertEmpty( $status['notices'] );
 	}
 }

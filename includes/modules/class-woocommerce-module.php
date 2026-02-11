@@ -38,6 +38,9 @@ class WooCommerce_Module extends Module_Base {
 	protected string $id   = 'woocommerce';
 	protected string $name = 'WooCommerce';
 
+	protected string $exclusive_group = 'commerce';
+	protected int $exclusive_priority = 30;
+
 	protected array $odoo_models = [
 		'product' => 'product.template',
 		'variant' => 'product.product',
@@ -245,12 +248,7 @@ class WooCommerce_Module extends Module_Base {
 
 		return [
 			'available' => true,
-			'notices'   => [
-				[
-					'type'    => 'info',
-					'message' => __( 'Enabling the WooCommerce module replaces the Sales module. Both cannot be active simultaneously.', 'wp4odoo' ),
-				],
-			],
+			'notices'   => [],
 		];
 	}
 

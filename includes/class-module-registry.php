@@ -8,9 +8,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Manages module registration, mutual exclusivity, and lifecycle.
+ * Manages module registration, declarative mutual exclusivity, and lifecycle.
  *
- * Extracted from WP4Odoo_Plugin for SRP.
+ * Modules declare their own exclusive group and priority via properties.
+ * The registry enforces that only one module per group is booted (highest
+ * priority wins). All modules are registered for admin UI visibility.
  *
  * @package WP4Odoo
  * @since   1.5.0
@@ -23,6 +25,13 @@ class Module_Registry {
 	 * @var array<string, Module_Base>
 	 */
 	private array $modules = [];
+
+	/**
+	 * Module IDs that have been booted.
+	 *
+	 * @var string[]
+	 */
+	private array $booted = [];
 
 	/**
 	 * Plugin instance (for third-party hook compatibility).
@@ -41,10 +50,11 @@ class Module_Registry {
 	}
 
 	/**
-	 * Register all built-in modules with mutual exclusivity rules.
+	 * Register all built-in modules.
 	 *
-	 * WooCommerce, EDD, and Sales modules are mutually exclusive (all share
-	 * sale.order + product.template in Odoo). Priority: WC > EDD > Sales.
+	 * Mutual exclusivity is driven by each module's $exclusive_group
+	 * and $exclusive_priority properties. The registry simply registers
+	 * every module whose external dependency is met.
 	 *
 	 * @return void
 	 */
@@ -52,62 +62,39 @@ class Module_Registry {
 		$client_provider = fn() => $this->plugin->client();
 		$entity_map      = new Entity_Map_Repository();
 
+		// CRM — always available.
 		$this->register( 'crm', new Modules\CRM_Module( $client_provider, $entity_map ) );
 
-		$wc_active   = class_exists( 'WooCommerce' );
-		$wc_enabled  = get_option( 'wp4odoo_module_woocommerce_enabled', false );
-		$edd_active  = class_exists( 'Easy_Digital_Downloads' );
-		$edd_enabled = get_option( 'wp4odoo_module_edd_enabled', false );
-
-		if ( $wc_active && $wc_enabled ) {
-			$this->register( 'woocommerce', new Modules\WooCommerce_Module( $client_provider, $entity_map ) );
-		} elseif ( $edd_active && $edd_enabled ) {
-			$this->register( 'edd', new Modules\EDD_Module( $client_provider, $entity_map ) );
-		} else {
-			$this->register( 'sales', new Modules\Sales_Module( $client_provider, $entity_map ) );
-		}
-
-		// Register inactive commerce modules for admin UI visibility.
-		if ( $wc_active && ! $wc_enabled ) {
+		// Commerce group (WC > EDD > Sales).
+		if ( class_exists( 'WooCommerce' ) ) {
 			$this->register( 'woocommerce', new Modules\WooCommerce_Module( $client_provider, $entity_map ) );
 		}
-		if ( $edd_active && ! $edd_enabled ) {
+		if ( class_exists( 'Easy_Digital_Downloads' ) ) {
 			$this->register( 'edd', new Modules\EDD_Module( $client_provider, $entity_map ) );
 		}
+		$this->register( 'sales', new Modules\Sales_Module( $client_provider, $entity_map ) );
 
-		// Memberships module (requires WooCommerce + WC Memberships).
-		if ( $wc_active ) {
+		// Membership group.
+		if ( class_exists( 'WooCommerce' ) ) {
 			$this->register( 'memberships', new Modules\Memberships_Module( $client_provider, $entity_map ) );
 		}
-
-		// MemberPress module (mutually exclusive with WC Memberships — same Odoo models).
 		if ( defined( 'MEPR_VERSION' ) ) {
-			if ( ! isset( $this->modules['memberships'] ) || ! get_option( 'wp4odoo_module_memberships_enabled', false ) ) {
-				$this->register( 'memberpress', new Modules\MemberPress_Module( $client_provider, $entity_map ) );
-			}
+			$this->register( 'memberpress', new Modules\MemberPress_Module( $client_provider, $entity_map ) );
 		}
 
-		// GiveWP module (donations → Odoo accounting).
+		// Independent modules.
 		if ( defined( 'GIVE_VERSION' ) ) {
 			$this->register( 'givewp', new Modules\GiveWP_Module( $client_provider, $entity_map ) );
 		}
-
-		// WP Charitable module (donations → Odoo accounting).
 		if ( class_exists( 'Charitable' ) ) {
 			$this->register( 'charitable', new Modules\Charitable_Module( $client_provider, $entity_map ) );
 		}
-
-		// WP Simple Pay module (Stripe payments → Odoo accounting).
 		if ( defined( 'SIMPLE_PAY_VERSION' ) ) {
 			$this->register( 'simplepay', new Modules\SimplePay_Module( $client_provider, $entity_map ) );
 		}
-
-		// WP Recipe Maker module (recipes → Odoo products).
 		if ( defined( 'WPRM_VERSION' ) ) {
 			$this->register( 'wprm', new Modules\WPRM_Module( $client_provider, $entity_map ) );
 		}
-
-		// Forms module (requires Gravity Forms or WPForms).
 		$gf_active  = class_exists( 'GFAPI' );
 		$wpf_active = function_exists( 'wpforms' );
 		if ( $gf_active || $wpf_active ) {
@@ -119,7 +106,8 @@ class Module_Registry {
 	}
 
 	/**
-	 * Register a single module. Boots it if enabled.
+	 * Register a single module. Boots it if enabled and no higher-priority
+	 * module in the same exclusive group is already booted.
 	 *
 	 * @param string      $id     Module identifier.
 	 * @param Module_Base $module Module instance.
@@ -129,9 +117,18 @@ class Module_Registry {
 		$this->modules[ $id ] = $module;
 
 		$enabled = get_option( 'wp4odoo_module_' . $id . '_enabled', false );
-		if ( $enabled ) {
-			$module->boot();
+		if ( ! $enabled ) {
+			return;
 		}
+
+		// Exclusive group check: skip boot if a higher-priority module is already booted.
+		$group = $module->get_exclusive_group();
+		if ( '' !== $group && $this->has_booted_in_group( $group, $module->get_exclusive_priority() ) ) {
+			return;
+		}
+
+		$module->boot();
+		$this->booted[] = $id;
 	}
 
 	/**
@@ -151,5 +148,73 @@ class Module_Registry {
 	 */
 	public function all(): array {
 		return $this->modules;
+	}
+
+	/**
+	 * Get the currently booted module ID for a given exclusive group.
+	 *
+	 * @param string $group Exclusive group name.
+	 * @return string|null Module ID, or null if none booted in this group.
+	 */
+	public function get_active_in_group( string $group ): ?string {
+		foreach ( $this->booted as $booted_id ) {
+			$module = $this->modules[ $booted_id ];
+			if ( $module->get_exclusive_group() === $group ) {
+				return $booted_id;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Get all enabled module IDs that conflict with a given module.
+	 *
+	 * Returns enabled modules in the same exclusive group (excluding the module itself).
+	 *
+	 * @param string $module_id Module identifier.
+	 * @return string[] Conflicting module IDs.
+	 */
+	public function get_conflicts( string $module_id ): array {
+		$module = $this->modules[ $module_id ] ?? null;
+		if ( ! $module ) {
+			return [];
+		}
+
+		$group = $module->get_exclusive_group();
+		if ( '' === $group ) {
+			return [];
+		}
+
+		$conflicts = [];
+		foreach ( $this->modules as $id => $other ) {
+			if ( $id === $module_id ) {
+				continue;
+			}
+			if ( $other->get_exclusive_group() === $group
+				&& get_option( 'wp4odoo_module_' . $id . '_enabled', false ) ) {
+				$conflicts[] = $id;
+			}
+		}
+
+		return $conflicts;
+	}
+
+	/**
+	 * Check if any module in the given exclusive group is already booted
+	 * with equal or higher priority.
+	 *
+	 * @param string $group    Exclusive group name.
+	 * @param int    $priority Priority of the module being registered.
+	 * @return bool True if a competing module is already booted.
+	 */
+	private function has_booted_in_group( string $group, int $priority ): bool {
+		foreach ( $this->booted as $booted_id ) {
+			$booted_module = $this->modules[ $booted_id ];
+			if ( $booted_module->get_exclusive_group() === $group
+				&& $booted_module->get_exclusive_priority() >= $priority ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

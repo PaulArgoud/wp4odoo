@@ -39,6 +39,14 @@ class MembershipsModuleTest extends TestCase {
 		$this->assertSame( 'Memberships', $this->module->get_name() );
 	}
 
+	public function test_exclusive_group(): void {
+		$this->assertSame( 'memberships', $this->module->get_exclusive_group() );
+	}
+
+	public function test_exclusive_priority(): void {
+		$this->assertSame( 20, $this->module->get_exclusive_priority() );
+	}
+
 	// ─── Odoo Models ───────────────────────────────────────
 
 	public function test_declares_plan_model(): void {

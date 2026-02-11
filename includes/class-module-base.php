@@ -55,6 +55,27 @@ abstract class Module_Base {
 	protected array $default_mappings = [];
 
 	/**
+	 * Exclusive group name.
+	 *
+	 * Modules in the same group cannot be active simultaneously.
+	 * Empty string means no exclusivity constraint.
+	 * Subclasses override to declare their group (e.g. 'commerce', 'memberships').
+	 *
+	 * @var string
+	 */
+	protected string $exclusive_group = '';
+
+	/**
+	 * Priority within the exclusive group (higher = takes precedence).
+	 *
+	 * When multiple modules in the same group are enabled, only the one
+	 * with the highest priority is booted.
+	 *
+	 * @var int
+	 */
+	protected int $exclusive_priority = 0;
+
+	/**
 	 * Logger instance.
 	 *
 	 * @var Logger
@@ -625,6 +646,24 @@ abstract class Module_Base {
 	 */
 	public function get_name(): string {
 		return $this->name;
+	}
+
+	/**
+	 * Get the exclusive group name.
+	 *
+	 * @return string Group name, or empty string if no exclusivity.
+	 */
+	public function get_exclusive_group(): string {
+		return $this->exclusive_group;
+	}
+
+	/**
+	 * Get the priority within the exclusive group.
+	 *
+	 * @return int Priority (higher = takes precedence).
+	 */
+	public function get_exclusive_priority(): int {
+		return $this->exclusive_priority;
 	}
 
 	/**

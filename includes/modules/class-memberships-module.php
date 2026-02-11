@@ -29,6 +29,9 @@ class Memberships_Module extends Module_Base {
 	protected string $id   = 'memberships';
 	protected string $name = 'Memberships';
 
+	protected string $exclusive_group = 'memberships';
+	protected int $exclusive_priority = 20;
+
 	/**
 	 * Sync direction: Memberships module only pushes to Odoo.
 	 *

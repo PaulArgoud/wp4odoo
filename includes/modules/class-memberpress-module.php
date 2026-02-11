@@ -44,6 +44,9 @@ class MemberPress_Module extends Module_Base {
 	 */
 	protected string $name = 'MemberPress';
 
+	protected string $exclusive_group = 'memberships';
+	protected int $exclusive_priority = 10;
+
 	/**
 	 * Sync direction: push-only (WP → Odoo).
 	 *

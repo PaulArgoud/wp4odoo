@@ -45,6 +45,11 @@ class WP4Odoo_Plugin {
 	public function client(): \WP4Odoo\API\Odoo_Client {
 		return new \WP4Odoo\API\Odoo_Client();
 	}
+
+	/** @return \WP4Odoo\Module_Registry */
+	public function module_registry(): \WP4Odoo\Module_Registry {
+		return new \WP4Odoo\Module_Registry( $this );
+	}
 }
 
 // ─── WooCommerce stubs ──────────────────────────────────

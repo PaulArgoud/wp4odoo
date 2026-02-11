@@ -58,11 +58,36 @@ trait Ajax_Module_Handlers {
 				),
 		];
 
-		// When enabling, check if the required Odoo models are available.
+		// When enabling, auto-disable conflicting modules and check Odoo models.
 		if ( $enabled ) {
 			$module = \WP4Odoo_Plugin::instance()->get_module( $module_id );
 
 			if ( $module ) {
+				// Exclusive group: auto-disable conflicting modules.
+				$group = $module->get_exclusive_group();
+				if ( '' !== $group ) {
+					$registry  = \WP4Odoo_Plugin::instance()->module_registry();
+					$conflicts = $registry->get_conflicts( $module_id );
+
+					if ( ! empty( $conflicts ) ) {
+						$disabled_names = [];
+						foreach ( $conflicts as $conflict_id ) {
+							update_option( 'wp4odoo_module_' . $conflict_id . '_enabled', false );
+							$conflict_module  = $registry->get( $conflict_id );
+							$disabled_names[] = $conflict_module ? $conflict_module->get_name() : $conflict_id;
+						}
+
+						$response['auto_disabled'] = $conflicts;
+						$response['warning']       = sprintf(
+							/* translators: 1: enabled module name, 2: comma-separated disabled module names */
+							__( '"%1$s" is mutually exclusive with %2$s. The conflicting module(s) have been disabled.', 'wp4odoo' ),
+							$module->get_name(),
+							implode( ', ', $disabled_names )
+						);
+					}
+				}
+
+				// Check required Odoo models.
 				$required = array_values( array_unique( $module->get_odoo_models() ) );
 
 				if ( ! empty( $required ) ) {
@@ -77,7 +102,13 @@ trait Ajax_Module_Handlers {
 						$missing   = array_values( array_diff( $required, $available ) );
 
 						if ( ! empty( $missing ) ) {
-							$response['warning'] = $this->format_missing_model_warning( $missing );
+							$model_warning = $this->format_missing_model_warning( $missing );
+							// Append to existing warning if conflicts were found.
+							if ( isset( $response['warning'] ) ) {
+								$response['warning'] .= ' ' . $model_warning;
+							} else {
+								$response['warning'] = $model_warning;
+							}
 						}
 					} catch ( \Throwable $e ) {
 						// Connection not configured or failed — skip model check.

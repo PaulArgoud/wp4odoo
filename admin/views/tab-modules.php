@@ -34,8 +34,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 			'odoo_to_wp'    => __( 'Odoo → WP', 'wp4odoo' ),
 		];
 		$direction_label  = $direction_labels[ $direction ] ?? $direction;
+
+		$excl_group  = $module->get_exclusive_group();
+		$active_peer = '';
+		if ( '' !== $excl_group ) {
+			foreach ( $modules as $peer_id => $peer ) {
+				if ( $peer_id !== $module_id
+					&& $peer->get_exclusive_group() === $excl_group
+					&& get_option( 'wp4odoo_module_' . $peer_id . '_enabled', false ) ) {
+					$active_peer = $peer->get_name();
+					break;
+				}
+			}
+		}
 		?>
-		<div class="wp4odoo-module-card" data-module="<?php echo esc_attr( $module_id ); ?>">
+		<div class="wp4odoo-module-card" data-module="<?php echo esc_attr( $module_id ); ?>" data-exclusive-group="<?php echo esc_attr( $excl_group ); ?>">
 			<div class="wp4odoo-module-header">
 				<h3>
 					<?php echo esc_html( $module->get_name() ); ?>
@@ -58,6 +71,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 					<?php echo esc_html( $notice['message'] ); ?>
 				</p>
 			<?php endforeach; ?>
+
+			<?php if ( $active_peer ) : ?>
+				<p class="notice notice-warning wp4odoo-exclusive-notice" style="margin: 10px 0 0; padding: 8px 12px;">
+					<?php
+					printf(
+						/* translators: %s: name of the conflicting active module */
+						esc_html__( 'Cannot be active simultaneously with "%s".', 'wp4odoo' ),
+						esc_html( $active_peer )
+					);
+					?>
+				</p>
+			<?php endif; ?>
 
 			<?php if ( ! empty( $odoo_models ) ) : ?>
 				<p class="wp4odoo-module-models">

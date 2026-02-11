@@ -34,6 +34,9 @@ class EDD_Module extends Module_Base {
 	protected string $id   = 'edd';
 	protected string $name = 'Easy Digital Downloads';
 
+	protected string $exclusive_group = 'commerce';
+	protected int $exclusive_priority = 20;
+
 	protected array $odoo_models = [
 		'download' => 'product.template',
 		'order'    => 'sale.order',
@@ -174,12 +177,7 @@ class EDD_Module extends Module_Base {
 
 		return [
 			'available' => true,
-			'notices'   => [
-				[
-					'type'    => 'info',
-					'message' => __( 'Enabling the EDD module replaces the Sales module. It cannot be active simultaneously with the WooCommerce or Sales modules.', 'wp4odoo' ),
-				],
-			],
+			'notices'   => [],
 		];
 	}
 

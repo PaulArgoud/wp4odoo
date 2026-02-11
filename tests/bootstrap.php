@@ -89,6 +89,7 @@ require_once WP4ODOO_PLUGIN_DIR . 'includes/class-sync-queue-repository.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/class-query-service.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/class-partner-service.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/class-module-base.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/class-module-registry.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/class-failure-notifier.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/class-sync-engine.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/class-queue-manager.php';

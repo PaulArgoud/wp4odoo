@@ -14,6 +14,9 @@ class WP4Odoo_Plugin {
 	/** @var array<string, \WP4Odoo\Module_Base> */
 	private array $modules = [];
 
+	/** @var \WP4Odoo\Module_Registry|null */
+	private ?\WP4Odoo\Module_Registry $module_registry = null;
+
 	public static function instance(): static {
 		if ( null === self::$instance ) {
 			self::$instance = new static();
@@ -32,6 +35,13 @@ class WP4Odoo_Plugin {
 	/** @return array<string, \WP4Odoo\Module_Base> */
 	public function get_modules(): array {
 		return $this->modules;
+	}
+
+	public function module_registry(): \WP4Odoo\Module_Registry {
+		if ( null === $this->module_registry ) {
+			$this->module_registry = new \WP4Odoo\Module_Registry( $this );
+		}
+		return $this->module_registry;
 	}
 
 	public function client(): \WP4Odoo\API\Odoo_Client {

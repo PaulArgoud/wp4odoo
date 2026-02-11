@@ -187,6 +187,15 @@ final class WP4Odoo_Plugin {
 		return $this->module_registry->all();
 	}
 
+	/**
+	 * Get the module registry.
+	 *
+	 * @return WP4Odoo\Module_Registry
+	 */
+	public function module_registry(): WP4Odoo\Module_Registry {
+		return $this->module_registry;
+	}
+
 	// ─── Infrastructure ─────────────────────────────────────
 
 	/**

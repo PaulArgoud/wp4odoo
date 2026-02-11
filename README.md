@@ -37,15 +37,18 @@ Modular WordPress plugin providing comprehensive, bidirectional integration betw
 - PHP 8.2+
 - Odoo 17+ (JSON-RPC) or Odoo 14+ (XML-RPC)
 - WordPress 6.0+
-- WooCommerce 7.1+ (optional, for WooCommerce and Memberships modules)
-- WooCommerce Memberships 1.12+ (optional, for Memberships module)
-- Easy Digital Downloads 3.0+ (optional, for EDD module)
-- MemberPress 1.9+ (optional, for MemberPress module)
-- GiveWP 3.0+ (optional, for GiveWP module)
-- WP Charitable 1.8+ (optional, for WP Charitable module)
-- WP Simple Pay 4.0+ (optional, for WP Simple Pay module)
-- WP Recipe Maker 8.0+ (optional, for WP Recipe Maker module)
-- Gravity Forms 2.5+ or WPForms 1.7+ (optional, for Forms module)
+
+## Optional
+
+- WooCommerce 7.1+
+- WooCommerce Memberships 1.12+
+- Easy Digital Downloads 3.0+
+- MemberPress 1.9+
+- GiveWP 3.0+
+- WP Charitable 1.8+
+- WP Simple Pay 4.0+
+- WP Recipe Maker 8.0+
+- Gravity Forms 2.5+ or WPForms 1.7+
 
 ## Compatibility
 

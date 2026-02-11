@@ -178,10 +178,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CLI`, `Admin_Ajax`, `Settings_Page` — all `Sync_Engine::get_stats/retry_failed/cleanup` calls migrated to `Queue_Manager::`
 - Tests — added `wp4odoo_test_entity_map()` and `wp4odoo_test_queue_repo()` helpers; updated ~20 test files for instance-based repositories
 
+#### Declarative Mutual Exclusivity
+- `Module_Base` — new `$exclusive_group` and `$exclusive_priority` properties with public getters; modules now self-declare their exclusivity constraints instead of relying on hardcoded logic in the registry
+- 5 modules declare exclusive groups: `WooCommerce_Module` (commerce/30), `EDD_Module` (commerce/20), `Sales_Module` (commerce/10), `Memberships_Module` (memberships/20), `MemberPress_Module` (memberships/10)
+- `Module_Registry` — removed all hardcoded if/elseif exclusivity chains from `register_all()`; `register()` now checks `$exclusive_group` and `$exclusive_priority` to skip booting lower-priority modules; new `has_booted_in_group()`, `get_active_in_group()`, `get_conflicts()` helpers; new `$booted` tracking array
+- `trait-ajax-module-handlers.php` — `toggle_module()` auto-disables conflicting modules when enabling one in the same exclusive group; returns `auto_disabled` array and warning message in AJAX response
+- `tab-modules.php` — `data-exclusive-group` attribute on module cards; conflict warning notice displayed when a peer in the same group is active
+- `admin.js` — handles `auto_disabled` in AJAX response: unchecks toggles and hides settings of auto-disabled modules
+- `WooCommerce_Module` and `EDD_Module` — removed hardcoded info notices about mutual exclusivity from `get_dependency_status()`
+- `wp4odoo.php` — exposed `module_registry()` public getter on `WP4Odoo_Plugin`
+- `ModuleRegistryTest` — 16 new tests: boot/no-boot, exclusive group blocking, priority resolution, `get_active_in_group()`, `get_conflicts()`
+- 10 existing module tests updated with `test_exclusive_group` and `test_exclusive_priority` assertions
+
 - Plugin version bumped from 1.9.8 to 2.0.0
-- PHPUnit: 879 unit tests, 1436 assertions — all green (was 436/855)
+- PHPUnit: 915 unit tests, 1473 assertions — all green (was 436/855)
 - PHPStan: 0 errors on 75 files (was 47 — added 3 module files + 2 forms files + 1 exchange rate file + 4 EDD files + 3 MemberPress files + 3 GiveWP files + 3 Charitable files + 3 SimplePay files + 3 WPRM files + 2 shared accounting files)
-- Translations: 325 translated strings × 2 languages (FR, ES), 0 fuzzy, 0 untranslated
+- Translations: 321 translated strings (FR), 0 fuzzy, 0 untranslated
 - `Dependency_Loader` — added 24 `require_once` (2 forms + 1 exchange rate + 4 EDD + 3 MemberPress + 3 GiveWP + 3 Charitable + 3 SimplePay + 3 WPRM + 2 shared accounting module files)
 - `Module_Registry` — registers `Forms_Module` when Gravity Forms or WPForms is active; extended mutual exclusivity from 2-way (WC/Sales) to 3-way (WC/EDD/Sales); registers `MemberPress_Module` when MemberPress is active (mutually exclusive with WC Memberships); registers `GiveWP_Module` when GiveWP is active; registers `Charitable_Module` when WP Charitable is active; registers `SimplePay_Module` when WP Simple Pay is active; registers `WPRM_Module` when WP Recipe Maker is active (no mutual exclusivity)
 - `tests/bootstrap.php` — added forms stubs and 2 new source file requires; added EDD stubs, global store, and 4 EDD source requires; added MemberPress stubs and 3 source requires; added GiveWP stubs and 3 source requires; added Charitable stubs and 3 source requires; added SimplePay stubs and 3 source requires; added WPRM stubs and 3 source requires
