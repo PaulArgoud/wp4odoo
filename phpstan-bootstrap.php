@@ -6,7 +6,7 @@
  * @package WP4Odoo
  */
 
-define( 'WP4ODOO_VERSION', '2.6.0' );
+define( 'WP4ODOO_VERSION', '2.6.5' );
 define( 'WP4ODOO_PLUGIN_FILE', __DIR__ . '/wp4odoo.php' );
 define( 'WP4ODOO_PLUGIN_DIR', __DIR__ . '/' );
 define( 'WP4ODOO_PLUGIN_URL', 'https://example.com/wp-content/plugins/wp4odoo/' );
@@ -211,6 +211,80 @@ if ( ! function_exists( 'wpforms' ) ) {
 	function wpforms() { return new stdClass(); }
 }
 
+// ─── Contact Form 7 stubs ───────────────────────────────
+
+if ( ! defined( 'WPCF7_VERSION' ) ) {
+	define( 'WPCF7_VERSION', '6.0' );
+}
+
+if ( ! class_exists( 'WPCF7_FormTag' ) ) {
+	class WPCF7_FormTag {
+		public string $basetype = '';
+		public string $name     = '';
+	}
+}
+
+if ( ! class_exists( 'WPCF7_ContactForm' ) ) {
+	class WPCF7_ContactForm {
+		public function title(): string { return ''; }
+		/** @return WPCF7_FormTag[] */
+		public function scan_form_tags(): array { return []; }
+	}
+}
+
+if ( ! class_exists( 'WPCF7_Submission' ) ) {
+	class WPCF7_Submission {
+		public static function get_instance(): ?self { return null; }
+		/** @return array<string, string> */
+		public function get_posted_data(): array { return []; }
+	}
+}
+
+// ─── Fluent Forms stubs ─────────────────────────────────
+
+if ( ! defined( 'FLUENTFORM' ) ) {
+	define( 'FLUENTFORM', true );
+}
+
+// ─── Formidable Forms stubs ─────────────────────────────
+
+if ( ! class_exists( 'FrmAppHelper' ) ) {
+	class FrmAppHelper {}
+}
+
+if ( ! class_exists( 'FrmField' ) ) {
+	class FrmField {
+		/** @return array */
+		public static function getAll( array $conditions = [] ): array { return []; }
+	}
+}
+
+if ( ! class_exists( 'FrmEntryMeta' ) ) {
+	class FrmEntryMeta {
+		/** @return array */
+		public static function getAll( array $conditions = [] ): array { return []; }
+	}
+}
+
+if ( ! class_exists( 'FrmForm' ) ) {
+	class FrmForm {
+		public string $name = '';
+		public static function getOne( int $form_id ): ?self { return null; }
+	}
+}
+
+// ─── Ninja Forms stubs ──────────────────────────────────
+
+if ( ! class_exists( 'Ninja_Forms' ) ) {
+	class Ninja_Forms {}
+}
+
+// ─── Forminator stubs ───────────────────────────────────
+
+if ( ! defined( 'FORMINATOR_VERSION' ) ) {
+	define( 'FORMINATOR_VERSION', '1.34.0' );
+}
+
 // ─── EDD stubs ──────────────────────────────────────────
 
 if ( ! class_exists( 'Easy_Digital_Downloads' ) ) {
@@ -277,6 +351,138 @@ if ( ! class_exists( 'MeprSubscription' ) ) {
 		public string $status = '';
 		public string $created_at = '';
 		public function __construct( int $id = 0 ) { $this->id = $id; }
+	}
+}
+
+// ─── PMPro stubs ────────────────────────────────────────
+
+if ( ! defined( 'PMPRO_VERSION' ) ) {
+	define( 'PMPRO_VERSION', '3.4.1' );
+}
+
+if ( ! function_exists( 'pmpro_getLevel' ) ) {
+	/**
+	 * @param int $level_id
+	 * @return PMPro_Membership_Level|false
+	 */
+	function pmpro_getLevel( int $level_id = 0 ) {
+		return false;
+	}
+}
+
+if ( ! function_exists( 'pmpro_getMembershipLevelForUser' ) ) {
+	/**
+	 * @param int $user_id
+	 * @return PMPro_Membership_Level|false
+	 */
+	function pmpro_getMembershipLevelForUser( int $user_id = 0 ) {
+		return false;
+	}
+}
+
+if ( ! class_exists( 'PMPro_Membership_Level' ) ) {
+	class PMPro_Membership_Level {
+		public int $id = 0;
+		public string $name = '';
+		public string $description = '';
+		public string $initial_payment = '0.00';
+		public string $billing_amount = '0.00';
+		public int $cycle_number = 0;
+		public string $cycle_period = '';
+		public int $billing_limit = 0;
+		public string $trial_amount = '0.00';
+		public int $trial_limit = 0;
+		public int $expiration_number = 0;
+		public string $expiration_period = '';
+		public bool $allow_signups = true;
+	}
+}
+
+if ( ! class_exists( 'MemberOrder' ) ) {
+	class MemberOrder {
+		public int $id = 0;
+		public string $code = '';
+		public int $user_id = 0;
+		public int $membership_id = 0;
+		public string $subtotal = '0.00';
+		public string $tax = '0.00';
+		public string $total = '0.00';
+		public string $status = '';
+		public string $gateway = '';
+		public string $payment_transaction_id = '';
+		public string $subscription_transaction_id = '';
+		public string $notes = '';
+		public string $timestamp = '';
+		public function __construct( int $id = 0 ) { $this->id = $id; }
+		/** @return PMPro_Membership_Level|false */
+		public function getMembershipLevel() { return pmpro_getLevel( $this->membership_id ); }
+		/** @return WP_User|false */
+		public function getUser() { return get_userdata( $this->user_id ); }
+	}
+}
+
+// ─── RCP stubs ──────────────────────────────────────────
+
+if ( ! function_exists( 'rcp_get_membership' ) ) {
+	/**
+	 * @param int $membership_id
+	 * @return RCP_Membership|false
+	 */
+	function rcp_get_membership( int $membership_id = 0 ) {
+		return false;
+	}
+}
+
+if ( ! function_exists( 'rcp_get_membership_level' ) ) {
+	/**
+	 * @param int $level_id
+	 * @return object|false
+	 */
+	function rcp_get_membership_level( int $level_id = 0 ) {
+		return false;
+	}
+}
+
+if ( ! function_exists( 'rcp_get_customer_by_user_id' ) ) {
+	/**
+	 * @param int $user_id
+	 * @return RCP_Customer|false
+	 */
+	function rcp_get_customer_by_user_id( int $user_id = 0 ) {
+		return false;
+	}
+}
+
+if ( ! class_exists( 'RCP_Membership' ) ) {
+	class RCP_Membership {
+		public function get_id(): int { return 0; }
+		public function get_customer_id(): int { return 0; }
+		/** @return RCP_Customer|false */
+		public function get_customer() { return false; }
+		public function get_object_id(): int { return 0; }
+		public function get_status(): string { return ''; }
+		public function get_created_date(): string { return ''; }
+		public function get_expiration_date( bool $formatted = true ): string { return ''; }
+		public function get_initial_amount( bool $formatted = false ): float { return 0.0; }
+		public function get_recurring_amount( bool $formatted = false ): float { return 0.0; }
+		public function is_recurring(): bool { return false; }
+		public function is_active(): bool { return false; }
+		public function is_expired(): bool { return false; }
+		public function get_times_billed(): int { return 0; }
+	}
+}
+
+if ( ! class_exists( 'RCP_Customer' ) ) {
+	class RCP_Customer {
+		public function get_id(): int { return 0; }
+		public function get_user_id(): int { return 0; }
+	}
+}
+
+if ( ! class_exists( 'RCP_Payments' ) ) {
+	class RCP_Payments {
+		/** @return object|null */
+		public function get_payment( int $payment_id ) { return null; }
 	}
 }
 
@@ -388,6 +594,46 @@ if ( ! function_exists( 'learndash_user_get_course_date' ) ) {
 	 */
 	function learndash_user_get_course_date( int $user_id = 0, int $course_id = 0 ): string {
 		return '';
+	}
+}
+
+// ─── LifterLMS stubs ────────────────────────────────────
+
+if ( ! defined( 'LLMS_VERSION' ) ) {
+	define( 'LLMS_VERSION', '7.8.5' );
+}
+
+if ( ! class_exists( 'LLMS_Order' ) ) {
+	class LLMS_Order {
+		public function __construct( int $id = 0 ) {}
+		public function get( string $key ): string { return ''; }
+		public function get_id(): int { return 0; }
+		public function get_product_id(): int { return 0; }
+		public function get_customer_id(): int { return 0; }
+		public function get_total(): float { return 0.0; }
+		public function get_status(): string { return ''; }
+		public function get_date( string $key = '' ): string { return ''; }
+		public function get_payment_gateway(): string { return ''; }
+	}
+}
+
+if ( ! class_exists( 'LLMS_Student' ) ) {
+	class LLMS_Student {
+		public function __construct( int $id = 0 ) {}
+		public function get_id(): int { return 0; }
+		public function is_enrolled( int $product_id = 0 ): bool { return false; }
+		public function get_enrollment_status( int $product_id = 0 ): string { return ''; }
+		public function get_enrollment_date( int $product_id = 0, string $format = 'Y-m-d H:i:s' ): string { return ''; }
+	}
+}
+
+if ( ! function_exists( 'llms_get_student' ) ) {
+	/**
+	 * @param int $user_id
+	 * @return LLMS_Student|false
+	 */
+	function llms_get_student( int $user_id = 0 ) {
+		return false;
 	}
 }
 

@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Extracts lead data from Gravity Forms and WPForms submissions.
+ * Extracts lead data from form plugin submissions.
  *
  * Stateless handler: receives raw form data, returns a normalised
  * lead array ready for Lead_Manager::save_lead_data().
@@ -162,6 +162,211 @@ class Form_Handler {
 	}
 
 	/**
+	 * Extract lead data from a Contact Form 7 submission.
+	 *
+	 * @param array  $posted_data Posted data (field_name => value).
+	 * @param array  $tags        Normalised tags: [['type' => basetype, 'name' => tag_name], …].
+	 * @param string $form_title  Form title.
+	 * @return array Normalised lead data, or empty array if invalid.
+	 */
+	public function extract_from_cf7( array $posted_data, array $tags, string $form_title ): array {
+		$data = $this->empty_lead(
+			sprintf(
+				/* translators: %s: form title */
+				__( 'Contact Form 7: %s', 'wp4odoo' ),
+				$form_title ?: __( 'Unknown Form', 'wp4odoo' )
+			)
+		);
+
+		foreach ( $tags as $tag ) {
+			$type  = $tag['type'] ?? '';
+			$name  = $tag['name'] ?? '';
+			$value = trim( (string) ( $posted_data[ $name ] ?? '' ) );
+
+			if ( '' === $value ) {
+				continue;
+			}
+
+			// CF7 basetype mapping: tel → phone, rest maps directly.
+			$mapped = match ( $type ) {
+				'tel'   => 'phone',
+				default => $type,
+			};
+
+			$this->assign_field( $data, $mapped, $name, $value );
+		}
+
+		return $this->finalise( $data, $form_title );
+	}
+
+	/**
+	 * Extract lead data from a Fluent Forms submission.
+	 *
+	 * Fluent Forms field names often hint at the type (email, phone, names, message).
+	 * The `names` field returns an associative array with first/last name parts.
+	 *
+	 * @param array  $form_data  Submitted data (field_name => value).
+	 * @param string $form_title Form title.
+	 * @return array Normalised lead data, or empty array if invalid.
+	 */
+	public function extract_from_fluent_forms( array $form_data, string $form_title ): array {
+		$data = $this->empty_lead(
+			sprintf(
+				/* translators: %s: form title */
+				__( 'Fluent Forms: %s', 'wp4odoo' ),
+				$form_title ?: __( 'Unknown Form', 'wp4odoo' )
+			)
+		);
+
+		foreach ( $form_data as $name => $value ) {
+			// Fluent Forms names field returns an array of parts.
+			if ( is_array( $value ) ) {
+				$value = implode( ' ', array_filter( array_map( 'trim', $value ) ) );
+			}
+
+			$value = trim( (string) $value );
+			if ( '' === $value ) {
+				continue;
+			}
+
+			$lower = mb_strtolower( $name );
+			$type  = $this->infer_type_from_key( $lower );
+
+			$this->assign_field( $data, $type, $name, $value );
+		}
+
+		return $this->finalise( $data, $form_title );
+	}
+
+	/**
+	 * Extract lead data from a Formidable Forms submission.
+	 *
+	 * Receives pre-normalised fields from the callback (which loads
+	 * field types and values via FrmField/FrmEntryMeta).
+	 *
+	 * @param array  $fields     Normalised fields: [['type', 'label', 'value'], …].
+	 * @param string $form_title Form title.
+	 * @return array Normalised lead data, or empty array if invalid.
+	 */
+	public function extract_from_formidable( array $fields, string $form_title ): array {
+		$data = $this->empty_lead(
+			sprintf(
+				/* translators: %s: form title */
+				__( 'Formidable: %s', 'wp4odoo' ),
+				$form_title ?: __( 'Unknown Form', 'wp4odoo' )
+			)
+		);
+
+		foreach ( $fields as $field ) {
+			$type  = $field['type'] ?? 'text';
+			$label = $field['label'] ?? '';
+			$value = trim( (string) ( $field['value'] ?? '' ) );
+
+			if ( '' === $value ) {
+				continue;
+			}
+
+			$this->assign_field( $data, $type, $label, $value );
+		}
+
+		return $this->finalise( $data, $form_title );
+	}
+
+	/**
+	 * Extract lead data from a Ninja Forms submission.
+	 *
+	 * Ninja Forms fields already carry type/label/value.
+	 * Special handling: `textbox` → `text`, `firstname`/`lastname` → concatenated name.
+	 *
+	 * @param array  $fields     Normalised fields: [['type', 'label', 'value'], …].
+	 * @param string $form_title Form title.
+	 * @return array Normalised lead data, or empty array if invalid.
+	 */
+	public function extract_from_ninja_forms( array $fields, string $form_title ): array {
+		$data = $this->empty_lead(
+			sprintf(
+				/* translators: %s: form title */
+				__( 'Ninja Forms: %s', 'wp4odoo' ),
+				$form_title ?: __( 'Unknown Form', 'wp4odoo' )
+			)
+		);
+
+		// Collect firstname/lastname for concatenation.
+		$first_name = '';
+		$last_name  = '';
+
+		foreach ( $fields as $field ) {
+			$type  = $field['type'] ?? 'textbox';
+			$label = $field['label'] ?? '';
+			$value = trim( (string) ( $field['value'] ?? '' ) );
+
+			if ( '' === $value ) {
+				continue;
+			}
+
+			if ( 'firstname' === $type ) {
+				$first_name = $value;
+				continue;
+			}
+			if ( 'lastname' === $type ) {
+				$last_name = $value;
+				continue;
+			}
+
+			// Ninja Forms type mapping.
+			$mapped = match ( $type ) {
+				'textbox' => 'text',
+				default   => $type,
+			};
+
+			$this->assign_field( $data, $mapped, $label, $value );
+		}
+
+		// Concatenate name parts if found.
+		if ( '' === $data['name'] && ( '' !== $first_name || '' !== $last_name ) ) {
+			$data['name'] = sanitize_text_field( trim( $first_name . ' ' . $last_name ) );
+		}
+
+		return $this->finalise( $data, $form_title );
+	}
+
+	/**
+	 * Extract lead data from a Forminator submission.
+	 *
+	 * Receives pre-normalised fields from the callback.
+	 * Forminator element IDs often embed the type (e.g. `email-1`, `text-2`).
+	 *
+	 * @param array  $fields     Normalised fields: [['type', 'label', 'value'], …].
+	 * @param string $form_title Form title.
+	 * @return array Normalised lead data, or empty array if invalid.
+	 */
+	public function extract_from_forminator( array $fields, string $form_title ): array {
+		$data = $this->empty_lead(
+			sprintf(
+				/* translators: %s: form title */
+				__( 'Forminator: %s', 'wp4odoo' ),
+				$form_title ?: __( 'Unknown Form', 'wp4odoo' )
+			)
+		);
+
+		foreach ( $fields as $field ) {
+			$type  = $field['type'] ?? 'text';
+			$label = $field['label'] ?? '';
+			$value = trim( (string) ( $field['value'] ?? '' ) );
+
+			if ( '' === $value ) {
+				continue;
+			}
+
+			$this->assign_field( $data, $type, $label, $value );
+		}
+
+		return $this->finalise( $data, $form_title );
+	}
+
+	// ─── Label detection ────────────────────────────────────
+
+	/**
 	 * Check if a label matches company-related patterns.
 	 *
 	 * @param string $label Field label.
@@ -198,6 +403,49 @@ class Form_Handler {
 	}
 
 	// ─── Private helpers ─────────────────────────────────────
+
+	/**
+	 * Create an empty lead data structure with a source string.
+	 *
+	 * @param string $source Source label.
+	 * @return array<string, string>
+	 */
+	private function empty_lead( string $source ): array {
+		return [
+			'name'        => '',
+			'email'       => '',
+			'phone'       => '',
+			'company'     => '',
+			'description' => '',
+			'source'      => $source,
+		];
+	}
+
+	/**
+	 * Infer a standard field type from a field key/name.
+	 *
+	 * Used by Fluent Forms where field names contain type hints
+	 * (e.g. `email`, `phone`, `names`, `message`).
+	 *
+	 * @param string $key Lowercased field key.
+	 * @return string Mapped type for assign_field().
+	 */
+	private function infer_type_from_key( string $key ): string {
+		if ( str_contains( $key, 'email' ) ) {
+			return 'email';
+		}
+		if ( str_contains( $key, 'phone' ) || str_contains( $key, 'tel' ) ) {
+			return 'phone';
+		}
+		if ( str_contains( $key, 'name' ) ) {
+			return 'name';
+		}
+		if ( str_contains( $key, 'message' ) || str_contains( $key, 'description' ) || str_contains( $key, 'comment' ) ) {
+			return 'textarea';
+		}
+
+		return 'text';
+	}
 
 	/**
 	 * Assign a field value to the lead data array by type.

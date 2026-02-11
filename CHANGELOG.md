@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [2.6.5] - 2026-02-11
+
+### Added
+- **RCP Module** — Restrict Content Pro → Odoo push sync: membership levels as products (`product.product`), payments as invoices (`account.move` with optional auto-posting), user memberships (`membership.membership_line`). Data access via RCP v3.0+ object classes (`RCP_Membership`, `RCP_Customer`, `RCP_Payments`). Exclusive group `memberships` (priority 12 — between MemberPress and PMPro). Level pricing: `recurring_amount` (recurring) or `initial_amount` (one-time). Payment filtering: only `complete` status synced. `RCP_Handler`, `RCP_Hooks` trait, 62 new unit tests
+- **LifterLMS Module** — LifterLMS → Odoo push sync: courses and memberships as service products (`product.product`), orders as invoices (`account.move` with optional auto-posting), enrollments as sale orders (`sale.order`). CPT-based data access (`llms_course`, `llms_membership`, `llms_order`). Synthetic enrollment IDs (`user_id × 1M + course_id`), automatic parent product sync before dependent entities, partner resolution via `Partner_Service`. `LifterLMS_Handler`, `LifterLMS_Hooks` trait, 61 new unit tests
+- **PMPro Module** — Paid Memberships Pro → Odoo push sync: membership levels as products (`product.product`), payment orders as invoices (`account.move` with optional auto-posting), user memberships (`membership.membership_line`). Data access via PMPro API functions and `$wpdb` on custom tables (no CPTs). Exclusive group `memberships` (priority 15 — between MemberPress and WC Memberships). Level pricing: `billing_amount` (recurring) or `initial_payment` (one-time). Order filtering: only `success`/`refunded` statuses synced. `PMPro_Handler`, `PMPro_Hooks` trait, 66 new unit tests
+- **Forms Module** — Added support for 5 new form plugins: Contact Form 7, Fluent Forms, Formidable Forms, Ninja Forms, and Forminator. All 7 supported form plugins push submissions to Odoo `crm.lead` through the same pipeline. Per-plugin sync toggles, plugin-specific field extraction (CF7 tag basetypes, Fluent Forms key-based heuristics, Ninja Forms firstname/lastname concatenation), 51 new unit tests
+
 ## [2.6.0] - 2026-02-11
 
 ### Added

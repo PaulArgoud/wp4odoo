@@ -262,6 +262,424 @@ class FormHandlerTest extends TestCase {
 		$this->assertSame( 'WPForms: Newsletter Signup', $data['source'] );
 	}
 
+	// ─── Contact Form 7 extraction ──────────────────────────
+
+	public function test_cf7_extracts_email(): void {
+		$posted = [ 'your-email' => 'bob@example.com', 'your-name' => 'Bob' ];
+		$tags   = [
+			[ 'type' => 'email', 'name' => 'your-email' ],
+			[ 'type' => 'text', 'name' => 'your-name' ],
+		];
+
+		$data = $this->handler->extract_from_cf7( $posted, $tags, 'Contact' );
+
+		$this->assertSame( 'bob@example.com', $data['email'] );
+	}
+
+	public function test_cf7_maps_tel_to_phone(): void {
+		$posted = [ 'your-email' => 'bob@example.com', 'your-tel' => '+33612345678' ];
+		$tags   = [
+			[ 'type' => 'email', 'name' => 'your-email' ],
+			[ 'type' => 'tel', 'name' => 'your-tel' ],
+		];
+
+		$data = $this->handler->extract_from_cf7( $posted, $tags, 'Contact' );
+
+		$this->assertSame( '+33612345678', $data['phone'] );
+	}
+
+	public function test_cf7_extracts_description_from_textarea(): void {
+		$posted = [ 'your-email' => 'bob@example.com', 'your-message' => 'Hello!' ];
+		$tags   = [
+			[ 'type' => 'email', 'name' => 'your-email' ],
+			[ 'type' => 'textarea', 'name' => 'your-message' ],
+		];
+
+		$data = $this->handler->extract_from_cf7( $posted, $tags, 'Contact' );
+
+		$this->assertSame( 'Hello!', $data['description'] );
+	}
+
+	public function test_cf7_extracts_company_from_text_with_company_label(): void {
+		$posted = [ 'your-email' => 'bob@example.com', 'company' => 'Acme Inc' ];
+		$tags   = [
+			[ 'type' => 'email', 'name' => 'your-email' ],
+			[ 'type' => 'text', 'name' => 'company' ],
+		];
+
+		$data = $this->handler->extract_from_cf7( $posted, $tags, 'Contact' );
+
+		$this->assertSame( 'Acme Inc', $data['company'] );
+	}
+
+	public function test_cf7_returns_empty_when_no_email(): void {
+		$posted = [ 'your-name' => 'Bob' ];
+		$tags   = [ [ 'type' => 'text', 'name' => 'your-name' ] ];
+
+		$data = $this->handler->extract_from_cf7( $posted, $tags, 'Contact' );
+
+		$this->assertSame( [], $data );
+	}
+
+	public function test_cf7_uses_email_as_name_fallback(): void {
+		$posted = [ 'your-email' => 'bob@example.com' ];
+		$tags   = [ [ 'type' => 'email', 'name' => 'your-email' ] ];
+
+		$data = $this->handler->extract_from_cf7( $posted, $tags, 'Contact' );
+
+		$this->assertSame( 'bob@example.com', $data['name'] );
+	}
+
+	public function test_cf7_sets_correct_source(): void {
+		$posted = [ 'your-email' => 'bob@example.com' ];
+		$tags   = [ [ 'type' => 'email', 'name' => 'your-email' ] ];
+
+		$data = $this->handler->extract_from_cf7( $posted, $tags, 'My CF7 Form' );
+
+		$this->assertSame( 'Contact Form 7: My CF7 Form', $data['source'] );
+	}
+
+	public function test_cf7_extracts_name_from_text_with_name_label(): void {
+		$posted = [ 'your-email' => 'bob@example.com', 'your-name' => 'Bob Smith' ];
+		$tags   = [
+			[ 'type' => 'email', 'name' => 'your-email' ],
+			[ 'type' => 'text', 'name' => 'your-name' ],
+		];
+
+		$data = $this->handler->extract_from_cf7( $posted, $tags, 'Contact' );
+
+		$this->assertSame( 'Bob Smith', $data['name'] );
+	}
+
+	// ─── Fluent Forms extraction ────────────────────────────
+
+	public function test_ff_extracts_email(): void {
+		$form_data = [ 'email' => 'alice@example.com', 'names' => 'Alice' ];
+
+		$data = $this->handler->extract_from_fluent_forms( $form_data, 'Subscribe' );
+
+		$this->assertSame( 'alice@example.com', $data['email'] );
+	}
+
+	public function test_ff_extracts_name_from_names_array(): void {
+		$form_data = [
+			'email' => 'alice@example.com',
+			'names' => [ 'first_name' => 'Alice', 'last_name' => 'Wonder' ],
+		];
+
+		$data = $this->handler->extract_from_fluent_forms( $form_data, 'Subscribe' );
+
+		$this->assertSame( 'Alice Wonder', $data['name'] );
+	}
+
+	public function test_ff_extracts_phone(): void {
+		$form_data = [ 'email' => 'alice@example.com', 'phone' => '+44123456' ];
+
+		$data = $this->handler->extract_from_fluent_forms( $form_data, 'Subscribe' );
+
+		$this->assertSame( '+44123456', $data['phone'] );
+	}
+
+	public function test_ff_extracts_description_from_message(): void {
+		$form_data = [ 'email' => 'alice@example.com', 'message' => 'Please help.' ];
+
+		$data = $this->handler->extract_from_fluent_forms( $form_data, 'Subscribe' );
+
+		$this->assertSame( 'Please help.', $data['description'] );
+	}
+
+	public function test_ff_returns_empty_when_no_email(): void {
+		$form_data = [ 'names' => 'Alice' ];
+
+		$data = $this->handler->extract_from_fluent_forms( $form_data, 'Subscribe' );
+
+		$this->assertSame( [], $data );
+	}
+
+	public function test_ff_uses_email_as_name_fallback(): void {
+		$form_data = [ 'email' => 'alice@example.com' ];
+
+		$data = $this->handler->extract_from_fluent_forms( $form_data, 'Subscribe' );
+
+		$this->assertSame( 'alice@example.com', $data['name'] );
+	}
+
+	public function test_ff_sets_correct_source(): void {
+		$form_data = [ 'email' => 'alice@example.com' ];
+
+		$data = $this->handler->extract_from_fluent_forms( $form_data, 'My Fluent Form' );
+
+		$this->assertSame( 'Fluent Forms: My Fluent Form', $data['source'] );
+	}
+
+	public function test_ff_infers_tel_as_phone(): void {
+		$form_data = [ 'email' => 'alice@example.com', 'telephone' => '+33612345' ];
+
+		$data = $this->handler->extract_from_fluent_forms( $form_data, 'Form' );
+
+		$this->assertSame( '+33612345', $data['phone'] );
+	}
+
+	// ─── Formidable Forms extraction ────────────────────────
+
+	public function test_frm_extracts_email(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'mark@example.com' ],
+			[ 'type' => 'name', 'label' => 'Name', 'value' => 'Mark' ],
+		];
+
+		$data = $this->handler->extract_from_formidable( $fields, 'Contact' );
+
+		$this->assertSame( 'mark@example.com', $data['email'] );
+	}
+
+	public function test_frm_extracts_name(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'mark@example.com' ],
+			[ 'type' => 'name', 'label' => 'Name', 'value' => 'Mark Johnson' ],
+		];
+
+		$data = $this->handler->extract_from_formidable( $fields, 'Contact' );
+
+		$this->assertSame( 'Mark Johnson', $data['name'] );
+	}
+
+	public function test_frm_extracts_phone(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'mark@example.com' ],
+			[ 'type' => 'phone', 'label' => 'Phone', 'value' => '+1234567' ],
+		];
+
+		$data = $this->handler->extract_from_formidable( $fields, 'Contact' );
+
+		$this->assertSame( '+1234567', $data['phone'] );
+	}
+
+	public function test_frm_extracts_description(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'mark@example.com' ],
+			[ 'type' => 'textarea', 'label' => 'Message', 'value' => 'I need help.' ],
+		];
+
+		$data = $this->handler->extract_from_formidable( $fields, 'Contact' );
+
+		$this->assertSame( 'I need help.', $data['description'] );
+	}
+
+	public function test_frm_extracts_company_by_label(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'mark@example.com' ],
+			[ 'type' => 'text', 'label' => 'Company', 'value' => 'BigCo' ],
+		];
+
+		$data = $this->handler->extract_from_formidable( $fields, 'Contact' );
+
+		$this->assertSame( 'BigCo', $data['company'] );
+	}
+
+	public function test_frm_returns_empty_when_no_email(): void {
+		$fields = [
+			[ 'type' => 'name', 'label' => 'Name', 'value' => 'Mark' ],
+		];
+
+		$data = $this->handler->extract_from_formidable( $fields, 'Contact' );
+
+		$this->assertSame( [], $data );
+	}
+
+	public function test_frm_uses_email_as_name_fallback(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'mark@example.com' ],
+		];
+
+		$data = $this->handler->extract_from_formidable( $fields, 'Contact' );
+
+		$this->assertSame( 'mark@example.com', $data['name'] );
+	}
+
+	public function test_frm_sets_correct_source(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'mark@example.com' ],
+		];
+
+		$data = $this->handler->extract_from_formidable( $fields, 'Inquiry Form' );
+
+		$this->assertSame( 'Formidable: Inquiry Form', $data['source'] );
+	}
+
+	// ─── Ninja Forms extraction ─────────────────────────────
+
+	public function test_nf_extracts_email(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'sam@example.com' ],
+		];
+
+		$data = $this->handler->extract_from_ninja_forms( $fields, 'Contact' );
+
+		$this->assertSame( 'sam@example.com', $data['email'] );
+	}
+
+	public function test_nf_concatenates_firstname_lastname(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'sam@example.com' ],
+			[ 'type' => 'firstname', 'label' => 'First', 'value' => 'Sam' ],
+			[ 'type' => 'lastname', 'label' => 'Last', 'value' => 'Jones' ],
+		];
+
+		$data = $this->handler->extract_from_ninja_forms( $fields, 'Contact' );
+
+		$this->assertSame( 'Sam Jones', $data['name'] );
+	}
+
+	public function test_nf_extracts_phone(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'sam@example.com' ],
+			[ 'type' => 'phone', 'label' => 'Phone', 'value' => '+999' ],
+		];
+
+		$data = $this->handler->extract_from_ninja_forms( $fields, 'Contact' );
+
+		$this->assertSame( '+999', $data['phone'] );
+	}
+
+	public function test_nf_extracts_description_from_textarea(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'sam@example.com' ],
+			[ 'type' => 'textarea', 'label' => 'Message', 'value' => 'Need info.' ],
+		];
+
+		$data = $this->handler->extract_from_ninja_forms( $fields, 'Contact' );
+
+		$this->assertSame( 'Need info.', $data['description'] );
+	}
+
+	public function test_nf_maps_textbox_to_text(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'sam@example.com' ],
+			[ 'type' => 'textbox', 'label' => 'Company', 'value' => 'NinjaCo' ],
+		];
+
+		$data = $this->handler->extract_from_ninja_forms( $fields, 'Contact' );
+
+		$this->assertSame( 'NinjaCo', $data['company'] );
+	}
+
+	public function test_nf_returns_empty_when_no_email(): void {
+		$fields = [
+			[ 'type' => 'firstname', 'label' => 'First', 'value' => 'Sam' ],
+		];
+
+		$data = $this->handler->extract_from_ninja_forms( $fields, 'Contact' );
+
+		$this->assertSame( [], $data );
+	}
+
+	public function test_nf_uses_email_as_name_fallback(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'sam@example.com' ],
+		];
+
+		$data = $this->handler->extract_from_ninja_forms( $fields, 'Contact' );
+
+		$this->assertSame( 'sam@example.com', $data['name'] );
+	}
+
+	public function test_nf_sets_correct_source(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'sam@example.com' ],
+		];
+
+		$data = $this->handler->extract_from_ninja_forms( $fields, 'NF Contact' );
+
+		$this->assertSame( 'Ninja Forms: NF Contact', $data['source'] );
+	}
+
+	// ─── Forminator extraction ──────────────────────────────
+
+	public function test_ftr_extracts_email(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'email-1', 'value' => 'liz@example.com' ],
+		];
+
+		$data = $this->handler->extract_from_forminator( $fields, 'Contact' );
+
+		$this->assertSame( 'liz@example.com', $data['email'] );
+	}
+
+	public function test_ftr_extracts_name(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'email-1', 'value' => 'liz@example.com' ],
+			[ 'type' => 'name', 'label' => 'name-1', 'value' => 'Liz Taylor' ],
+		];
+
+		$data = $this->handler->extract_from_forminator( $fields, 'Contact' );
+
+		$this->assertSame( 'Liz Taylor', $data['name'] );
+	}
+
+	public function test_ftr_extracts_phone(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'email-1', 'value' => 'liz@example.com' ],
+			[ 'type' => 'phone', 'label' => 'phone-1', 'value' => '+44888' ],
+		];
+
+		$data = $this->handler->extract_from_forminator( $fields, 'Contact' );
+
+		$this->assertSame( '+44888', $data['phone'] );
+	}
+
+	public function test_ftr_extracts_description(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'email-1', 'value' => 'liz@example.com' ],
+			[ 'type' => 'textarea', 'label' => 'textarea-1', 'value' => 'Hi there.' ],
+		];
+
+		$data = $this->handler->extract_from_forminator( $fields, 'Contact' );
+
+		$this->assertSame( 'Hi there.', $data['description'] );
+	}
+
+	public function test_ftr_extracts_company_by_label(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'email-1', 'value' => 'liz@example.com' ],
+			[ 'type' => 'text', 'label' => 'Company', 'value' => 'FormCo' ],
+		];
+
+		$data = $this->handler->extract_from_forminator( $fields, 'Contact' );
+
+		$this->assertSame( 'FormCo', $data['company'] );
+	}
+
+	public function test_ftr_returns_empty_when_no_email(): void {
+		$fields = [
+			[ 'type' => 'name', 'label' => 'name-1', 'value' => 'Liz' ],
+		];
+
+		$data = $this->handler->extract_from_forminator( $fields, 'Contact' );
+
+		$this->assertSame( [], $data );
+	}
+
+	public function test_ftr_uses_email_as_name_fallback(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'email-1', 'value' => 'liz@example.com' ],
+		];
+
+		$data = $this->handler->extract_from_forminator( $fields, 'Contact' );
+
+		$this->assertSame( 'liz@example.com', $data['name'] );
+	}
+
+	public function test_ftr_sets_correct_source(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'email-1', 'value' => 'liz@example.com' ],
+		];
+
+		$data = $this->handler->extract_from_forminator( $fields, 'Forminator Form' );
+
+		$this->assertSame( 'Forminator: Forminator Form', $data['source'] );
+	}
+
 	// ─── Label detection ─────────────────────────────────────
 
 	public function test_is_company_label_matches_english(): void {

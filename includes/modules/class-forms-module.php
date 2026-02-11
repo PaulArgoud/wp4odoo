@@ -11,11 +11,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Forms Module — Gravity Forms and WPForms → Odoo CRM leads.
+ * Forms Module — form plugin submissions → Odoo CRM leads.
  *
- * Intercepts form submissions from Gravity Forms and/or WPForms,
- * extracts lead data via Form_Handler, saves to the wp4odoo_lead
- * CPT, and enqueues a push job to Odoo's crm.lead model.
+ * Intercepts form submissions from 7 supported plugins, extracts
+ * lead data via Form_Handler, saves to the wp4odoo_lead CPT,
+ * and enqueues a push job to Odoo's crm.lead model.
+ *
+ * Supported: Gravity Forms, WPForms, Contact Form 7, Fluent Forms,
+ * Formidable Forms, Ninja Forms, Forminator.
  *
  * @package WP4Odoo
  * @since   2.0.0
@@ -69,7 +72,7 @@ class Forms_Module extends Module_Base {
 	 * Constructor.
 	 */
 	public function __construct( \Closure $client_provider, \WP4Odoo\Entity_Map_Repository $entity_map, \WP4Odoo\Settings_Repository $settings ) {
-		parent::__construct( 'forms', 'Gravity Forms / WPForms', $client_provider, $entity_map, $settings );
+		parent::__construct( 'forms', 'Forms', $client_provider, $entity_map, $settings );
 		$this->lead_manager = new Lead_Manager( $this->logger, fn() => $this->get_settings() );
 		$this->form_handler = new Form_Handler( $this->logger );
 	}
@@ -94,6 +97,31 @@ class Forms_Module extends Module_Base {
 		if ( ! empty( $settings['sync_wpforms'] ) && function_exists( 'wpforms' ) ) {
 			add_action( 'wpforms_process_complete', [ $this, 'on_wpforms_submitted' ], 10, 4 );
 		}
+
+		// Contact Form 7 hook.
+		if ( ! empty( $settings['sync_cf7'] ) && defined( 'WPCF7_VERSION' ) ) {
+			add_action( 'wpcf7_mail_sent', [ $this, 'on_cf7_submitted' ], 10, 1 );
+		}
+
+		// Fluent Forms hook.
+		if ( ! empty( $settings['sync_fluent_forms'] ) && defined( 'FLUENTFORM' ) ) {
+			add_action( 'fluentform/submission_inserted', [ $this, 'on_fluent_form_submitted' ], 10, 3 );
+		}
+
+		// Formidable Forms hook.
+		if ( ! empty( $settings['sync_formidable'] ) && class_exists( 'FrmAppHelper' ) ) {
+			add_action( 'frm_after_create_entry', [ $this, 'on_formidable_submitted' ], 10, 2 );
+		}
+
+		// Ninja Forms hook.
+		if ( ! empty( $settings['sync_ninja_forms'] ) && class_exists( 'Ninja_Forms' ) ) {
+			add_action( 'ninja_forms_after_submission', [ $this, 'on_ninja_forms_submitted' ], 10, 1 );
+		}
+
+		// Forminator hook.
+		if ( ! empty( $settings['sync_forminator'] ) && defined( 'FORMINATOR_VERSION' ) ) {
+			add_action( 'forminator_custom_form_submit_before_set_fields', [ $this, 'on_forminator_submitted' ], 10, 3 );
+		}
 	}
 
 	// ─── Hook Callbacks ──────────────────────────────────────
@@ -111,20 +139,7 @@ class Forms_Module extends Module_Base {
 		}
 
 		$lead_data = $this->form_handler->extract_from_gravity_forms( $entry, $form );
-
-		/**
-		 * Filter the lead data extracted from a form submission.
-		 *
-		 * Return an empty array to skip creating this lead.
-		 *
-		 * @since 2.0.0
-		 *
-		 * @param array  $lead_data   Extracted lead data.
-		 * @param string $source_type 'gravity_forms' or 'wpforms'.
-		 * @param array  $raw_data    Original form submission data.
-		 */
-		$lead_data = apply_filters(
-			'wp4odoo_form_lead_data',
+		$this->process_lead(
 			$lead_data,
 			'gravity_forms',
 			[
@@ -132,8 +147,6 @@ class Forms_Module extends Module_Base {
 				'form'  => $form,
 			]
 		);
-
-		$this->enqueue_lead( $lead_data );
 	}
 
 	/**
@@ -151,10 +164,7 @@ class Forms_Module extends Module_Base {
 		}
 
 		$lead_data = $this->form_handler->extract_from_wpforms( $fields, $form_data );
-
-		/** This filter is documented in Forms_Module::on_gravity_form_submitted(). */
-		$lead_data = apply_filters(
-			'wp4odoo_form_lead_data',
+		$this->process_lead(
 			$lead_data,
 			'wpforms',
 			[
@@ -164,8 +174,175 @@ class Forms_Module extends Module_Base {
 				'entry_id'  => $entry_id,
 			]
 		);
+	}
 
-		$this->enqueue_lead( $lead_data );
+	/**
+	 * Handle Contact Form 7 submission.
+	 *
+	 * @param \WPCF7_ContactForm $contact_form CF7 form object.
+	 * @return void
+	 */
+	public function on_cf7_submitted( $contact_form ): void {
+		if ( $this->is_importing() ) {
+			return;
+		}
+
+		$submission = \WPCF7_Submission::get_instance();
+		if ( ! $submission ) {
+			return;
+		}
+
+		$posted_data = $submission->get_posted_data();
+
+		// Normalise tags to plain arrays for testable handler.
+		$tags = [];
+		foreach ( $contact_form->scan_form_tags() as $tag ) {
+			if ( ! empty( $tag->name ) ) {
+				$tags[] = [
+					'type' => $tag->basetype,
+					'name' => $tag->name,
+				];
+			}
+		}
+
+		$lead_data = $this->form_handler->extract_from_cf7( $posted_data, $tags, $contact_form->title() );
+		$this->process_lead( $lead_data, 'cf7', [ 'posted_data' => $posted_data ] );
+	}
+
+	/**
+	 * Handle Fluent Forms submission.
+	 *
+	 * @param int    $submission_id Submission ID.
+	 * @param array  $form_data    Submitted data (field_name => value).
+	 * @param object $form         Form object with title property.
+	 * @return void
+	 */
+	public function on_fluent_form_submitted( int $submission_id, array $form_data, object $form ): void {
+		if ( $this->is_importing() ) {
+			return;
+		}
+
+		$form_title = $form->title ?? '';
+		$lead_data  = $this->form_handler->extract_from_fluent_forms( $form_data, $form_title );
+		$this->process_lead( $lead_data, 'fluent_forms', [ 'form_data' => $form_data ] );
+	}
+
+	/**
+	 * Handle Formidable Forms submission.
+	 *
+	 * Loads field definitions and entry values via Formidable's API,
+	 * normalises them, and delegates extraction to Form_Handler.
+	 *
+	 * @param int $entry_id Entry ID.
+	 * @param int $form_id  Form ID.
+	 * @return void
+	 */
+	public function on_formidable_submitted( int $entry_id, int $form_id ): void {
+		if ( $this->is_importing() ) {
+			return;
+		}
+
+		$frm_fields  = \FrmField::getAll( [ 'fi.form_id' => $form_id ] );
+		$entry_metas = \FrmEntryMeta::getAll( [ 'it.item_id' => $entry_id ] );
+
+		// Build value lookup: field_id → meta_value.
+		$values = [];
+		foreach ( $entry_metas as $meta ) {
+			$values[ $meta->field_id ] = $meta->meta_value;
+		}
+
+		$fields = [];
+		foreach ( $frm_fields as $field ) {
+			$raw   = $values[ $field->id ] ?? '';
+			$value = is_array( $raw ) ? implode( ' ', array_filter( array_map( 'trim', $raw ) ) ) : (string) $raw;
+			$value = trim( $value );
+			if ( '' === $value ) {
+				continue;
+			}
+			$fields[] = [
+				'type'  => $field->type ?? 'text',
+				'label' => $field->name ?? '',
+				'value' => $value,
+			];
+		}
+
+		$form       = \FrmForm::getOne( $form_id );
+		$form_title = $form ? $form->name : '';
+		$lead_data  = $this->form_handler->extract_from_formidable( $fields, $form_title );
+		$this->process_lead( $lead_data, 'formidable', [ 'entry_id' => $entry_id ] );
+	}
+
+	/**
+	 * Handle Ninja Forms submission.
+	 *
+	 * @param array $form_data Ninja Forms submission data with 'fields' and 'settings'.
+	 * @return void
+	 */
+	public function on_ninja_forms_submitted( array $form_data ): void {
+		if ( $this->is_importing() ) {
+			return;
+		}
+
+		$fields = [];
+		foreach ( ( $form_data['fields'] ?? [] ) as $field ) {
+			$fields[] = [
+				'type'  => $field['type'] ?? 'textbox',
+				'label' => $field['label'] ?? '',
+				'value' => $field['value'] ?? '',
+			];
+		}
+
+		$form_title = $form_data['settings']['title'] ?? '';
+		$lead_data  = $this->form_handler->extract_from_ninja_forms( $fields, $form_title );
+		$this->process_lead( $lead_data, 'ninja_forms', [ 'form_data' => $form_data ] );
+	}
+
+	/**
+	 * Handle Forminator submission.
+	 *
+	 * Normalises fields from the submitted data array. Forminator element
+	 * IDs often embed the type (e.g. `email-1`, `text-2`, `phone-1`).
+	 *
+	 * @param object $entry          Forminator entry object.
+	 * @param int    $form_id        Form ID.
+	 * @param array  $form_data_array Submitted data (element_id => value).
+	 * @return void
+	 */
+	public function on_forminator_submitted( object $entry, int $form_id, array $form_data_array ): void {
+		if ( $this->is_importing() ) {
+			return;
+		}
+
+		$fields = [];
+		foreach ( $form_data_array as $key => $value ) {
+			if ( is_array( $value ) ) {
+				$value = implode( ' ', array_filter( array_map( 'trim', $value ) ) );
+			}
+			$value = trim( (string) $value );
+			if ( '' === $value ) {
+				continue;
+			}
+
+			// Extract type from Forminator element ID (e.g. "email-1" → "email").
+			$type = (string) preg_replace( '/-\d+$/', '', (string) $key );
+
+			$fields[] = [
+				'type'  => $type,
+				'label' => $key,
+				'value' => $value,
+			];
+		}
+
+		$form_title = '';
+		if ( class_exists( 'Forminator_API' ) ) {
+			$form_model = \Forminator_API::get_form( $form_id );
+			if ( $form_model && ! is_wp_error( $form_model ) ) {
+				$form_title = $form_model->settings['formName'] ?? '';
+			}
+		}
+
+		$lead_data = $this->form_handler->extract_from_forminator( $fields, $form_title );
+		$this->process_lead( $lead_data, 'forminator', [ 'form_data' => $form_data_array ] );
 	}
 
 	// ─── Settings ────────────────────────────────────────────
@@ -173,19 +350,24 @@ class Forms_Module extends Module_Base {
 	/**
 	 * Get default settings for the Forms module.
 	 *
-	 * @return array
+	 * @return array<string, bool>
 	 */
 	public function get_default_settings(): array {
 		return [
 			'sync_gravity_forms' => true,
 			'sync_wpforms'       => true,
+			'sync_cf7'           => true,
+			'sync_fluent_forms'  => true,
+			'sync_formidable'    => true,
+			'sync_ninja_forms'   => true,
+			'sync_forminator'    => true,
 		];
 	}
 
 	/**
 	 * Get settings field definitions for the admin UI.
 	 *
-	 * @return array<string, array>
+	 * @return array<string, array<string, string>>
 	 */
 	public function get_settings_fields(): array {
 		return [
@@ -199,45 +381,77 @@ class Forms_Module extends Module_Base {
 				'type'        => 'checkbox',
 				'description' => __( 'Create Odoo leads from WPForms submissions.', 'wp4odoo' ),
 			],
+			'sync_cf7'           => [
+				'label'       => __( 'Sync Contact Form 7', 'wp4odoo' ),
+				'type'        => 'checkbox',
+				'description' => __( 'Create Odoo leads from Contact Form 7 submissions.', 'wp4odoo' ),
+			],
+			'sync_fluent_forms'  => [
+				'label'       => __( 'Sync Fluent Forms', 'wp4odoo' ),
+				'type'        => 'checkbox',
+				'description' => __( 'Create Odoo leads from Fluent Forms submissions.', 'wp4odoo' ),
+			],
+			'sync_formidable'    => [
+				'label'       => __( 'Sync Formidable Forms', 'wp4odoo' ),
+				'type'        => 'checkbox',
+				'description' => __( 'Create Odoo leads from Formidable Forms submissions.', 'wp4odoo' ),
+			],
+			'sync_ninja_forms'   => [
+				'label'       => __( 'Sync Ninja Forms', 'wp4odoo' ),
+				'type'        => 'checkbox',
+				'description' => __( 'Create Odoo leads from Ninja Forms submissions.', 'wp4odoo' ),
+			],
+			'sync_forminator'    => [
+				'label'       => __( 'Sync Forminator', 'wp4odoo' ),
+				'type'        => 'checkbox',
+				'description' => __( 'Create Odoo leads from Forminator submissions.', 'wp4odoo' ),
+			],
 		];
 	}
 
 	/**
 	 * Check external dependency status.
 	 *
-	 * At least one form plugin (Gravity Forms or WPForms) must be active.
+	 * At least one supported form plugin must be active.
 	 *
-	 * @return array{available: bool, notices: array}
+	 * @return array{available: bool, notices: array<array{type: string, message: string}>}
 	 */
 	public function get_dependency_status(): array {
-		$gf_available = class_exists( 'GFAPI' );
-		$wf_available = function_exists( 'wpforms' );
+		$plugins = [
+			'Gravity Forms'    => class_exists( 'GFAPI' ),
+			'WPForms'          => function_exists( 'wpforms' ),
+			'Contact Form 7'   => defined( 'WPCF7_VERSION' ),
+			'Fluent Forms'     => defined( 'FLUENTFORM' ),
+			'Formidable Forms' => class_exists( 'FrmAppHelper' ),
+			'Ninja Forms'      => class_exists( 'Ninja_Forms' ),
+			'Forminator'       => defined( 'FORMINATOR_VERSION' ),
+		];
 
-		if ( ! $gf_available && ! $wf_available ) {
+		$active = array_filter( $plugins );
+
+		if ( empty( $active ) ) {
 			return [
 				'available' => false,
 				'notices'   => [
 					[
 						'type'    => 'warning',
-						'message' => __( 'Gravity Forms or WPForms must be installed and activated to use this module.', 'wp4odoo' ),
+						'message' => __( 'At least one form plugin must be installed and activated to use this module.', 'wp4odoo' ),
 					],
 				],
 			];
 		}
 
-		$notices = [];
+		$notices  = [];
+		$inactive = array_diff_key( $plugins, $active );
 
-		if ( ! $gf_available ) {
+		foreach ( $inactive as $name => $status ) {
 			$notices[] = [
 				'type'    => 'info',
-				'message' => __( 'Gravity Forms is not active. Only WPForms submissions will be synced.', 'wp4odoo' ),
-			];
-		}
-
-		if ( ! $wf_available ) {
-			$notices[] = [
-				'type'    => 'info',
-				'message' => __( 'WPForms is not active. Only Gravity Forms submissions will be synced.', 'wp4odoo' ),
+				'message' => sprintf(
+					/* translators: %s: form plugin name */
+					__( '%s is not active.', 'wp4odoo' ),
+					$name
+				),
 			];
 		}
 
@@ -299,6 +513,33 @@ class Forms_Module extends Module_Base {
 	}
 
 	// ─── Private Helpers ─────────────────────────────────────
+
+	/**
+	 * Filter and enqueue extracted lead data.
+	 *
+	 * Shared by all 7 hook callbacks to avoid duplication.
+	 *
+	 * @param array  $lead_data   Extracted lead data (may be empty).
+	 * @param string $source_type Source identifier for the filter.
+	 * @param array  $raw_data    Original form submission data (for filter).
+	 * @return void
+	 */
+	private function process_lead( array $lead_data, string $source_type, array $raw_data = [] ): void {
+		/**
+		 * Filter the lead data extracted from a form submission.
+		 *
+		 * Return an empty array to skip creating this lead.
+		 *
+		 * @since 2.0.0
+		 *
+		 * @param array  $lead_data   Extracted lead data.
+		 * @param string $source_type Plugin identifier (e.g. 'gravity_forms', 'cf7').
+		 * @param array  $raw_data    Original form submission data.
+		 */
+		$lead_data = apply_filters( 'wp4odoo_form_lead_data', $lead_data, $source_type, $raw_data );
+
+		$this->enqueue_lead( $lead_data );
+	}
 
 	/**
 	 * Save lead data to CPT and enqueue for Odoo sync.

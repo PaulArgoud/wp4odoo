@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'WP4ODOO_PLUGIN_DIR', dirname( __DIR__ ) . '/' );
-define( 'WP4ODOO_VERSION', '2.6.0' );
+define( 'WP4ODOO_VERSION', '2.6.5' );
 
 if ( ! defined( 'DAY_IN_SECONDS' ) ) {
 	define( 'DAY_IN_SECONDS', 86400 );
@@ -58,6 +58,13 @@ $GLOBALS['_wc_membership_plans'] = [];
 $GLOBALS['_edd_orders']          = [];
 $GLOBALS['_mepr_transactions']   = [];
 $GLOBALS['_mepr_subscriptions']  = [];
+$GLOBALS['_pmpro_levels']        = [];
+$GLOBALS['_pmpro_orders']        = [];
+$GLOBALS['_rcp_levels']          = [];
+$GLOBALS['_rcp_payments']        = [];
+$GLOBALS['_rcp_memberships']     = [];
+$GLOBALS['_llms_orders']         = [];
+$GLOBALS['_llms_enrollments']    = [];
 
 // ─── Load stubs ─────────────────────────────────────────
 // Stubs must be loaded before the autoloader so that external
@@ -72,6 +79,8 @@ require_once __DIR__ . '/stubs/plugin-stub.php';
 require_once __DIR__ . '/stubs/wp-cli-utils.php';
 require_once __DIR__ . '/stubs/edd-classes.php';
 require_once __DIR__ . '/stubs/memberpress-classes.php';
+require_once __DIR__ . '/stubs/pmpro-classes.php';
+require_once __DIR__ . '/stubs/rcp-classes.php';
 require_once __DIR__ . '/stubs/givewp-classes.php';
 require_once __DIR__ . '/stubs/charitable-classes.php';
 require_once __DIR__ . '/stubs/simplepay-classes.php';
@@ -80,6 +89,7 @@ require_once __DIR__ . '/stubs/form-classes.php';
 require_once __DIR__ . '/stubs/amelia-classes.php';
 require_once __DIR__ . '/stubs/bookly-classes.php';
 require_once __DIR__ . '/stubs/learndash-classes.php';
+require_once __DIR__ . '/stubs/lifterlms-classes.php';
 
 // ─── Composer autoloader ────────────────────────────────
 

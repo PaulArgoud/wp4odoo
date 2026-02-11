@@ -91,6 +91,12 @@ class Module_Registry {
 		if ( defined( 'MEPR_VERSION' ) ) {
 			$this->register( 'memberpress', new Modules\MemberPress_Module( $client_provider, $entity_map, $settings ) );
 		}
+		if ( defined( 'PMPRO_VERSION' ) ) {
+			$this->register( 'pmpro', new Modules\PMPro_Module( $client_provider, $entity_map, $settings ) );
+		}
+		if ( function_exists( 'rcp_get_membership' ) ) {
+			$this->register( 'rcp', new Modules\RCP_Module( $client_provider, $entity_map, $settings ) );
+		}
 
 		// Independent modules.
 		if ( defined( 'GIVE_VERSION' ) ) {
@@ -105,9 +111,14 @@ class Module_Registry {
 		if ( defined( 'WPRM_VERSION' ) ) {
 			$this->register( 'wprm', new Modules\WPRM_Module( $client_provider, $entity_map, $settings ) );
 		}
-		$gf_active  = class_exists( 'GFAPI' );
-		$wpf_active = function_exists( 'wpforms' );
-		if ( $gf_active || $wpf_active ) {
+		$forms_active = class_exists( 'GFAPI' )
+			|| function_exists( 'wpforms' )
+			|| defined( 'WPCF7_VERSION' )
+			|| defined( 'FLUENTFORM' )
+			|| class_exists( 'FrmAppHelper' )
+			|| class_exists( 'Ninja_Forms' )
+			|| defined( 'FORMINATOR_VERSION' );
+		if ( $forms_active ) {
 			$this->register( 'forms', new Modules\Forms_Module( $client_provider, $entity_map, $settings ) );
 		}
 		if ( defined( 'AMELIA_VERSION' ) ) {
@@ -118,6 +129,9 @@ class Module_Registry {
 		}
 		if ( defined( 'LEARNDASH_VERSION' ) ) {
 			$this->register( 'learndash', new Modules\LearnDash_Module( $client_provider, $entity_map, $settings ) );
+		}
+		if ( defined( 'LLMS_VERSION' ) ) {
+			$this->register( 'lifterlms', new Modules\LifterLMS_Module( $client_provider, $entity_map, $settings ) );
 		}
 
 		// Allow third-party modules (closures and shared entity map available as arguments).

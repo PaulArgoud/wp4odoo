@@ -32,7 +32,7 @@ class FormsModuleTest extends TestCase {
 	}
 
 	public function test_module_name_is_forms(): void {
-		$this->assertSame( 'Gravity Forms / WPForms', $this->module->get_name() );
+		$this->assertSame( 'Forms', $this->module->get_name() );
 	}
 
 	public function test_exclusive_group(): void {
@@ -67,9 +67,34 @@ class FormsModuleTest extends TestCase {
 		$this->assertTrue( $settings['sync_wpforms'] );
 	}
 
-	public function test_default_settings_has_exactly_two_keys(): void {
+	public function test_default_sync_cf7_is_true(): void {
 		$settings = $this->module->get_default_settings();
-		$this->assertCount( 2, $settings );
+		$this->assertTrue( $settings['sync_cf7'] );
+	}
+
+	public function test_default_sync_fluent_forms_is_true(): void {
+		$settings = $this->module->get_default_settings();
+		$this->assertTrue( $settings['sync_fluent_forms'] );
+	}
+
+	public function test_default_sync_formidable_is_true(): void {
+		$settings = $this->module->get_default_settings();
+		$this->assertTrue( $settings['sync_formidable'] );
+	}
+
+	public function test_default_sync_ninja_forms_is_true(): void {
+		$settings = $this->module->get_default_settings();
+		$this->assertTrue( $settings['sync_ninja_forms'] );
+	}
+
+	public function test_default_sync_forminator_is_true(): void {
+		$settings = $this->module->get_default_settings();
+		$this->assertTrue( $settings['sync_forminator'] );
+	}
+
+	public function test_default_settings_has_exactly_seven_keys(): void {
+		$settings = $this->module->get_default_settings();
+		$this->assertCount( 7, $settings );
 	}
 
 	// ─── Settings Fields ───────────────────────────────────
@@ -84,6 +109,41 @@ class FormsModuleTest extends TestCase {
 		$fields = $this->module->get_settings_fields();
 		$this->assertArrayHasKey( 'sync_wpforms', $fields );
 		$this->assertSame( 'checkbox', $fields['sync_wpforms']['type'] );
+	}
+
+	public function test_settings_fields_exposes_sync_cf7(): void {
+		$fields = $this->module->get_settings_fields();
+		$this->assertArrayHasKey( 'sync_cf7', $fields );
+		$this->assertSame( 'checkbox', $fields['sync_cf7']['type'] );
+	}
+
+	public function test_settings_fields_exposes_sync_fluent_forms(): void {
+		$fields = $this->module->get_settings_fields();
+		$this->assertArrayHasKey( 'sync_fluent_forms', $fields );
+		$this->assertSame( 'checkbox', $fields['sync_fluent_forms']['type'] );
+	}
+
+	public function test_settings_fields_exposes_sync_formidable(): void {
+		$fields = $this->module->get_settings_fields();
+		$this->assertArrayHasKey( 'sync_formidable', $fields );
+		$this->assertSame( 'checkbox', $fields['sync_formidable']['type'] );
+	}
+
+	public function test_settings_fields_exposes_sync_ninja_forms(): void {
+		$fields = $this->module->get_settings_fields();
+		$this->assertArrayHasKey( 'sync_ninja_forms', $fields );
+		$this->assertSame( 'checkbox', $fields['sync_ninja_forms']['type'] );
+	}
+
+	public function test_settings_fields_exposes_sync_forminator(): void {
+		$fields = $this->module->get_settings_fields();
+		$this->assertArrayHasKey( 'sync_forminator', $fields );
+		$this->assertSame( 'checkbox', $fields['sync_forminator']['type'] );
+	}
+
+	public function test_settings_fields_has_exactly_seven_keys(): void {
+		$fields = $this->module->get_settings_fields();
+		$this->assertCount( 7, $fields );
 	}
 
 	// ─── Field Mappings ────────────────────────────────────
