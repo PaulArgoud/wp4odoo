@@ -71,23 +71,19 @@ All hosting types expose the standard Odoo external API used by the plugin. No c
 5. Click **Test Connection** to verify
 6. Enable the modules you need in the **Modules** tab
 
-## Architecture
-
-![WP4ODOO Architecture](assets/images/architecture.svg)
-
 ### Module System
 
 Each Odoo domain is encapsulated in an independent module extending `Module_Base`. The plugin automatically detects missing Odoo apps at connection test and module activation.
 
-| WP4Odoo Modules    | Sync | Odoo Apps                             | Free⁴ | Key Features                                                                   |
-|--------------------|:----:|---------------------------------------|:-----:|--------------------------------------------------------------------------------|
-| **CRM**            |  ↔   | Contacts, CRM                         |  ⚠️   | Contact sync, lead form shortcode, email dedup, archive-on-delete              |
-| **Sales**          |  ←   | Contacts, Sales, Invoicing            |  ❌   | Order/invoice CPTs, customer portal shortcode, currency display                |
-| **WooCommerce**    |  ↔   | Contacts, Sales, Inventory, Invoicing |  ❌   | Product/order/stock sync, variants, image pull, exchange rates, bulk ops       |
-| **EDD**            |  ↔   | Contacts, Sales, Invoicing            |  ❌   | Download/order sync, status mapping, invoice pull                              |
-| **WC Memberships** |  →   | Contacts, Members                     |  ❌   | Plan auto-sync, status mapping, filterable via `wp4odoo_membership_status_map` |
-| **MemberPress**    |  →   | Contacts, Members, Invoicing          |  ❌   | Plan/txn/sub sync, auto-post invoices, status mapping                          |
-| **Forms**          |  →   | Contacts, CRM                         |  ⚠️   | GF + WPForms lead creation, field auto-detection, multilingual label matching  |
+| WP4Odoo Modules            | Sync | Odoo Apps                             | Free⁴ | Key Features                                                                   |
+|----------------------------|:----:|---------------------------------------|:-----:|--------------------------------------------------------------------------------|
+| **CRM**                    |  ↔   | Contacts, CRM                         |  ⚠️   | Contact sync, lead form shortcode, email dedup, archive-on-delete              |
+| **Sales**                  |  ←   | Contacts, Sales, Invoicing            |  ❌   | Order/invoice CPTs, customer portal shortcode, currency display                |
+| **WooCommerce**            |  ↔   | Contacts, Sales, Inventory, Invoicing |  ❌   | Product/order/stock sync, variants, image pull, exchange rates, bulk ops       |
+| **Easy Digital Downloads** |  ↔   | Contacts, Sales, Invoicing            |  ❌   | Download/order sync, status mapping, invoice pull                              |
+| **WC Memberships**         |  →   | Contacts, Members                     |  ❌   | Plan auto-sync, status mapping, filterable via `wp4odoo_membership_status_map` |
+| **MemberPress**            |  →   | Contacts, Members, Invoicing          |  ❌   | Plan/txn/sub sync, auto-post invoices, status mapping                          |
+| **Forms (GF & WPF)**       |  →   | Contacts, CRM                         |  ⚠️   | GF + WPForms lead creation, field auto-detection, multilingual label matching  |
 
 > ↔ Bidirectional — → WP to Odoo — ← Odoo to WP
 >
@@ -100,6 +96,9 @@ add_action( 'wp4odoo_register_modules', function( $plugin ) {
     $plugin->register_module( 'my_module', new My_Custom_Module() );
 });
 ```
+## Architecture
+
+![WP4ODOO Architecture](assets/images/architecture.svg)
 
 ### Sync Flow
 
