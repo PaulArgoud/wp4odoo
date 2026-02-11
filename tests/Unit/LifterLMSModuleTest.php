@@ -94,9 +94,9 @@ class LifterLMSModuleTest extends TestCase {
 		$this->assertTrue( $settings['sync_enrollments'] );
 	}
 
-	public function test_default_settings_has_auto_post_invoice(): void {
+	public function test_default_settings_has_auto_post_invoices(): void {
 		$settings = $this->module->get_default_settings();
-		$this->assertTrue( $settings['auto_post_invoice'] );
+		$this->assertTrue( $settings['auto_post_invoices'] );
 	}
 
 	public function test_default_settings_has_exactly_five_keys(): void {
@@ -130,10 +130,10 @@ class LifterLMSModuleTest extends TestCase {
 		$this->assertSame( 'checkbox', $fields['sync_enrollments']['type'] );
 	}
 
-	public function test_settings_fields_exposes_auto_post_invoice(): void {
+	public function test_settings_fields_exposes_auto_post_invoices(): void {
 		$fields = $this->module->get_settings_fields();
-		$this->assertArrayHasKey( 'auto_post_invoice', $fields );
-		$this->assertSame( 'checkbox', $fields['auto_post_invoice']['type'] );
+		$this->assertArrayHasKey( 'auto_post_invoices', $fields );
+		$this->assertSame( 'checkbox', $fields['auto_post_invoices']['type'] );
 	}
 
 	// ─── Field Mappings: Course ───────────────────────────

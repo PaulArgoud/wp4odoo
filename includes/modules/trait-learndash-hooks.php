@@ -128,7 +128,7 @@ trait LearnDash_Hooks {
 			return;
 		}
 
-		$synthetic_id = $user_id * 1_000_000 + $course_id;
+		$synthetic_id = self::encode_synthetic_id( $user_id, $course_id );
 		$action       = $remove ? 'delete' : 'create';
 
 		$odoo_id = 0;

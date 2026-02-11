@@ -142,7 +142,7 @@ class LearnDash_Module extends Module_Base {
 			'sync_groups'       => true,
 			'sync_transactions' => true,
 			'sync_enrollments'  => true,
-			'auto_post_invoice' => true,
+			'auto_post_invoices' => true,
 		];
 	}
 
@@ -173,7 +173,7 @@ class LearnDash_Module extends Module_Base {
 				'type'        => 'checkbox',
 				'description' => __( 'Push course enrollments to Odoo as sale orders.', 'wp4odoo' ),
 			],
-			'auto_post_invoice' => [
+			'auto_post_invoices' => [
 				'label'       => __( 'Auto-post invoices', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Automatically confirm invoices in Odoo for completed transactions.', 'wp4odoo' ),
@@ -213,7 +213,7 @@ class LearnDash_Module extends Module_Base {
 		$result = parent::push_to_odoo( $entity_type, $action, $wp_id, $odoo_id, $payload );
 
 		if ( $result->succeeded() && 'transaction' === $entity_type && 'create' === $action ) {
-			$this->auto_post_invoice( 'auto_post_invoice', 'transaction', $wp_id );
+			$this->auto_post_invoice( 'auto_post_invoices', 'transaction', $wp_id );
 		}
 
 		return $result;
@@ -295,7 +295,7 @@ class LearnDash_Module extends Module_Base {
 		}
 
 		$settings               = $this->get_settings();
-		$auto_post              = ! empty( $settings['auto_post_invoice'] );
+		$auto_post              = ! empty( $settings['auto_post_invoices'] );
 		$data['transaction_id'] = $transaction_id;
 
 		return $this->handler->format_invoice( $data, $product_odoo_id, $partner_id, $auto_post );
@@ -310,8 +310,7 @@ class LearnDash_Module extends Module_Base {
 	 * @return array<string, mixed>
 	 */
 	private function load_enrollment_data( int $synthetic_id ): array {
-		$user_id   = intdiv( $synthetic_id, 1_000_000 );
-		$course_id = $synthetic_id % 1_000_000;
+		[ $user_id, $course_id ] = self::decode_synthetic_id( $synthetic_id );
 
 		$data = $this->handler->load_enrollment( $user_id, $course_id );
 		if ( empty( $data ) ) {
@@ -368,8 +367,7 @@ class LearnDash_Module extends Module_Base {
 				$course_id = (int) ( $meta['course_id'][0] ?? $meta['post_id'][0] ?? 0 );
 			}
 		} elseif ( 'enrollment' === $entity_type ) {
-			// Synthetic ID: user_id * 1M + course_id.
-			$course_id = $wp_id % 1_000_000;
+			[ , $course_id ] = self::decode_synthetic_id( $wp_id );
 		}
 
 		$this->ensure_entity_synced( 'course', $course_id );

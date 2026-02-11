@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Membership module refactoring** — Extracted `Membership_Module_Base` abstract class from MemberPress, PMPro, and RCP modules. Shared `push_to_odoo()` orchestration (level auto-sync, invoice auto-posting), `load_wp_data()` dispatch with partner/level/price resolution. Each module now implements abstract methods for entity type names, handler delegation, and plugin-specific data extraction. ~370 lines deduplicated
 - **Module_Base helpers** — Added `auto_post_invoice()` and `ensure_entity_synced()` protected methods to `Module_Base`, replacing 6 copies of `maybe_auto_post_invoice()` and ~8 copies of `ensure_*_synced()` across modules. Used by LearnDash, LifterLMS, WC Subscriptions, Booking_Module_Base, and Events_Calendar_Module
+- **Synthetic ID helpers** — Added `Module_Base::encode_synthetic_id()` / `decode_synthetic_id()` static methods with `OverflowException` guard, replacing raw arithmetic (`user_id * 1_000_000 + course_id`) in LearnDash and LifterLMS modules
+- **Setting key alignment** — Unified `auto_post_invoice` → `auto_post_invoices` in LearnDash and LifterLMS modules for consistency with all other modules
+- **Dual_Accounting_Model inlining** — Merged `Dual_Accounting_Model` trait directly into `Dual_Accounting_Module_Base` (sole consumer), removing unnecessary indirection
 
 ## [2.6.5] - 2026-02-11
 

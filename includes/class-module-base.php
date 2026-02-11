@@ -572,6 +572,49 @@ abstract class Module_Base {
 		$this->push_to_odoo( $entity_type, 'create', $wp_id );
 	}
 
+	// ─── Synthetic ID helpers ──────────────────────────────
+
+	/**
+	 * Multiplier for synthetic ID encoding (user_id * MULTIPLIER + entity_id).
+	 *
+	 * @var int
+	 */
+	private const SYNTHETIC_ID_MULTIPLIER = 1_000_000;
+
+	/**
+	 * Encode two IDs into a single synthetic ID.
+	 *
+	 * Used by LMS modules (LearnDash, LifterLMS) to represent enrollment
+	 * as a single integer (user_id * 1M + course_id) for the entity map.
+	 *
+	 * @param int $primary_id   Primary ID (e.g. user_id).
+	 * @param int $secondary_id Secondary ID (e.g. course_id). Must be < 1,000,000.
+	 * @return int Synthetic ID.
+	 * @throws \OverflowException If secondary_id >= 1,000,000.
+	 */
+	public static function encode_synthetic_id( int $primary_id, int $secondary_id ): int {
+		if ( $secondary_id >= self::SYNTHETIC_ID_MULTIPLIER ) {
+			throw new \OverflowException(
+				sprintf( 'Secondary ID %d exceeds synthetic ID multiplier %d.', $secondary_id, self::SYNTHETIC_ID_MULTIPLIER )
+			);
+		}
+
+		return $primary_id * self::SYNTHETIC_ID_MULTIPLIER + $secondary_id;
+	}
+
+	/**
+	 * Decode a synthetic ID into its two components.
+	 *
+	 * @param int $synthetic_id Synthetic ID to decode.
+	 * @return array{int, int} [ primary_id, secondary_id ].
+	 */
+	public static function decode_synthetic_id( int $synthetic_id ): array {
+		return [
+			intdiv( $synthetic_id, self::SYNTHETIC_ID_MULTIPLIER ),
+			$synthetic_id % self::SYNTHETIC_ID_MULTIPLIER,
+		];
+	}
+
 	/**
 	 * Delete a WordPress post (force delete, bypass Trash).
 	 *

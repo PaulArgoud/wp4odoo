@@ -153,7 +153,7 @@ class LifterLMS_Module extends Module_Base {
 			'sync_memberships'  => true,
 			'sync_orders'       => true,
 			'sync_enrollments'  => true,
-			'auto_post_invoice' => true,
+			'auto_post_invoices' => true,
 		];
 	}
 
@@ -184,7 +184,7 @@ class LifterLMS_Module extends Module_Base {
 				'type'        => 'checkbox',
 				'description' => __( 'Push course enrollments to Odoo as sale orders.', 'wp4odoo' ),
 			],
-			'auto_post_invoice' => [
+			'auto_post_invoices' => [
 				'label'       => __( 'Auto-post invoices', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Automatically confirm invoices in Odoo for completed orders.', 'wp4odoo' ),
@@ -224,7 +224,7 @@ class LifterLMS_Module extends Module_Base {
 		$result = parent::push_to_odoo( $entity_type, $action, $wp_id, $odoo_id, $payload );
 
 		if ( $result->succeeded() && 'order' === $entity_type && 'create' === $action ) {
-			$this->auto_post_invoice( 'auto_post_invoice', 'order', $wp_id );
+			$this->auto_post_invoice( 'auto_post_invoices', 'order', $wp_id );
 		}
 
 		return $result;
@@ -309,7 +309,7 @@ class LifterLMS_Module extends Module_Base {
 		}
 
 		$settings         = $this->get_settings();
-		$auto_post        = ! empty( $settings['auto_post_invoice'] );
+		$auto_post        = ! empty( $settings['auto_post_invoices'] );
 		$data['order_id'] = $order_id;
 
 		return $this->handler->format_invoice( $data, $product_odoo_id, $partner_id, $auto_post );
@@ -324,8 +324,7 @@ class LifterLMS_Module extends Module_Base {
 	 * @return array<string, mixed>
 	 */
 	private function load_enrollment_data( int $synthetic_id ): array {
-		$user_id   = intdiv( $synthetic_id, 1_000_000 );
-		$course_id = $synthetic_id % 1_000_000;
+		[ $user_id, $course_id ] = self::decode_synthetic_id( $synthetic_id );
 
 		$data = $this->handler->load_enrollment( $user_id, $course_id );
 		if ( empty( $data ) ) {
@@ -384,8 +383,7 @@ class LifterLMS_Module extends Module_Base {
 				$product_type = 'membership';
 			}
 		} elseif ( 'enrollment' === $entity_type ) {
-			// Synthetic ID: user_id * 1M + course_id.
-			$product_id = $wp_id % 1_000_000;
+			[ , $product_id ] = self::decode_synthetic_id( $wp_id );
 		}
 
 		$this->ensure_entity_synced( $product_type, $product_id );

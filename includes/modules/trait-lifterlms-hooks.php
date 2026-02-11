@@ -130,7 +130,7 @@ trait LifterLMS_Hooks {
 			return;
 		}
 
-		$synthetic_id = $user_id * 1_000_000 + $course_id;
+		$synthetic_id = self::encode_synthetic_id( $user_id, $course_id );
 
 		Queue_Manager::push( 'lifterlms', 'enrollment', 'create', $synthetic_id );
 	}
@@ -152,7 +152,7 @@ trait LifterLMS_Hooks {
 			return;
 		}
 
-		$synthetic_id = $user_id * 1_000_000 + $course_id;
+		$synthetic_id = self::encode_synthetic_id( $user_id, $course_id );
 		$odoo_id      = $this->get_mapping( 'enrollment', $synthetic_id ) ?? 0;
 
 		if ( ! $odoo_id ) {

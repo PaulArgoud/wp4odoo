@@ -126,9 +126,8 @@ WordPress For Odoo/
 │   │   ├── class-memberpress-module.php      # MemberPress: extends Membership_Module_Base (uses MemberPress_Hooks trait)
 │   │   │
 │   │   ├── # ─── Shared Accounting (GiveWP + Charitable + SimplePay) ─
-│   │   ├── trait-dual-accounting-model.php   # Shared: OCA donation detection, auto-validate, parent sync
 │   │   ├── class-odoo-accounting-formatter.php # Shared: static formatting for donation.donation / account.move
-│   │   ├── class-dual-accounting-module-base.php # Shared: abstract base class for donation/payment modules
+│   │   ├── class-dual-accounting-module-base.php # Shared: abstract base class for donation/payment modules (OCA detection, auto-validate, parent sync)
 │   │   │
 │   │   ├── # ─── GiveWP ───────────────────────────────────────
 │   │   ├── trait-givewp-hooks.php            # GiveWP: hook callbacks (form save, donation status)
@@ -386,7 +385,7 @@ Module_Base (abstract)
 │   ├── MemberPress_Module      → product.product, account.move, membership.m_line   [WP → Odoo]
 │   ├── PMPro_Module            → product.product, account.move, membership.m_line   [WP → Odoo]
 │   └── RCP_Module              → product.product, account.move, membership.m_line   [WP → Odoo]
-├── Dual_Accounting_Module_Base (abstract, uses Dual_Accounting_Model trait)
+├── Dual_Accounting_Module_Base (abstract)
 │   ├── GiveWP_Module           → product.product, donation.donation / account.move  [WP → Odoo]
 │   ├── Charitable_Module       → product.product, donation.donation / account.move  [WP → Odoo]
 │   └── SimplePay_Module        → product.product, donation.donation / account.move  [WP → Odoo]
@@ -413,7 +412,7 @@ Module_Base (abstract)
 - Entity mapping CRUD: `get_mapping()`, `save_mapping()`, `get_wp_mapping()`, `remove_mapping()` (delegates to `Entity_Map_Repository`)
 - Data transformation: `map_to_odoo()`, `map_from_odoo()`, `generate_sync_hash()`
 - Settings: `get_settings()`, `get_settings_fields()`, `get_default_settings()`, `get_dependency_status()` (external dependency check for admin UI) — delegates to injected `Settings_Repository`
-- Helpers: `is_importing()` (anti-loop guard, resettable static flag), `mark_importing()`, `clear_importing()` (try/finally in pull), `resolve_many2one_field()` (Many2one → scalar), `delete_wp_post()` (safe post deletion), `log_unsupported_entity()` (centralized warning), `partner_service()` (lazy `Partner_Service` factory), `check_dependency()` (one-liner dependency status), `client()`, `auto_post_invoice()` (setting check + mapping lookup + `action_post`), `ensure_entity_synced()` (mapping check + auto-push if missing)
+- Helpers: `is_importing()` (anti-loop guard, resettable static flag), `mark_importing()`, `clear_importing()` (try/finally in pull), `resolve_many2one_field()` (Many2one → scalar), `delete_wp_post()` (safe post deletion), `log_unsupported_entity()` (centralized warning), `partner_service()` (lazy `Partner_Service` factory), `check_dependency()` (one-liner dependency status), `client()`, `auto_post_invoice()` (setting check + mapping lookup + `action_post`), `ensure_entity_synced()` (mapping check + auto-push if missing), `encode_synthetic_id()` / `decode_synthetic_id()` (static, with overflow guard — used by LMS modules for enrollment IDs)
 - Subclass hooks: `boot()`, `load_wp_data()`, `save_wp_data()`, `delete_wp_data()`
 
 **Module lifecycle:**
@@ -558,14 +557,12 @@ The codebase uses a tiered error-handling strategy. Each tier is appropriate for
 
 Three donation/payment modules (GiveWP, Charitable, SimplePay) share a common dual-model accounting pattern extracted into three shared components:
 
-**`Dual_Accounting_Model` trait** (`trait-dual-accounting-model.php`):
-- `has_donation_model()` — probes Odoo `ir.model` for OCA `donation.donation`, caches in transient (1h TTL) + in-memory
-- `resolve_accounting_model(string $entity_key)` — sets `$this->odoo_models[$key]` to `donation.donation` or `account.move` based on detection
-- `ensure_parent_synced(int $wp_id, string $meta_key, string $parent_entity_type)` — auto-pushes parent entity (form/campaign) before child (donation/payment) if not yet mapped
-- `auto_validate(string $entity_key, int $wp_id, string $setting_key, ?string $required_status)` — validates entity in Odoo: OCA `validate` or core `action_post`
-
 **`Dual_Accounting_Module_Base`** (`class-dual-accounting-module-base.php`):
-- Abstract base class extending `Module_Base`, uses `Dual_Accounting_Model` trait
+- Abstract base class extending `Module_Base`
+- OCA donation detection: `has_donation_model()` probes `ir.model` for `donation.donation` (cached 1h transient + in-memory)
+- `resolve_accounting_model()` — sets `$this->odoo_models[$key]` dynamically
+- `ensure_parent_synced()` — auto-pushes parent entity before child if not yet mapped
+- `auto_validate()` — validates entity in Odoo: OCA `validate` or core `action_post`
 - Shared `push_to_odoo()`: resolves accounting model, ensures parent synced, delegates to parent, then auto-validates
 - Shared `map_to_odoo()`: child entities bypass field mapping (handler pre-formats for target model)
 - Shared `load_wp_data()` / `load_child_data()`: CPT validation, email→partner resolution, parent→Odoo product resolution
@@ -848,7 +845,7 @@ All user inputs are sanitized with:
 **Key features:**
 - Push-only (WP → Odoo) — full recurring donation support
 - Requires GiveWP; `boot()` guards with `defined('GIVE_VERSION')`
-- **Dual Odoo model** via `Dual_Accounting_Module_Base` (inherits `Dual_Accounting_Model` trait): probes `ir.model` for OCA `donation.donation` (cached 1h); falls back to `account.move`
+- **Dual Odoo model** via `Dual_Accounting_Module_Base`: probes `ir.model` for OCA `donation.donation` (cached 1h); falls back to `account.move`
 - Auto-validation via base class: OCA `validate` or core `action_post`
 - Form auto-sync via `ensure_parent_synced()` from base class
 - Guest donor support via `Partner_Service::get_or_create($email, $data, 0)`
@@ -1003,11 +1000,11 @@ All user inputs are sanitized with:
 - Independent module (no exclusive group) — LMS coexists with e-commerce modules
 - Courses (`sfwd-courses` CPT) and groups (`groups` CPT) synced as service products
 - Transactions → invoices with `invoice_line_ids` One2many tuples, optional auto-posting
-- Enrollments → sale orders via synthetic ID encoding (`user_id * 1_000_000 + course_id`)
+- Enrollments → sale orders via synthetic ID encoding (`Module_Base::encode_synthetic_id()` / `decode_synthetic_id()`)
 - Product auto-sync: `ensure_product_synced()` pushes course before dependent transaction/enrollment
 - Uses `Partner_Service` for user → Odoo partner resolution
 
-**Settings:** `sync_courses`, `sync_groups`, `sync_transactions`, `sync_enrollments`, `auto_post_invoice`
+**Settings:** `sync_courses`, `sync_groups`, `sync_transactions`, `sync_enrollments`, `auto_post_invoices`
 
 ### LifterLMS — COMPLETE
 
@@ -1021,13 +1018,13 @@ All user inputs are sanitized with:
 - Independent module (no exclusive group) — LMS coexists with e-commerce modules
 - Courses (`llms_course` CPT) and memberships (`llms_membership` CPT) synced as service products
 - Orders → invoices with `invoice_line_ids` One2many tuples, optional auto-posting
-- Enrollments → sale orders via synthetic ID encoding (`user_id * 1_000_000 + course_id`)
+- Enrollments → sale orders via synthetic ID encoding (`Module_Base::encode_synthetic_id()` / `decode_synthetic_id()`)
 - Product auto-sync: `ensure_product_synced()` pushes course/membership before dependent order/enrollment
 - Unenrollment tracking: deletes enrollment sale orders in Odoo when LifterLMS enrollment removed
 - Uses `Partner_Service` for user → Odoo partner resolution
 - Status mapping filterable via `wp4odoo_lifterlms_order_status_map` (8 statuses)
 
-**Settings:** `sync_courses`, `sync_memberships`, `sync_orders`, `sync_enrollments`, `auto_post_invoice`
+**Settings:** `sync_courses`, `sync_memberships`, `sync_orders`, `sync_enrollments`, `auto_post_invoices`
 
 ### WooCommerce Subscriptions — COMPLETE
 
