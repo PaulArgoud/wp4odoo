@@ -209,6 +209,44 @@ class EntityMapRepositoryTest extends TestCase {
 		$this->assertStringContainsString( '%d,%d', $prepare[0]['args'][0] );
 	}
 
+	// ─── get_module_entity_mappings() ────────────────────
+
+	public function test_get_module_entity_mappings_returns_indexed_map(): void {
+		$this->wpdb->get_results_return = [
+			(object) [ 'wp_id' => '1', 'odoo_id' => '100', 'sync_hash' => 'abc' ],
+			(object) [ 'wp_id' => '2', 'odoo_id' => '200', 'sync_hash' => 'def' ],
+		];
+
+		$result = $this->repo->get_module_entity_mappings( 'bookly', 'service' );
+
+		$this->assertSame( [
+			1 => [ 'odoo_id' => 100, 'sync_hash' => 'abc' ],
+			2 => [ 'odoo_id' => 200, 'sync_hash' => 'def' ],
+		], $result );
+	}
+
+	public function test_get_module_entity_mappings_returns_empty_when_no_matches(): void {
+		$this->wpdb->get_results_return = [];
+
+		$result = $this->repo->get_module_entity_mappings( 'bookly', 'service' );
+
+		$this->assertSame( [], $result );
+	}
+
+	public function test_get_module_entity_mappings_populates_cache(): void {
+		$this->wpdb->get_results_return = [
+			(object) [ 'wp_id' => '5', 'odoo_id' => '50', 'sync_hash' => 'xyz' ],
+		];
+
+		$this->repo->get_module_entity_mappings( 'bookly', 'service' );
+
+		// Cache should be populated — get_odoo_id should return without DB query.
+		$this->wpdb->get_var_return = null;
+		$result = $this->repo->get_odoo_id( 'bookly', 'service', 5 );
+
+		$this->assertSame( 50, $result );
+	}
+
 	// ─── Cache behavior ──────────────────────────────────
 
 	public function test_get_odoo_id_cache_hit_avoids_second_query(): void {

@@ -41,3 +41,4 @@ foreach ( $cpt_types as $cpt ) {
 
 // Clear scheduled cron events.
 wp_clear_scheduled_hook( 'wp4odoo_scheduled_sync' );
+wp_clear_scheduled_hook( 'wp4odoo_bookly_poll' );

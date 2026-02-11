@@ -151,6 +151,10 @@ require_once __DIR__ . '/stubs/amelia-classes.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-amelia-hooks.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-amelia-handler.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-amelia-module.php';
+require_once __DIR__ . '/stubs/bookly-classes.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-bookly-poller.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-bookly-handler.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-bookly-module.php';
 
 // Webhook handler.
 require_once WP4ODOO_PLUGIN_DIR . 'includes/class-webhook-handler.php';

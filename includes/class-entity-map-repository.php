@@ -270,6 +270,48 @@ class Entity_Map_Repository {
 	}
 
 	/**
+	 * Get all entity mappings for a module and entity type.
+	 *
+	 * Returns an associative array keyed by wp_id containing odoo_id and sync_hash.
+	 * Used by polling modules (Bookly) to efficiently diff against source data.
+	 *
+	 * @param string $module      Module identifier.
+	 * @param string $entity_type Entity type.
+	 * @return array<int, array{odoo_id: int, sync_hash: string}>
+	 */
+	public function get_module_entity_mappings( string $module, string $entity_type ): array {
+		global $wpdb;
+
+		$table = $wpdb->prefix . 'wp4odoo_entity_map';
+
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT wp_id, odoo_id, sync_hash FROM {$table} WHERE module = %s AND entity_type = %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				$module,
+				$entity_type
+			)
+		);
+
+		$map = [];
+		if ( $rows ) {
+			foreach ( $rows as $row ) {
+				$w_id = (int) $row->wp_id;
+				$o_id = (int) $row->odoo_id;
+
+				$map[ $w_id ] = [
+					'odoo_id'   => $o_id,
+					'sync_hash' => $row->sync_hash ?? '',
+				];
+
+				$this->cache[ "{$module}:{$entity_type}:wp:{$w_id}" ]   = $o_id;
+				$this->cache[ "{$module}:{$entity_type}:odoo:{$o_id}" ] = $w_id;
+			}
+		}
+
+		return $map;
+	}
+
+	/**
 	 * Flush the per-request lookup cache.
 	 *
 	 * Useful for testing or after bulk operations.

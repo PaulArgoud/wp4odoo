@@ -584,3 +584,23 @@ if ( ! function_exists( 'wp_remote_retrieve_response_code' ) ) {
 		return $response['response']['code'] ?? 200;
 	}
 }
+
+// ─── WP-Cron ────────────────────────────────────────────
+
+if ( ! function_exists( 'wp_next_scheduled' ) ) {
+	function wp_next_scheduled( $hook, $args = [] ) {
+		return false;
+	}
+}
+
+if ( ! function_exists( 'wp_schedule_event' ) ) {
+	function wp_schedule_event( $timestamp, $recurrence, $hook, $args = [], $wp_error = false ) {
+		return true;
+	}
+}
+
+if ( ! function_exists( 'wp_clear_scheduled_hook' ) ) {
+	function wp_clear_scheduled_hook( $hook, $args = [] ) {
+		return 0;
+	}
+}

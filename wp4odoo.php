@@ -139,6 +139,7 @@ final class WP4Odoo_Plugin {
 	 */
 	public function deactivate(): void {
 		wp_clear_scheduled_hook( 'wp4odoo_scheduled_sync' );
+		wp_clear_scheduled_hook( 'wp4odoo_bookly_poll' );
 		flush_rewrite_rules();
 	}
 

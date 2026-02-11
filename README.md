@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/PaulArgoud/wordpress-for-odoo/actions/workflows/ci.yml/badge.svg)](https://github.com/PaulArgoud/wordpress-for-odoo/actions/workflows/ci.yml)
 
-Modular WordPress plugin providing comprehensive, bidirectional integration between WordPress/WooCommerce and Odoo ERP (v14+). Covers CRM, Sales & Invoicing, WooCommerce, EDD, Memberships, MemberPress, GiveWP donations, WP Charitable donations, WP Simple Pay (Stripe), WP Recipe Maker, Amelia Booking, and form leads through a clean, extensible architecture. Ships in **3 languages** (English, French, Spanish) and is fully translation-ready.
+Modular WordPress plugin providing comprehensive, bidirectional integration between WordPress/WooCommerce and Odoo ERP (v14+). Covers CRM, Sales & Invoicing, WooCommerce, EDD, Memberships, MemberPress, GiveWP donations, WP Charitable donations, WP Simple Pay (Stripe), WP Recipe Maker, Amelia Booking, Bookly Booking, and form leads through a clean, extensible architecture. Ships in **3 languages** (English, French, Spanish) and is fully translation-ready.
 
 **Target users:** WordPress agencies and businesses running Odoo as their ERP who need seamless data flow between their website and back-office.
 
@@ -21,6 +21,7 @@ Modular WordPress plugin providing comprehensive, bidirectional integration betw
 - **WP Simple Pay Module** — Push WP Simple Pay Stripe payments to Odoo accounting with **full recurring subscription support**. Same dual Odoo model as GiveWP (OCA `donation.donation` / `account.move`). Forms synced as products, Stripe payments captured via webhook with hidden tracking CPT, deduplication by PaymentIntent ID, auto-validation, guest payer support
 - **WP Recipe Maker Module** — Push WP Recipe Maker recipes to Odoo as service products (`product.product`), with structured descriptions including summary, preparation/cooking times, and servings
 - **Amelia Module** — Push Amelia Booking services to Odoo as service products (`product.product`) and appointments as calendar events (`calendar.event`), with automatic customer-to-partner resolution, event naming "Service — Customer", and service auto-sync before appointment push
+- **Bookly Module** — Push Bookly Booking services and appointments to Odoo via **WP-Cron polling** (Bookly has no WordPress hooks). Services synced as `product.product`, customer appointments as `calendar.event`, with SHA-256 hash-based change detection, automatic customer-to-partner resolution, and service auto-sync before booking push
 - **Forms Module** — Automatic lead creation in Odoo from Gravity Forms and WPForms submissions, with field auto-detection (name, email, phone, company, message), multilingual label matching, and filterable via `wp4odoo_form_lead_data`
 - **Async Queue** — No API calls during user requests; all sync jobs go through a persistent database queue with exponential backoff, deduplication, and configurable batch size
 - **Dual Transport** — JSON-RPC 2.0 (default for Odoo 17+) and XML-RPC (legacy), swappable via settings, shared retry logic via `Retryable_Http` trait (3 attempts, exponential backoff + jitter)
@@ -30,8 +31,8 @@ Modular WordPress plugin providing comprehensive, bidirectional integration betw
 - **Onboarding** — Post-activation redirect, setup notice, 3-step checklist with progress bar, inline Odoo documentation (API keys, webhooks)
 - **WP-CLI** — Full command suite: `wp wp4odoo status|test|sync|queue|module` for headless management
 - **Extensible** — Register custom modules via `wp4odoo_register_modules` action hook; filter data with `wp4odoo_map_to_odoo_*` / `wp4odoo_map_from_odoo_*`
-- **Multilingual (3 languages)** — Fully internationalized with WordPress standard Gettext i18n. Ships with English (source), French, and Spanish translations (325 strings). Translation-ready for additional languages via `.po`/`.mo` files
-- **Code Quality** — WordPress Coding Standards (PHPCS), PHPStan level 5 static analysis, 991 unit tests + 26 integration tests, CI/CD with GitHub Actions
+- **Multilingual (3 languages)** — Fully internationalized with WordPress standard Gettext i18n. Ships with English (source), French, and Spanish translations (337 strings). Translation-ready for additional languages via `.po`/`.mo` files
+- **Code Quality** — WordPress Coding Standards (PHPCS), PHPStan level 5 static analysis, 1039 unit tests + 26 integration tests, CI/CD with GitHub Actions
 
 ## Requirements
 
@@ -50,6 +51,7 @@ Modular WordPress plugin providing comprehensive, bidirectional integration betw
 - WP Simple Pay 4.0+
 - WP Recipe Maker 8.0+
 - Amelia Booking 1.0+
+- Bookly 20.0+
 - Gravity Forms 2.5+ or WPForms 1.7+
 
 ## Compatibility
@@ -100,9 +102,10 @@ Each Odoo domain is encapsulated in an independent module extending `Module_Base
 | **WP Simple Pay**          |   ➡️   | Contacts, Invoicing (+ OCA Donation)  |  ⚠️  | Stripe payment sync, webhook capture, dual-model, auto-validate, recurring     |
 | **WP Recipe Maker**        |   ➡️   | Products                              |  ❌  | Recipe sync as service products, structured descriptions, push-only            |
 | **Amelia Booking**         |   ➡️   | Contacts, Calendar                    |  ⚠️  | Service/appointment sync, calendar events, customer-to-partner resolution      |
+| **Bookly Booking**         |   ➡️   | Contacts, Calendar                    |  ⚠️  | Service/booking sync via WP-Cron polling, hash-based change detection          |
 | **Forms (GF & WPF)**       |   ➡️   | Contacts, CRM                         |  ⚠️  | GF + WPForms lead creation, field auto-detection, multilingual label matching  |
 
-> ⁴ **[One App Free](https://www.odoo.com/pricing)**: with CRM as your free app, CRM and Forms modules work. With Invoicing as your free app, GiveWP, WP Charitable, and WP Simple Pay work. With Calendar as your free app, Amelia works (partial — no Contacts). Sales, WooCommerce, Memberships, and WP Recipe Maker require 2–4 apps.
+> ⁴ **[One App Free](https://www.odoo.com/pricing)**: with CRM as your free app, CRM and Forms modules work. With Invoicing as your free app, GiveWP, WP Charitable, and WP Simple Pay work. With Calendar as your free app, Amelia and Bookly work (partial — no Contacts). Sales, WooCommerce, Memberships, and WP Recipe Maker require 2–4 apps.
 
 Third-party modules can be registered:
 

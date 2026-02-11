@@ -113,6 +113,9 @@ class Module_Registry {
 		if ( defined( 'AMELIA_VERSION' ) ) {
 			$this->register( 'amelia', new Modules\Amelia_Module( $client_provider, $entity_map, $settings ) );
 		}
+		if ( class_exists( 'Bookly\Lib\Plugin' ) ) {
+			$this->register( 'bookly', new Modules\Bookly_Module( $client_provider, $entity_map, $settings ) );
+		}
 
 		// Allow third-party modules (closures and shared entity map available as arguments).
 		do_action( 'wp4odoo_register_modules', $this->plugin, $client_provider, $entity_map );

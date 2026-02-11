@@ -147,6 +147,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AmeliaHandlerTest` — 15 tests: load_service, load_appointment, get_customer_data, get_service_id_for_appointment, table name verification
 - Amelia stubs: `AMELIA_VERSION` constant
 
+#### Bookly Module — Bookings → Odoo Calendar + Products (Polling)
+- New module: `Bookly_Module` (`includes/modules/class-bookly-module.php`) — push-only sync from Bookly to Odoo: services as `product.product` (type service) and customer_appointments as `calendar.event`
+- `Bookly_Handler` (`includes/modules/class-bookly-handler.php`) — data access via `$wpdb` queries on Bookly's custom tables (`bookly_services`, `bookly_appointments`, `bookly_customer_appointments`, `bookly_customers`), includes batch queries for polling
+- `Bookly_Poller` trait (`includes/modules/trait-bookly-poller.php`) — WP-Cron-based polling every 5 minutes (`wp4odoo_bookly_poll`), replaces hooks since Bookly has NO WordPress hooks for booking lifecycle events. Uses SHA-256 hash comparison against `entity_map` for change detection
+- Entity types: `service` → `product.product`, `booking` → `calendar.event`
+- `Entity_Map_Repository::get_module_entity_mappings()` — new batch method returning `[wp_id => {odoo_id, sync_hash}]` for efficient polling without N+1 queries
+- Booking data enrichment: service name + customer resolution via `Partner_Service` → Odoo `partner_ids` M2M command `[[4, id, 0]]`
+- Event naming: composed as "Service — Customer" (e.g., "Haircut — Jane Doe")
+- Service auto-sync: `ensure_service_synced()` pushes the service to Odoo before any dependent booking sync
+- Status mapping: approved/done → sync, pending/waitlisted → skip, cancelled/rejected/no-show → delete if previously synced
+- Settings: `sync_services` and `sync_bookings` checkboxes (both default: enabled)
+- Dependency detection: `class_exists('Bookly\Lib\Plugin')` — module available only when Bookly is active
+- Cron cleanup on deactivation (`wp4odoo.php`) and uninstall (`uninstall.php`)
+- No mutual exclusivity with any other module
+- `BooklyModuleTest` — 24 tests: identity, Odoo models, settings, field mappings (service + booking), map_to_odoo, dependency status, boot guard, poll
+- `BooklyHandlerTest` — 22 tests: load_service, load_booking, get_customer_data, get_service_id_for_booking, get_all_services, get_active_bookings, table name verification
+- Bookly stubs: `Bookly\Lib\Plugin` namespaced class
+
 #### WP Recipe Maker Module — Recipes → Odoo Products
 - New module: `WPRM_Module` (`includes/modules/class-wprm-module.php`) — push-only sync from WP Recipe Maker recipes to Odoo as service products (`product.product`)
 - `WPRM_Handler` (`includes/modules/class-wprm-handler.php`) — loads recipe data from `wprm_recipe` CPT and meta fields (`wprm_summary`, `wprm_prep_time`, `wprm_cook_time`, `wprm_total_time`, `wprm_servings`, `wprm_servings_unit`, `wprm_cost`), builds structured description with times and servings info
@@ -228,7 +246,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Plugin version bumped from 1.9.8 to 2.0.0
 - PHPUnit: 952 unit tests, 1538 assertions — all green (was 915/1473)
 - PHPStan: 0 errors on 76 files (was 75 — added `class-settings-repository.php`)
-- Translations: 321 translated strings (FR), 0 fuzzy, 0 untranslated
+- Translations: 337 translated strings (FR + ES), 0 fuzzy, 0 untranslated
 - `Dependency_Loader` — added 24 `require_once` (2 forms + 1 exchange rate + 4 EDD + 3 MemberPress + 3 GiveWP + 3 Charitable + 3 SimplePay + 3 WPRM + 2 shared accounting module files)
 - `Module_Registry` — registers `Forms_Module` when Gravity Forms or WPForms is active; extended mutual exclusivity from 2-way (WC/Sales) to 3-way (WC/EDD/Sales); registers `MemberPress_Module` when MemberPress is active (mutually exclusive with WC Memberships); registers `GiveWP_Module` when GiveWP is active; registers `Charitable_Module` when WP Charitable is active; registers `SimplePay_Module` when WP Simple Pay is active; registers `WPRM_Module` when WP Recipe Maker is active (no mutual exclusivity)
 - `tests/bootstrap.php` — added forms stubs and 2 new source file requires; added EDD stubs, global store, and 4 EDD source requires; added MemberPress stubs and 3 source requires; added GiveWP stubs and 3 source requires; added Charitable stubs and 3 source requires; added SimplePay stubs and 3 source requires; added WPRM stubs and 3 source requires

@@ -340,5 +340,8 @@ if ( ! defined( 'AMELIA_VERSION' ) ) {
 	define( 'AMELIA_VERSION', '1.2.37' );
 }
 
+// Bookly namespace stub loaded from separate file (PHP namespace rules).
+require_once __DIR__ . '/phpstan-bookly-stubs.php';
+
 // WP_CLI\Utils namespace stub loaded from separate file (PHP namespace rules).
 require_once __DIR__ . '/phpstan-wp-cli-stubs.php';

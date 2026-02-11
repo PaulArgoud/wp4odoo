@@ -2,7 +2,7 @@
 
 ## Overview
 
-Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 12 modules across 8 domains: CRM, Sales & Invoicing, WooCommerce, Easy Digital Downloads, Memberships (WC Memberships + MemberPress), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (Gravity Forms + WPForms), WP Recipe Maker, and Amelia Booking.
+Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 13 modules across 8 domains: CRM, Sales & Invoicing, WooCommerce, Easy Digital Downloads, Memberships (WC Memberships + MemberPress), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (Gravity Forms + WPForms), WP Recipe Maker, Amelia Booking, and Bookly.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -23,7 +23,11 @@ Modular WordPress plugin providing bidirectional synchronization between WordPre
 │  │  Module   │ │  Module   │ │   Module   │ │  Module   │  Forms,     │
 │  └────┬──────┘ └────┬──────┘ └─────┬──────┘ └─────┬─────┘  Content & │
 │       │             │              │              │        Booking    │
-│       └─────────────┼──────────────┴──────────────┘        Modules   │
+│       │             │              │         ┌────┴──────┐  Modules   │
+│       │             │              │         │  Bookly   │             │
+│       │             │              │         │  Module   │             │
+│       │             │              │         └────┬──────┘             │
+│       └─────────────┼──────────────┴──────────────┘                   │
 │                     ▼                                                │
 │  ┌─────────────────────────────────────────────────────────────────┐ │
 │  │  Shared Infrastructure                                          │ │
@@ -143,7 +147,10 @@ WordPress For Odoo/
 │   │   ├── # ─── Amelia Booking ───────────────────────────────
 │   │   ├── trait-amelia-hooks.php            # Amelia: hook callbacks (booking saved/canceled/rescheduled, service saved)
 │   │   ├── class-amelia-handler.php          # Amelia: $wpdb queries on amelia_* tables (no CPT)
-│   │   └── class-amelia-module.php           # Amelia: push sync coordinator (uses Amelia_Hooks trait)
+│   │   ├── class-amelia-module.php           # Amelia: push sync coordinator (uses Amelia_Hooks trait)
+│   │   ├── trait-bookly-poller.php           # Bookly: WP-Cron polling (no hooks available)
+│   │   ├── class-bookly-handler.php          # Bookly: $wpdb queries on bookly_* tables (batch + individual)
+│   │   └── class-bookly-module.php           # Bookly: push sync coordinator (uses Bookly_Poller trait)
 │   │
 │   ├── admin/
 │   │   ├── class-admin.php            # Admin menu, assets, activation redirect, setup notice
@@ -196,7 +203,7 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # 991 unit tests (1599 assertions) + 26 integration tests (wp-env)
+├── tests/                             # 1039 unit tests (1685 assertions) + 26 integration tests (wp-env)
 │   ├── bootstrap.php                 #   Unit test bootstrap: constants, stub loading, plugin class requires
 │   ├── bootstrap-integration.php     #   Integration test bootstrap: loads WP test framework (wp-env)
 │   ├── stubs/
@@ -213,7 +220,8 @@ WordPress For Odoo/
 │   │   ├── charitable-classes.php    #   Charitable class with instance()
 │   │   ├── simplepay-classes.php     #   SIMPLE_PAY_VERSION constant
 │   │   ├── wprm-classes.php          #   WPRM_VERSION constant
-│   │   └── amelia-classes.php        #   AMELIA_VERSION constant
+│   │   ├── amelia-classes.php        #   AMELIA_VERSION constant
+│   │   └── bookly-classes.php        #   Bookly\Lib\Plugin class
 │   ├── Integration/                       #   wp-env integration tests (real WordPress + MySQL)
 │   │   ├── WP4Odoo_TestCase.php          #   Base test case for integration tests
 │   │   ├── DatabaseMigrationTest.php     #   7 tests for table creation, options seeding
@@ -270,7 +278,9 @@ WordPress For Odoo/
 │       ├── WPRMModuleTest.php           #   15 tests for WPRM_Module
 │       ├── WPRMHandlerTest.php          #   12 tests for WPRM_Handler
 │       ├── AmeliaModuleTest.php         #   24 tests for Amelia_Module
-│       └── AmeliaHandlerTest.php        #   15 tests for Amelia_Handler
+│       ├── AmeliaHandlerTest.php        #   15 tests for Amelia_Handler
+│       ├── BooklyModuleTest.php         #   24 tests for Bookly_Module
+│       └── BooklyHandlerTest.php        #   22 tests for Bookly_Handler
 │
 ├── uninstall.php                      # Cleanup on plugin uninstall
 │
@@ -321,6 +331,7 @@ Module_Base (abstract)
 ├── WPRM_Module            → product.product                                    [WP → Odoo]
 ├── Forms_Module           → crm.lead                                           [WP → Odoo]
 ├── Amelia_Module          → product.product, calendar.event                    [WP → Odoo]
+├── Bookly_Module          → product.product, calendar.event                    [WP → Odoo]
 └── [Custom_Module]        → extensible via action hook
 ```
 
