@@ -2,45 +2,55 @@
 
 ## Overview
 
-Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers four domains: CRM, Sales & Invoicing, WooCommerce, and Memberships.
+Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 11 modules across 7 domains: CRM, Sales & Invoicing, WooCommerce, Easy Digital Downloads, Memberships (WC Memberships + MemberPress), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (Gravity Forms + WPForms), and WP Recipe Maker.
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        WordPress                                │
-│                                                                 │
-│  ┌──────────┐  ┌──────────┐  ┌───────────────┐                │
-│  │   CRM    │  │  Sales   │  │  WooCommerce  │   Modules      │
-│  │  Module  │  │  Module  │  │    Module      │                │
-│  └────┬─────┘  └────┬─────┘  └──────┬────────┘                │
-│       │              │               │                          │
-│       └──────────────┼───────────────┘                          │
-│                      ▼                                          │
-│              ┌──────────────┐     ┌────────────────┐           │
-│              │  Sync Engine │◄────│ Queue Manager  │           │
-│              │  (cron job)  │     └────────────────┘           │
-│              └──────┬───────┘                                   │
-│                     │                                           │
-│              ┌──────▼───────┐     ┌────────────────┐           │
-│              │ Field Mapper │     │ Webhook Handler│◄── REST   │
-│              └──────┬───────┘     └────────┬───────┘    API    │
-│                     │                      │                    │
-│              ┌──────▼──────────────────────▼────┐              │
-│              │          Odoo Client             │              │
-│              │  ┌──────────┐  ┌──────────────┐  │              │
-│              │  │ JSON-RPC │  │   XML-RPC    │  │              │
-│              │  │Transport │  │  Transport   │  │              │
-│              │  └────┬─────┘  └──────┬───────┘  │              │
-│              │       └──── Transport ────┘       │              │
-│              │            interface              │              │
-│              └──────────────┬───────────────────┘              │
-│                             │                                   │
-└─────────────────────────────┼───────────────────────────────────┘
-                              │ HTTP
-                              ▼
-                    ┌──────────────────┐
-                    │    Odoo ERP      │
-                    │     (v14+)       │
-                    └──────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│                              WordPress                               │
+│                                                                      │
+│  ┌──────────┐ ┌───────────┐ ┌─────────────┐ ┌─────────┐              │
+│  │   CRM    │ │   Sales   │ │ WooCommerce │ │   EDD   │  Commerce    │
+│  │  Module  │ │   Module  │ │   Module    │ │  Module │  Modules     │
+│  └────┬─────┘ └─────┬─────┘ └──────┬──────┘ └────┬────┘              │
+│       │             │              │              │                  │
+│  ┌────┴──────┐ ┌────┴──────┐ ┌─────┴──────┐ ┌───┴──────┐             │
+│  │Memberships│ │MemberPress│ │   GiveWP   │ │Charitable│  Membership │
+│  │  Module   │ │  Module   │ │   Module   │ │  Module  │  & Donation │
+│  └────┬──────┘ └────┬──────┘ └─────┬──────┘ └────┬─────┘  Modules    │
+│       │             │              │             │                   │
+│  ┌────┴──────┐ ┌────┴──────┐ ┌─────┴──────┐                          │
+│  │ SimplePay │ │   Forms   │ │    WPRM    │  Payment, Forms          │
+│  │  Module   │ │  Module   │ │   Module   │  & Content Modules       │
+│  └────┬──────┘ └────┬──────┘ └─────┬──────┘                          │
+│       │             │              │                                 │
+│       └─────────────┼──────────────┘                                 │
+│                     ▼                                                │
+│  ┌─────────────────────────────────────────────────────────────────┐ │
+│  │  Shared Infrastructure                                          │ │
+│  │  ┌──────────────┐  ┌────────────────┐  ┌─────────────────┐      │ │
+│  │  │  Sync Engine │  │ Queue Manager  │  │ Partner Service │      │ │
+│  │  │  (cron job)  │  └────────────────┘  └─────────────────┘      │ │
+│  │  └──────┬───────┘                                               │ │
+│  │         │  ┌──────────────┐  ┌────────────────┐                 │ │
+│  │         │  │ Field Mapper │  │Webhook Handler │◄── REST API     │ │
+│  │         │  └──────┬───────┘  └───────┬────────┘                 │ │
+│  │         │         │                  │                          │ │
+│  │  ┌──────▼─────────▼──────────────────▼──────┐                   │ │
+│  │  │             Odoo Client                  │                   │ │
+│  │  │  ┌───────────┐    ┌──────────────┐       │                   │ │
+│  │  │  │ JSON-RPC  │    │   XML-RPC    │       │                   │ │
+│  │  │  │ Transport │    │  Transport   │       │                   │ │
+│  │  │  └┬───────┘       └───────┬──────┘       │                   │ │
+│  │  │   └─ Transport interface ─┘              │                   │ │
+│  │  └────────────────────┬─────────────────────┘                   │ │
+│  └───────────────────────┼─────────────────────────────────────────┘ │
+└──────────────────────────┼───────────────────────────────────────────┘
+                           │ HTTP
+                           ▼
+                 ┌──────────────────┐
+                 │    Odoo ERP      │
+                 │     (v14+)       │
+                 └──────────────────┘
 ```
 
 ## Directory Structure
@@ -64,26 +74,71 @@ WordPress For Odoo/
 │   │   └── class-odoo-auth.php        # Auth, API key encryption, connection testing
 │   │
 │   ├── modules/
-│   │   ├── trait-crm-user-hooks.php   # CRM: WP user hook callbacks (register, update, delete)
-│   │   ├── class-crm-module.php       # CRM: contact sync orchestration (uses CRM_User_Hooks trait)
-│   │   ├── class-contact-manager.php  # CRM: contact data load/save/sync-check
-│   │   ├── class-lead-manager.php     # CRM: lead CPT, shortcode, form, data load/save
-│   │   ├── class-contact-refiner.php  # CRM: name/country/state refinement filters
-│   │   ├── class-invoice-helper.php    # Shared: invoice CPT registration, load, save (used by Sales + WooCommerce)
-│   │   ├── class-sales-module.php     # Sales: orders, invoices (delegates invoice ops to Invoice_Helper)
-│   │   ├── class-portal-manager.php   # Sales: customer portal shortcode, AJAX, queries
-│   │   ├── class-currency-guard.php      # WooCommerce: static currency mismatch detection utility
-│   │   ├── class-variant-handler.php    # WooCommerce: variant import (product.product → WC variations)
-│   │   ├── class-image-handler.php      # WooCommerce: product image import (Odoo image_1920 → WC thumbnail)
-│   │   ├── class-product-handler.php    # WooCommerce: product CRUD with currency guard
-│   │   ├── class-order-handler.php      # WooCommerce: order CRUD + Odoo status mapping
-│   │   ├── trait-woocommerce-hooks.php  # WooCommerce: WC hook callbacks (product save/delete, order)
-│   │   ├── class-woocommerce-module.php  # WooCommerce: sync coordinator (uses WooCommerce_Hooks trait)
-│   │   ├── trait-membership-hooks.php  # Memberships: WC Memberships hook callbacks (created, status, saved)
-│   │   ├── class-membership-handler.php  # Memberships: plan/membership data load, status mapping
-│   │   ├── class-memberships-module.php  # Memberships: push sync coordinator (uses Membership_Hooks trait)
-│   │   ├── class-form-handler.php       # Forms: field extraction from GF/WPForms submissions (auto-detection)
-│   │   └── class-forms-module.php       # Forms: push sync coordinator (GF/WPForms → crm.lead)
+│   │   ├── # ─── CRM ──────────────────────────────────────────
+│   │   ├── trait-crm-user-hooks.php          # CRM: WP user hook callbacks (register, update, delete)
+│   │   ├── class-crm-module.php              # CRM: contact sync orchestration (uses CRM_User_Hooks trait)
+│   │   ├── class-contact-manager.php         # CRM: contact data load/save/sync-check
+│   │   ├── class-lead-manager.php            # CRM: lead CPT, shortcode, form, data load/save
+│   │   ├── class-contact-refiner.php         # CRM: name/country/state refinement filters
+│   │   │
+│   │   ├── # ─── Sales ─────────────────────────────────────────
+│   │   ├── class-invoice-helper.php          # Shared: invoice CPT registration, load, save (Sales + WC + EDD)
+│   │   ├── class-sales-module.php            # Sales: orders, invoices (delegates invoice ops to Invoice_Helper)
+│   │   ├── class-portal-manager.php          # Sales: customer portal shortcode, AJAX, queries
+│   │   │
+│   │   ├── # ─── WooCommerce ───────────────────────────────────
+│   │   ├── trait-woocommerce-hooks.php       # WooCommerce: WC hook callbacks (product save/delete, order)
+│   │   ├── class-woocommerce-module.php      # WooCommerce: sync coordinator (uses WooCommerce_Hooks trait)
+│   │   ├── class-product-handler.php         # WooCommerce: product CRUD with currency guard
+│   │   ├── class-order-handler.php           # WooCommerce: order CRUD + Odoo status mapping
+│   │   ├── class-variant-handler.php         # WooCommerce: variant import (product.product → WC variations)
+│   │   ├── class-image-handler.php           # WooCommerce: product image import (Odoo image_1920 → WC thumbnail)
+│   │   ├── class-currency-guard.php          # WooCommerce: static currency mismatch detection utility
+│   │   ├── class-exchange-rate-service.php   # WooCommerce: Odoo exchange rate fetching + caching + conversion
+│   │   │
+│   │   ├── # ─── EDD ───────────────────────────────────────────
+│   │   ├── trait-edd-hooks.php               # EDD: hook callbacks (download save/delete, order status)
+│   │   ├── class-edd-module.php              # EDD: bidirectional sync coordinator (uses EDD_Hooks trait)
+│   │   ├── class-edd-download-handler.php    # EDD: download load/save/delete
+│   │   ├── class-edd-order-handler.php       # EDD: order load/save, bidirectional status mapping
+│   │   │
+│   │   ├── # ─── Memberships ───────────────────────────────────
+│   │   ├── trait-membership-hooks.php        # Memberships: WC Memberships hook callbacks
+│   │   ├── class-membership-handler.php      # Memberships: plan/membership data load, status mapping
+│   │   ├── class-memberships-module.php      # Memberships: push sync coordinator (uses Membership_Hooks trait)
+│   │   │
+│   │   ├── # ─── MemberPress ──────────────────────────────────
+│   │   ├── trait-memberpress-hooks.php       # MemberPress: hook callbacks (plan save, txn store, sub status)
+│   │   ├── class-memberpress-handler.php     # MemberPress: plan/transaction/subscription data load, status mapping
+│   │   ├── class-memberpress-module.php      # MemberPress: push sync coordinator (uses MemberPress_Hooks trait)
+│   │   │
+│   │   ├── # ─── Shared Accounting (GiveWP + Charitable + SimplePay) ─
+│   │   ├── trait-dual-accounting-model.php   # Shared: OCA donation detection, auto-validate, parent sync, Partner_Service
+│   │   ├── class-odoo-accounting-formatter.php # Shared: static formatting for donation.donation / account.move
+│   │   │
+│   │   ├── # ─── GiveWP ───────────────────────────────────────
+│   │   ├── trait-givewp-hooks.php            # GiveWP: hook callbacks (form save, donation status)
+│   │   ├── class-givewp-handler.php          # GiveWP: form/donation data load, status mapping
+│   │   ├── class-givewp-module.php           # GiveWP: push sync coordinator (uses GiveWP_Hooks + Dual_Accounting_Model)
+│   │   │
+│   │   ├── # ─── WP Charitable ─────────────────────────────────
+│   │   ├── trait-charitable-hooks.php        # Charitable: hook callbacks (campaign save, donation status)
+│   │   ├── class-charitable-handler.php      # Charitable: campaign/donation data load, status mapping
+│   │   ├── class-charitable-module.php       # Charitable: push sync coordinator (uses Charitable_Hooks + Dual_Accounting_Model)
+│   │   │
+│   │   ├── # ─── WP Simple Pay ─────────────────────────────────
+│   │   ├── trait-simplepay-hooks.php         # SimplePay: hook callbacks (form save, payment/invoice webhooks)
+│   │   ├── class-simplepay-handler.php       # SimplePay: Stripe extraction, tracking CPT, data load
+│   │   ├── class-simplepay-module.php        # SimplePay: push sync coordinator (uses SimplePay_Hooks + Dual_Accounting_Model)
+│   │   │
+│   │   ├── # ─── WP Recipe Maker ───────────────────────────────
+│   │   ├── trait-wprm-hooks.php              # WPRM: hook callback (recipe save)
+│   │   ├── class-wprm-handler.php            # WPRM: recipe data load (meta + description builder)
+│   │   ├── class-wprm-module.php             # WPRM: push sync coordinator (uses WPRM_Hooks trait)
+│   │   │
+│   │   ├── # ─── Forms ─────────────────────────────────────────
+│   │   ├── class-form-handler.php            # Forms: field extraction from GF/WPForms submissions (auto-detection)
+│   │   └── class-forms-module.php            # Forms: push sync coordinator (GF/WPForms → crm.lead)
 │   │
 │   ├── admin/
 │   │   ├── class-admin.php            # Admin menu, assets, activation redirect, setup notice
@@ -94,7 +149,7 @@ WordPress For Odoo/
 │   │   ├── class-admin-ajax.php       # AJAX coordinator: hook registration, request verification (uses 3 traits)
 │   │   └── class-settings-page.php    # Settings API, 5-tab rendering, setup checklist, sanitize callbacks
 │   │
-│   ├── class-dependency-loader.php    # Loads all plugin class files (require_once)
+│   ├── class-dependency-loader.php    # Loads all plugin class files (69 require_once)
 │   ├── class-database-migration.php   # Table creation (dbDelta) and default options
 │   ├── class-module-registry.php      # Module registration, mutual exclusivity, lifecycle
 │   ├── class-module-base.php          # Abstract base class for modules
@@ -135,7 +190,7 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # 587 unit tests (1041 assertions) + 26 integration tests (wp-env)
+├── tests/                             # 879 unit tests (1436 assertions) + 26 integration tests (wp-env)
 │   ├── bootstrap.php                 #   Unit test bootstrap: constants, stub loading, plugin class requires
 │   ├── bootstrap-integration.php     #   Integration test bootstrap: loads WP test framework (wp-env)
 │   ├── stubs/
@@ -145,8 +200,15 @@ WordPress For Odoo/
 │   │   ├── wp-db-stub.php            #   WP_DB_Stub ($wpdb mock with call recording)
 │   │   ├── plugin-stub.php           #   WP4Odoo_Plugin test singleton
 │   │   ├── wp-cli-utils.php          #   WP_CLI\Utils\format_items stub
-│   │   └── form-classes.php          #   GFAPI, GF_Field, wpforms() stubs
+│   │   ├── form-classes.php          #   GFAPI, GF_Field, wpforms() stubs
+│   │   ├── edd-classes.php           #   Easy_Digital_Downloads, EDD_Download, EDD_Customer, EDD\Orders\Order
+│   │   ├── memberpress-classes.php   #   MeprProduct, MeprTransaction, MeprSubscription
+│   │   ├── givewp-classes.php        #   Give class, give() function, GIVE_VERSION
+│   │   ├── charitable-classes.php    #   Charitable class with instance()
+│   │   ├── simplepay-classes.php     #   SIMPLE_PAY_VERSION constant
+│   │   └── wprm-classes.php          #   WPRM_VERSION constant
 │   ├── Integration/                       #   wp-env integration tests (real WordPress + MySQL)
+│   │   ├── WP4Odoo_TestCase.php          #   Base test case for integration tests
 │   │   ├── DatabaseMigrationTest.php     #   7 tests for table creation, options seeding
 │   │   ├── EntityMapRepositoryTest.php   #   7 tests for entity map CRUD
 │   │   ├── SyncQueueRepositoryTest.php   #   10 tests for sync queue operations
@@ -184,7 +246,21 @@ WordPress For Odoo/
 │       ├── CPTHelperTest.php            #   11 tests for CPT_Helper
 │       ├── SalesModuleTest.php          #   23 tests for Sales_Module
 │       ├── FormHandlerTest.php         #   27 tests for Form_Handler
-│       └── FormsModuleTest.php         #   16 tests for Forms_Module
+│       ├── FormsModuleTest.php         #   16 tests for Forms_Module
+│       ├── ExchangeRateServiceTest.php  #   14 tests for Exchange_Rate_Service
+│       ├── EDDModuleTest.php            #   22 tests for EDD_Module
+│       ├── EDDDownloadHandlerTest.php   #   10 tests for EDD_Download_Handler
+│       ├── EDDOrderHandlerTest.php      #   16 tests for EDD_Order_Handler
+│       ├── MemberPressModuleTest.php    #   28 tests for MemberPress_Module
+│       ├── MemberPressHandlerTest.php   #   28 tests for MemberPress_Handler
+│       ├── GiveWPModuleTest.php         #   22 tests for GiveWP_Module
+│       ├── GiveWPHandlerTest.php        #   20 tests for GiveWP_Handler
+│       ├── CharitableModuleTest.php     #   22 tests for Charitable_Module
+│       ├── CharitableHandlerTest.php    #   23 tests for Charitable_Handler
+│       ├── SimplePayModuleTest.php      #   22 tests for SimplePay_Module
+│       ├── SimplePayHandlerTest.php     #   30 tests for SimplePay_Handler
+│       ├── WPRMModuleTest.php           #   15 tests for WPRM_Module
+│       └── WPRMHandlerTest.php          #   12 tests for WPRM_Handler
 │
 ├── uninstall.php                      # Cleanup on plugin uninstall
 │
@@ -223,13 +299,24 @@ Each Odoo domain is encapsulated in an independent module extending `Module_Base
 
 ```
 Module_Base (abstract)
-├── CRM_Module          → res.partner, crm.lead         [COMPLETE]
-├── Sales_Module        → product.template, sale.order, account.move  [COMPLETE]
-├── WooCommerce_Module  → + stock.quant, woocommerce hooks  [COMPLETE]
-├── Memberships_Module  → product.product, membership.membership_line  [COMPLETE]
-├── Forms_Module        → crm.lead  [COMPLETE]
-└── [Custom_Module]     → extensible via action hook
+├── CRM_Module             → res.partner, crm.lead                              [bidirectional]
+├── Sales_Module           → product.template, sale.order, account.move         [Odoo → WP]
+├── WooCommerce_Module     → + stock.quant, product.product (variants)          [bidirectional]
+├── EDD_Module             → product.template, sale.order, account.move         [bidirectional]
+├── Memberships_Module     → product.product, membership.membership_line        [WP → Odoo]
+├── MemberPress_Module     → product.product, account.move, membership.m_line   [WP → Odoo]
+├── GiveWP_Module          → product.product, donation.donation / account.move  [WP → Odoo]
+├── Charitable_Module      → product.product, donation.donation / account.move  [WP → Odoo]
+├── SimplePay_Module       → product.product, donation.donation / account.move  [WP → Odoo]
+├── WPRM_Module            → product.product                                    [WP → Odoo]
+├── Forms_Module           → crm.lead                                           [WP → Odoo]
+└── [Custom_Module]        → extensible via action hook
 ```
+
+**Mutual exclusivity rules:**
+- **Commerce**: WooCommerce, EDD, and Sales are mutually exclusive (all share `sale.order` + `product.template`). Priority: WC > EDD > Sales.
+- **Memberships**: WC Memberships and MemberPress are mutually exclusive (both target `membership.membership_line`).
+- All other modules are independent and can coexist freely.
 
 **Module_Base provides:**
 - Push/Pull orchestration: `push_to_odoo()`, `pull_from_odoo()`
@@ -274,9 +361,9 @@ WP Event               Sync Engine (cron)           Odoo
 
 | Column | Purpose |
 |--------|---------|
-| `module` | Source module (crm, sales, woocommerce) |
+| `module` | Source module (crm, sales, woocommerce, edd, ...) |
 | `direction` | `wp_to_odoo` or `odoo_to_wp` |
-| `entity_type` | Entity type (contact, lead, product, order...) |
+| `entity_type` | Entity type (contact, lead, product, order, donation, recipe...) |
 | `wp_id` / `odoo_id` | Identifiers on both sides |
 | `action` | `create`, `update`, `delete` |
 | `payload` | JSON-serialized data |
@@ -338,7 +425,7 @@ The `wp4odoo_entity_map` table maintains the correspondence between WordPress an
 ├──────────┼─────────────┼───────┼─────────┼────────────────┼──────────┼─────────────────────┤
 │ crm      │ contact     │ 42    │ 1337    │ res.partner    │ a3f8...  │ 2026-02-10 12:00:00 │
 │ woo      │ product     │ 15    │ 201     │ product.tmpl   │ b7e2...  │ 2026-02-10 12:05:00 │
-│ woo      │ order       │ 88    │ 5042    │ sale.order     │ c1d9...  │ 2026-02-10 12:10:00 │
+│ givewp   │ donation    │ 88    │ 5042    │ donation.don   │ c1d9...  │ 2026-02-10 12:10:00 │
 └──────────┴─────────────┴───────┴─────────┴────────────────┴──────────┴─────────────────────┘
 ```
 
@@ -374,6 +461,23 @@ The codebase uses a tiered error-handling strategy. Each tier is appropriate for
 - **API layer** (`Odoo_Client`): throw on RPC faults, return empty arrays for search with no results.
 - **Modules**: return `bool` from push/pull, `null` from ID lookups, `0` from failed saves.
 - **Infrastructure**: throw for configuration errors, use typed returns for data access.
+
+### 8. Shared Accounting Infrastructure
+
+Three donation/payment modules (GiveWP, Charitable, SimplePay) share a common dual-model accounting pattern extracted into two shared components:
+
+**`Dual_Accounting_Model` trait** (`trait-dual-accounting-model.php`):
+- `has_donation_model()` — probes Odoo `ir.model` for OCA `donation.donation`, caches in transient (1h TTL) + in-memory
+- `resolve_accounting_model(string $entity_key)` — sets `$this->odoo_models[$key]` to `donation.donation` or `account.move` based on detection
+- `ensure_parent_synced(int $wp_id, string $meta_key, string $parent_entity_type)` — auto-pushes parent entity (form/campaign) before child (donation/payment) if not yet mapped
+- `auto_validate(string $entity_key, int $wp_id, string $setting_key, ?string $required_status)` — validates entity in Odoo: OCA `validate` or core `action_post`
+- `partner_service()` — lazy `Partner_Service` factory
+
+**`Odoo_Accounting_Formatter`** (`class-odoo-accounting-formatter.php`):
+- `for_donation_model(partner_id, product_id, amount, date, ref)` — OCA `donation.donation` format with `line_ids`
+- `for_account_move(partner_id, product_id, amount, date, ref, line_name, fallback_name)` — core `account.move` format with `invoice_line_ids`
+
+Used by `GiveWP_Handler`, `Charitable_Handler`, and `SimplePay_Handler`.
 
 ## Database
 
@@ -487,7 +591,7 @@ All user inputs are sanitized with:
 |-----|----------|----------|
 | Connection | `tab-connection.php` | Credentials form, "Test connection" AJAX, webhook token display + copy |
 | Sync | `tab-sync.php` | Direction, conflict rule, batch size, interval, auto-sync; logging settings |
-| Modules | `tab-modules.php` | Card grid with AJAX toggle switches, inline settings panels, WooCommerce dependency check |
+| Modules | `tab-modules.php` | Card grid with AJAX toggle switches, inline settings panels, dependency check, sync direction badges |
 | Queue | `tab-queue.php` | 4 status cards, jobs table with server-side pagination, retry/cleanup/cancel |
 | Logs | `tab-logs.php` | Filter bar (level, module, dates), AJAX paginated log table, purge |
 
@@ -523,30 +627,11 @@ All user inputs are sanitized with:
 - `wp4odoo_lead` CPT for storing leads locally, nested under plugin admin menu
 - `[wp4odoo_lead_form]` shortcode with AJAX submission (`assets/js/lead-form.js`)
 
-**Field mappings:**
-
-Contact (WP user ↔ `res.partner`):
-```
-display_name → name, user_email → email, description → comment,
-first_name → x_wp_first_name, last_name → x_wp_last_name (composed into name by Contact_Refiner),
-billing_phone → phone,
-billing_company → company_name, billing_address_1 → street,
-billing_address_2 → street2, billing_city → city, billing_postcode → zip,
-billing_country → country_id (ISO→ID), billing_state → state_id (name→ID),
-user_url → website
-```
-
-Lead (form → `crm.lead`):
-```
-name → name, email → email_from, phone → phone,
-company → partner_name, description → description, source → x_wp_source
-```
-
 **Settings:** `sync_users_as_contacts`, `archive_on_delete`, `sync_role`, `create_users_on_pull`, `default_user_role`, `lead_form_enabled`
 
 ### Sales — COMPLETE
 
-**Files:** `class-sales-module.php` (order/invoice sync, delegates invoices to `Invoice_Helper`), `class-portal-manager.php` (portal shortcode, AJAX, queries), `class-invoice-helper.php` (shared invoice CPT: registration, load, save with currency resolution — used by Sales + WooCommerce)
+**Files:** `class-sales-module.php` (order/invoice sync, delegates invoices to `Invoice_Helper`), `class-portal-manager.php` (portal shortcode, AJAX, queries), `class-invoice-helper.php` (shared invoice CPT: registration, load, save with currency resolution — used by Sales + WooCommerce + EDD)
 
 **Odoo models:** `product.template`, `sale.order`, `account.move`
 
@@ -557,115 +642,162 @@ company → partner_name, description → description, source → x_wp_source
 
 **Customer portal:** `[wp4odoo_customer_portal]` shortcode renders a tabbed interface (Orders / Invoices) with pagination and currency display. Links WP users to Odoo partners via CRM entity_map, then queries `wp4odoo_order` / `wp4odoo_invoice` CPTs by `_wp4odoo_partner_id` meta.
 
-**Field mappings:**
-
-Order (Odoo `sale.order` → `wp4odoo_order` CPT):
-```
-name → post_title, amount_total → _order_total, date_order → _order_date,
-state → _order_state, partner_id → _wp4odoo_partner_id (Many2one → ID),
-currency_id → _order_currency (Many2one → code string)
-```
-
-Invoice (Odoo `account.move` → `wp4odoo_invoice` CPT):
-```
-name → post_title, amount_total → _invoice_total, invoice_date → _invoice_date,
-state → _invoice_state, payment_state → _payment_state, partner_id → _wp4odoo_partner_id,
-currency_id → _invoice_currency (Many2one → code string)
-```
-
 **Settings:** `import_products`, `portal_enabled`, `orders_per_page`
 
 ### WooCommerce — COMPLETE
 
-**Files:** `class-woocommerce-module.php` (sync coordinator, uses `WooCommerce_Hooks` trait), `trait-woocommerce-hooks.php` (WC hook callbacks), `class-product-handler.php` (product CRUD), `class-order-handler.php` (order CRUD + status mapping), `class-variant-handler.php` (variant import), `class-image-handler.php` (product image pull), `class-currency-guard.php` (currency mismatch detection), `class-invoice-helper.php` (shared with Sales)
+**Files:** `class-woocommerce-module.php` (sync coordinator, uses `WooCommerce_Hooks` trait), `trait-woocommerce-hooks.php` (WC hook callbacks), `class-product-handler.php` (product CRUD), `class-order-handler.php` (order CRUD + status mapping), `class-variant-handler.php` (variant import), `class-image-handler.php` (product image pull), `class-currency-guard.php` (currency mismatch detection), `class-exchange-rate-service.php` (Odoo exchange rates), `class-invoice-helper.php` (shared with Sales + EDD)
 
 **Odoo models:** `product.template`, `product.product`, `sale.order`, `stock.quant`, `account.move`
 
-| Direction | Source | Destination | Matching |
-|-----------|--------|-------------|----------|
-| WP → Odoo | `woocommerce_update_product` | `product.template` create/update | SKU |
-| WP → Odoo | `woocommerce_new_order` | `sale.order` create | — |
-| WP → Odoo | `woocommerce_order_status_changed` | `sale.order` update | Mapping |
-| Odoo → WP | Webhook `product.template` | WC product update | SKU |
-| Odoo → WP | Webhook `sale.order` | WC order status update | Mapping |
-| Odoo → WP | Webhook `stock.quant` | `wc_update_product_stock()` | SKU |
-| Odoo → WP | Webhook `account.move` | `wp4odoo_invoice` CPT | Mapping |
-| Odoo → WP | Product pull `product.product` | WC variations (auto-enqueued after template pull) | Template mapping |
-| WP → Odoo | Bulk export (all products) | `product.template` create/update (via queue) | Entity map |
-| Odoo → WP | Bulk import (all products) | WC product create/update + variants (via queue) | Entity map |
-
 **Key features:**
-- Mutually exclusive with Sales_Module (same Odoo models)
+- Mutually exclusive with Sales_Module and EDD_Module (same Odoo models)
 - Uses `Partner_Service` for customer resolution (WP user → Odoo partner)
 - WC-native APIs: `wc_get_product()`, `wc_get_order()`, `wc_update_product_stock()`
 - HPOS compatible (High-Performance Order Storage)
 - `wp4odoo_invoice` CPT for invoices (WC has no native invoice type)
 - **Product variants**: auto-imports `product.product` variants as WC variations after a `product.template` pull; skips single-variant (simple) products; resolves attributes via `product.template.attribute.value`
-- **Bulk operations**: queue-based import/export of all products via admin UI (Sync tab), no synchronous API calls during requests
-- **Multi-currency guard**: skips price update when Odoo `currency_id` differs from WC shop currency (`get_woocommerce_currency()`); stores Odoo currency code in product meta; same guard applies to variants via `Variant_Handler`
-- `stock.quant` resolution: checks both `product` and `variant` entity mappings (since stock.quant references `product.product`)
+- **Bulk operations**: queue-based import/export of all products via admin UI (Sync tab)
+- **Multi-currency guard**: skips price update when Odoo `currency_id` differs from WC shop currency
+- **Exchange rate conversion**: optional `convert_currency` setting; prices converted via `Exchange_Rate_Service` (Odoo `res.currency` rates, 1-hour cache)
 
-**Order status mapping (Odoo → WC):**
+**Settings:** `sync_products`, `sync_orders`, `sync_stock`, `sync_product_images`, `convert_currency`, `auto_confirm_orders`
 
-```php
-$map = [
-    'draft'   => 'pending',
-    'sent'    => 'on-hold',
-    'sale'    => 'processing',
-    'done'    => 'completed',
-    'cancel'  => 'cancelled',
-];
+### EDD — COMPLETE
 
-```
+**Files:** `class-edd-module.php` (bidirectional sync coordinator, uses `EDD_Hooks` trait), `trait-edd-hooks.php` (EDD hook callbacks), `class-edd-download-handler.php` (download load/save/delete), `class-edd-order-handler.php` (order load/save, status mapping), `class-invoice-helper.php` (shared)
 
-**Anti-loop protection:** The `WP4ODOO_IMPORTING` constant is defined during pull operations to prevent WooCommerce hooks from re-enqueuing a sync.
+**Odoo models:** `product.template`, `sale.order`, `account.move`
 
-**Settings:** `sync_products`, `sync_orders`, `sync_stock`, `sync_product_images`, `auto_confirm_orders`
+**Key features:**
+- Bidirectional sync for downloads and orders
+- Mutually exclusive with WooCommerce_Module and Sales_Module
+- Uses EDD 3.0+ custom tables (`edd_get_order()`, `edd_update_order_status()`)
+- Partner resolution via `Partner_Service`
+- Invoices via shared `Invoice_Helper`
+- Status mapping filterable via `apply_filters('wp4odoo_edd_order_status_map', ...)` and `apply_filters('wp4odoo_edd_odoo_status_map', ...)`
+
+**Settings:** `sync_downloads`, `sync_orders`, `auto_confirm_orders`
 
 ### Memberships — COMPLETE
 
 **Files:** `class-memberships-module.php` (push sync coordinator, uses `Membership_Hooks` trait), `trait-membership-hooks.php` (WC Memberships hook callbacks), `class-membership-handler.php` (plan/membership data load, status mapping)
 
-**Odoo models:** `product.product` (membership plans), `membership.membership_line` (user memberships)
-
-| Direction | Source | Destination | Matching |
-|-----------|--------|-------------|----------|
-| WP → Odoo | `wc_memberships_user_membership_created` | `membership.membership_line` create | — |
-| WP → Odoo | `wc_memberships_user_membership_status_changed` | `membership.membership_line` update | Mapping |
-| WP → Odoo | `wc_memberships_user_membership_saved` | `membership.membership_line` create/update | Mapping |
-| WP → Odoo | Auto-sync (before membership push) | `product.product` create (membership plan) | Entity map |
+**Odoo models:** `product.product` (plans), `membership.membership_line` (memberships)
 
 **Key features:**
 - Push-only (WC → Odoo) — no pull support
-- Requires WooCommerce Memberships plugin (SkyVerge/Woo); `boot()` guards with `function_exists('wc_memberships')`
-- Plan auto-sync: `ensure_plan_synced()` pushes the plan to Odoo as a `product.product` with `membership: true` before any membership line push
-- Uses `Partner_Service` for WP user → Odoo `res.partner` resolution (lazy initialization)
-- Handler initialized in `__construct()` (not `boot()`) for residual queue job safety
-
-**Membership status mapping (WC → Odoo):**
-
-```php
-$map = [
-    'wcm-active'         => 'paid',
-    'wcm-free_trial'     => 'free',
-    'wcm-complimentary'  => 'free',
-    'wcm-delayed'        => 'waiting',
-    'wcm-pending-cancel' => 'paid',
-    'wcm-paused'         => 'waiting',
-    'wcm-cancelled'      => 'cancelled',
-    'wcm-expired'        => 'none',
-];
-```
-
-Filterable via `apply_filters('wp4odoo_membership_status_map', $map)`.
+- Requires WooCommerce Memberships plugin; `boot()` guards with `function_exists('wc_memberships')`
+- Mutually exclusive with MemberPress module
+- Plan auto-sync: `ensure_plan_synced()` pushes plan before membership push
+- Uses `Partner_Service` for WP user → Odoo partner resolution
+- Status mapping filterable via `apply_filters('wp4odoo_membership_status_map', ...)`
 
 **Settings:** `sync_plans`, `sync_memberships`
+
+### MemberPress — COMPLETE
+
+**Files:** `class-memberpress-module.php` (push sync coordinator, uses `MemberPress_Hooks` trait), `trait-memberpress-hooks.php` (hook callbacks), `class-memberpress-handler.php` (plan/transaction/subscription data load, status mapping)
+
+**Odoo models:** `product.product` (plans), `account.move` (transactions as invoices), `membership.membership_line` (subscriptions)
+
+**Key features:**
+- Push-only (WP → Odoo) — recurring subscriptions → recurring accounting entries
+- Requires MemberPress; `boot()` guards with `defined('MEPR_VERSION')`
+- Mutually exclusive with WC Memberships module
+- Plan auto-sync: `ensure_plan_synced()` pushes plan before dependent entity
+- Invoice auto-posting: completed transactions optionally auto-posted via Odoo `action_post`
+- Uses `Partner_Service` for WP user → Odoo partner resolution
+- Status mapping filterable via `apply_filters('wp4odoo_mepr_txn_status_map', ...)` and `apply_filters('wp4odoo_mepr_sub_status_map', ...)`
+
+**Settings:** `sync_plans`, `sync_transactions`, `sync_subscriptions`, `auto_post_invoices`
+
+### GiveWP — COMPLETE
+
+**Files:** `class-givewp-module.php` (uses `GiveWP_Hooks` + `Dual_Accounting_Model` traits), `trait-givewp-hooks.php` (hook callbacks), `class-givewp-handler.php` (delegates formatting to `Odoo_Accounting_Formatter`)
+
+**Odoo models:** `product.product` (forms), `donation.donation` or `account.move` (donations — runtime detection)
+
+**Key features:**
+- Push-only (WP → Odoo) — full recurring donation support
+- Requires GiveWP; `boot()` guards with `defined('GIVE_VERSION')`
+- **Dual Odoo model** via `Dual_Accounting_Model` trait: probes `ir.model` for OCA `donation.donation` (cached 1h); falls back to `account.move`
+- Auto-validation via trait: OCA `validate` or core `action_post`
+- Form auto-sync via `ensure_parent_synced()` from trait
+- Guest donor support via `Partner_Service::get_or_create($email, $data, 0)`
+- Status mapping filterable via `apply_filters('wp4odoo_givewp_donation_status_map', ...)`
+
+**Settings:** `sync_forms`, `sync_donations`, `auto_validate_donations`
+
+### WP Charitable — COMPLETE
+
+**Files:** `class-charitable-module.php` (uses `Charitable_Hooks` + `Dual_Accounting_Model` traits), `trait-charitable-hooks.php` (hook callbacks), `class-charitable-handler.php` (delegates formatting to `Odoo_Accounting_Formatter`)
+
+**Odoo models:** `product.product` (campaigns), `donation.donation` or `account.move` (donations — runtime detection)
+
+**Key features:**
+- Push-only (WP → Odoo) — full recurring donation support
+- Requires WP Charitable; `boot()` guards with `class_exists('Charitable')`
+- **Dual Odoo model** via `Dual_Accounting_Model` trait (shared transient `wp4odoo_has_donation_model`)
+- Auto-validation: completed donations (`charitable-completed` status) auto-posted
+- Campaign auto-sync via `ensure_parent_synced()` from trait
+- Guest donor support via email/name from post meta
+- Status mapping filterable via `apply_filters('wp4odoo_charitable_donation_status_map', ...)`
+
+**Settings:** `sync_campaigns`, `sync_donations`, `auto_validate_donations`
+
+### WP Simple Pay — COMPLETE
+
+**Files:** `class-simplepay-module.php` (uses `SimplePay_Hooks` + `Dual_Accounting_Model` traits), `trait-simplepay-hooks.php` (hook callbacks), `class-simplepay-handler.php` (Stripe extraction, tracking CPT, delegates formatting to `Odoo_Accounting_Formatter`)
+
+**Odoo models:** `product.product` (forms), `donation.donation` or `account.move` (payments — runtime detection)
+
+**Key features:**
+- Push-only (WP → Odoo) — full recurring subscription support via Stripe webhooks
+- Requires WP Simple Pay; `boot()` guards with `defined('SIMPLE_PAY_VERSION')`
+- **Hidden tracking CPT** (`wp4odoo_spay`): creates internal posts from Stripe webhook data
+- **Dual Odoo model** via `Dual_Accounting_Model` trait (shared transient)
+- **Deduplication by Stripe PaymentIntent ID**: prevents double-push
+- Auto-validation via trait (Stripe webhook = already succeeded)
+- Form auto-sync via `ensure_parent_synced()` from trait
+
+**Settings:** `sync_forms`, `sync_payments`, `auto_validate_payments`
+
+### WP Recipe Maker — COMPLETE
+
+**Files:** `class-wprm-module.php` (uses `WPRM_Hooks` trait), `trait-wprm-hooks.php` (hook callback), `class-wprm-handler.php` (recipe data load)
+
+**Odoo models:** `product.product` (recipes as service products)
+
+**Key features:**
+- Push-only (WP → Odoo) — simplest module (single entity type, no payments, no partner)
+- Requires WP Recipe Maker; `boot()` guards with `defined('WPRM_VERSION')`
+- Reads recipe meta (`wprm_summary`, `wprm_prep_time`, `wprm_cook_time`, `wprm_total_time`, `wprm_servings`, `wprm_cost`)
+- Builds structured description: summary + times/servings info line
+
+**Settings:** `sync_recipes`
+
+### Forms — COMPLETE
+
+**Files:** `class-forms-module.php` (push sync coordinator, hook callbacks inline), `class-form-handler.php` (field extraction from GF/WPForms with auto-detection)
+
+**Odoo models:** `crm.lead`
+
+**Key features:**
+- Push-only (WP → Odoo) — form submissions → Odoo CRM leads
+- Requires at least one form plugin: Gravity Forms (`class_exists('GFAPI')`) or WPForms (`function_exists('wpforms')`)
+- Field auto-detection: GF name sub-fields, email as name fallback
+- Multilingual label matching for company detection (EN/FR/ES)
+- Reuses `Lead_Manager` for CPT persistence (shared with CRM module)
+- Filterable via `apply_filters('wp4odoo_form_lead_data', ...)`
+
+**Settings:** `sync_gravity_forms`, `sync_wpforms`
 
 ### Partner Service
 
 **File:** `class-partner-service.php`
 
-Shared service for managing WP user ↔ Odoo `res.partner` relationships. Used by `Portal_Manager`, `WooCommerce_Module`, and `Memberships_Module`.
+Shared service for managing WP user ↔ Odoo `res.partner` relationships. Used by `Portal_Manager`, `WooCommerce_Module`, `EDD_Module`, `Memberships_Module`, `MemberPress_Module`, `GiveWP_Module`, `Charitable_Module`, and `SimplePay_Module` (last 3 via `Dual_Accounting_Model` trait).
 
 **Resolution flow (3-step):**
 1. Check `wp4odoo_entity_map` for existing mapping
@@ -722,6 +854,7 @@ Auto-dismissed when all steps completed. Dismiss via × button persisted in `wp4
 | `wp4odoo_loaded` | All plugins loaded | — |
 | `wp4odoo_register_modules` | Module registration | `$plugin` |
 | `wp4odoo_lead_created` | Lead form submitted and saved | `$wp_id`, `$lead_data` |
+| `wp4odoo_form_lead_created` | Form module lead created and enqueued | `$wp_id`, `$lead_data` |
 | `wp4odoo_api_call` | Every Odoo API call | `$model`, `$method`, `$args`, `$kwargs`, `$result` |
 
 ### Filters
@@ -731,6 +864,15 @@ Auto-dismissed when all steps completed. Dismiss via × button persisted in `wp4
 | `wp4odoo_map_to_odoo_{module}_{entity}` | Modify mapped Odoo values before push |
 | `wp4odoo_map_from_odoo_{module}_{entity}` | Modify mapped WP data during pull |
 | `wp4odoo_ssl_verify` | Enable/disable SSL verification |
+| `wp4odoo_order_status_map` | Customize WC Odoo → WC status mapping |
+| `wp4odoo_edd_order_status_map` | Customize EDD → Odoo status mapping |
+| `wp4odoo_edd_odoo_status_map` | Customize Odoo → EDD status mapping |
+| `wp4odoo_membership_status_map` | Customize WC Memberships → Odoo status mapping |
+| `wp4odoo_mepr_txn_status_map` | Customize MemberPress transaction status mapping |
+| `wp4odoo_mepr_sub_status_map` | Customize MemberPress subscription status mapping |
+| `wp4odoo_givewp_donation_status_map` | Customize GiveWP → Odoo donation status mapping |
+| `wp4odoo_charitable_donation_status_map` | Customize Charitable → Odoo donation status mapping |
+| `wp4odoo_form_lead_data` | Modify/skip form lead data before enqueue |
 
 ## Cron
 

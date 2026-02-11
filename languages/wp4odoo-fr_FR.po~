@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WordPress For Odoo 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-11 01:37+0100\n"
+"POT-Creation-Date: 2026-02-11 02:37+0100\n"
 "PO-Revision-Date: 2026-02-09 22:31+0100\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
@@ -376,6 +376,62 @@ msgstr "Vous n'avez pas la permission d'effectuer cette action."
 msgid "Too many requests. Please try again later."
 msgstr "Trop de requêtes. Veuillez réessayer plus tard."
 
+#: includes/modules/class-charitable-handler.php:169
+#: includes/modules/class-givewp-handler.php:161
+msgid "Donation"
+msgstr "Don"
+
+#: includes/modules/class-charitable-module.php:129
+msgid "WP Charitable module enabled but WP Charitable is not active."
+msgstr "Module WP Charitable activé mais WP Charitable n'est pas actif."
+
+#: includes/modules/class-charitable-module.php:144
+msgid ""
+"WP Charitable Recurring add-on detected. Recurring payments will be synced "
+"automatically."
+msgstr ""
+"Extension WP Charitable Recurring détectée. Les paiements récurrents seront "
+"synchronisés automatiquement."
+
+#: includes/modules/class-charitable-module.php:169
+msgid "Sync campaigns"
+msgstr "Synchroniser les campagnes"
+
+#: includes/modules/class-charitable-module.php:171
+msgid "Push WP Charitable campaigns to Odoo as service products."
+msgstr ""
+"Envoyer les campagnes WP Charitable vers Odoo en tant que produits de "
+"service."
+
+#: includes/modules/class-charitable-module.php:174
+#: includes/modules/class-givewp-module.php:174
+msgid "Sync donations"
+msgstr "Synchroniser les dons"
+
+#: includes/modules/class-charitable-module.php:176
+#: includes/modules/class-givewp-module.php:176
+msgid "Push completed donations to Odoo (includes recurring payments)."
+msgstr ""
+"Envoyer les dons finalisés vers Odoo (inclut les paiements récurrents)."
+
+#: includes/modules/class-charitable-module.php:179
+#: includes/modules/class-givewp-module.php:179
+msgid "Auto-validate donations"
+msgstr "Valider automatiquement les dons"
+
+#: includes/modules/class-charitable-module.php:181
+#: includes/modules/class-givewp-module.php:181
+msgid "Automatically validate donations in Odoo after creation."
+msgstr "Valider automatiquement les dons dans Odoo après leur création."
+
+#: includes/modules/class-charitable-module.php:198
+msgid "WP Charitable must be installed and activated to use this module."
+msgstr "WP Charitable doit être installé et activé pour utiliser ce module."
+
+#: includes/modules/class-charitable-module.php:403
+msgid "Auto-pushing WP Charitable campaign before donation."
+msgstr "Envoi automatique de la campagne WP Charitable avant le don."
+
 #: includes/modules/class-crm-module.php:148
 msgid "Sync users as contacts"
 msgstr "Synchroniser les utilisateurs comme contacts"
@@ -528,10 +584,6 @@ msgstr ""
 "WPForms n'est pas actif. Seules les soumissions Gravity Forms seront "
 "synchronisées."
 
-#: includes/modules/class-givewp-handler.php:161
-msgid "Donation"
-msgstr "Don"
-
 #: includes/modules/class-givewp-module.php:129
 msgid "GiveWP module enabled but GiveWP is not active."
 msgstr "Module GiveWP activé mais GiveWP n'est pas actif."
@@ -542,23 +594,9 @@ msgstr "Synchroniser les formulaires de dons"
 
 #: includes/modules/class-givewp-module.php:171
 msgid "Push GiveWP donation forms to Odoo as service products."
-msgstr "Envoyer les formulaires de dons GiveWP vers Odoo en tant que produits de service."
-
-#: includes/modules/class-givewp-module.php:174
-msgid "Sync donations"
-msgstr "Synchroniser les dons"
-
-#: includes/modules/class-givewp-module.php:176
-msgid "Push completed donations to Odoo (includes recurring payments)."
-msgstr "Envoyer les dons finalisés vers Odoo (inclut les paiements récurrents)."
-
-#: includes/modules/class-givewp-module.php:179
-msgid "Auto-validate donations"
-msgstr "Valider automatiquement les dons"
-
-#: includes/modules/class-givewp-module.php:181
-msgid "Automatically validate donations in Odoo after creation."
-msgstr "Valider automatiquement les dons dans Odoo après leur création."
+msgstr ""
+"Envoyer les formulaires de dons GiveWP vers Odoo en tant que produits de "
+"service."
 
 #: includes/modules/class-givewp-module.php:198
 msgid "GiveWP must be installed and activated to use this module."
@@ -831,6 +869,50 @@ msgstr "Aucune commande trouvée."
 #: includes/modules/class-sales-module.php:162
 msgid "No orders found in Trash."
 msgstr "Aucune commande trouvée dans la corbeille."
+
+#: includes/modules/class-simplepay-handler.php:363
+#: templates/customer-portal.php:87
+msgid "Payment"
+msgstr "Paiement"
+
+#: includes/modules/class-simplepay-module.php:132
+msgid "WP Simple Pay module enabled but WP Simple Pay is not active."
+msgstr "Module WP Simple Pay activé mais WP Simple Pay n'est pas actif."
+
+#: includes/modules/class-simplepay-module.php:172
+msgid "Sync payment forms"
+msgstr "Synchroniser les formulaires de paiement"
+
+#: includes/modules/class-simplepay-module.php:174
+msgid "Push WP Simple Pay forms to Odoo as service products."
+msgstr ""
+"Envoyer les formulaires WP Simple Pay vers Odoo en tant que produits de "
+"service."
+
+#: includes/modules/class-simplepay-module.php:177
+msgid "Sync payments"
+msgstr "Synchroniser les paiements"
+
+#: includes/modules/class-simplepay-module.php:179
+msgid "Push Stripe payments to Odoo (includes recurring subscriptions)."
+msgstr ""
+"Envoyer les paiements Stripe vers Odoo (inclut les abonnements récurrents)."
+
+#: includes/modules/class-simplepay-module.php:182
+msgid "Auto-validate payments"
+msgstr "Valider automatiquement les paiements"
+
+#: includes/modules/class-simplepay-module.php:184
+msgid "Automatically validate payments in Odoo after creation."
+msgstr "Valider automatiquement les paiements dans Odoo après leur création."
+
+#: includes/modules/class-simplepay-module.php:201
+msgid "WP Simple Pay must be installed and activated to use this module."
+msgstr "WP Simple Pay doit être installé et activé pour utiliser ce module."
+
+#: includes/modules/class-simplepay-module.php:404
+msgid "Auto-pushing WP Simple Pay form before payment."
+msgstr "Envoi automatique du formulaire WP Simple Pay avant le paiement."
 
 #: includes/modules/class-woocommerce-module.php:196
 msgid "Sync products"
@@ -1378,10 +1460,6 @@ msgstr "Référence"
 #: templates/customer-portal.php:40 templates/customer-portal.php:85
 msgid "Total"
 msgstr "Total"
-
-#: templates/customer-portal.php:87
-msgid "Payment"
-msgstr "Paiement"
 
 #, php-format
 #~ msgid "%d product(s) enqueued for import."

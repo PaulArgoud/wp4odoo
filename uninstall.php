@@ -24,7 +24,7 @@ $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wp4odoo_logs" );
 $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wp4odoo\_%'" );
 
 // Delete custom post type posts (leads, orders, invoices).
-$cpt_types = [ 'wp4odoo_lead', 'wp4odoo_order', 'wp4odoo_invoice' ];
+$cpt_types = [ 'wp4odoo_lead', 'wp4odoo_order', 'wp4odoo_invoice', 'wp4odoo_spay' ];
 foreach ( $cpt_types as $cpt ) {
 	$cpt_ids = get_posts(
 		[

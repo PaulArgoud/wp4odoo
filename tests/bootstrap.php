@@ -71,6 +71,8 @@ require_once __DIR__ . '/stubs/edd-classes.php';
 require_once __DIR__ . '/stubs/memberpress-classes.php';
 require_once __DIR__ . '/stubs/givewp-classes.php';
 require_once __DIR__ . '/stubs/charitable-classes.php';
+require_once __DIR__ . '/stubs/simplepay-classes.php';
+require_once __DIR__ . '/stubs/wprm-classes.php';
 
 // ─── Composer autoloader ────────────────────────────────
 
@@ -126,12 +128,20 @@ require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-memberships-module.php
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-memberpress-hooks.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-memberpress-handler.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-memberpress-module.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-dual-accounting-model.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-odoo-accounting-formatter.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-givewp-hooks.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-givewp-handler.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-givewp-module.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-charitable-hooks.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-charitable-handler.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-charitable-module.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-simplepay-hooks.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-simplepay-handler.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-simplepay-module.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/trait-wprm-hooks.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-wprm-handler.php';
+require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-wprm-module.php';
 require_once __DIR__ . '/stubs/form-classes.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-form-handler.php';
 require_once WP4ODOO_PLUGIN_DIR . 'includes/modules/class-forms-module.php';

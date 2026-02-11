@@ -331,6 +331,18 @@ if ( ! class_exists( 'Charitable' ) ) {
 	}
 }
 
+// ─── WP Simple Pay stubs ────────────────────────────────
+
+if ( ! defined( 'SIMPLE_PAY_VERSION' ) ) {
+	define( 'SIMPLE_PAY_VERSION', '4.16.1' );
+}
+
+// ─── WP Recipe Maker stubs ──────────────────────────────
+
+if ( ! defined( 'WPRM_VERSION' ) ) {
+	define( 'WPRM_VERSION', '10.3.2' );
+}
+
 // ─── WP-CLI stubs ───────────────────────────────────────
 
 if ( ! defined( 'WP_CLI' ) ) {

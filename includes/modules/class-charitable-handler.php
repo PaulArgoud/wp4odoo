@@ -12,8 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * WP Charitable Handler — data access for campaigns and donations.
  *
- * Loads WP Charitable entities and formats donation data for the target
- * Odoo model (either OCA `donation.donation` or core `account.move`).
+ * Loads WP Charitable entities and delegates Odoo formatting to
+ * Odoo_Accounting_Formatter (shared with GiveWP and SimplePay).
  *
  * Called by Charitable_Module via its load_wp_data dispatch.
  *
@@ -106,71 +106,10 @@ class Charitable_Handler {
 		$ref  = 'charitable-donation-' . $donation_id;
 
 		if ( $use_donation_model ) {
-			return $this->format_for_donation_model( $partner_id, $campaign_odoo_id, $amount, $date, $ref );
+			return Odoo_Accounting_Formatter::for_donation_model( $partner_id, $campaign_odoo_id, $amount, $date, $ref );
 		}
 
-		return $this->format_for_account_move( $partner_id, $campaign_odoo_id, $amount, $date, $ref, $campaign_title );
-	}
-
-	/**
-	 * Format donation data for OCA donation.donation model.
-	 *
-	 * @param int    $partner_id      Odoo partner ID.
-	 * @param int    $campaign_odoo_id Odoo product ID.
-	 * @param float  $amount          Donation amount.
-	 * @param string $date            Donation date (Y-m-d).
-	 * @param string $ref             Payment reference.
-	 * @return array<string, mixed>
-	 */
-	private function format_for_donation_model( int $partner_id, int $campaign_odoo_id, float $amount, string $date, string $ref ): array {
-		return [
-			'partner_id'    => $partner_id,
-			'donation_date' => $date,
-			'payment_ref'   => $ref,
-			'line_ids'      => [
-				[
-					0,
-					0,
-					[
-						'product_id' => $campaign_odoo_id,
-						'quantity'   => 1,
-						'unit_price' => $amount,
-					],
-				],
-			],
-		];
-	}
-
-	/**
-	 * Format donation data for core account.move model (invoice).
-	 *
-	 * @param int    $partner_id      Odoo partner ID.
-	 * @param int    $campaign_odoo_id Odoo product ID.
-	 * @param float  $amount          Donation amount.
-	 * @param string $date            Donation date (Y-m-d).
-	 * @param string $ref             Payment reference.
-	 * @param string $campaign_title  Campaign title (for invoice line name fallback).
-	 * @return array<string, mixed>
-	 */
-	private function format_for_account_move( int $partner_id, int $campaign_odoo_id, float $amount, string $date, string $ref, string $campaign_title ): array {
-		return [
-			'move_type'        => 'out_invoice',
-			'partner_id'       => $partner_id,
-			'invoice_date'     => $date,
-			'ref'              => $ref,
-			'invoice_line_ids' => [
-				[
-					0,
-					0,
-					[
-						'product_id' => $campaign_odoo_id,
-						'quantity'   => 1,
-						'price_unit' => $amount,
-						'name'       => $campaign_title ?: __( 'Donation', 'wp4odoo' ),
-					],
-				],
-			],
-		];
+		return Odoo_Accounting_Formatter::for_account_move( $partner_id, $campaign_odoo_id, $amount, $date, $ref, $campaign_title, __( 'Donation', 'wp4odoo' ) );
 	}
 
 	// ─── Status mapping ───────────────────────────────────

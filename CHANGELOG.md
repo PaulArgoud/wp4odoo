@@ -114,10 +114,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CharitableHandlerTest` — 23 tests: load_campaign, load_donation (account.move + OCA formats), 6 status mappings, edge cases
 - Charitable stubs: `Charitable` class with `instance()` method
 
+#### WP Simple Pay Module — Stripe Payments → Odoo Accounting
+- New module: `SimplePay_Module` (`includes/modules/class-simplepay-module.php`) — push-only sync from WP Simple Pay Stripe payments to Odoo accounting, with **full recurring subscription support** (each Stripe invoice payment is captured via webhook and pushed automatically)
+- `SimplePay_Handler` (`includes/modules/class-simplepay-handler.php`) — extracts payment data from Stripe webhook objects (PaymentIntent/Invoice), manages hidden `wp4odoo_spay` tracking CPT, pre-formats for Odoo target model; supports cents-to-major-unit conversion, email/name extraction from Stripe billing details, and form resolution from Stripe metadata
+- `SimplePay_Hooks` trait (`includes/modules/trait-simplepay-hooks.php`) — 3 hook callbacks with anti-loop guards: `on_form_save` (`save_post_simple-pay`), `on_payment_succeeded` (`simpay_webhook_payment_intent_succeeded` for one-time payments), `on_invoice_payment_succeeded` (`simpay_webhook_invoice_payment_succeeded` for recurring subscriptions)
+- **Hidden tracking CPT** (`wp4odoo_spay`): WP Simple Pay stores payments in Stripe only — this module creates internal tracking posts from Stripe webhook data to integrate with the Module_Base architecture (`show_ui => false`, cleaned up on uninstall)
+- **Dual Odoo model with runtime detection**: same as GiveWP/Charitable — probes `ir.model` for OCA `donation.donation` (shared transient `wp4odoo_has_donation_model`, 1h TTL)
+- **Deduplication by Stripe PaymentIntent ID**: prevents double-push when both `payment_intent.succeeded` and `invoice.payment_succeeded` fire for the same payment
+- Auto-validation: all Stripe payments auto-validated in Odoo (Stripe webhook = already succeeded) — OCA: `validate`, core: `action_post` (configurable via `auto_validate_payments` setting)
+- Form auto-sync: `ensure_form_synced()` pushes payment form to Odoo as `product.product` before any dependent payment sync
+- Guest payer support: payer email/name from Stripe PaymentIntent billing details, resolved via `Partner_Service::get_or_create($email, $data, 0)`
+- Settings: `sync_forms`, `sync_payments`, `auto_validate_payments` checkboxes (all default: enabled)
+- Dependency detection: `defined('SIMPLE_PAY_VERSION')` — module available only when WP Simple Pay is active
+- No mutual exclusivity with any other module
+- `SimplePayModuleTest` — 22 tests: identity, Odoo models, settings, field mappings, dependency status, boot guard
+- `SimplePayHandlerTest` — 30 tests: load_form, extract_from_payment_intent, extract_from_invoice, find_existing_payment, create_tracking_post, load_payment (account.move + OCA formats), edge cases
+- SimplePay stubs: `SIMPLE_PAY_VERSION` constant
+
+#### WP Recipe Maker Module — Recipes → Odoo Products
+- New module: `WPRM_Module` (`includes/modules/class-wprm-module.php`) — push-only sync from WP Recipe Maker recipes to Odoo as service products (`product.product`)
+- `WPRM_Handler` (`includes/modules/class-wprm-handler.php`) — loads recipe data from `wprm_recipe` CPT and meta fields (`wprm_summary`, `wprm_prep_time`, `wprm_cook_time`, `wprm_total_time`, `wprm_servings`, `wprm_servings_unit`, `wprm_cost`), builds structured description with times and servings info
+- `WPRM_Hooks` trait (`includes/modules/trait-wprm-hooks.php`) — 1 hook callback with anti-loop guard: `on_recipe_save` (`save_post_wprm_recipe`)
+- Single entity type: `recipe` → `product.product` (service type, simplest module pattern)
+- Settings: `sync_recipes` checkbox (default: enabled)
+- Dependency detection: `defined('WPRM_VERSION')` — module available only when WP Recipe Maker is active
+- No mutual exclusivity with any other module
+- `WPRMModuleTest` — 15 tests: identity, Odoo models, settings, field mappings, dependency status, boot guard, map_to_odoo
+- `WPRMHandlerTest` — 12 tests: load_recipe (name, type, price, cost meta, summary, HTML stripping, times, servings, empty meta), not found edge cases
+- WPRM stubs: `WPRM_VERSION` constant
+
 #### Refactoring
 - `Module_Base`: 3 new shared helpers — `mark_importing()` (replaces inline `define()`), `delete_wp_post()` (safe post deletion with null/false check), `log_unsupported_entity()` (centralized warning logging)
 - `CRM_Module`, `Sales_Module`, `WooCommerce_Module`: refactored to use new `Module_Base` helpers, removed duplicated code
 - `uninstall.php`: added CPT cleanup — deletes all `wp4odoo_lead`, `wp4odoo_order`, `wp4odoo_invoice` posts on plugin uninstall
+- **Dual Accounting Model extraction**: `Dual_Accounting_Model` trait (`includes/modules/trait-dual-accounting-model.php`) — extracts 5 identical methods from GiveWP, Charitable, and SimplePay modules: `has_donation_model()` (OCA detection with transient cache), `resolve_accounting_model()` (runtime model switching), `ensure_parent_synced()` (auto-push form/campaign before child), `auto_validate()` (OCA validate / core action_post), `partner_service()` (lazy Partner_Service). Removes ~250 lines of duplication
+- **Odoo Accounting Formatter**: `Odoo_Accounting_Formatter` (`includes/modules/class-odoo-accounting-formatter.php`) — extracts 2 static methods: `for_donation_model()` (OCA donation.donation format) and `for_account_move()` (core invoice format). Replaces private formatting methods in GiveWP_Handler, Charitable_Handler, and SimplePay_Handler. Removes ~115 lines of duplication
 
 #### Security
 - `Webhook_Handler`: hardened `get_client_ip()` — parses only first IP from X-Forwarded-For, validates with `filter_var(FILTER_VALIDATE_IP)`, falls back to REMOTE_ADDR
@@ -125,12 +156,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Plugin version bumped from 1.9.8 to 2.0.0
-- PHPUnit: 797 unit tests, 1322 assertions — all green (was 436/855)
-- PHPStan: 0 errors on 67 files (was 47 — added 3 module files + 2 forms files + 1 exchange rate file + 4 EDD files + 3 MemberPress files + 3 GiveWP files + 3 Charitable files)
-- `Dependency_Loader` — added 16 `require_once` (2 forms + 1 exchange rate + 4 EDD + 3 MemberPress + 3 GiveWP + 3 Charitable module files)
-- `Module_Registry` — registers `Forms_Module` when Gravity Forms or WPForms is active; extended mutual exclusivity from 2-way (WC/Sales) to 3-way (WC/EDD/Sales); registers `MemberPress_Module` when MemberPress is active (mutually exclusive with WC Memberships); registers `GiveWP_Module` when GiveWP is active; registers `Charitable_Module` when WP Charitable is active (no mutual exclusivity — separate Odoo models)
-- `tests/bootstrap.php` — added forms stubs and 2 new source file requires; added EDD stubs, global store, and 4 EDD source requires; added MemberPress stubs and 3 source requires; added GiveWP stubs and 3 source requires; added Charitable stubs and 3 source requires
-- `phpstan-bootstrap.php` — added GFAPI, GF_Field, and wpforms() stubs; added EDD class/function stubs (separate `phpstan-edd-stubs.php` for namespace isolation); added MemberPress class stubs (MeprProduct, MeprTransaction, MeprSubscription); added GiveWP stubs (Give class, give() function, GIVE_VERSION constant); added Charitable stub (Charitable class)
+- PHPUnit: 879 unit tests, 1436 assertions — all green (was 436/855)
+- PHPStan: 0 errors on 75 files (was 47 — added 3 module files + 2 forms files + 1 exchange rate file + 4 EDD files + 3 MemberPress files + 3 GiveWP files + 3 Charitable files + 3 SimplePay files + 3 WPRM files + 2 shared accounting files)
+- Translations: 325 translated strings × 2 languages (FR, ES), 0 fuzzy, 0 untranslated
+- `Dependency_Loader` — added 24 `require_once` (2 forms + 1 exchange rate + 4 EDD + 3 MemberPress + 3 GiveWP + 3 Charitable + 3 SimplePay + 3 WPRM + 2 shared accounting module files)
+- `Module_Registry` — registers `Forms_Module` when Gravity Forms or WPForms is active; extended mutual exclusivity from 2-way (WC/Sales) to 3-way (WC/EDD/Sales); registers `MemberPress_Module` when MemberPress is active (mutually exclusive with WC Memberships); registers `GiveWP_Module` when GiveWP is active; registers `Charitable_Module` when WP Charitable is active; registers `SimplePay_Module` when WP Simple Pay is active; registers `WPRM_Module` when WP Recipe Maker is active (no mutual exclusivity)
+- `tests/bootstrap.php` — added forms stubs and 2 new source file requires; added EDD stubs, global store, and 4 EDD source requires; added MemberPress stubs and 3 source requires; added GiveWP stubs and 3 source requires; added Charitable stubs and 3 source requires; added SimplePay stubs and 3 source requires; added WPRM stubs and 3 source requires
+- `phpstan-bootstrap.php` — added GFAPI, GF_Field, and wpforms() stubs; added EDD class/function stubs (separate `phpstan-edd-stubs.php` for namespace isolation); added MemberPress class stubs (MeprProduct, MeprTransaction, MeprSubscription); added GiveWP stubs (Give class, give() function, GIVE_VERSION constant); added Charitable stub (Charitable class); added SimplePay stub (SIMPLE_PAY_VERSION constant); added WPRM stub (WPRM_VERSION constant)
 - `tests/stubs/wp-functions.php` — `get_post_meta()` and `update_post_meta()` now use `$GLOBALS['_wp_post_meta']` store for realistic test behavior
 - `README.md` — added Memberships module to features, module table, Required Odoo apps table; added WooCommerce 7.1+ and WC Memberships 1.12+ to Requirements
 - `Dependency_Loader` — added 3 `require_once` for membership module files
@@ -138,6 +170,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tab-modules.php` — WC Memberships detection and disabled toggle with warning notice
 - `tests/bootstrap.php` — added WC Memberships globals and 3 new source file requires
 - `phpstan-bootstrap.php` — added WC Memberships function and class stubs
+
+#### Documentation
+- `ARCHITECTURE.md` — complete rewrite: updated from 3-module overview to comprehensive documentation covering all 11 modules, shared accounting infrastructure (`Dual_Accounting_Model` trait, `Odoo_Accounting_Formatter`), complete directory structure (~75 source files), hooks & filters reference, mutual exclusivity rules, updated test counts (879/1436), PHPStan file count (75)
 
 ## [1.9.8] - 2026-02-10
 

@@ -94,6 +94,16 @@ class Module_Registry {
 			$this->register( 'charitable', new Modules\Charitable_Module() );
 		}
 
+		// WP Simple Pay module (Stripe payments → Odoo accounting).
+		if ( defined( 'SIMPLE_PAY_VERSION' ) ) {
+			$this->register( 'simplepay', new Modules\SimplePay_Module() );
+		}
+
+		// WP Recipe Maker module (recipes → Odoo products).
+		if ( defined( 'WPRM_VERSION' ) ) {
+			$this->register( 'wprm', new Modules\WPRM_Module() );
+		}
+
 		// Forms module (requires Gravity Forms or WPForms).
 		$gf_active  = class_exists( 'GFAPI' );
 		$wpf_active = function_exists( 'wpforms' );

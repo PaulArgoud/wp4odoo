@@ -10,26 +10,29 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * GiveWP Module — push donations to Odoo accounting.
+ * WP Simple Pay Module — push Stripe payments to Odoo accounting.
  *
- * Syncs GiveWP donation forms as Odoo service products (product.product)
- * and donations as either OCA donation records (donation.donation) or
+ * Syncs WP Simple Pay payment forms as Odoo service products (product.product)
+ * and Stripe payments as either OCA donation records (donation.donation) or
  * core invoices (account.move), with automatic runtime detection.
  *
- * Fully supports recurring donations: each GiveWP recurring payment
- * fires the same status hook, so every instalment is pushed to Odoo
- * automatically through the standard donation pipeline.
+ * Fully supports recurring payments: Stripe subscription invoices are
+ * captured via webhook and pushed to Odoo automatically.
+ *
+ * Unlike GiveWP/Charitable, WP Simple Pay does not store payments in
+ * WordPress. This module creates hidden tracking posts (wp4odoo_spay)
+ * from Stripe webhook data to integrate with the Module_Base architecture.
  *
  * Push-only (WP → Odoo). No mutual exclusivity with other modules.
  *
- * Requires the GiveWP plugin to be active.
+ * Requires the WP Simple Pay plugin to be active.
  *
  * @package WP4Odoo
  * @since   2.0.0
  */
-class GiveWP_Module extends Module_Base {
+class SimplePay_Module extends Module_Base {
 
-	use GiveWP_Hooks;
+	use SimplePay_Hooks;
 	use Dual_Accounting_Model;
 
 	/**
@@ -37,14 +40,14 @@ class GiveWP_Module extends Module_Base {
 	 *
 	 * @var string
 	 */
-	protected string $id = 'givewp';
+	protected string $id = 'simplepay';
 
 	/**
 	 * Human-readable module name.
 	 *
 	 * @var string
 	 */
-	protected string $name = 'GiveWP';
+	protected string $name = 'WP Simple Pay';
 
 	/**
 	 * Sync direction: push-only (WP → Odoo).
@@ -58,76 +61,76 @@ class GiveWP_Module extends Module_Base {
 	/**
 	 * Odoo models by entity type.
 	 *
-	 * The donation model is resolved dynamically at push time:
+	 * The payment model is resolved dynamically at push time:
 	 * donation.donation if OCA module is detected, account.move otherwise.
 	 *
 	 * @var array<string, string>
 	 */
 	protected array $odoo_models = [
-		'form'     => 'product.product',
-		'donation' => 'account.move',
+		'form'    => 'product.product',
+		'payment' => 'account.move',
 	];
 
 	/**
 	 * Default field mappings.
 	 *
-	 * Donation mappings are minimal because map_to_odoo() is overridden
+	 * Payment mappings are minimal because map_to_odoo() is overridden
 	 * to pass handler-formatted data directly to Odoo.
 	 *
 	 * @var array<string, array<string, string>>
 	 */
 	protected array $default_mappings = [
-		'form'     => [
+		'form'    => [
 			'form_name'  => 'name',
 			'list_price' => 'list_price',
 			'type'       => 'type',
 		],
-		'donation' => [
+		'payment' => [
 			'partner_id' => 'partner_id',
 		],
 	];
 
 	/**
-	 * GiveWP data handler.
+	 * WP Simple Pay data handler.
 	 *
 	 * Initialized in __construct() (not boot()) because Sync_Engine can
 	 * call push_to_odoo on non-booted modules for residual queue jobs.
 	 *
-	 * @var GiveWP_Handler
+	 * @var SimplePay_Handler
 	 */
-	private GiveWP_Handler $handler;
+	private SimplePay_Handler $handler;
 
 	/**
 	 * Constructor.
 	 */
 	public function __construct() {
 		parent::__construct();
-		$this->handler = new GiveWP_Handler( $this->logger );
+		$this->handler = new SimplePay_Handler( $this->logger );
 	}
 
 	/**
-	 * Boot the module: register GiveWP hooks.
+	 * Boot the module: register CPT and WP Simple Pay hooks.
 	 *
 	 * @return void
 	 */
 	public function boot(): void {
-		if ( ! defined( 'GIVE_VERSION' ) ) {
-			$this->logger->warning( __( 'GiveWP module enabled but GiveWP is not active.', 'wp4odoo' ) );
+		if ( ! defined( 'SIMPLE_PAY_VERSION' ) ) {
+			$this->logger->warning( __( 'WP Simple Pay module enabled but WP Simple Pay is not active.', 'wp4odoo' ) );
 			return;
 		}
+
+		// Register the hidden tracking CPT.
+		add_action( 'init', [ SimplePay_Handler::class, 'register_cpt' ] );
 
 		$settings = $this->get_settings();
 
 		if ( ! empty( $settings['sync_forms'] ) ) {
-			add_action( 'save_post_give_forms', [ $this, 'on_form_save' ], 10, 1 );
+			add_action( 'save_post_simple-pay', [ $this, 'on_form_save' ], 10, 1 );
 		}
 
-		if ( ! empty( $settings['sync_donations'] ) ) {
-			add_action( 'give_update_payment_status', [ $this, 'on_donation_status_change' ], 10, 3 );
-		}
-
-		if ( class_exists( 'Give_Recurring' ) ) {
-			$this->logger->info( 'GiveWP Recurring Donations add-on detected. Recurring payments will be synced automatically.' );
+		if ( ! empty( $settings['sync_payments'] ) ) {
+			add_action( 'simpay_webhook_payment_intent_succeeded', [ $this, 'on_payment_succeeded' ], 10, 2 );
+			add_action( 'simpay_webhook_invoice_payment_succeeded', [ $this, 'on_invoice_payment_succeeded' ], 10, 2 );
 		}
 	}
 
@@ -138,9 +141,9 @@ class GiveWP_Module extends Module_Base {
 	 */
 	public function get_default_settings(): array {
 		return [
-			'sync_forms'              => true,
-			'sync_donations'          => true,
-			'auto_validate_donations' => true,
+			'sync_forms'             => true,
+			'sync_payments'          => true,
+			'auto_validate_payments' => true,
 		];
 	}
 
@@ -151,37 +154,37 @@ class GiveWP_Module extends Module_Base {
 	 */
 	public function get_settings_fields(): array {
 		return [
-			'sync_forms'              => [
-				'label'       => __( 'Sync donation forms', 'wp4odoo' ),
+			'sync_forms'             => [
+				'label'       => __( 'Sync payment forms', 'wp4odoo' ),
 				'type'        => 'checkbox',
-				'description' => __( 'Push GiveWP donation forms to Odoo as service products.', 'wp4odoo' ),
+				'description' => __( 'Push WP Simple Pay forms to Odoo as service products.', 'wp4odoo' ),
 			],
-			'sync_donations'          => [
-				'label'       => __( 'Sync donations', 'wp4odoo' ),
+			'sync_payments'          => [
+				'label'       => __( 'Sync payments', 'wp4odoo' ),
 				'type'        => 'checkbox',
-				'description' => __( 'Push completed donations to Odoo (includes recurring payments).', 'wp4odoo' ),
+				'description' => __( 'Push Stripe payments to Odoo (includes recurring subscriptions).', 'wp4odoo' ),
 			],
-			'auto_validate_donations' => [
-				'label'       => __( 'Auto-validate donations', 'wp4odoo' ),
+			'auto_validate_payments' => [
+				'label'       => __( 'Auto-validate payments', 'wp4odoo' ),
 				'type'        => 'checkbox',
-				'description' => __( 'Automatically validate donations in Odoo after creation.', 'wp4odoo' ),
+				'description' => __( 'Automatically validate payments in Odoo after creation.', 'wp4odoo' ),
 			],
 		];
 	}
 
 	/**
-	 * Get external dependency status for GiveWP.
+	 * Get external dependency status for WP Simple Pay.
 	 *
 	 * @return array{available: bool, notices: array<array{type: string, message: string}>}
 	 */
 	public function get_dependency_status(): array {
-		if ( ! defined( 'GIVE_VERSION' ) ) {
+		if ( ! defined( 'SIMPLE_PAY_VERSION' ) ) {
 			return [
 				'available' => false,
 				'notices'   => [
 					[
 						'type'    => 'warning',
-						'message' => __( 'GiveWP must be installed and activated to use this module.', 'wp4odoo' ),
+						'message' => __( 'WP Simple Pay must be installed and activated to use this module.', 'wp4odoo' ),
 					],
 				],
 			];
@@ -198,7 +201,7 @@ class GiveWP_Module extends Module_Base {
 	/**
 	 * Push a WordPress entity to Odoo.
 	 *
-	 * For donations: resolves the Odoo model dynamically (OCA donation
+	 * For payments: resolves the Odoo model dynamically (OCA donation
 	 * vs core invoice), ensures the form is synced, and auto-validates.
 	 *
 	 * @param string $entity_type The entity type.
@@ -209,15 +212,15 @@ class GiveWP_Module extends Module_Base {
 	 * @return bool True on success.
 	 */
 	public function push_to_odoo( string $entity_type, string $action, int $wp_id, int $odoo_id = 0, array $payload = [] ): bool {
-		if ( 'donation' === $entity_type && 'delete' !== $action ) {
-			$this->resolve_accounting_model( 'donation' );
-			$this->ensure_parent_synced( $wp_id, '_give_payment_form_id', 'form' );
+		if ( 'payment' === $entity_type && 'delete' !== $action ) {
+			$this->resolve_accounting_model( 'payment' );
+			$this->ensure_parent_synced( $wp_id, '_spay_form_id', 'form' );
 		}
 
 		$result = parent::push_to_odoo( $entity_type, $action, $wp_id, $odoo_id, $payload );
 
-		if ( $result && 'donation' === $entity_type && 'create' === $action ) {
-			$this->auto_validate( 'donation', $wp_id, 'auto_validate_donations', 'publish' );
+		if ( $result && 'payment' === $entity_type && 'create' === $action ) {
+			$this->auto_validate( 'payment', $wp_id, 'auto_validate_payments' );
 		}
 
 		return $result;
@@ -226,7 +229,7 @@ class GiveWP_Module extends Module_Base {
 	/**
 	 * Map WP data to Odoo values.
 	 *
-	 * Donations bypass standard mapping — handler pre-formats for
+	 * Payments bypass standard mapping — handler pre-formats for
 	 * the target Odoo model. Forms use standard field mapping.
 	 *
 	 * @param string $entity_type Entity type.
@@ -234,7 +237,7 @@ class GiveWP_Module extends Module_Base {
 	 * @return array<string, mixed> Odoo-ready data.
 	 */
 	public function map_to_odoo( string $entity_type, array $wp_data ): array {
-		if ( 'donation' === $entity_type ) {
+		if ( 'payment' === $entity_type ) {
 			return $wp_data;
 		}
 
@@ -252,49 +255,49 @@ class GiveWP_Module extends Module_Base {
 	 */
 	protected function load_wp_data( string $entity_type, int $wp_id ): array {
 		return match ( $entity_type ) {
-			'form'     => $this->handler->load_form( $wp_id ),
-			'donation' => $this->load_donation_data( $wp_id ),
-			default    => [],
+			'form'    => $this->handler->load_form( $wp_id ),
+			'payment' => $this->load_payment_data( $wp_id ),
+			default   => [],
 		};
 	}
 
 	/**
-	 * Load and resolve a donation with Odoo references.
+	 * Load and resolve a payment with Odoo references.
 	 *
-	 * Resolves donor email → partner and form → Odoo product ID.
-	 * Supports guest donors (no WP user account).
+	 * Reads from the tracking post (wp4odoo_spay), resolves payer email
+	 * to an Odoo partner, and resolves form to an Odoo product.
 	 *
-	 * @param int $payment_id GiveWP payment ID.
+	 * @param int $wp_id Tracking post ID.
 	 * @return array<string, mixed>
 	 */
-	private function load_donation_data( int $payment_id ): array {
-		$post = get_post( $payment_id );
-		if ( ! $post || 'give_payment' !== $post->post_type ) {
+	private function load_payment_data( int $wp_id ): array {
+		$post = get_post( $wp_id );
+		if ( ! $post || 'wp4odoo_spay' !== $post->post_type ) {
 			return [];
 		}
 
-		// Resolve donor → partner via email.
-		$donor_email = (string) get_post_meta( $payment_id, '_give_payment_donor_email', true );
-		if ( empty( $donor_email ) ) {
-			$this->logger->warning( 'Donation has no donor email.', [ 'payment_id' => $payment_id ] );
+		// Resolve payer → partner via email.
+		$payer_email = (string) get_post_meta( $wp_id, '_spay_email', true );
+		if ( empty( $payer_email ) ) {
+			$this->logger->warning( 'Payment has no payer email.', [ 'wp_id' => $wp_id ] );
 			return [];
 		}
 
-		$donor_name = (string) get_post_meta( $payment_id, '_give_payment_donor_name', true );
+		$payer_name = (string) get_post_meta( $wp_id, '_spay_name', true );
 
 		$partner_id = $this->partner_service()->get_or_create(
-			$donor_email,
-			[ 'name' => $donor_name ?: $donor_email ],
+			$payer_email,
+			[ 'name' => $payer_name ?: $payer_email ],
 			0
 		);
 
 		if ( ! $partner_id ) {
-			$this->logger->warning( 'Cannot resolve partner for donation.', [ 'payment_id' => $payment_id ] );
+			$this->logger->warning( 'Cannot resolve partner for payment.', [ 'wp_id' => $wp_id ] );
 			return [];
 		}
 
 		// Resolve form → Odoo product ID.
-		$form_id      = (int) get_post_meta( $payment_id, '_give_payment_form_id', true );
+		$form_id      = (int) get_post_meta( $wp_id, '_spay_form_id', true );
 		$form_odoo_id = 0;
 		if ( $form_id > 0 ) {
 			$form_odoo_id = $this->get_mapping( 'form', $form_id ) ?? 0;
@@ -302,14 +305,14 @@ class GiveWP_Module extends Module_Base {
 
 		if ( ! $form_odoo_id ) {
 			$this->logger->warning(
-				'Cannot resolve Odoo product for donation form.',
+				'Cannot resolve Odoo product for payment form.',
 				[ 'form_id' => $form_id ]
 			);
 			return [];
 		}
 
-		$use_donation_model = 'donation.donation' === $this->odoo_models['donation'];
+		$use_donation_model = 'donation.donation' === $this->odoo_models['payment'];
 
-		return $this->handler->load_donation( $payment_id, $partner_id, $form_odoo_id, $use_donation_model );
+		return $this->handler->load_payment( $wp_id, $partner_id, $form_odoo_id, $use_donation_model );
 	}
 }

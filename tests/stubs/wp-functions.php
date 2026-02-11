@@ -364,6 +364,36 @@ if ( ! function_exists( 'wp_delete_post' ) ) {
 	}
 }
 
+if ( ! function_exists( 'get_posts' ) ) {
+	function get_posts( $args = [] ) {
+		$results   = [];
+		$post_type = $args['post_type'] ?? 'post';
+		$meta_key  = $args['meta_key'] ?? '';
+		$meta_val  = $args['meta_value'] ?? '';
+		$fields    = $args['fields'] ?? '';
+
+		foreach ( $GLOBALS['_wp_posts'] ?? [] as $post ) {
+			if ( $post->post_type !== $post_type ) {
+				continue;
+			}
+			if ( $meta_key && $meta_val ) {
+				$stored = $GLOBALS['_wp_post_meta'][ $post->ID ][ $meta_key ] ?? '';
+				if ( (string) $stored !== (string) $meta_val ) {
+					continue;
+				}
+			}
+			$results[] = 'ids' === $fields ? $post->ID : $post;
+		}
+
+		$limit = (int) ( $args['posts_per_page'] ?? -1 );
+		if ( $limit > 0 ) {
+			$results = array_slice( $results, 0, $limit );
+		}
+
+		return $results;
+	}
+}
+
 if ( ! function_exists( 'register_post_type' ) ) {
 	function register_post_type( $post_type, $args = [] ) {}
 }

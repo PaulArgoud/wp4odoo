@@ -4,7 +4,6 @@ declare( strict_types=1 );
 namespace WP4Odoo\Modules;
 
 use WP4Odoo\Module_Base;
-use WP4Odoo\Partner_Service;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -31,6 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Charitable_Module extends Module_Base {
 
 	use Charitable_Hooks;
+	use Dual_Accounting_Model;
 
 	/**
 	 * Module identifier.
@@ -96,20 +96,6 @@ class Charitable_Module extends Module_Base {
 	 * @var Charitable_Handler
 	 */
 	private Charitable_Handler $handler;
-
-	/**
-	 * Lazy Partner_Service instance.
-	 *
-	 * @var Partner_Service|null
-	 */
-	private ?Partner_Service $partner_service = null;
-
-	/**
-	 * Cached OCA donation model detection result.
-	 *
-	 * @var bool|null
-	 */
-	private ?bool $donation_model_detected = null;
 
 	/**
 	 * Constructor.
@@ -224,14 +210,14 @@ class Charitable_Module extends Module_Base {
 	 */
 	public function push_to_odoo( string $entity_type, string $action, int $wp_id, int $odoo_id = 0, array $payload = [] ): bool {
 		if ( 'donation' === $entity_type && 'delete' !== $action ) {
-			$this->resolve_donation_model();
-			$this->ensure_campaign_synced( $wp_id );
+			$this->resolve_accounting_model( 'donation' );
+			$this->ensure_parent_synced( $wp_id, '_charitable_campaign_id', 'campaign' );
 		}
 
 		$result = parent::push_to_odoo( $entity_type, $action, $wp_id, $odoo_id, $payload );
 
 		if ( $result && 'donation' === $entity_type && 'create' === $action ) {
-			$this->maybe_auto_validate( $wp_id );
+			$this->auto_validate( 'donation', $wp_id, 'auto_validate_donations', 'charitable-completed' );
 		}
 
 		return $result;
@@ -327,148 +313,5 @@ class Charitable_Module extends Module_Base {
 		$use_donation_model = 'donation.donation' === $this->odoo_models['donation'];
 
 		return $this->handler->load_donation( $donation_id, $partner_id, $campaign_odoo_id, $use_donation_model );
-	}
-
-	// ─── Donation model detection ───────────────────────────
-
-	/**
-	 * Resolve the Odoo model for donations at runtime.
-	 *
-	 * Probes Odoo for the OCA donation.donation model. If found,
-	 * switches the donation entity to use it; otherwise keeps account.move.
-	 * Result is cached in a transient (1 hour).
-	 *
-	 * @return void
-	 */
-	private function resolve_donation_model(): void {
-		if ( $this->has_donation_model() ) {
-			$this->odoo_models['donation'] = 'donation.donation';
-		} else {
-			$this->odoo_models['donation'] = 'account.move';
-		}
-	}
-
-	/**
-	 * Check whether the OCA donation.donation model exists in Odoo.
-	 *
-	 * @return bool
-	 */
-	private function has_donation_model(): bool {
-		if ( null !== $this->donation_model_detected ) {
-			return $this->donation_model_detected;
-		}
-
-		$cached = get_transient( 'wp4odoo_has_donation_model' );
-		if ( false !== $cached ) {
-			$this->donation_model_detected = (bool) $cached;
-			return $this->donation_model_detected;
-		}
-
-		try {
-			$count  = $this->client()->search_count(
-				'ir.model',
-				[ [ 'model', '=', 'donation.donation' ] ]
-			);
-			$result = $count > 0;
-		} catch ( \Exception $e ) {
-			$result = false;
-		}
-
-		set_transient( 'wp4odoo_has_donation_model', $result ? 1 : 0, HOUR_IN_SECONDS );
-		$this->donation_model_detected = $result;
-
-		return $result;
-	}
-
-	// ─── Campaign sync ─────────────────────────────────────
-
-	/**
-	 * Ensure the campaign is synced to Odoo before pushing a donation.
-	 *
-	 * @param int $donation_id Charitable donation ID.
-	 * @return void
-	 */
-	private function ensure_campaign_synced( int $donation_id ): void {
-		$campaign_id = (int) get_post_meta( $donation_id, '_charitable_campaign_id', true );
-		if ( $campaign_id <= 0 ) {
-			return;
-		}
-
-		$odoo_campaign_id = $this->get_mapping( 'campaign', $campaign_id );
-		if ( $odoo_campaign_id ) {
-			return;
-		}
-
-		// Campaign not yet in Odoo — push it synchronously.
-		$this->logger->info( __( 'Auto-pushing WP Charitable campaign before donation.', 'wp4odoo' ), [ 'campaign_id' => $campaign_id ] );
-		parent::push_to_odoo( 'campaign', 'create', $campaign_id );
-	}
-
-	// ─── Auto-validation ────────────────────────────────────
-
-	/**
-	 * Auto-validate a donation in Odoo after creation.
-	 *
-	 * For OCA donation.donation: calls validate().
-	 * For core account.move: calls action_post.
-	 *
-	 * @param int $donation_id Charitable donation ID.
-	 * @return void
-	 */
-	private function maybe_auto_validate( int $donation_id ): void {
-		$settings = $this->get_settings();
-		if ( empty( $settings['auto_validate_donations'] ) ) {
-			return;
-		}
-
-		if ( 'charitable-completed' !== get_post_status( $donation_id ) ) {
-			return;
-		}
-
-		$odoo_id = $this->get_mapping( 'donation', $donation_id );
-		if ( ! $odoo_id ) {
-			return;
-		}
-
-		$model  = $this->odoo_models['donation'];
-		$method = 'donation.donation' === $model ? 'validate' : 'action_post';
-
-		try {
-			$this->client()->execute(
-				$model,
-				$method,
-				[ [ $odoo_id ] ]
-			);
-			$this->logger->info(
-				'Auto-validated donation in Odoo.',
-				[
-					'donation_id' => $donation_id,
-					'odoo_id'     => $odoo_id,
-					'model'       => $model,
-				]
-			);
-		} catch ( \Exception $e ) {
-			$this->logger->warning(
-				'Could not auto-validate donation.',
-				[
-					'donation_id' => $donation_id,
-					'odoo_id'     => $odoo_id,
-					'error'       => $e->getMessage(),
-				]
-			);
-		}
-	}
-
-	/**
-	 * Get or create the Partner_Service instance.
-	 *
-	 * @return Partner_Service
-	 */
-	private function partner_service(): Partner_Service {
-		if ( null === $this->partner_service ) {
-			$this->partner_service = new Partner_Service( fn() => $this->client() );
-		}
-
-		return $this->partner_service;
 	}
 }
