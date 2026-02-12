@@ -49,6 +49,7 @@ if ( ! $table_check ) {
 	$wpdb->query(
 		"CREATE TABLE IF NOT EXISTS {$wpdb->prefix}wp4odoo_sync_queue (
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+			correlation_id CHAR(36) DEFAULT NULL,
 			module VARCHAR(50) NOT NULL,
 			direction ENUM('wp_to_odoo','odoo_to_wp') NOT NULL,
 			entity_type VARCHAR(100) NOT NULL,
@@ -67,8 +68,11 @@ if ( ! $table_check ) {
 			PRIMARY KEY (id),
 			KEY idx_status_priority (status, priority, scheduled_at),
 			KEY idx_module_entity (module, entity_type),
+			KEY idx_dedup_wp (module, entity_type, direction, status, wp_id),
+			KEY idx_dedup_odoo (module, entity_type, direction, status, odoo_id),
 			KEY idx_wp_id (wp_id),
-			KEY idx_odoo_id (odoo_id)
+			KEY idx_odoo_id (odoo_id),
+			KEY idx_correlation (correlation_id)
 		) $charset_collate"
 	);
 
@@ -86,13 +90,14 @@ if ( ! $table_check ) {
 			PRIMARY KEY (id),
 			UNIQUE KEY idx_unique_mapping (module, entity_type, wp_id, odoo_id),
 			KEY idx_wp_lookup (entity_type, wp_id),
-			KEY idx_odoo_lookup (odoo_model, odoo_id)
+			KEY idx_odoo_lookup (module, entity_type, odoo_id)
 		) $charset_collate"
 	);
 
 	$wpdb->query(
 		"CREATE TABLE IF NOT EXISTS {$wpdb->prefix}wp4odoo_logs (
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+			correlation_id CHAR(36) DEFAULT NULL,
 			level ENUM('debug','info','warning','error','critical') NOT NULL DEFAULT 'info',
 			module VARCHAR(50) DEFAULT NULL,
 			message TEXT NOT NULL,
@@ -100,7 +105,8 @@ if ( ! $table_check ) {
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
 			KEY idx_level_date (level, created_at),
-			KEY idx_module (module)
+			KEY idx_module (module),
+			KEY idx_correlation (correlation_id)
 		) $charset_collate"
 	);
 }
