@@ -224,12 +224,12 @@ class Events_Calendar_Handler {
 			$result = \wp_insert_post( $post_args, true );
 		}
 
-		if ( \is_wp_error( $result ) || 0 === $result ) {
+		if ( \is_wp_error( $result ) ) {
 			$this->logger->error( 'Failed to save event post.', [ 'wp_id' => $wp_id ] );
 			return 0;
 		}
 
-		$post_id = (int) $result;
+		$post_id = $result;
 
 		\update_post_meta( $post_id, '_EventStartDateUTC', $data['start_date'] ?? '' );
 		\update_post_meta( $post_id, '_EventEndDateUTC', $data['end_date'] ?? '' );
@@ -264,12 +264,12 @@ class Events_Calendar_Handler {
 			$result = \wp_insert_post( $post_args, true );
 		}
 
-		if ( \is_wp_error( $result ) || 0 === $result ) {
+		if ( \is_wp_error( $result ) ) {
 			$this->logger->error( 'Failed to save ticket post.', [ 'wp_id' => $wp_id ] );
 			return 0;
 		}
 
-		$post_id = (int) $result;
+		$post_id = $result;
 
 		if ( isset( $data['list_price'] ) ) {
 			\update_post_meta( $post_id, '_price', (string) $data['list_price'] );

@@ -28,45 +28,14 @@ abstract class Dual_Accounting_Module_Base extends Module_Base {
 	// ─── OCA donation model detection ──────────────────────
 
 	/**
-	 * Cached OCA donation model detection result.
-	 *
-	 * @var bool|null
-	 */
-	private ?bool $donation_model_detected = null;
-
-	/**
 	 * Check whether the OCA donation.donation model exists in Odoo.
 	 *
-	 * Probes Odoo's ir.model registry. Result cached in a transient
-	 * (1 hour) and in-memory for the request.
+	 * Delegates to Module_Helpers::has_odoo_model().
 	 *
 	 * @return bool
 	 */
 	private function has_donation_model(): bool {
-		if ( null !== $this->donation_model_detected ) {
-			return $this->donation_model_detected;
-		}
-
-		$cached = get_transient( 'wp4odoo_has_donation_model' );
-		if ( false !== $cached ) {
-			$this->donation_model_detected = (bool) $cached;
-			return $this->donation_model_detected;
-		}
-
-		try {
-			$count  = $this->client()->search_count(
-				'ir.model',
-				[ [ 'model', '=', 'donation.donation' ] ]
-			);
-			$result = $count > 0;
-		} catch ( \Exception $e ) {
-			$result = false;
-		}
-
-		set_transient( 'wp4odoo_has_donation_model', $result ? 1 : 0, HOUR_IN_SECONDS );
-		$this->donation_model_detected = $result;
-
-		return $result;
+		return $this->has_odoo_model( 'donation.donation', 'wp4odoo_has_donation_model' );
 	}
 
 	/**

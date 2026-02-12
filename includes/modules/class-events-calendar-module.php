@@ -100,13 +100,6 @@ class Events_Calendar_Module extends Module_Base {
 	private Events_Calendar_Handler $handler;
 
 	/**
-	 * Cached event.event model detection result.
-	 *
-	 * @var bool|null
-	 */
-	private ?bool $event_model_detected = null;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param \Closure                       $client_provider Client provider closure.
@@ -211,35 +204,12 @@ class Events_Calendar_Module extends Module_Base {
 	/**
 	 * Check whether Odoo has the event.event model (Events module).
 	 *
-	 * Probes ir.model. Result cached in transient (1 hour) and in-memory.
+	 * Delegates to Module_Helpers::has_odoo_model().
 	 *
 	 * @return bool
 	 */
 	private function has_event_model(): bool {
-		if ( null !== $this->event_model_detected ) {
-			return $this->event_model_detected;
-		}
-
-		$cached = \get_transient( 'wp4odoo_has_event_event' );
-		if ( false !== $cached ) {
-			$this->event_model_detected = (bool) $cached;
-			return $this->event_model_detected;
-		}
-
-		try {
-			$count  = $this->client()->search_count(
-				'ir.model',
-				[ [ 'model', '=', 'event.event' ] ]
-			);
-			$result = $count > 0;
-		} catch ( \Exception $e ) {
-			$result = false;
-		}
-
-		\set_transient( 'wp4odoo_has_event_event', $result ? 1 : 0, HOUR_IN_SECONDS );
-		$this->event_model_detected = $result;
-
-		return $result;
+		return $this->has_odoo_model( 'event.event', 'wp4odoo_has_event_event' );
 	}
 
 	/**

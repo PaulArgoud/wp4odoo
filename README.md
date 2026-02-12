@@ -193,14 +193,13 @@ For detailed architecture, class diagrams, and data flows, see [ARCHITECTURE.md]
 # Install dependencies
 composer install
 
-# Unit tests (PHPUnit)
-php vendor/bin/phpunit
+# Run all checks at once (mirrors CI — recommended before pushing)
+composer check
 
-# Static analysis (PHPStan level 5)
-php -d memory_limit=1G vendor/bin/phpstan analyse --memory-limit=1G
-
-# Coding standards (PHPCS — WordPress-Extra)
-php vendor/bin/phpcs
+# Or run individually:
+composer phpcs                # Coding standards (PHPCS — WordPress-Extra)
+composer test                 # Unit tests (PHPUnit)
+composer phpstan              # Static analysis (PHPStan level 5)
 
 # Integration tests (requires Docker)
 npm install
@@ -213,7 +212,7 @@ npx wp-env stop
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/my-feature`)
-3. Ensure all checks pass: `php vendor/bin/phpunit && php vendor/bin/phpstan analyse --memory-limit=1G && php vendor/bin/phpcs`
+3. Ensure all checks pass: `composer check`
 4. Commit and open a Pull Request
 
 ### Translations

@@ -19,6 +19,17 @@
 			"WP4Odoo\\Tests\\": "tests/"
 		}
 	},
+	"scripts": {
+		"test": "@php vendor/bin/phpunit",
+		"phpcs": "@php vendor/bin/phpcs",
+		"phpstan": "@php -d memory_limit=1G vendor/bin/phpstan analyse --memory-limit=1G",
+		"check": [
+			"@phpcs",
+			"@test",
+			"@php -d memory_limit=1G vendor/bin/phpstan clear-result-cache --memory-limit=1G",
+			"@phpstan"
+		]
+	},
 	"config": {
 		"allow-plugins": {
 			"dealerdirect/phpcodesniffer-composer-installer": true

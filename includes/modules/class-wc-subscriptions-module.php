@@ -95,13 +95,6 @@ class WC_Subscriptions_Module extends Module_Base {
 	private WC_Subscriptions_Handler $handler;
 
 	/**
-	 * Cached sale.subscription model detection result.
-	 *
-	 * @var bool|null
-	 */
-	private ?bool $subscription_model_detected = null;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param \Closure                       $client_provider Client provider closure.
@@ -203,35 +196,12 @@ class WC_Subscriptions_Module extends Module_Base {
 	/**
 	 * Check whether Odoo has the sale.subscription model (Enterprise 14-16).
 	 *
-	 * Probes ir.model. Result cached in transient (1 hour) and in-memory.
+	 * Delegates to Module_Helpers::has_odoo_model().
 	 *
 	 * @return bool
 	 */
 	private function has_subscription_model(): bool {
-		if ( null !== $this->subscription_model_detected ) {
-			return $this->subscription_model_detected;
-		}
-
-		$cached = get_transient( 'wp4odoo_has_sale_subscription' );
-		if ( false !== $cached ) {
-			$this->subscription_model_detected = (bool) $cached;
-			return $this->subscription_model_detected;
-		}
-
-		try {
-			$count  = $this->client()->search_count(
-				'ir.model',
-				[ [ 'model', '=', 'sale.subscription' ] ]
-			);
-			$result = $count > 0;
-		} catch ( \Exception $e ) {
-			$result = false;
-		}
-
-		set_transient( 'wp4odoo_has_sale_subscription', $result ? 1 : 0, HOUR_IN_SECONDS );
-		$this->subscription_model_detected = $result;
-
-		return $result;
+		return $this->has_odoo_model( 'sale.subscription', 'wp4odoo_has_sale_subscription' );
 	}
 
 	// ─── Pull override ─────────────────────────────────────

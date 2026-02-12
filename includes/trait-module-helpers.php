@@ -232,6 +232,53 @@ trait Module_Helpers {
 	}
 
 	/**
+	 * In-memory cache for has_odoo_model() results.
+	 *
+	 * Keyed by transient name → bool.
+	 *
+	 * @var array<string, bool>
+	 */
+	private array $odoo_model_cache = [];
+
+	/**
+	 * Check whether an Odoo model exists via ir.model probe.
+	 *
+	 * Shared implementation for dual-model detection (Events Calendar,
+	 * WC Subscriptions, Dual_Accounting_Module_Base). The result is
+	 * cached in-memory for the request and in a transient (1 hour).
+	 *
+	 * @param string $model_name    Odoo model to probe (e.g. 'event.event').
+	 * @param string $transient_key WP transient key (e.g. 'wp4odoo_has_event_event').
+	 * @return bool True if the model exists in the connected Odoo instance.
+	 */
+	protected function has_odoo_model( string $model_name, string $transient_key ): bool {
+		if ( isset( $this->odoo_model_cache[ $transient_key ] ) ) {
+			return $this->odoo_model_cache[ $transient_key ];
+		}
+
+		$cached = get_transient( $transient_key );
+		if ( false !== $cached ) {
+			$this->odoo_model_cache[ $transient_key ] = (bool) $cached;
+			return $this->odoo_model_cache[ $transient_key ];
+		}
+
+		try {
+			$count  = $this->client()->search_count(
+				'ir.model',
+				[ [ 'model', '=', $model_name ] ]
+			);
+			$result = $count > 0;
+		} catch ( \Exception $e ) {
+			$result = false;
+		}
+
+		set_transient( $transient_key, $result ? 1 : 0, HOUR_IN_SECONDS );
+		$this->odoo_model_cache[ $transient_key ] = $result;
+
+		return $result;
+	}
+
+	/**
 	 * Check whether an external plugin dependency is available.
 	 *
 	 * Helper for get_dependency_status() — returns a standard
