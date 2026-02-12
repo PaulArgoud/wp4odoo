@@ -83,7 +83,7 @@ class Sync_Queue_Repository {
 		//
 		// If already in a transaction (e.g. WordPress test framework, or another
 		// plugin's transaction), use a SAVEPOINT to avoid implicit commit.
-		$use_savepoint = $in_transaction;
+		$use_savepoint = $in_transaction || (bool) $wpdb->get_var( 'SELECT @@in_transaction' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		if ( $use_savepoint ) {
 			$wpdb->query( 'SAVEPOINT wp4odoo_dedup' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		} else {

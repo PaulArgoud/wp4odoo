@@ -225,8 +225,9 @@ class SyncQueueRepositoryTest extends TestCase {
 		] );
 
 		$get_var = $this->get_calls( 'get_var' );
-		$this->assertGreaterThanOrEqual( 1, count( $get_var ), 'Expected dedup SELECT' );
-		$this->assertStringContainsString( 'FOR UPDATE', $get_var[0]['args'][0] );
+		$this->assertGreaterThanOrEqual( 2, count( $get_var ), 'Expected @@in_transaction check + dedup SELECT' );
+		$this->assertStringContainsString( '@@in_transaction', $get_var[0]['args'][0] );
+		$this->assertStringContainsString( 'FOR UPDATE', $get_var[1]['args'][0] );
 	}
 
 	public function test_enqueue_uses_savepoint_when_in_transaction(): void {
