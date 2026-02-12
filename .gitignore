@@ -6,8 +6,7 @@
 composer.phar
 composer.lock
 
-# npm
-package-lock.json
+# npm (package-lock.json is committed for reproducible CI builds)
 
 # IDE / Editor
 *.code-workspace

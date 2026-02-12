@@ -19,9 +19,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Sync_Engine {
 
 	/**
-	 * MySQL advisory lock name.
+	 * MySQL advisory lock name prefix.
+	 *
+	 * When processing a specific module, the lock name becomes
+	 * `wp4odoo_sync_{module}` to allow parallel processing of
+	 * different modules from separate WP-Cron workers.
 	 */
-	private const LOCK_NAME = 'wp4odoo_sync';
+	private const LOCK_PREFIX = 'wp4odoo_sync';
 
 	/**
 	 * Lock acquisition timeout in seconds.
@@ -142,12 +146,37 @@ class Sync_Engine {
 	 * @return int Number of jobs processed successfully.
 	 */
 	public function process_queue(): int {
+		return $this->run_with_lock( self::LOCK_PREFIX, null );
+	}
+
+	/**
+	 * Process the sync queue for a specific module only.
+	 *
+	 * Uses a module-specific advisory lock (`wp4odoo_sync_{module}`)
+	 * so multiple modules can be processed in parallel from separate
+	 * WP-Cron workers or CLI calls.
+	 *
+	 * @param string $module Module identifier.
+	 * @return int Number of jobs processed successfully.
+	 */
+	public function process_module_queue( string $module ): int {
+		return $this->run_with_lock( self::LOCK_PREFIX . '_' . $module, $module );
+	}
+
+	/**
+	 * Core queue processing loop under an advisory lock.
+	 *
+	 * @param string      $lock_name Advisory lock name.
+	 * @param string|null $module    Module filter (null = all modules).
+	 * @return int Number of jobs processed successfully.
+	 */
+	private function run_with_lock( string $lock_name, ?string $module ): int {
 		if ( ! $this->circuit_breaker->is_available() ) {
 			$this->logger->info( 'Queue processing skipped: circuit breaker open (Odoo unreachable).' );
 			return 0;
 		}
 
-		if ( ! $this->acquire_lock() ) {
+		if ( ! $this->acquire_lock( $lock_name ) ) {
 			$this->logger->info( 'Queue processing skipped: another process is running.' );
 			return 0;
 		}
@@ -159,7 +188,9 @@ class Sync_Engine {
 			$batch         = (int) $sync_settings['batch_size'];
 			$now           = current_time( 'mysql', true );
 
-			$jobs       = $this->queue_repo->fetch_pending( $batch, $now );
+			$jobs       = null !== $module
+				? $this->queue_repo->fetch_pending_for_module( $module, $batch, $now )
+				: $this->queue_repo->fetch_pending( $batch, $now );
 			$start_time = microtime( true );
 
 			$this->batch_failures  = 0;
@@ -182,6 +213,7 @@ class Sync_Engine {
 				}
 
 				$this->queue_repo->update_status( (int) $job->id, 'processing' );
+				$this->logger->set_correlation_id( $job->correlation_id ?? null );
 
 				try {
 					$result = $this->process_job( $job );
@@ -203,6 +235,8 @@ class Sync_Engine {
 				} catch ( \Throwable $e ) {
 					$this->handle_failure( $job, $e->getMessage() );
 					++$this->batch_failures;
+				} finally {
+					$this->logger->set_correlation_id( null );
 				}
 			}
 
@@ -215,7 +249,7 @@ class Sync_Engine {
 				$this->circuit_breaker->record_failure();
 			}
 		} finally {
-			$this->release_lock();
+			$this->release_lock( $lock_name );
 		}
 
 		if ( $processed > 0 ) {
@@ -224,6 +258,7 @@ class Sync_Engine {
 				[
 					'processed' => $processed,
 					'total'     => count( $jobs ),
+					'module'    => $module,
 				]
 			);
 		}
@@ -352,13 +387,14 @@ class Sync_Engine {
 	 * Uses GET_LOCK() which is atomic and server-level.
 	 * Returns true if the lock was acquired, false if another process holds it.
 	 *
+	 * @param string $lock_name Lock name (global or per-module).
 	 * @return bool True if lock acquired.
 	 */
-	private function acquire_lock(): bool {
+	private function acquire_lock( string $lock_name ): bool {
 		global $wpdb;
 
 		$result = $wpdb->get_var(
-			$wpdb->prepare( 'SELECT GET_LOCK( %s, %d )', self::LOCK_NAME, self::LOCK_TIMEOUT )
+			$wpdb->prepare( 'SELECT GET_LOCK( %s, %d )', $lock_name, self::LOCK_TIMEOUT )
 		);
 
 		return '1' === (string) $result;
@@ -370,13 +406,14 @@ class Sync_Engine {
 	 * Logs a warning if the lock was not held or could not be released
 	 * (e.g. database connection dropped after processing).
 	 *
+	 * @param string $lock_name Lock name (global or per-module).
 	 * @return void
 	 */
-	private function release_lock(): void {
+	private function release_lock( string $lock_name ): void {
 		global $wpdb;
 
 		$result = $wpdb->get_var(
-			$wpdb->prepare( 'SELECT RELEASE_LOCK( %s )', self::LOCK_NAME )
+			$wpdb->prepare( 'SELECT RELEASE_LOCK( %s )', $lock_name )
 		);
 
 		if ( '1' !== (string) $result ) {

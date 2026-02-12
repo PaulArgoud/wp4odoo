@@ -159,9 +159,16 @@ class Webhook_Handler {
 			);
 		}
 
-		// Content-based deduplication.
-		$hash      = hash( 'sha256', wp_json_encode( $body ) );
-		$dedup_key = 'wp4odoo_wh_' . substr( $hash, 0, 32 );
+		// Idempotency: prefer explicit X-Odoo-Idempotency-Key header,
+		// fall back to content-based SHA-256 hash deduplication.
+		$idempotency_key = $request->get_header( 'X-Odoo-Idempotency-Key' );
+
+		if ( ! empty( $idempotency_key ) ) {
+			$dedup_key = 'wp4odoo_wh_' . substr( sanitize_key( $idempotency_key ), 0, 32 );
+		} else {
+			$hash      = hash( 'sha256', wp_json_encode( $body ) );
+			$dedup_key = 'wp4odoo_wh_' . substr( $hash, 0, 32 );
+		}
 
 		if ( false !== get_transient( $dedup_key ) ) {
 			$this->logger->debug(

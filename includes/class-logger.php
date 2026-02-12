@@ -46,6 +46,13 @@ class Logger {
 	private ?string $module;
 
 	/**
+	 * Correlation ID for tracing a job across log entries.
+	 *
+	 * @var string|null
+	 */
+	private ?string $correlation_id = null;
+
+	/**
 	 * Settings repository (optional, for DI consumers).
 	 *
 	 * @var Settings_Repository|null
@@ -68,6 +75,25 @@ class Logger {
 	public function __construct( ?string $module = null, ?Settings_Repository $settings = null ) {
 		$this->module   = $module;
 		$this->settings = $settings;
+	}
+
+	/**
+	 * Set the correlation ID for subsequent log entries.
+	 *
+	 * @param string|null $correlation_id UUID or null to clear.
+	 * @return void
+	 */
+	public function set_correlation_id( ?string $correlation_id ): void {
+		$this->correlation_id = $correlation_id;
+	}
+
+	/**
+	 * Get the current correlation ID.
+	 *
+	 * @return string|null
+	 */
+	public function get_correlation_id(): ?string {
+		return $this->correlation_id;
 	}
 
 	/**
@@ -94,12 +120,13 @@ class Logger {
 		$result = $wpdb->insert(
 			$table,
 			[
-				'level'   => $level,
-				'module'  => $this->module,
-				'message' => $message,
-				'context' => ! empty( $context ) ? self::truncate_context( $context ) : null,
+				'correlation_id' => $this->correlation_id,
+				'level'          => $level,
+				'module'         => $this->module,
+				'message'        => $message,
+				'context'        => ! empty( $context ) ? self::truncate_context( $context ) : null,
 			],
-			[ '%s', '%s', '%s', '%s' ]
+			[ '%s', '%s', '%s', '%s', '%s' ]
 		);
 
 		return false !== $result;

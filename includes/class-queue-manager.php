@@ -22,6 +22,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Queue_Manager {
 
 	/**
+	 * Default debounce delay in seconds.
+	 *
+	 * When non-zero, newly enqueued jobs get a future scheduled_at
+	 * so rapid-fire hook callbacks coalesce into a single job.
+	 */
+	private const DEBOUNCE_SECONDS = 5;
+
+	/**
 	 * Lazy Sync_Queue_Repository instance.
 	 *
 	 * @var Sync_Queue_Repository|null
@@ -43,13 +51,17 @@ class Queue_Manager {
 	/**
 	 * Enqueue a WordPress-to-Odoo sync job.
 	 *
-	 * @param string   $module      Module identifier.
-	 * @param string   $entity_type Entity type.
-	 * @param string   $action      'create', 'update', or 'delete'.
-	 * @param int      $wp_id       WordPress entity ID.
-	 * @param int|null $odoo_id     Odoo entity ID (if known).
-	 * @param array    $payload     Additional data.
-	 * @param int      $priority    Priority (1-10).
+	 * Uses a short debounce delay so rapid-fire updates to the same
+	 * entity coalesce via the dedup mechanism instead of racing.
+	 *
+	 * @param string   $module       Module identifier.
+	 * @param string   $entity_type  Entity type.
+	 * @param string   $action       'create', 'update', or 'delete'.
+	 * @param int      $wp_id        WordPress entity ID.
+	 * @param int|null $odoo_id      Odoo entity ID (if known).
+	 * @param array    $payload      Additional data.
+	 * @param int      $priority     Priority (1-10).
+	 * @param int      $debounce     Debounce delay in seconds (0 = immediate).
 	 * @return int|false Job ID or false.
 	 */
 	public static function push(
@@ -59,32 +71,38 @@ class Queue_Manager {
 		int $wp_id,
 		?int $odoo_id = null,
 		array $payload = [],
-		int $priority = 5
+		int $priority = 5,
+		int $debounce = self::DEBOUNCE_SECONDS
 	): int|false {
-		return self::repo()->enqueue(
-			[
-				'module'      => $module,
-				'direction'   => 'wp_to_odoo',
-				'entity_type' => $entity_type,
-				'action'      => $action,
-				'wp_id'       => $wp_id,
-				'odoo_id'     => $odoo_id,
-				'payload'     => $payload,
-				'priority'    => $priority,
-			]
-		);
+		$args = [
+			'module'      => $module,
+			'direction'   => 'wp_to_odoo',
+			'entity_type' => $entity_type,
+			'action'      => $action,
+			'wp_id'       => $wp_id,
+			'odoo_id'     => $odoo_id,
+			'payload'     => $payload,
+			'priority'    => $priority,
+		];
+
+		if ( $debounce > 0 ) {
+			$args['scheduled_at'] = gmdate( 'Y-m-d H:i:s', time() + $debounce );
+		}
+
+		return self::repo()->enqueue( $args );
 	}
 
 	/**
 	 * Enqueue an Odoo-to-WordPress sync job.
 	 *
-	 * @param string   $module      Module identifier.
-	 * @param string   $entity_type Entity type.
-	 * @param string   $action      'create', 'update', or 'delete'.
-	 * @param int      $odoo_id     Odoo entity ID.
-	 * @param int|null $wp_id       WordPress entity ID (if known).
-	 * @param array    $payload     Additional data.
-	 * @param int      $priority    Priority (1-10).
+	 * @param string   $module       Module identifier.
+	 * @param string   $entity_type  Entity type.
+	 * @param string   $action       'create', 'update', or 'delete'.
+	 * @param int      $odoo_id      Odoo entity ID.
+	 * @param int|null $wp_id        WordPress entity ID (if known).
+	 * @param array    $payload      Additional data.
+	 * @param int      $priority     Priority (1-10).
+	 * @param int      $debounce     Debounce delay in seconds (0 = immediate).
 	 * @return int|false Job ID or false.
 	 */
 	public static function pull(
@@ -94,20 +112,25 @@ class Queue_Manager {
 		int $odoo_id,
 		?int $wp_id = null,
 		array $payload = [],
-		int $priority = 5
+		int $priority = 5,
+		int $debounce = 0
 	): int|false {
-		return self::repo()->enqueue(
-			[
-				'module'      => $module,
-				'direction'   => 'odoo_to_wp',
-				'entity_type' => $entity_type,
-				'action'      => $action,
-				'wp_id'       => $wp_id,
-				'odoo_id'     => $odoo_id,
-				'payload'     => $payload,
-				'priority'    => $priority,
-			]
-		);
+		$args = [
+			'module'      => $module,
+			'direction'   => 'odoo_to_wp',
+			'entity_type' => $entity_type,
+			'action'      => $action,
+			'wp_id'       => $wp_id,
+			'odoo_id'     => $odoo_id,
+			'payload'     => $payload,
+			'priority'    => $priority,
+		];
+
+		if ( $debounce > 0 ) {
+			$args['scheduled_at'] = gmdate( 'Y-m-d H:i:s', time() + $debounce );
+		}
+
+		return self::repo()->enqueue( $args );
 	}
 
 	/**
@@ -159,5 +182,14 @@ class Queue_Manager {
 	 */
 	public static function cleanup( int $days_old = 7 ): int {
 		return self::repo()->cleanup( $days_old );
+	}
+
+	/**
+	 * Get queue health metrics (latency, success rate, depth by module).
+	 *
+	 * @return array{avg_latency_seconds: float, success_rate: float, depth_by_module: array<string, int>}
+	 */
+	public static function get_health_metrics(): array {
+		return self::repo()->get_health_metrics();
 	}
 }

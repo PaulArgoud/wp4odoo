@@ -54,18 +54,19 @@ class Sync_Queue_Repository {
 
 		$table = $this->table();
 
-		$module      = sanitize_text_field( $args['module'] ?? '' );
-		$direction   = in_array( $args['direction'] ?? '', [ 'wp_to_odoo', 'odoo_to_wp' ], true )
+		$module       = sanitize_text_field( $args['module'] ?? '' );
+		$direction    = in_array( $args['direction'] ?? '', [ 'wp_to_odoo', 'odoo_to_wp' ], true )
 			? $args['direction']
 			: 'wp_to_odoo';
-		$entity_type = sanitize_text_field( $args['entity_type'] ?? '' );
-		$wp_id       = isset( $args['wp_id'] ) ? absint( $args['wp_id'] ) : null;
-		$odoo_id     = isset( $args['odoo_id'] ) ? absint( $args['odoo_id'] ) : null;
-		$action      = in_array( $args['action'] ?? '', [ 'create', 'update', 'delete' ], true )
+		$entity_type  = sanitize_text_field( $args['entity_type'] ?? '' );
+		$wp_id        = isset( $args['wp_id'] ) ? absint( $args['wp_id'] ) : null;
+		$odoo_id      = isset( $args['odoo_id'] ) ? absint( $args['odoo_id'] ) : null;
+		$action       = in_array( $args['action'] ?? '', [ 'create', 'update', 'delete' ], true )
 			? $args['action']
 			: 'update';
-		$payload     = isset( $args['payload'] ) ? wp_json_encode( $args['payload'] ) : null;
-		$priority    = isset( $args['priority'] ) ? absint( $args['priority'] ) : 5;
+		$payload      = isset( $args['payload'] ) ? wp_json_encode( $args['payload'] ) : null;
+		$priority     = isset( $args['priority'] ) ? absint( $args['priority'] ) : 5;
+		$scheduled_at = isset( $args['scheduled_at'] ) ? sanitize_text_field( $args['scheduled_at'] ) : null;
 
 		if ( empty( $module ) || empty( $entity_type ) ) {
 			return false;
@@ -103,13 +104,17 @@ class Sync_Queue_Repository {
 		$existing = $wpdb->get_var( "SELECT id FROM {$table} WHERE {$where} LIMIT 1 FOR UPDATE" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		if ( $existing ) {
+			$update_data = [
+				'action'   => $action,
+				'payload'  => $payload,
+				'priority' => $priority,
+			];
+			if ( null !== $scheduled_at ) {
+				$update_data['scheduled_at'] = $scheduled_at;
+			}
 			$wpdb->update(
 				$table,
-				[
-					'action'   => $action,
-					'payload'  => $payload,
-					'priority' => $priority,
-				],
+				$update_data,
 				[ 'id' => (int) $existing ]
 			);
 			if ( $use_savepoint ) {
@@ -121,13 +126,14 @@ class Sync_Queue_Repository {
 		}
 
 		$insert_data = [
-			'module'      => $module,
-			'direction'   => $direction,
-			'entity_type' => $entity_type,
-			'action'      => $action,
-			'payload'     => $payload,
-			'priority'    => $priority,
-			'status'      => 'pending',
+			'correlation_id' => wp_generate_uuid4(),
+			'module'         => $module,
+			'direction'      => $direction,
+			'entity_type'    => $entity_type,
+			'action'         => $action,
+			'payload'        => $payload,
+			'priority'       => $priority,
+			'status'         => 'pending',
 		];
 
 		if ( null !== $wp_id ) {
@@ -135,6 +141,9 @@ class Sync_Queue_Repository {
 		}
 		if ( null !== $odoo_id ) {
 			$insert_data['odoo_id'] = $odoo_id;
+		}
+		if ( null !== $scheduled_at ) {
+			$insert_data['scheduled_at'] = $scheduled_at;
 		}
 
 		$wpdb->insert( $table, $insert_data );
@@ -189,6 +198,50 @@ class Sync_Queue_Repository {
 		) ?? '';
 
 		return $stats;
+	}
+
+	/**
+	 * Get queue health metrics.
+	 *
+	 * Returns extended metrics beyond basic counts: average processing
+	 * latency, success rate, and per-module depth.
+	 *
+	 * @return array{avg_latency_seconds: float, success_rate: float, depth_by_module: array<string, int>}
+	 */
+	public function get_health_metrics(): array {
+		global $wpdb;
+
+		$table = $this->table();
+
+		// Average latency: time between created_at and processed_at for recent completed jobs (last 24h).
+		$avg_latency = (float) $wpdb->get_var(
+			"SELECT AVG(TIMESTAMPDIFF(SECOND, created_at, processed_at)) FROM {$table} WHERE status = 'completed' AND processed_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+		);
+
+		// Success rate: completed / (completed + failed) over last 24h.
+		$totals = $wpdb->get_row(
+			"SELECT COALESCE(SUM(status = 'completed'), 0) as completed, COALESCE(SUM(status = 'failed'), 0) as failed FROM {$table} WHERE processed_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+		);
+
+		$completed_count = (int) ( $totals->completed ?? 0 );
+		$failed_count    = (int) ( $totals->failed ?? 0 );
+		$denominator     = $completed_count + $failed_count;
+		$success_rate    = $denominator > 0 ? round( $completed_count / $denominator * 100, 1 ) : 100.0;
+
+		// Pending depth by module.
+		$module_rows     = $wpdb->get_results(
+			"SELECT module, COUNT(*) as depth FROM {$table} WHERE status = 'pending' GROUP BY module ORDER BY depth DESC" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+		);
+		$depth_by_module = [];
+		foreach ( $module_rows as $row ) {
+			$depth_by_module[ $row->module ] = (int) $row->depth;
+		}
+
+		return [
+			'avg_latency_seconds' => round( $avg_latency, 1 ),
+			'success_rate'        => $success_rate,
+			'depth_by_module'     => $depth_by_module,
+		];
 	}
 
 	/**
@@ -282,6 +335,31 @@ class Sync_Queue_Repository {
 				$module
 			)
 		);
+	}
+
+	/**
+	 * Fetch pending jobs for a specific module, ready for processing.
+	 *
+	 * @param string $module     Module identifier.
+	 * @param int    $batch_size Maximum number of jobs to fetch.
+	 * @param string $now        Current datetime string (GMT).
+	 * @return array Array of job objects.
+	 */
+	public function fetch_pending_for_module( string $module, int $batch_size, string $now ): array {
+		global $wpdb;
+
+		$table = $this->table();
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+		$sql = "SELECT * FROM {$table}
+				 WHERE status = 'pending'
+				   AND module = %s
+				   AND ( scheduled_at IS NULL OR scheduled_at <= %s )
+				 ORDER BY priority ASC, created_at ASC
+				 LIMIT %d";
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $sql built above from safe $wpdb->prefix.
+		return $wpdb->get_results( $wpdb->prepare( $sql, $module, $now, $batch_size ) );
 	}
 
 	/**

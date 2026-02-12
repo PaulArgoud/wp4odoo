@@ -37,6 +37,11 @@ trait Retryable_Http {
 	protected function http_post_with_retry( string $url, array $request_args, string $endpoint ): array {
 		$response = null;
 
+		// Enable TCP connection reuse across batch calls.
+		if ( ! isset( $request_args['headers']['Connection'] ) ) {
+			$request_args['headers']['Connection'] = 'keep-alive';
+		}
+
 		for ( $attempt = 1; $attempt <= self::MAX_RETRIES; $attempt++ ) {
 			$response = wp_remote_post( $url, $request_args );
 

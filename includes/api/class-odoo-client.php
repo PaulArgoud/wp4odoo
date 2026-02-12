@@ -192,6 +192,31 @@ class Odoo_Client {
 	}
 
 	/**
+	 * Create multiple records in a single RPC call.
+	 *
+	 * Odoo's `create()` natively accepts a list of value dicts
+	 * and returns a list of IDs. This avoids N round-trips.
+	 *
+	 * @param string                          $model       Odoo model name.
+	 * @param array<int, array<string, mixed>> $values_list Array of value dicts.
+	 * @return array<int> Array of new record IDs (same order as input).
+	 */
+	public function create_batch( string $model, array $values_list ): array {
+		if ( empty( $values_list ) ) {
+			return [];
+		}
+
+		// Single record: delegate to scalar create for backward compat.
+		if ( 1 === count( $values_list ) ) {
+			return [ $this->create( $model, reset( $values_list ) ) ];
+		}
+
+		$result = $this->call( $model, 'create', [ array_values( $values_list ) ] );
+
+		return is_array( $result ) ? array_map( 'intval', $result ) : [ (int) $result ];
+	}
+
+	/**
 	 * Update existing records.
 	 *
 	 * @param string               $model  Odoo model name.
@@ -203,6 +228,30 @@ class Odoo_Client {
 		$result = $this->call( $model, 'write', [ $ids, $values ] );
 
 		return (bool) $result;
+	}
+
+	/**
+	 * Update multiple records sharing the same field values in one call.
+	 *
+	 * Odoo's `write()` accepts multiple IDs natively. This method
+	 * groups updates by identical value dicts and batches them.
+	 *
+	 * @param string                                  $model   Odoo model name.
+	 * @param array<int, array{ids: array<int>, values: array<string, mixed>}> $batches Grouped updates.
+	 * @return bool True if all batches succeeded.
+	 */
+	public function write_batch( string $model, array $batches ): bool {
+		if ( empty( $batches ) ) {
+			return true;
+		}
+
+		foreach ( $batches as $batch ) {
+			if ( ! $this->write( $model, $batch['ids'], $batch['values'] ) ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**
