@@ -3,6 +3,7 @@
 [![CI](https://github.com/PaulArgoud/wordpress-for-odoo/actions/workflows/ci.yml/badge.svg)](https://github.com/PaulArgoud/wordpress-for-odoo/actions/workflows/ci.yml)
 ![PHP 8.2+](https://img.shields.io/badge/PHP-8.2%2B-8892BF)
 ![WordPress 6.0+](https://img.shields.io/badge/WordPress-6.0%2B-21759B)
+![Odoo 14+](https://img.shields.io/badge/Odoo-14%2B-714B67)
 ![License: GPL v2+](https://img.shields.io/badge/License-GPL%20v2%2B-blue)
 
 Modular WordPress plugin that creates a seamless, bidirectional bridge between WordPress/WooCommerce and Odoo ERP (v14+). Built on a clean, extensible architecture with 24 integration modules, an async sync queue, and full WP-CLI support. Ships in **3 languages** (English, French, Spanish).
@@ -24,10 +25,7 @@ Modular WordPress plugin that creates a seamless, bidirectional bridge between W
 
 ## Requirements
 
-- PHP 8.2+
-- MySQL 8.0+ or MariaDB 10.5+
-- WordPress 6.0+
-- Odoo 17+ (JSON-RPC) or Odoo 14+ (XML-RPC)
+PHP 8.2+, MySQL 8.0+ / MariaDB 10.5+, WordPress 6.0+, Odoo 17+ (JSON-RPC) or 14+ (XML-RPC).
 
 ## Compatibility
 
