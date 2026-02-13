@@ -161,16 +161,20 @@ class Odoo_Client {
 	/**
 	 * Read specific records by IDs.
 	 *
-	 * @param string              $model  Odoo model name.
-	 * @param array<int>          $ids    Record IDs to read.
-	 * @param array<int, string>  $fields Fields to read.
+	 * @param string              $model   Odoo model name.
+	 * @param array<int>          $ids     Record IDs to read.
+	 * @param array<int, string>  $fields  Fields to read.
+	 * @param array<string, mixed> $context Optional Odoo context (e.g. ['lang' => 'fr_FR']).
 	 * @return array<int, array<string, mixed>> Array of record arrays.
 	 */
-	public function read( string $model, array $ids, array $fields = [] ): array {
+	public function read( string $model, array $ids, array $fields = [], array $context = [] ): array {
 		$kwargs = [];
 
 		if ( ! empty( $fields ) ) {
 			$kwargs['fields'] = $fields;
+		}
+		if ( ! empty( $context ) ) {
+			$kwargs['context'] = $context;
 		}
 
 		$result = $this->call( $model, 'read', [ $ids ], $kwargs );
@@ -181,12 +185,18 @@ class Odoo_Client {
 	/**
 	 * Create a new record.
 	 *
-	 * @param string               $model  Odoo model name.
-	 * @param array<string, mixed> $values Field values.
+	 * @param string               $model   Odoo model name.
+	 * @param array<string, mixed> $values  Field values.
+	 * @param array<string, mixed> $context Optional Odoo context (e.g. ['lang' => 'fr_FR']).
 	 * @return int The new record ID.
 	 */
-	public function create( string $model, array $values ): int {
-		$result = $this->call( $model, 'create', [ $values ] );
+	public function create( string $model, array $values, array $context = [] ): int {
+		$kwargs = [];
+		if ( ! empty( $context ) ) {
+			$kwargs['context'] = $context;
+		}
+
+		$result = $this->call( $model, 'create', [ $values ], $kwargs );
 
 		return (int) $result;
 	}
@@ -219,13 +229,19 @@ class Odoo_Client {
 	/**
 	 * Update existing records.
 	 *
-	 * @param string               $model  Odoo model name.
-	 * @param array<int>           $ids    Record IDs to update.
-	 * @param array<string, mixed> $values Field values to update.
+	 * @param string               $model   Odoo model name.
+	 * @param array<int>           $ids     Record IDs to update.
+	 * @param array<string, mixed> $values  Field values to update.
+	 * @param array<string, mixed> $context Optional Odoo context (e.g. ['lang' => 'fr_FR']).
 	 * @return bool True on success.
 	 */
-	public function write( string $model, array $ids, array $values ): bool {
-		$result = $this->call( $model, 'write', [ $ids, $values ] );
+	public function write( string $model, array $ids, array $values, array $context = [] ): bool {
+		$kwargs = [];
+		if ( ! empty( $context ) ) {
+			$kwargs['context'] = $context;
+		}
+
+		$result = $this->call( $model, 'write', [ $ids, $values ], $kwargs );
 
 		return (bool) $result;
 	}

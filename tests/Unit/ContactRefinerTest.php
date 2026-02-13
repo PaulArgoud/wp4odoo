@@ -59,7 +59,7 @@ class MockOdooClient extends Odoo_Client {
 	 * @param array  $fields Fields to read.
 	 * @return array Array of records.
 	 */
-	public function read( string $model, array $ids, array $fields = [] ): array {
+	public function read( string $model, array $ids, array $fields = [], array $context = [] ): array {
 		$this->calls[] = [
 			'method' => 'read',
 			'model'  => $model,

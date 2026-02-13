@@ -4,6 +4,7 @@ declare( strict_types=1 );
 namespace WP4Odoo;
 
 use WP4Odoo\API\Odoo_Client;
+use WP4Odoo\I18n\Translation_Service;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -29,6 +30,13 @@ trait Module_Helpers {
 	 * @var Partner_Service|null
 	 */
 	private ?Partner_Service $partner_service_instance = null;
+
+	/**
+	 * Lazy Translation_Service instance.
+	 *
+	 * @var Translation_Service|null
+	 */
+	private ?Translation_Service $translation_service_instance = null;
 
 	// ─── Synthetic ID helpers ──────────────────────────────
 
@@ -231,6 +239,22 @@ trait Module_Helpers {
 		}
 
 		return $this->partner_service_instance;
+	}
+
+	/**
+	 * Get or create the Translation_Service instance (lazy).
+	 *
+	 * Used by any module that needs to push translated field values
+	 * to Odoo (WPML/Polylang). Returns the same instance on each call.
+	 *
+	 * @return Translation_Service
+	 */
+	protected function translation_service(): Translation_Service {
+		if ( null === $this->translation_service_instance ) {
+			$this->translation_service_instance = new Translation_Service( fn() => $this->client() );
+		}
+
+		return $this->translation_service_instance;
 	}
 
 	/**

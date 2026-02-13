@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WordPress For Odoo 3.0.0\n"
-"Report-Msgid-Bugs-To: contact@avalia.io\n"
-"POT-Creation-Date: 2026-02-13 12:10+0100\n"
+"Report-Msgid-Bugs-To: support@avalia.io\n"
+"POT-Creation-Date: 2026-02-13 12:58+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1078,7 +1078,7 @@ msgstr ""
 #: includes/modules/class-ecwid-module.php:136
 #: includes/modules/class-shopwp-module.php:124
 #: includes/modules/class-wc-bookings-module.php:120
-#: includes/modules/class-woocommerce-module.php:247
+#: includes/modules/class-woocommerce-module.php:322
 msgid "Sync products"
 msgstr ""
 
@@ -1090,7 +1090,7 @@ msgstr ""
 #: includes/modules/class-edd-module.php:157
 #: includes/modules/class-lifterlms-module.php:183
 #: includes/modules/class-pmpro-module.php:157
-#: includes/modules/class-woocommerce-module.php:252
+#: includes/modules/class-woocommerce-module.php:327
 msgid "Sync orders"
 msgstr ""
 
@@ -1115,7 +1115,7 @@ msgid "Synchronize EDD orders with Odoo."
 msgstr ""
 
 #: includes/modules/class-edd-module.php:162
-#: includes/modules/class-woocommerce-module.php:267
+#: includes/modules/class-woocommerce-module.php:342
 msgid "Auto-confirm orders"
 msgstr ""
 
@@ -1881,66 +1881,78 @@ msgstr ""
 msgid "Pull subscription status changes from Odoo back to WooCommerce."
 msgstr ""
 
-#: includes/modules/class-woocommerce-module.php:249
+#: includes/modules/class-woocommerce-module.php:256
+msgid "No Odoo mapping for translation."
+msgstr ""
+
+#: includes/modules/class-woocommerce-module.php:263
+msgid "Missing translation parameters."
+msgstr ""
+
+#: includes/modules/class-woocommerce-module.php:268
+msgid "Translated product not found."
+msgstr ""
+
+#: includes/modules/class-woocommerce-module.php:324
 msgid "Synchronize WooCommerce products with Odoo."
 msgstr ""
 
-#: includes/modules/class-woocommerce-module.php:254
+#: includes/modules/class-woocommerce-module.php:329
 msgid "Synchronize WooCommerce orders with Odoo."
 msgstr ""
 
-#: includes/modules/class-woocommerce-module.php:257
+#: includes/modules/class-woocommerce-module.php:332
 msgid "Sync stock"
 msgstr ""
 
-#: includes/modules/class-woocommerce-module.php:259
+#: includes/modules/class-woocommerce-module.php:334
 msgid "Pull stock levels from Odoo into WooCommerce products."
 msgstr ""
 
-#: includes/modules/class-woocommerce-module.php:262
+#: includes/modules/class-woocommerce-module.php:337
 msgid "Sync product images"
 msgstr ""
 
-#: includes/modules/class-woocommerce-module.php:264
+#: includes/modules/class-woocommerce-module.php:339
 msgid "Pull product featured images from Odoo."
 msgstr ""
 
-#: includes/modules/class-woocommerce-module.php:269
+#: includes/modules/class-woocommerce-module.php:344
 msgid "Automatically confirm orders in Odoo when created from WooCommerce."
 msgstr ""
 
-#: includes/modules/class-woocommerce-module.php:272
+#: includes/modules/class-woocommerce-module.php:347
 msgid "Sync pricelist prices"
 msgstr ""
 
-#: includes/modules/class-woocommerce-module.php:274
+#: includes/modules/class-woocommerce-module.php:349
 msgid "Pull pricelist prices from Odoo and set as WooCommerce sale prices."
 msgstr ""
 
-#: includes/modules/class-woocommerce-module.php:277
+#: includes/modules/class-woocommerce-module.php:352
 msgid "Pricelist ID"
 msgstr ""
 
-#: includes/modules/class-woocommerce-module.php:279
+#: includes/modules/class-woocommerce-module.php:354
 msgid ""
 "The Odoo pricelist ID to use for pricing (Sales > Configuration > "
 "Pricelists)."
 msgstr ""
 
-#: includes/modules/class-woocommerce-module.php:282
+#: includes/modules/class-woocommerce-module.php:357
 msgid "Sync shipments"
 msgstr ""
 
-#: includes/modules/class-woocommerce-module.php:284
+#: includes/modules/class-woocommerce-module.php:359
 msgid ""
 "Pull shipment tracking from Odoo into WooCommerce orders (AST compatible)."
 msgstr ""
 
-#: includes/modules/class-woocommerce-module.php:287
+#: includes/modules/class-woocommerce-module.php:362
 msgid "Convert currency"
 msgstr ""
 
-#: includes/modules/class-woocommerce-module.php:289
+#: includes/modules/class-woocommerce-module.php:364
 msgid ""
 "Convert prices using Odoo exchange rates when the product currency differs "
 "from the shop currency."
@@ -2011,7 +2023,7 @@ msgstr ""
 msgid "WC Bookings module enabled but WooCommerce Bookings is not active."
 msgstr ""
 
-#: includes/trait-module-helpers.php:359
+#: includes/trait-module-helpers.php:383
 #, php-format
 msgid "%s must be installed and activated to use this module."
 msgstr ""

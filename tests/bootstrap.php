@@ -114,6 +114,7 @@ require_once __DIR__ . '/stubs/lifterlms-classes.php';
 require_once __DIR__ . '/stubs/wc-subscriptions-classes.php';
 require_once __DIR__ . '/stubs/events-calendar-classes.php';
 require_once __DIR__ . '/stubs/wc-bookings-classes.php';
+require_once __DIR__ . '/stubs/i18n-classes.php';
 
 // ─── Composer autoloader ────────────────────────────────
 
@@ -157,3 +158,4 @@ spl_autoload_register(
 
 require_once __DIR__ . '/helpers/test-functions.php';
 require_once __DIR__ . '/helpers/Module_Test_Case.php';
+require_once __DIR__ . '/helpers/MockTransport.php';

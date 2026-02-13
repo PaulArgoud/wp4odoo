@@ -4,83 +4,7 @@ declare( strict_types=1 );
 namespace WP4Odoo\Tests\Unit;
 
 use WP4Odoo\API\Odoo_Client;
-use WP4Odoo\API\Transport;
 use PHPUnit\Framework\TestCase;
-
-/**
- * Mock Transport implementation for testing Odoo_Client.
- *
- * Records all execute_kw calls and returns configurable values or exceptions.
- */
-class MockTransport implements Transport {
-
-	/**
-	 * Configurable return value for execute_kw.
-	 *
-	 * @var mixed
-	 */
-	public mixed $return_value = null;
-
-	/**
-	 * Optional exception to throw from execute_kw.
-	 *
-	 * @var \Throwable|null
-	 */
-	public ?\Throwable $throw = null;
-
-	/**
-	 * Recorded execute_kw calls.
-	 *
-	 * @var array<int, array{model: string, method: string, args: array, kwargs: array}>
-	 */
-	public array $calls = [];
-
-	/**
-	 * Authenticate against Odoo.
-	 *
-	 * @param string $username The Odoo login.
-	 * @return int Always returns 1 (stub).
-	 */
-	public function authenticate( string $username ): int {
-		return 1;
-	}
-
-	/**
-	 * Execute a method on an Odoo model.
-	 *
-	 * Records the call, optionally throws, or returns configured value.
-	 *
-	 * @param string               $model  Odoo model name.
-	 * @param string               $method Method name.
-	 * @param array<int, mixed>    $args   Positional arguments.
-	 * @param array<string, mixed> $kwargs Keyword arguments.
-	 * @return mixed
-	 * @throws \Throwable If $throw is set.
-	 */
-	public function execute_kw( string $model, string $method, array $args = [], array $kwargs = [] ): mixed {
-		$this->calls[] = [
-			'model'  => $model,
-			'method' => $method,
-			'args'   => $args,
-			'kwargs' => $kwargs,
-		];
-
-		if ( $this->throw ) {
-			throw $this->throw;
-		}
-
-		return $this->return_value;
-	}
-
-	/**
-	 * Get the authenticated user ID.
-	 *
-	 * @return int|null Always returns 1 (stub).
-	 */
-	public function get_uid(): ?int {
-		return 1;
-	}
-}
 
 /**
  * Test suite for Odoo_Client.
@@ -398,5 +322,95 @@ class OdooClientTest extends TestCase {
 
 		// Trigger ensure_connected() by calling any CRUD method.
 		$fresh_client->search( 'res.partner', [] );
+	}
+
+	// ─── Context parameter ─────────────────────────────────
+
+	/**
+	 * Test create passes context as kwargs when provided.
+	 *
+	 * @return void
+	 */
+	public function test_create_with_context(): void {
+		$this->transport->return_value = 99;
+
+		$result = $this->client->create( 'product.product', [ 'name' => 'Produit' ], [ 'lang' => 'fr_FR' ] );
+
+		$this->assertSame( 99, $result );
+		$this->assertCount( 1, $this->transport->calls );
+		$this->assertSame( [ 'context' => [ 'lang' => 'fr_FR' ] ], $this->transport->calls[0]['kwargs'] );
+	}
+
+	/**
+	 * Test create without context passes empty kwargs.
+	 *
+	 * @return void
+	 */
+	public function test_create_without_context_has_empty_kwargs(): void {
+		$this->transport->return_value = 99;
+
+		$this->client->create( 'product.product', [ 'name' => 'Test' ] );
+
+		$this->assertSame( [], $this->transport->calls[0]['kwargs'] );
+	}
+
+	/**
+	 * Test write passes context as kwargs when provided.
+	 *
+	 * @return void
+	 */
+	public function test_write_with_context(): void {
+		$this->transport->return_value = true;
+
+		$this->client->write( 'product.product', [ 42 ], [ 'name' => 'Produit' ], [ 'lang' => 'fr_FR' ] );
+
+		$this->assertCount( 1, $this->transport->calls );
+		$this->assertSame( [ 'context' => [ 'lang' => 'fr_FR' ] ], $this->transport->calls[0]['kwargs'] );
+	}
+
+	/**
+	 * Test write without context passes empty kwargs.
+	 *
+	 * @return void
+	 */
+	public function test_write_without_context_has_empty_kwargs(): void {
+		$this->transport->return_value = true;
+
+		$this->client->write( 'product.product', [ 42 ], [ 'name' => 'Test' ] );
+
+		$this->assertSame( [], $this->transport->calls[0]['kwargs'] );
+	}
+
+	/**
+	 * Test read passes context in kwargs when provided.
+	 *
+	 * @return void
+	 */
+	public function test_read_with_context(): void {
+		$this->transport->return_value = [ [ 'id' => 1, 'name' => 'Produit' ] ];
+
+		$this->client->read( 'product.product', [ 1 ], [ 'name' ], [ 'lang' => 'fr_FR' ] );
+
+		$this->assertCount( 1, $this->transport->calls );
+		$this->assertSame(
+			[ 'fields' => [ 'name' ], 'context' => [ 'lang' => 'fr_FR' ] ],
+			$this->transport->calls[0]['kwargs']
+		);
+	}
+
+	/**
+	 * Test read with context and no fields.
+	 *
+	 * @return void
+	 */
+	public function test_read_with_context_no_fields(): void {
+		$this->transport->return_value = [ [ 'id' => 1, 'name' => 'Produit' ] ];
+
+		$this->client->read( 'product.product', [ 1 ], [], [ 'lang' => 'fr_FR' ] );
+
+		$this->assertSame(
+			[ 'context' => [ 'lang' => 'fr_FR' ] ],
+			$this->transport->calls[0]['kwargs']
+		);
 	}
 }

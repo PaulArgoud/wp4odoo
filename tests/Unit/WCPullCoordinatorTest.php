@@ -62,7 +62,7 @@ class WCPullCoordinatorTest extends TestCase {
 			}
 
 			/** @return array */
-			public function read( string $model, array $ids, array $fields = [] ): array {
+			public function read( string $model, array $ids, array $fields = [], array $context = [] ): array {
 				return [];
 			}
 		};
@@ -84,7 +84,7 @@ class WCPullCoordinatorTest extends TestCase {
 
 	public function test_pull_variant_fails_when_parent_not_mapped(): void {
 		$client = new class {
-			public function read( string $model, array $ids, array $fields = [] ): array {
+			public function read( string $model, array $ids, array $fields = [], array $context = [] ): array {
 				return [ [ 'product_tmpl_id' => [ 100, 'Template' ] ] ];
 			}
 		};
@@ -136,7 +136,7 @@ class WCPullCoordinatorTest extends TestCase {
 
 	public function test_pull_shipment_succeeds_for_done_outgoing(): void {
 		$client = new class {
-			public function read( string $model, array $ids, array $fields = [] ): array {
+			public function read( string $model, array $ids, array $fields = [], array $context = [] ): array {
 				return [ [
 					'sale_id'            => [ 50, 'SO050' ],
 					'state'              => 'done',

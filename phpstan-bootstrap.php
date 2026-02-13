@@ -788,5 +788,47 @@ if ( ! class_exists( 'WC_Product_Booking' ) ) {
 	}
 }
 
+// ─── WPML stubs ─────────────────────────────────────────
+
+if ( ! defined( 'ICL_SITEPRESS_VERSION' ) ) {
+	define( 'ICL_SITEPRESS_VERSION', '4.7.0' );
+}
+
+if ( ! class_exists( 'SitePress' ) ) {
+	class SitePress {
+		public function get_default_language(): string { return 'en'; }
+	}
+}
+
+// ─── Polylang stubs ─────────────────────────────────────
+
+if ( ! defined( 'POLYLANG_VERSION' ) ) {
+	define( 'POLYLANG_VERSION', '3.6.0' );
+}
+
+if ( ! function_exists( 'pll_default_language' ) ) {
+	function pll_default_language(): string { return 'en'; }
+}
+
+if ( ! function_exists( 'pll_languages_list' ) ) {
+	/** @return array<int, string> */
+	function pll_languages_list( array $args = [] ): array { return []; }
+}
+
+if ( ! function_exists( 'pll_get_post_translations' ) ) {
+	/** @return array<string, int> */
+	function pll_get_post_translations( int $post_id ): array { return []; }
+}
+
+if ( ! function_exists( 'pll_get_post_language' ) ) {
+	/** @return string|false */
+	function pll_get_post_language( int $post_id, string $field = 'slug' ) { return false; }
+}
+
+if ( ! function_exists( 'pll_get_post' ) ) {
+	/** @return int|false */
+	function pll_get_post( int $post_id, string $lang = '' ) { return false; }
+}
+
 // WP_CLI\Utils namespace stub loaded from separate file (PHP namespace rules).
 require_once __DIR__ . '/phpstan-wp-cli-stubs.php';

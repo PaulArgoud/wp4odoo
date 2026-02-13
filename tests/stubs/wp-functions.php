@@ -107,6 +107,9 @@ if ( ! function_exists( 'do_action' ) ) {
 
 if ( ! function_exists( 'apply_filters' ) ) {
 	function apply_filters( $tag, $value, ...$args ) {
+		if ( isset( $GLOBALS['_wp_filters'][ $tag ] ) && is_callable( $GLOBALS['_wp_filters'][ $tag ] ) ) {
+			return call_user_func( $GLOBALS['_wp_filters'][ $tag ], $value, ...$args );
+		}
 		return $value;
 	}
 }

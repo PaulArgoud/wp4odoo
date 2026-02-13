@@ -162,6 +162,13 @@ WordPress For Odoo/
 │   │   ├── class-shopwp-handler.php          # ShopWP: CPT + shopwp_variants table via $wpdb
 │   │   └── class-shopwp-module.php           # ShopWP: ecommerce exclusive group, products only
 │   │
+│   ├── i18n/
+│   │   ├── interface-translation-adapter.php   # Adapter interface (6 methods: default lang, active langs, translations, post lang, original ID, is_translation)
+│   │   ├── class-wpml-adapter.php              # WPML implementation (filter API: wpml_default_language, wpml_active_languages, etc.)
+│   │   ├── class-polylang-adapter.php          # Polylang implementation (function API: pll_default_language, pll_get_post_translations, etc.)
+│   │   ├── class-translation-service.php       # Core service: adapter detection, locale mapping (34 WP→Odoo), Odoo version detection, dual-path push
+│   │   └── index.php                           # Silence is golden
+│   │
 │   ├── admin/
 │   │   ├── class-admin.php            # Admin menu, assets, activation redirect, setup notice
 │   │   ├── class-bulk-handler.php     # Bulk product import/export (paginated, batch lookups)
@@ -178,7 +185,7 @@ WordPress For Odoo/
 │   ├── class-settings-repository.php  # Centralized option access: keys, defaults, typed accessors (DI)
 │   ├── class-module-registry.php      # Module registration, mutual exclusivity, lifecycle
 │   ├── class-module-base.php          # Abstract base class for modules (push/pull, mapping, anti-loop)
-│   ├── trait-module-helpers.php       # Shared helpers: auto_post_invoice (→bool), ensure_entity_synced, synthetic IDs, partner_service, resolve_partner_from_user/email, check_dependency
+│   ├── trait-module-helpers.php       # Shared helpers: auto_post_invoice (→bool), ensure_entity_synced, synthetic IDs, partner_service, translation_service, resolve_partner_from_user/email, check_dependency
 │   ├── class-entity-map-repository.php # DB access for wp4odoo_entity_map (batch lookups, LRU cache)
 │   ├── class-sync-queue-repository.php # DB access for wp4odoo_sync_queue (atomic dedup via transaction)
 │   ├── class-partner-service.php       # Shared res.partner lookup/creation service
@@ -249,7 +256,10 @@ WordPress For Odoo/
 │   │   ├── wp-invoice-classes.php       # WPI_Invoice
 │   │   ├── crowdfunding-classes.php     # wpneo_crowdfunding_init()
 │   │   ├── ecwid-classes.php            # ECWID_PLUGIN_DIR constant
-│   │   └── shopwp-classes.php           # SHOPWP_PLUGIN_DIR constant
+│   │   ├── shopwp-classes.php           # SHOPWP_PLUGIN_DIR constant
+│   │   └── i18n-classes.php            # WPML + Polylang stubs (constants, classes, functions)
+│   ├── helpers/
+│   │   └── MockTransport.php            #   Shared mock Transport for API tests
 │   ├── Integration/                       #   wp-env integration tests (real WordPress + MySQL)
 │   │   ├── WP4Odoo_TestCase.php          #   Base test case for integration tests
 │   │   ├── DatabaseMigrationTest.php     #   7 tests for table creation, options seeding
@@ -274,7 +284,7 @@ WordPress For Odoo/
 │       ├── LoggerTest.php               #   33 tests for Logger
 │       ├── SyncEngineTest.php           #   16 tests for Sync_Engine
 │       ├── OdooAuthTest.php             #   20 tests for Odoo_Auth
-│       ├── OdooClientTest.php           #   14 tests for Odoo_Client
+│       ├── OdooClientTest.php           #   21 tests for Odoo_Client
 │       ├── QueryServiceTest.php         #   15 tests for Query_Service
 │       ├── ContactRefinerTest.php       #   19 tests for Contact_Refiner
 │       ├── SettingsPageTest.php         #   20 tests for Settings_Page
@@ -327,7 +337,10 @@ WordPress For Odoo/
 │       ├── WPInvoiceModuleTest.php       # 32 tests for WP_Invoice_Module
 │       ├── CrowdfundingModuleTest.php    # 22 tests for Crowdfunding_Module
 │       ├── EcwidModuleTest.php           # 42 tests for Ecwid_Module
-│       └── ShopWPModuleTest.php          # 25 tests for ShopWP_Module
+│       ├── ShopWPModuleTest.php          # 25 tests for ShopWP_Module
+│       ├── WPMLAdapterTest.php          # 12 tests for WPML_Adapter
+│       ├── PolylangAdapterTest.php      # 12 tests for Polylang_Adapter
+│       └── TranslationServiceTest.php   # 20 tests for Translation_Service
 │
 ├── uninstall.php                      # Cleanup on plugin uninstall
 │
@@ -624,6 +637,35 @@ Two booking modules (Amelia, Bookly) share a common service/appointment sync pat
 - Shared `load_wp_data()` / `load_booking_data()`: loads booking via handler, resolves service name for event title, resolves customer→Odoo partner, composes event name "Service — Customer"
 - Shared `ensure_service_synced()`: auto-pushes service to Odoo before dependent booking
 - 8 abstract methods for subclass configuration: `get_booking_entity_type()`, `get_fallback_label()`, `handler_load_service()`, `handler_extract_booking_fields()` (consolidated: returns service_id, customer email/name, start/end/notes in one call), `handler_get_service_id()`, `handler_parse_service_from_odoo()`, `handler_save_service()`, `handler_delete_service()`
+
+### 11. Translation Infrastructure (i18n)
+
+The `Translation_Service` (`includes/i18n/class-translation-service.php`) is a cross-cutting service (like `Partner_Service`) that enables any module to push translated content to Odoo. It is **not a module** — it is accessible via `$this->translation_service()` from `Module_Helpers`.
+
+**Architecture:**
+
+```
+Translation_Service
+    ├── Detects WPML / Polylang via constants + functions
+    ├── Translation_Adapter (interface)
+    │   ├── WPML_Adapter   → filter API (wpml_default_language, wpml_active_languages, etc.)
+    │   └── Polylang_Adapter → function API (pll_default_language, pll_get_post_translations, etc.)
+    ├── Locale mapping: WP 2-letter → Odoo 5-letter (34 locales, filterable via wp4odoo_odoo_locale)
+    └── Dual-path push:
+        ├── Odoo 16+: write() with context={'lang': 'fr_FR'} (JSONB inline columns)
+        └── Odoo 14-15: CRUD on ir.translation model (legacy table)
+```
+
+**Key design decisions:**
+- **Adapter pattern**: `Translation_Adapter` interface abstracts WPML/Polylang differences. WPML uses WordPress filter API; Polylang uses direct function calls. Detection order: WPML first (more popular).
+- **Original-only push**: Translated posts do not create separate Odoo records. Their content is pushed as translations of the original post's Odoo record via language context.
+- **Queue reuse**: Uses existing `update` action with `_translate` payload flag — no DB migration needed for new ENUM values.
+- **Odoo version detection**: `has_ir_translation()` probes `ir.model` for the `ir.translation` model (present in Odoo 14-15, removed in 16+). Result cached in 1-hour transient.
+
+**WooCommerce integration** (Phase 3):
+- `on_product_save()` detects if the saved post is a translation → enqueues translations for the original instead
+- `enqueue_product_translations()` iterates all translations of the original product, enqueuing update jobs with `_translate`/`_lang`/`_translated_id` payload
+- `push_product_translation()` intercepts these jobs in `push_to_odoo()`, loads the translated WC product, and pushes `name` + `description_sale` via `Translation_Service::push_translation()`
 
 ## Database
 

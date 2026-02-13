@@ -62,7 +62,7 @@ class PartnerServiceTest extends TestCase {
 				return $this->search_read_return;
 			}
 
-			public function create( string $model, array $values ): int {
+			public function create( string $model, array $values, array $context = [] ): int {
 				$this->calls[] = [ 'method' => 'create', 'args' => [ $model, $values ] ];
 				return $this->create_return;
 			}

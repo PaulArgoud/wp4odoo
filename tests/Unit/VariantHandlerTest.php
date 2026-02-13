@@ -34,7 +34,7 @@ class VariantHandlerTest extends TestCase {
 				return [];
 			}
 			/** @return array<int, array<string, mixed>> */
-			public function read( string $model, array $ids, array $fields = [] ): array {
+			public function read( string $model, array $ids, array $fields = [], array $context = [] ): array {
 				return [];
 			}
 		};

@@ -3,9 +3,11 @@ declare( strict_types=1 );
 
 namespace WP4Odoo\Modules;
 
+use WP4Odoo\Error_Type;
 use WP4Odoo\Field_Mapper;
 use WP4Odoo\Module_Base;
 use WP4Odoo\Partner_Service;
+use WP4Odoo\Sync_Result;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -215,6 +217,79 @@ class WooCommerce_Module extends Module_Base {
 
 		// Invoices: CPT (WC has no native invoice type).
 		add_action( 'init', [ Invoice_Helper::class, 'register_cpt' ] );
+	}
+
+	// ─── Translation push override ─────────────────────────
+
+	/**
+	 * Push entity to Odoo, intercepting translation payloads.
+	 *
+	 * When a queue job carries a _translate payload flag, the translated
+	 * product fields are pushed to the existing Odoo record using
+	 * Translation_Service (context-based write for Odoo 16+ or
+	 * ir.translation CRUD for Odoo 14-15).
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param string $action      'create', 'update', or 'delete'.
+	 * @param int    $wp_id       WordPress entity ID.
+	 * @param int    $odoo_id     Odoo entity ID.
+	 * @param array  $payload     Queue payload.
+	 * @return Sync_Result
+	 */
+	public function push_to_odoo( string $entity_type, string $action, int $wp_id, int $odoo_id = 0, array $payload = [] ): Sync_Result {
+		if ( 'product' === $entity_type && ! empty( $payload['_translate'] ) ) {
+			return $this->push_product_translation( $odoo_id, $payload );
+		}
+
+		return parent::push_to_odoo( $entity_type, $action, $wp_id, $odoo_id, $payload );
+	}
+
+	/**
+	 * Push translated product fields to an existing Odoo record.
+	 *
+	 * @param int   $odoo_id Odoo product ID.
+	 * @param array $payload Queue payload with _lang and _translated_id.
+	 * @return Sync_Result
+	 */
+	private function push_product_translation( int $odoo_id, array $payload ): Sync_Result {
+		if ( $odoo_id <= 0 ) {
+			return Sync_Result::failure( __( 'No Odoo mapping for translation.', 'wp4odoo' ), Error_Type::Permanent );
+		}
+
+		$lang          = $payload['_lang'] ?? '';
+		$translated_id = (int) ( $payload['_translated_id'] ?? 0 );
+
+		if ( '' === $lang || $translated_id <= 0 ) {
+			return Sync_Result::failure( __( 'Missing translation parameters.', 'wp4odoo' ), Error_Type::Permanent );
+		}
+
+		$product = wc_get_product( $translated_id );
+		if ( ! $product ) {
+			return Sync_Result::failure( __( 'Translated product not found.', 'wp4odoo' ), Error_Type::Permanent );
+		}
+
+		$values = [
+			'name'             => $product->get_name(),
+			'description_sale' => $product->get_description(),
+		];
+
+		$this->translation_service()->push_translation(
+			$this->get_odoo_model( 'product' ),
+			$odoo_id,
+			$values,
+			$lang
+		);
+
+		$this->logger->info(
+			'Pushed product translation.',
+			[
+				'odoo_id' => $odoo_id,
+				'lang'    => $lang,
+				'wp_id'   => $translated_id,
+			]
+		);
+
+		return Sync_Result::success( $odoo_id );
 	}
 
 	/**

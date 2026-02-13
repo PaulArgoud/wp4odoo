@@ -16,10 +16,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Handles product save/delete, order creation, and order status changes.
  *
  * Expects the using class to provide:
- * - is_importing(): bool           (from Module_Base)
- * - get_mapping(): ?int            (from Module_Base)
- * - partner_service: Partner_Service (private property)
- * - logger: Logger                 (from Module_Base)
+ * - is_importing(): bool              (from Module_Base)
+ * - get_mapping(): ?int               (from Module_Base)
+ * - partner_service: Partner_Service  (private property)
+ * - translation_service(): Translation_Service (from Module_Helpers)
+ * - logger: Logger                    (from Module_Base)
  *
  * @package WP4Odoo
  * @since   1.9.9
@@ -37,10 +38,72 @@ trait WooCommerce_Hooks {
 			return;
 		}
 
+		// If this is a translated post, enqueue translations for the original instead.
+		$ts = $this->translation_service();
+		if ( $ts->is_available() ) {
+			$adapter = $ts->get_adapter();
+			if ( $adapter && $adapter->is_translation( $product_id ) ) {
+				$original_id = $adapter->get_original_post_id( $product_id );
+				if ( $original_id !== $product_id ) {
+					$this->enqueue_product_translations( $original_id );
+					return;
+				}
+			}
+		}
+
 		$odoo_id = $this->get_mapping( 'product', $product_id );
 		$action  = $odoo_id ? 'update' : 'create';
 
 		Queue_Manager::push( 'woocommerce', 'product', $action, $product_id, $odoo_id ?? 0 );
+
+		$this->enqueue_product_translations( $product_id );
+	}
+
+	/**
+	 * Enqueue translation pushes for a product's translated posts.
+	 *
+	 * For each translation (WPML/Polylang), enqueues an 'update' job
+	 * with a _translate payload flag so WooCommerce_Module::push_to_odoo()
+	 * can intercept and push translated fields via Translation_Service.
+	 *
+	 * @param int $product_id Original (source) product ID.
+	 * @return void
+	 */
+	private function enqueue_product_translations( int $product_id ): void {
+		$ts = $this->translation_service();
+		if ( ! $ts->is_available() ) {
+			return;
+		}
+
+		$adapter = $ts->get_adapter();
+		if ( ! $adapter ) {
+			return;
+		}
+
+		if ( $adapter->is_translation( $product_id ) ) {
+			return;
+		}
+
+		$odoo_id = $this->get_mapping( 'product', $product_id );
+		if ( ! $odoo_id ) {
+			return;
+		}
+
+		$translations = $adapter->get_translations( $product_id );
+		foreach ( $translations as $lang => $translated_post_id ) {
+			Queue_Manager::push(
+				'woocommerce',
+				'product',
+				'update',
+				$product_id,
+				$odoo_id,
+				[
+					'_translate'     => true,
+					'_lang'          => $lang,
+					'_translated_id' => $translated_post_id,
+				]
+			);
+		}
 	}
 
 	/**
