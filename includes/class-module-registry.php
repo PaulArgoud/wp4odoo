@@ -147,6 +147,11 @@ class Module_Registry {
 			$this->register( 'job_manager', new Modules\Job_Manager_Module( $client_provider, $entity_map, $settings ) );
 		}
 
+		// Meta-modules (enrich other modules, no own entity types).
+		if ( class_exists( 'ACF' ) || defined( 'ACF_MAJOR_VERSION' ) ) {
+			$this->register( 'acf', new Modules\ACF_Module( $client_provider, $entity_map, $settings ) );
+		}
+
 		// Allow third-party modules (closures and shared entity map available as arguments).
 		do_action( 'wp4odoo_register_modules', $this->plugin, $client_provider, $entity_map );
 	}

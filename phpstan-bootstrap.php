@@ -794,6 +794,24 @@ if ( ! defined( 'JOB_MANAGER_VERSION' ) ) {
 	define( 'JOB_MANAGER_VERSION', '2.4.0' );
 }
 
+// ─── ACF stubs ──────────────────────────────────────────
+
+if ( ! defined( 'ACF_MAJOR_VERSION' ) ) {
+	define( 'ACF_MAJOR_VERSION', 6 );
+}
+
+if ( ! class_exists( 'ACF' ) ) {
+	class ACF {}
+}
+
+if ( ! function_exists( 'get_field' ) ) {
+	function get_field( string $selector, $post_id = false ) { return null; }
+}
+
+if ( ! function_exists( 'update_field' ) ) {
+	function update_field( string $selector, $value, $post_id = false ): bool { return true; }
+}
+
 // ─── WPML stubs ─────────────────────────────────────────
 
 if ( ! defined( 'ICL_SITEPRESS_VERSION' ) ) {

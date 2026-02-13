@@ -455,6 +455,12 @@ if ( ! function_exists( 'wp_delete_post' ) ) {
 	}
 }
 
+if ( ! function_exists( 'get_attached_file' ) ) {
+	function get_attached_file( $attachment_id, $unfiltered = false ) {
+		return false;
+	}
+}
+
 if ( ! function_exists( 'get_posts' ) ) {
 	function get_posts( $args = [] ) {
 		$results   = [];

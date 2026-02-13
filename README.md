@@ -6,7 +6,7 @@
 ![Odoo 14+](https://img.shields.io/badge/Odoo-14%2B-714B67)
 ![License: GPL v2+](https://img.shields.io/badge/License-GPL%20v2%2B-blue)
 
-Modular WordPress plugin that creates a seamless, bidirectional bridge between WordPress/WooCommerce and Odoo ERP (v14+). Built on a clean, extensible architecture with 26 integration modules, an async sync queue, and full WP-CLI support. Ships in **3 languages** (English, French, Spanish).
+Modular WordPress plugin that creates a seamless, bidirectional bridge between WordPress/WooCommerce and Odoo ERP (v14+). Built on a clean, extensible architecture with 27 integration modules, an async sync queue, and full WP-CLI support. Ships in **3 languages** (English, French, Spanish).
 
 **Target users:** WordPress agencies and businesses running Odoo as their ERP who need reliable, real-time data flow between their website and back-office.
 
@@ -20,8 +20,9 @@ Modular WordPress plugin that creates a seamless, bidirectional bridge between W
 - **Webhooks** — REST API endpoints for real-time notifications from Odoo, with per-IP rate limiting
 - **Admin Dashboard** — 5-tab settings interface (Connection, Sync, Modules, Queue, Logs) with guided onboarding
 - **WP-CLI** — Full command suite: `wp wp4odoo status|test|sync|queue|module` for headless management
-- **Extensible** — Register custom modules via `wp4odoo_register_modules`; filter data with `wp4odoo_map_to_odoo_*` / `wp4odoo_map_from_odoo_*`
-- **Multilingual** — 481 translatable strings, ships with English, French, and Spanish. Translation-ready via `.po`/`.mo`
+- **WPML / Polylang Translation Sync** — Multilingual product sync via WPML or Polylang: pushes translated names/descriptions to Odoo with language context, pulls translations back to create/update translated posts. Category and attribute value translations included
+- **Extensible** — Register custom modules via `wp4odoo_register_modules`; filter data with `wp4odoo_map_to_odoo_*` / `wp4odoo_map_from_odoo_*`; map ACF custom fields to Odoo via the ACF meta-module
+- **Multilingual** — 490 translatable strings, ships with English, French, and Spanish. Translation-ready via `.po`/`.mo`
 
 ## Requirements
 
@@ -124,7 +125,14 @@ Each Odoo domain is encapsulated in an independent module extending `Module_Base
 |---------------------|:----:|-------------------------------|:-----:|---------------------------------------------------------------------------------|
 | **Amelia Booking**  |  ↔️  | Contacts, Calendar            |  ⚠️  | Service sync (bidirectional), appointment sync (push), customer-to-partner      |
 | **Bookly Booking**  |  ↔️  | Contacts, Calendar            |  ⚠️  | Service sync (bidirectional), booking sync (push) via WP-Cron, hash detection   |
+| **WC Bookings**     |  ↔️  | Contacts, Calendar            |  ⚠️  | Booking product/booking sync, all-day support, persons count, status filter     |
 | **Events Calendar** |  ↔️  | Contacts, Events (+ Calendar) |  ⚠️  | Event/ticket/attendee sync, dual-model (event.event or calendar.event)          |
+
+### Cross-Module
+
+| Module                        | Sync | Odoo Apps | Free⁴ | Key Features                                                                    |
+|-------------------------------|:----:|-----------|:-----:|---------------------------------------------------------------------------------|
+| **ACF (Advanced Custom Fields)** |  ↔️  | —         |  —   | Maps ACF custom fields ↔ Odoo `x_*` fields via filters, 9 type conversions     |
 
 ### Other
 
@@ -132,7 +140,7 @@ Each Odoo domain is encapsulated in an independent module extending `Module_Base
 |---------------------|:----:|-----------|:-----:|-----------------------------------------------------------------|
 | **WP Recipe Maker** |  ➡️  | Products  |  ❌  | Recipe sync as service products, structured descriptions         |
 
-> ⁴ **[One App Free](https://www.odoo.com/pricing)**: with CRM as your free app, CRM and Forms modules work. With Invoicing as your free app, GiveWP, WP Charitable, WP Simple Pay, Sprout Invoices, and WP-Invoice work. With Calendar as your free app, Amelia, Bookly, and Events Calendar (fallback mode) work (partial — no Contacts). Sales, WooCommerce, WooCommerce Subscriptions (Enterprise), Memberships (MemberPress/PMPro/RCP/WC Memberships), LMS (LearnDash/LifterLMS), Ecwid, and WP Recipe Maker require 2–4 apps.
+> ⁴ **[One App Free](https://www.odoo.com/pricing)**: with CRM as your free app, CRM and Forms modules work. With Invoicing as your free app, GiveWP, WP Charitable, WP Simple Pay, Sprout Invoices, and WP-Invoice work. With Calendar as your free app, Amelia, Bookly, WC Bookings, and Events Calendar (fallback mode) work (partial — no Contacts). Sales, WooCommerce, WooCommerce Subscriptions (Enterprise), Memberships (MemberPress/PMPro/RCP/WC Memberships), LMS (LearnDash/LifterLMS), Ecwid, and WP Recipe Maker require 2–4 apps.
 
 ## Usage
 

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WordPress For Odoo 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-13 18:31+0100\n"
+"POT-Creation-Date: 2026-02-13 19:13+0100\n"
 "PO-Revision-Date: 2026-02-09 22:31+0100\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
@@ -16,8 +16,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: admin/views/page-settings.php:16 includes/admin/class-admin.php:180
-#: includes/admin/class-admin.php:224
+#: admin/views/page-settings.php:16 includes/admin/class-admin.php:182
+#: includes/admin/class-admin.php:226
 msgid "WordPress For Odoo"
 msgstr "WordPress For Odoo"
 
@@ -25,7 +25,6 @@ msgstr "WordPress For Odoo"
 msgid "Setup Checklist"
 msgstr "Liste de vérification"
 
-#. translators: 1: completed steps, 2: total steps
 #: admin/views/partial-checklist.php:27
 #, php-format
 msgid "%1$d / %2$d completed"
@@ -48,19 +47,12 @@ msgid "An Odoo instance (version 14 or later) with API access enabled."
 msgstr "Une instance Odoo (version 14 ou ultérieure) avec l'accès API activé."
 
 #: admin/views/tab-connection.php:24
-msgid ""
-"An Odoo user with administrator privileges (or at least access to the "
-"modules you want to sync)."
-msgstr ""
-"Un utilisateur Odoo avec les droits d'administrateur (ou au moins l'accès "
-"aux modules à synchroniser)."
+msgid "An Odoo user with administrator privileges (or at least access to the modules you want to sync)."
+msgstr "Un utilisateur Odoo avec les droits d'administrateur (ou au moins l'accès aux modules à synchroniser)."
 
 #: admin/views/tab-connection.php:25
-msgid ""
-"An API key generated from your Odoo user profile (see instructions below)."
-msgstr ""
-"Une clé API générée depuis votre profil utilisateur Odoo (voir les "
-"instructions ci-dessous)."
+msgid "An API key generated from your Odoo user profile (see instructions below)."
+msgstr "Une clé API générée depuis votre profil utilisateur Odoo (voir les instructions ci-dessous)."
 
 #: admin/views/tab-connection.php:27
 msgid "Required Odoo Modules"
@@ -136,39 +128,27 @@ msgstr "Allez dans Paramètres > Utilisateurs & Sociétés > Utilisateurs."
 
 #: admin/views/tab-connection.php:99
 msgid "Select your user, then click the \"Preferences\" tab."
-msgstr ""
-"Sélectionnez votre utilisateur, puis cliquez sur l'onglet « Préférences »."
+msgstr "Sélectionnez votre utilisateur, puis cliquez sur l'onglet « Préférences »."
 
 #: admin/views/tab-connection.php:100
 msgid "Scroll to \"Account Security\" and click \"New API Key\"."
-msgstr ""
-"Faites défiler jusqu'à « Sécurité du compte » et cliquez sur « Nouvelle clé "
-"API »."
+msgstr "Faites défiler jusqu'à « Sécurité du compte » et cliquez sur « Nouvelle clé API »."
 
 #: admin/views/tab-connection.php:101
-msgid ""
-"Enter a description (e.g. \"WordPress For Odoo\") and copy the generated key."
-msgstr ""
-"Entrez une description (par ex. « WordPress For Odoo ») et copiez la clé "
-"générée."
+msgid "Enter a description (e.g. \"WordPress For Odoo\") and copy the generated key."
+msgstr "Entrez une description (par ex. « WordPress For Odoo ») et copiez la clé générée."
 
 #: admin/views/tab-connection.php:103
 msgid "Odoo 14-16"
 msgstr "Odoo 14-16"
 
 #: admin/views/tab-connection.php:105
-msgid ""
-"Go to Settings > Activate the developer mode (from the General settings "
-"page)."
-msgstr ""
-"Allez dans Paramètres > Activez le mode développeur (depuis la page des "
-"paramètres généraux)."
+msgid "Go to Settings > Activate the developer mode (from the General settings page)."
+msgstr "Allez dans Paramètres > Activez le mode développeur (depuis la page des paramètres généraux)."
 
 #: admin/views/tab-connection.php:106
 msgid "Click your user avatar (top right) > My Profile > \"Preferences\" tab."
-msgstr ""
-"Cliquez sur votre avatar (en haut à droite) > Mon profil > onglet "
-"« Préférences »."
+msgstr "Cliquez sur votre avatar (en haut à droite) > Mon profil > onglet « Préférences »."
 
 #: admin/views/tab-connection.php:107
 msgid "Under \"Account Security\", click \"New API Key\"."
@@ -179,15 +159,8 @@ msgid "Copy the key immediately — it will not be shown again."
 msgstr "Copiez la clé immédiatement — elle ne sera plus affichée."
 
 #: admin/views/tab-connection.php:113
-msgid ""
-"API keys are encrypted at rest. For multi-environment or staging setups, "
-"define WP4ODOO_ENCRYPTION_KEY in wp-config.php to ensure keys remain "
-"decryptable after salt rotation."
-msgstr ""
-"Les clés API sont chiffrées au repos. Pour les configurations multi-"
-"environnements ou staging, définissez WP4ODOO_ENCRYPTION_KEY dans wp-"
-"config.php afin que les clés restent déchiffrables après une rotation des "
-"salts."
+msgid "API keys are encrypted at rest. For multi-environment or staging setups, define WP4ODOO_ENCRYPTION_KEY in wp-config.php to ensure keys remain decryptable after salt rotation."
+msgstr "Les clés API sont chiffrées au repos. Pour les configurations multi-environnements ou staging, définissez WP4ODOO_ENCRYPTION_KEY dans wp-config.php afin que les clés restent déchiffrables après une rotation des salts."
 
 #: admin/views/tab-connection.php:120
 msgid "Protocol"
@@ -225,7 +198,6 @@ msgstr "Token"
 msgid "Copy"
 msgstr "Copier"
 
-#. translators: %s: header name
 #: admin/views/tab-connection.php:170
 #, php-format
 msgid "Configure this token in Odoo as the %s header."
@@ -248,20 +220,14 @@ msgid "Go to Settings > Technical > Automation > Webhooks."
 msgstr "Allez dans Paramètres > Technique > Automatisation > Webhooks."
 
 #: admin/views/tab-connection.php:192
-msgid ""
-"Create a new webhook for each model you want to sync (e.g. res.partner, "
-"sale.order)."
-msgstr ""
-"Créez un nouveau webhook pour chaque modèle à synchroniser (par ex. "
-"res.partner, sale.order)."
+msgid "Create a new webhook for each model you want to sync (e.g. res.partner, sale.order)."
+msgstr "Créez un nouveau webhook pour chaque modèle à synchroniser (par ex. res.partner, sale.order)."
 
-#. translators: %s: webhook URL
 #: admin/views/tab-connection.php:197
 #, php-format
 msgid "Set the URL to: %s"
 msgstr "Définissez l'URL : %s"
 
-#. translators: %s: header name
 #: admin/views/tab-connection.php:206
 #, php-format
 msgid "Add a custom header %s with the token shown above."
@@ -269,33 +235,23 @@ msgstr "Ajoutez un en-tête personnalisé %s avec le jeton ci-dessus."
 
 #: admin/views/tab-connection.php:211
 msgid "Select the events: Create, Update, Delete (as needed)."
-msgstr ""
-"Sélectionnez les événements : Création, Modification, Suppression (selon les "
-"besoins)."
+msgstr "Sélectionnez les événements : Création, Modification, Suppression (selon les besoins)."
 
 #: admin/views/tab-connection.php:213
 msgid "Odoo 14-16 (Automated Actions)"
 msgstr "Odoo 14-16 (Actions automatisées)"
 
 #: admin/views/tab-connection.php:215
-msgid ""
-"Activate the developer mode, then go to Settings > Technical > Automation > "
-"Automated Actions."
-msgstr ""
-"Activez le mode développeur, puis allez dans Paramètres > Technique > "
-"Automatisation > Actions automatisées."
+msgid "Activate the developer mode, then go to Settings > Technical > Automation > Automated Actions."
+msgstr "Activez le mode développeur, puis allez dans Paramètres > Technique > Automatisation > Actions automatisées."
 
 #: admin/views/tab-connection.php:216
 msgid "Create an action for each model (e.g. res.partner)."
 msgstr "Créez une action pour chaque modèle (par ex. res.partner)."
 
 #: admin/views/tab-connection.php:217
-msgid ""
-"Set trigger to \"On Creation & Update\" and action type to \"Execute Python "
-"Code\"."
-msgstr ""
-"Définissez le déclencheur sur « Lors de la création et de la mise à jour » "
-"et le type d'action sur « Exécuter du code Python »."
+msgid "Set trigger to \"On Creation & Update\" and action type to \"Execute Python Code\"."
+msgstr "Définissez le déclencheur sur « Lors de la création et de la mise à jour » et le type d'action sur « Exécuter du code Python »."
 
 #: admin/views/tab-connection.php:219
 msgid "Use the following Python code template:"
@@ -345,7 +301,8 @@ msgstr "Message"
 msgid "Context"
 msgstr "Contexte"
 
-#: admin/views/tab-logs.php:78
+#: admin/views/tab-logs.php:78 templates/customer-portal.php:39
+#: templates/customer-portal.php:84
 msgid "Date"
 msgstr "Date"
 
@@ -373,7 +330,6 @@ msgstr "WP → Odoo"
 msgid "Odoo → WP"
 msgstr "Odoo → WP"
 
-#. translators: %s: name of the conflicting active module
 #: admin/views/tab-modules.php:80
 #, php-format
 msgid "Cannot be active simultaneously with \"%s\"."
@@ -392,22 +348,22 @@ msgid "No modules registered."
 msgstr "Aucun module enregistré."
 
 #: admin/views/tab-queue.php:23 admin/views/tab-queue.php:35
-#: includes/admin/class-admin.php:114
+#: includes/admin/class-admin.php:115
 msgid "Pending"
 msgstr "En attente"
 
 #: admin/views/tab-queue.php:24 admin/views/tab-queue.php:39
-#: includes/admin/class-admin.php:115
+#: includes/admin/class-admin.php:116
 msgid "Processing"
 msgstr "En cours"
 
 #: admin/views/tab-queue.php:25 admin/views/tab-queue.php:43
-#: includes/admin/class-admin.php:116
+#: includes/admin/class-admin.php:117
 msgid "Completed"
 msgstr "Terminé"
 
 #: admin/views/tab-queue.php:26 admin/views/tab-queue.php:47
-#: includes/admin/class-admin.php:117
+#: includes/admin/class-admin.php:118
 msgid "Failed"
 msgstr "Échoué"
 
@@ -427,9 +383,7 @@ msgstr "Nettoyer (> 7 jours)"
 msgid "Refresh"
 msgstr "Actualiser"
 
-#. translators: %s: datetime string
-#. translators: %s: formatted date/time of the last synchronization
-#: admin/views/tab-queue.php:68 includes/admin/class-admin.php:112
+#: admin/views/tab-queue.php:68 includes/admin/class-admin.php:113
 #, php-format
 msgid "Last sync: %s"
 msgstr "Dernière synchro : %s"
@@ -446,7 +400,8 @@ msgstr "Direction"
 msgid "Action"
 msgstr "Action"
 
-#: admin/views/tab-queue.php:86
+#: admin/views/tab-queue.php:86 templates/customer-portal.php:41
+#: templates/customer-portal.php:86
 msgid "Status"
 msgstr "Statut"
 
@@ -466,11 +421,10 @@ msgstr "Actions"
 msgid "No jobs in the queue."
 msgstr "Aucun job dans la file."
 
-#: admin/views/tab-queue.php:128 includes/admin/class-admin.php:113
+#: admin/views/tab-queue.php:128 includes/admin/class-admin.php:114
 msgid "Cancel"
 msgstr "Annuler"
 
-#. translators: %s: number of items
 #: admin/views/tab-queue.php:149
 #, php-format
 msgid "%s item(s)"
@@ -561,12 +515,8 @@ msgid "Bulk Operations"
 msgstr "Opérations en masse"
 
 #: admin/views/tab-sync.php:150
-msgid ""
-"Import or export all products at once via the queue. Jobs are processed in "
-"the background by the sync engine."
-msgstr ""
-"Importez ou exportez tous les produits en une fois via la file d'attente. "
-"Les jobs sont traités en arrière-plan par le moteur de synchronisation."
+msgid "Import or export all products at once via the queue. Jobs are processed in the background by the sync engine."
+msgstr "Importez ou exportez tous les produits en une fois via la file d'attente. Les jobs sont traités en arrière-plan par le moteur de synchronisation."
 
 #: admin/views/tab-sync.php:154
 msgid "Import all products from Odoo"
@@ -581,108 +531,102 @@ msgstr "Exporter tous les produits vers Odoo"
 msgid "Permission denied."
 msgstr "Permission refusée."
 
-#. translators: %s: comma-separated list of Odoo model names with module hints
 #: includes/admin/class-admin-ajax.php:118
 #, php-format
-msgid ""
-"Required Odoo models are not available: %s. Install the corresponding Odoo "
-"modules to use these features."
-msgstr ""
-"Les modèles Odoo requis ne sont pas disponibles : %s. Installez les modules "
-"Odoo correspondants pour utiliser ces fonctionnalités."
+msgid "Required Odoo models are not available: %s. Install the corresponding Odoo modules to use these features."
+msgstr "Les modèles Odoo requis ne sont pas disponibles : %s. Installez les modules Odoo correspondants pour utiliser ces fonctionnalités."
 
 #: includes/admin/class-admin-ajax.php:123
-msgid ""
-"Some Odoo modules required by the enabled features are not installed on your "
-"Odoo instance. Enable WP_DEBUG for technical details."
-msgstr ""
-"Certains modules Odoo requis par les fonctionnalités activées ne sont pas "
-"installés sur votre instance Odoo. Activez WP_DEBUG pour les détails "
-"techniques."
+msgid "Some Odoo modules required by the enabled features are not installed on your Odoo instance. Enable WP_DEBUG for technical details."
+msgstr "Certains modules Odoo requis par les fonctionnalités activées ne sont pas installés sur votre instance Odoo. Activez WP_DEBUG pour les détails techniques."
 
-#: includes/admin/class-admin.php:55 includes/admin/class-admin.php:56
+#: includes/admin/class-admin.php:56 includes/admin/class-admin.php:57
 msgid "Odoo Connector"
 msgstr "Connecteur Odoo"
 
-#: includes/admin/class-admin.php:98
+#: includes/admin/class-admin.php:99
 msgid "Testing..."
 msgstr "Test en cours…"
 
-#: includes/admin/class-admin.php:99
+#: includes/admin/class-admin.php:100
 msgid "Connection successful!"
 msgstr "Connexion réussie !"
 
-#: includes/admin/class-admin.php:100
+#: includes/admin/class-admin.php:101
 msgid "Connection failed."
 msgstr "Échec de la connexion."
 
-#: includes/admin/class-admin.php:101
+#: includes/admin/class-admin.php:102
 msgid "Copied!"
 msgstr "Copié !"
 
-#: includes/admin/class-admin.php:102
+#: includes/admin/class-admin.php:103
 msgid "Delete all old log entries?"
 msgstr "Supprimer tous les journaux anciens ?"
 
-#: includes/admin/class-admin.php:103
+#: includes/admin/class-admin.php:104
 msgid "Delete completed/failed jobs older than 7 days?"
 msgstr "Supprimer les jobs terminés/échoués de plus de 7 jours ?"
 
-#: includes/admin/class-admin.php:104
+#: includes/admin/class-admin.php:105
 msgid "Cancel this job?"
 msgstr "Annuler ce job ?"
 
-#: includes/admin/class-admin.php:105
+#: includes/admin/class-admin.php:106
 msgid "No results."
 msgstr "Aucun résultat."
 
-#: includes/admin/class-admin.php:106
+#: includes/admin/class-admin.php:107
 #: includes/admin/trait-ajax-module-handlers.php:190
 msgid "Settings saved."
 msgstr "Paramètres enregistrés."
 
-#: includes/admin/class-admin.php:107
+#: includes/admin/class-admin.php:108
 msgid "Failed to save settings."
 msgstr "Échec de l'enregistrement des paramètres."
 
-#: includes/admin/class-admin.php:108
-msgid ""
-"Import all products from Odoo? This will enqueue sync jobs for all Odoo "
-"products."
-msgstr ""
-"Importer tous les produits depuis Odoo ? Cela ajoutera des jobs de "
-"synchronisation pour tous les produits Odoo."
-
 #: includes/admin/class-admin.php:109
-msgid ""
-"Export all products to Odoo? This will enqueue sync jobs for all WooCommerce "
-"products."
-msgstr ""
-"Exporter tous les produits vers Odoo ? Cela ajoutera des jobs de "
-"synchronisation pour tous les produits WooCommerce."
+msgid "Import all products from Odoo? This will enqueue sync jobs for all Odoo products."
+msgstr "Importer tous les produits depuis Odoo ? Cela ajoutera des jobs de synchronisation pour tous les produits Odoo."
 
 #: includes/admin/class-admin.php:110
+msgid "Export all products to Odoo? This will enqueue sync jobs for all WooCommerce products."
+msgstr "Exporter tous les produits vers Odoo ? Cela ajoutera des jobs de synchronisation pour tous les produits WooCommerce."
+
+#: includes/admin/class-admin.php:111
 #: includes/modules/class-portal-manager.php:106
 msgid "Loading..."
 msgstr "Chargement…"
 
-#: includes/admin/class-admin.php:118
+#: includes/admin/class-admin.php:119
 msgid "Detecting languages..."
 msgstr "Détection des langues…"
 
-#: includes/admin/class-admin.php:119
+#: includes/admin/class-admin.php:120
 msgid "default"
 msgstr "par défaut"
 
-#: includes/admin/class-admin.php:181
+#: includes/admin/class-admin.php:121
+msgid "Have you backed up your WordPress and Odoo databases?"
+msgstr "Avez-vous sauvegardé vos bases de données WordPress et Odoo ?"
+
+#: includes/admin/class-admin.php:183
 msgid "is almost ready! Configure your Odoo connection to get started."
 msgstr "est presque prêt ! Configurez votre connexion Odoo pour commencer."
 
-#: includes/admin/class-admin.php:183
+#: includes/admin/class-admin.php:185
 msgid "Go to settings"
 msgstr "Aller aux paramètres"
 
-#: includes/admin/class-admin.php:239
+#: includes/admin/class-admin.php:246
+msgid "Back up your databases before any synchronization."
+msgstr "Sauvegardez vos bases de données avant toute synchronisation."
+
+#: includes/admin/class-admin.php:247
+msgid "WP4Odoo is designed and tested with care, but WordPress and Odoo (along with their respective modules) evolve at their own pace — a third-party update can introduce unexpected incompatibilities. A full backup (WordPress + Odoo) allows you to roll back if anything goes wrong."
+msgstr "WP4Odoo est conçu et testé avec soin, mais WordPress et Odoo (ainsi que leurs modules respectifs) évoluent chacun à leur rythme — une mise à jour tierce peut introduire des incompatibilités imprévues. Une sauvegarde complète (WordPress + Odoo) vous permet de revenir en arrière en cas de problème."
+
+#: includes/admin/class-admin.php:261
 msgid "Settings"
 msgstr "Réglages"
 
@@ -690,38 +634,25 @@ msgstr "Réglages"
 msgid "No products found in Odoo."
 msgstr "Aucun produit trouvé dans Odoo."
 
-#. translators: 1: number of products enqueued, 2: total number of products
 #: includes/admin/class-bulk-handler.php:112
 #, php-format
-msgid ""
-"%1$d product(s) enqueued for import so far (%2$d found in Odoo). Operation "
-"timed out — run again to continue."
-msgstr ""
-"%1$d produit(s) mis en file d'attente pour l'import (%2$d trouvés dans "
-"Odoo). Opération expirée — relancez pour continuer."
+msgid "%1$d product(s) enqueued for import so far (%2$d found in Odoo). Operation timed out — run again to continue."
+msgstr "%1$d produit(s) mis en file d'attente pour l'import (%2$d trouvés dans Odoo). Opération expirée — relancez pour continuer."
 
-#. translators: 1: number of products enqueued, 2: total number of products
 #: includes/admin/class-bulk-handler.php:118
 #, php-format
 msgid "%1$d product(s) enqueued for import (%2$d found in Odoo)."
-msgstr ""
-"%1$d produit(s) mis en file d'attente pour l'import (%2$d trouvés dans Odoo)."
+msgstr "%1$d produit(s) mis en file d'attente pour l'import (%2$d trouvés dans Odoo)."
 
 #: includes/admin/class-bulk-handler.php:181
 msgid "No WooCommerce products found."
 msgstr "Aucun produit WooCommerce trouvé."
 
-#. translators: %d: number of products enqueued
 #: includes/admin/class-bulk-handler.php:188
 #, php-format
-msgid ""
-"%d product(s) enqueued for export so far. Operation timed out — run again to "
-"continue."
-msgstr ""
-"%d produit(s) mis en file d'attente pour l'export. Opération expirée — "
-"relancez pour continuer."
+msgid "%d product(s) enqueued for export so far. Operation timed out — run again to continue."
+msgstr "%d produit(s) mis en file d'attente pour l'export. Opération expirée — relancez pour continuer."
 
-#. translators: %d: number of products enqueued
 #: includes/admin/class-bulk-handler.php:193
 #, php-format
 msgid "%d product(s) enqueued for export."
@@ -748,27 +679,20 @@ msgstr "Configurer les webhooks dans Odoo"
 msgid "Missing module identifier."
 msgstr "Identifiant de module manquant."
 
-#. translators: %s: module identifier
 #: includes/admin/trait-ajax-module-handlers.php:51
 #, php-format
 msgid "Module \"%s\" enabled."
 msgstr "Module « %s » activé."
 
-#. translators: %s: module identifier
 #: includes/admin/trait-ajax-module-handlers.php:56
 #, php-format
 msgid "Module \"%s\" disabled."
 msgstr "Module « %s » désactivé."
 
-#. translators: 1: enabled module name, 2: comma-separated disabled module names
 #: includes/admin/trait-ajax-module-handlers.php:83
 #, php-format
-msgid ""
-"\"%1$s\" is mutually exclusive with %2$s. The conflicting module(s) have "
-"been disabled."
-msgstr ""
-"« %1$s » est mutuellement exclusif avec %2$s. Le(s) module(s) en conflit ont "
-"été désactivés."
+msgid "\"%1$s\" is mutually exclusive with %2$s. The conflicting module(s) have been disabled."
+msgstr "« %1$s » est mutuellement exclusif avec %2$s. Le(s) module(s) en conflit ont été désactivés."
 
 #: includes/admin/trait-ajax-module-handlers.php:148
 msgid "Unknown module."
@@ -783,13 +707,11 @@ msgstr "Le module WooCommerce n'est pas enregistré."
 msgid "No translation plugin detected (WPML or Polylang required)."
 msgstr "Aucun plugin de traduction détecté (WPML ou Polylang requis)."
 
-#. translators: %d: number of jobs
 #: includes/admin/trait-ajax-monitor-handlers.php:39
 #, php-format
 msgid "%d job(s) retried."
 msgstr "%d job(s) relancé(s)."
 
-#. translators: %d: number of deleted jobs
 #: includes/admin/trait-ajax-monitor-handlers.php:62
 #, php-format
 msgid "%d job(s) deleted."
@@ -803,7 +725,6 @@ msgstr "Job annulé."
 msgid "Unable to cancel this job."
 msgstr "Impossible d'annuler ce job."
 
-#. translators: %d: number of deleted log entries
 #: includes/admin/trait-ajax-monitor-handlers.php:111
 #, php-format
 msgid "%d log entry(ies) deleted."
@@ -833,7 +754,6 @@ msgstr "Identifiants Odoo non configurés."
 msgid "Authentication failed: invalid credentials."
 msgstr "Échec de l'authentification : identifiants invalides."
 
-#. translators: %d: HTTP status code
 #: includes/api/class-odoo-jsonrpc.php:128
 #, php-format
 msgid "Invalid JSON response from Odoo (HTTP %d)."
@@ -843,7 +763,6 @@ msgstr "Réponse JSON invalide depuis Odoo (HTTP %d)."
 msgid "Unknown RPC error"
 msgstr "Erreur RPC inconnue"
 
-#. translators: %s: error message from Odoo
 #: includes/api/class-odoo-jsonrpc.php:157
 #, php-format
 msgid "Odoo RPC error: %s"
@@ -861,82 +780,64 @@ msgstr "Échec de l'analyse de la réponse XML-RPC d'Odoo."
 msgid "Unknown XML-RPC fault"
 msgstr "Erreur XML-RPC inconnue"
 
-#. translators: %s: error message from Odoo
 #: includes/api/class-odoo-xmlrpc.php:155
 #, php-format
 msgid "Odoo XML-RPC error: %s"
 msgstr "Erreur XML-RPC Odoo : %s"
 
-#. translators: %s: error message from HTTP request
 #: includes/api/trait-retryable-http.php:46
 #, php-format
 msgid "HTTP error: %s"
 msgstr "Erreur HTTP : %s"
 
-#. translators: 1: HTTP status code, 2: endpoint
 #: includes/api/trait-retryable-http.php:64
 #, php-format
 msgid "Server error HTTP %1$d on %2$s."
 msgstr "Erreur serveur HTTP %1$d sur %2$s."
 
-#. translators: %d: number of consecutive failures
+#: includes/class-cli.php:162
+msgid "Back up your WordPress and Odoo databases before running sync operations."
+msgstr "Sauvegardez vos bases de données WordPress et Odoo avant de lancer des opérations de synchronisation."
+
 #: includes/class-failure-notifier.php:103
 #, php-format
 msgid "[WP4Odoo] %d consecutive sync failures"
 msgstr "[WP4Odoo] %d échecs de synchronisation consécutifs"
 
-#. translators: 1: number of failures, 2: queue admin URL
 #: includes/class-failure-notifier.php:109
 #, php-format
 msgid ""
-"The WordPress For Odoo sync queue has encountered %1$d consecutive "
-"failures.\n"
+"The WordPress For Odoo sync queue has encountered %1$d consecutive failures.\n"
 "\n"
 "Please check the sync queue at %2$s"
 msgstr ""
-"La file de synchronisation WordPress For Odoo a rencontré %1$d échecs "
-"consécutifs.\n"
+"La file de synchronisation WordPress For Odoo a rencontré %1$d échecs consécutifs.\n"
 "\n"
 "Veuillez vérifier la file de synchronisation à %2$s"
 
-#. translators: 1: entity type, 2: module identifier
 #: includes/class-module-base.php:612
 #, php-format
 msgid "Entity type \"%1$s\" is not registered in module \"%2$s\"."
-msgstr ""
-"Le type d'entité « %1$s » n'est pas enregistré dans le module « %2$s »."
+msgstr "Le type d'entité « %1$s » n'est pas enregistré dans le module « %2$s »."
 
 #: includes/class-settings-repository.php:410
-msgid ""
-"WP-Cron is disabled (DISABLE_WP_CRON). Ensure a system cron job calls wp-"
-"cron.php regularly, or queue processing will not run."
-msgstr ""
-"WP-Cron est désactivé (DISABLE_WP_CRON). Assurez-vous qu'une tâche cron "
-"système appelle wp-cron.php régulièrement, sinon la file d'attente ne sera "
-"pas traitée."
+msgid "WP-Cron is disabled (DISABLE_WP_CRON). Ensure a system cron job calls wp-cron.php regularly, or queue processing will not run."
+msgstr "WP-Cron est désactivé (DISABLE_WP_CRON). Assurez-vous qu'une tâche cron système appelle wp-cron.php régulièrement, sinon la file d'attente ne sera pas traitée."
 
 #: includes/class-settings-repository.php:412
-msgid ""
-"WP-Cron has not triggered recently. On low-traffic sites, scheduled sync may "
-"be delayed. Consider setting up a system cron job."
-msgstr ""
-"WP-Cron ne s'est pas déclenché récemment. Sur les sites à faible trafic, la "
-"synchronisation planifiée peut être retardée. Envisagez de configurer une "
-"tâche cron système."
+msgid "WP-Cron has not triggered recently. On low-traffic sites, scheduled sync may be delayed. Consider setting up a system cron job."
+msgstr "WP-Cron ne s'est pas déclenché récemment. Sur les sites à faible trafic, la synchronisation planifiée peut être retardée. Envisagez de configurer une tâche cron système."
 
-#. translators: %s: module identifier
 #: includes/class-sync-engine.php:314
 #, php-format
 msgid "Module \"%s\" not found or not registered."
 msgstr "Module « %s » introuvable ou non enregistré."
 
-#. translators: %d: job ID
 #: includes/class-sync-engine.php:327
 #, php-format
 msgid "Invalid JSON payload in job #%d."
 msgstr "Payload JSON invalide dans le job #%d."
 
-#. translators: 1: direction value, 2: job ID
 #: includes/class-sync-engine.php:365
 #, php-format
 msgid "Invalid sync direction \"%1$s\" in job #%2$d."
@@ -946,7 +847,6 @@ msgstr "Direction de synchronisation invalide « %1$s » dans le job #%2$d."
 msgid "Missing required fields: module, entity_type, odoo_id."
 msgstr "Champs requis manquants : module, entity_type, odoo_id."
 
-#. translators: %s: module identifier
 #: includes/class-webhook-handler.php:255
 #, php-format
 msgid "Module \"%s\" not found."
@@ -991,8 +891,7 @@ msgstr "Synchroniser les rendez-vous"
 
 #: includes/modules/class-amelia-module.php:124
 msgid "Push Amelia appointments to Odoo as calendar events."
-msgstr ""
-"Envoyer les rendez-vous Amelia vers Odoo en tant qu'événements de calendrier."
+msgstr "Envoyer les rendez-vous Amelia vers Odoo en tant qu'événements de calendrier."
 
 #: includes/modules/class-amelia-module.php:127
 #: includes/modules/class-bookly-module.php:128
@@ -1007,7 +906,6 @@ msgstr "Récupérer les produits de service Odoo dans les services Amelia."
 msgid "Appointment"
 msgstr "Rendez-vous"
 
-#. translators: %1$s: service name, %2$s: customer name
 #: includes/modules/class-booking-module-base.php:298
 #, php-format
 msgid "%1$s — %2$s"
@@ -1024,9 +922,7 @@ msgstr "Synchroniser les réservations"
 
 #: includes/modules/class-bookly-module.php:125
 msgid "Push Bookly bookings to Odoo as calendar events."
-msgstr ""
-"Envoyer les réservations Bookly vers Odoo en tant qu'événements de "
-"calendrier."
+msgstr "Envoyer les réservations Bookly vers Odoo en tant qu'événements de calendrier."
 
 #: includes/modules/class-bookly-module.php:130
 msgid "Pull Odoo service products into Bookly services."
@@ -1047,12 +943,8 @@ msgid "WP Charitable module enabled but WP Charitable is not active."
 msgstr "Module WP Charitable activé mais WP Charitable n'est pas actif."
 
 #: includes/modules/class-charitable-module.php:108
-msgid ""
-"WP Charitable Recurring add-on detected. Recurring payments will be synced "
-"automatically."
-msgstr ""
-"Extension WP Charitable Recurring détectée. Les paiements récurrents seront "
-"synchronisés automatiquement."
+msgid "WP Charitable Recurring add-on detected. Recurring payments will be synced automatically."
+msgstr "Extension WP Charitable Recurring détectée. Les paiements récurrents seront synchronisés automatiquement."
 
 #: includes/modules/class-charitable-module.php:133
 #: includes/modules/class-crowdfunding-module.php:121
@@ -1061,9 +953,7 @@ msgstr "Synchroniser les campagnes"
 
 #: includes/modules/class-charitable-module.php:135
 msgid "Push WP Charitable campaigns to Odoo as service products."
-msgstr ""
-"Envoyer les campagnes WP Charitable vers Odoo en tant que produits de "
-"service."
+msgstr "Envoyer les campagnes WP Charitable vers Odoo en tant que produits de service."
 
 #: includes/modules/class-charitable-module.php:138
 #: includes/modules/class-givewp-module.php:138
@@ -1073,8 +963,7 @@ msgstr "Synchroniser les dons"
 #: includes/modules/class-charitable-module.php:140
 #: includes/modules/class-givewp-module.php:140
 msgid "Push completed donations to Odoo (includes recurring payments)."
-msgstr ""
-"Envoyer les dons finalisés vers Odoo (inclut les paiements récurrents)."
+msgstr "Envoyer les dons finalisés vers Odoo (inclut les paiements récurrents)."
 
 #: includes/modules/class-charitable-module.php:143
 #: includes/modules/class-givewp-module.php:143
@@ -1112,9 +1001,7 @@ msgstr "Tous les rôles"
 
 #: includes/modules/class-crm-module.php:163
 msgid "Only sync users with this role. Leave empty to sync all."
-msgstr ""
-"Ne synchroniser que les utilisateurs avec ce rôle. Laisser vide pour tout "
-"synchroniser."
+msgstr "Ne synchroniser que les utilisateurs avec ce rôle. Laisser vide pour tout synchroniser."
 
 #: includes/modules/class-crm-module.php:166
 msgid "Create users on pull"
@@ -1122,9 +1009,7 @@ msgstr "Créer les utilisateurs lors du pull"
 
 #: includes/modules/class-crm-module.php:168
 msgid "Create new WordPress users when pulling contacts from Odoo."
-msgstr ""
-"Créer de nouveaux utilisateurs WordPress lors de l'import des contacts "
-"depuis Odoo."
+msgstr "Créer de nouveaux utilisateurs WordPress lors de l'import des contacts depuis Odoo."
 
 #: includes/modules/class-crm-module.php:171
 msgid "Default user role"
@@ -1142,19 +1027,16 @@ msgstr "Activer le formulaire de leads"
 msgid "Enable the [wp4odoo_lead_form] shortcode."
 msgstr "Activer le shortcode [wp4odoo_lead_form]."
 
-#. translators: %s: funding goal amount.
 #: includes/modules/class-crowdfunding-handler.php:102
 #, php-format
 msgid "Funding goal: %s"
 msgstr "Objectif de financement : %s"
 
-#. translators: %s: campaign end date.
 #: includes/modules/class-crowdfunding-handler.php:107
 #, php-format
 msgid "End date: %s"
 msgstr "Date de fin : %s"
 
-#. translators: %s: minimum pledge amount.
 #: includes/modules/class-crowdfunding-handler.php:112
 #, php-format
 msgid "Min pledge: %s"
@@ -1166,10 +1048,8 @@ msgstr "Module WP Crowdfunding activé mais WP Crowdfunding n'est pas actif."
 
 #: includes/modules/class-crowdfunding-module.php:123
 msgid "Push crowdfunding campaigns to Odoo as service products."
-msgstr ""
-"Envoyer les campagnes de crowdfunding vers Odoo comme produits de service."
+msgstr "Envoyer les campagnes de crowdfunding vers Odoo comme produits de service."
 
-#. translators: %s: order number.
 #: includes/modules/class-ecwid-handler.php:109
 #, php-format
 msgid "Order %s"
@@ -1237,14 +1117,11 @@ msgstr "Confirmer automatiquement les commandes"
 
 #: includes/modules/class-edd-module.php:164
 msgid "Automatically confirm orders in Odoo when an EDD order is completed."
-msgstr ""
-"Confirmer automatiquement les commandes dans Odoo lorsqu'une commande EDD "
-"est finalisée."
+msgstr "Confirmer automatiquement les commandes dans Odoo lorsqu'une commande EDD est finalisée."
 
 #: includes/modules/class-events-calendar-module.php:122
 msgid "Events Calendar module enabled but The Events Calendar is not active."
-msgstr ""
-"Module Events Calendar activé mais The Events Calendar n'est pas actif."
+msgstr "Module Events Calendar activé mais The Events Calendar n'est pas actif."
 
 #: includes/modules/class-events-calendar-module.php:167
 msgid "Sync events"
@@ -1259,23 +1136,16 @@ msgid "Sync tickets"
 msgstr "Synchroniser les billets"
 
 #: includes/modules/class-events-calendar-module.php:174
-msgid ""
-"Push RSVP ticket types to Odoo as service products. Requires Event Tickets."
-msgstr ""
-"Envoyer les types de billets RSVP vers Odoo comme produits de service. "
-"Nécessite Event Tickets."
+msgid "Push RSVP ticket types to Odoo as service products. Requires Event Tickets."
+msgstr "Envoyer les types de billets RSVP vers Odoo comme produits de service. Nécessite Event Tickets."
 
 #: includes/modules/class-events-calendar-module.php:177
 msgid "Sync attendees"
 msgstr "Synchroniser les participants"
 
 #: includes/modules/class-events-calendar-module.php:179
-msgid ""
-"Push RSVP attendees to Odoo as event registrations. Requires Event Tickets "
-"and Odoo Events module."
-msgstr ""
-"Envoyer les participants RSVP vers Odoo comme inscriptions aux événements. "
-"Nécessite Event Tickets et le module Événements Odoo."
+msgid "Push RSVP attendees to Odoo as event registrations. Requires Event Tickets and Odoo Events module."
+msgstr "Envoyer les participants RSVP vers Odoo comme inscriptions aux événements. Nécessite Event Tickets et le module Événements Odoo."
 
 #: includes/modules/class-events-calendar-module.php:182
 msgid "Pull events from Odoo"
@@ -1293,7 +1163,6 @@ msgstr "Récupérer les billets depuis Odoo"
 msgid "Pull ticket product changes from Odoo back to WordPress."
 msgstr "Récupérer les modifications de billets depuis Odoo vers WordPress."
 
-#. translators: %s: form title
 #: includes/modules/class-form-handler.php:88
 #, php-format
 msgid "Gravity Forms: %s"
@@ -1309,37 +1178,31 @@ msgstr "Gravity Forms : %s"
 msgid "Unknown Form"
 msgstr "Formulaire inconnu"
 
-#. translators: %s: form title
 #: includes/modules/class-form-handler.php:144
 #, php-format
 msgid "WPForms: %s"
 msgstr "WPForms : %s"
 
-#. translators: %s: form title
 #: includes/modules/class-form-handler.php:176
 #, php-format
 msgid "Contact Form 7: %s"
 msgstr "Contact Form 7 : %s"
 
-#. translators: %s: form title
 #: includes/modules/class-form-handler.php:216
 #, php-format
 msgid "Fluent Forms: %s"
 msgstr "Fluent Forms : %s"
 
-#. translators: %s: form title
 #: includes/modules/class-form-handler.php:255
 #, php-format
 msgid "Formidable: %s"
 msgstr "Formidable : %s"
 
-#. translators: %s: form title
 #: includes/modules/class-form-handler.php:289
 #, php-format
 msgid "Ninja Forms: %s"
 msgstr "Ninja Forms : %s"
 
-#. translators: %s: form title
 #: includes/modules/class-form-handler.php:347
 #, php-format
 msgid "Forminator: %s"
@@ -1402,13 +1265,9 @@ msgid "Create Odoo leads from Forminator submissions."
 msgstr "Créer des leads Odoo depuis les soumissions Forminator."
 
 #: includes/modules/class-forms-module.php:438
-msgid ""
-"At least one form plugin must be installed and activated to use this module."
-msgstr ""
-"Au moins un plugin de formulaire doit être installé et activé pour utiliser "
-"ce module."
+msgid "At least one form plugin must be installed and activated to use this module."
+msgstr "Au moins un plugin de formulaire doit être installé et activé pour utiliser ce module."
 
-#. translators: %s: form plugin name
 #: includes/modules/class-forms-module.php:452
 #, php-format
 msgid "%s is not active."
@@ -1424,11 +1283,10 @@ msgstr "Synchroniser les formulaires de dons"
 
 #: includes/modules/class-givewp-module.php:135
 msgid "Push GiveWP donation forms to Odoo as service products."
-msgstr ""
-"Envoyer les formulaires de dons GiveWP vers Odoo en tant que produits de "
-"service."
+msgstr "Envoyer les formulaires de dons GiveWP vers Odoo en tant que produits de service."
 
 #: includes/modules/class-invoice-helper.php:48
+#: templates/customer-portal.php:25
 msgid "Invoices"
 msgstr "Factures"
 
@@ -1455,6 +1313,7 @@ msgid "Search Invoices"
 msgstr "Rechercher des factures"
 
 #: includes/modules/class-invoice-helper.php:54
+#: templates/customer-portal.php:78
 msgid "No invoices found."
 msgstr "Aucune facture trouvée."
 
@@ -1462,13 +1321,11 @@ msgstr "Aucune facture trouvée."
 msgid "No invoices found in Trash."
 msgstr "Aucune facture trouvée dans la corbeille."
 
-#. translators: %s: job location (e.g. "Paris, France").
 #: includes/modules/class-job-manager-handler.php:167
 #, php-format
 msgid "Location: %s"
 msgstr "Lieu : %s"
 
-#. translators: %s: company name.
 #: includes/modules/class-job-manager-handler.php:171
 #, php-format
 msgid "Company: %s"
@@ -1609,8 +1466,7 @@ msgstr "Synchroniser les transactions"
 
 #: includes/modules/class-learndash-module.php:172
 msgid "Push LearnDash payment transactions to Odoo as invoices."
-msgstr ""
-"Envoyer les transactions de paiement LearnDash vers Odoo comme factures."
+msgstr "Envoyer les transactions de paiement LearnDash vers Odoo comme factures."
 
 #: includes/modules/class-learndash-module.php:175
 #: includes/modules/class-lifterlms-module.php:188
@@ -1636,9 +1492,7 @@ msgstr "Valider automatiquement les factures"
 #: includes/modules/class-learndash-module.php:182
 #: includes/modules/class-memberpress-module.php:159
 msgid "Automatically confirm invoices in Odoo for completed transactions."
-msgstr ""
-"Valider automatiquement les factures dans Odoo pour les transactions "
-"finalisées."
+msgstr "Valider automatiquement les factures dans Odoo pour les transactions finalisées."
 
 #: includes/modules/class-learndash-module.php:185
 #: includes/modules/class-lifterlms-module.php:198
@@ -1691,9 +1545,7 @@ msgstr "Envoyer les commandes terminées vers Odoo comme factures."
 #: includes/modules/class-lifterlms-module.php:195
 #: includes/modules/class-pmpro-module.php:169
 msgid "Automatically confirm invoices in Odoo for completed orders."
-msgstr ""
-"Confirmer automatiquement les factures dans Odoo pour les commandes "
-"terminées."
+msgstr "Confirmer automatiquement les factures dans Odoo pour les commandes terminées."
 
 #: includes/modules/class-lifterlms-module.php:203
 msgid "Pull memberships from Odoo"
@@ -1718,8 +1570,7 @@ msgstr "Synchroniser les plans d'adhésion"
 
 #: includes/modules/class-memberpress-module.php:144
 msgid "Push MemberPress plans to Odoo as membership products."
-msgstr ""
-"Envoyer les plans MemberPress vers Odoo en tant que produits d'adhésion."
+msgstr "Envoyer les plans MemberPress vers Odoo en tant que produits d'adhésion."
 
 #: includes/modules/class-memberpress-module.php:149
 msgid "Push completed transactions to Odoo as invoices."
@@ -1736,8 +1587,7 @@ msgstr "Envoyer le statut des abonnements vers les lignes d'adhésion Odoo."
 
 #: includes/modules/class-memberships-module.php:102
 msgid "Memberships module enabled but WooCommerce Memberships is not active."
-msgstr ""
-"Module Memberships activé mais WooCommerce Memberships n'est pas actif."
+msgstr "Module Memberships activé mais WooCommerce Memberships n'est pas actif."
 
 #: includes/modules/class-memberships-module.php:144
 msgid "Push WooCommerce membership plans to Odoo."
@@ -1765,9 +1615,7 @@ msgstr "Récupérer les mises à jour d'adhésion"
 
 #: includes/modules/class-memberships-module.php:159
 msgid "Pull Odoo membership line status/date updates into WooCommerce."
-msgstr ""
-"Récupérer les mises à jour de statut/dates des lignes d'adhésion Odoo dans "
-"WooCommerce."
+msgstr "Récupérer les mises à jour de statut/dates des lignes d'adhésion Odoo dans WooCommerce."
 
 #: includes/modules/class-pmpro-handler.php:138
 msgid "PMPro membership"
@@ -1793,25 +1641,16 @@ msgstr "Envoyer les commandes de paiement terminées vers Odoo comme factures."
 #: includes/modules/class-pmpro-module.php:164
 #: includes/modules/class-rcp-module.php:163
 msgid "Push user membership status to Odoo membership lines."
-msgstr ""
-"Envoyer le statut d'adhésion des utilisateurs vers les lignes d'adhésion "
-"Odoo."
+msgstr "Envoyer le statut d'adhésion des utilisateurs vers les lignes d'adhésion Odoo."
 
-#. translators: %s: login URL
 #: includes/modules/class-portal-manager.php:76
 #, php-format
 msgid "Please <a href=\"%s\">log in</a> to access your customer portal."
-msgstr ""
-"Veuillez <a href=\"%s\">vous connecter</a> pour accéder à votre portail "
-"client."
+msgstr "Veuillez <a href=\"%s\">vous connecter</a> pour accéder à votre portail client."
 
 #: includes/modules/class-portal-manager.php:86
-msgid ""
-"Your account is not yet linked to an Odoo partner. Please contact the "
-"administrator."
-msgstr ""
-"Votre compte n'est pas encore lié à un partenaire Odoo. Veuillez contacter "
-"l'administrateur."
+msgid "Your account is not yet linked to an Odoo partner. Please contact the administrator."
+msgstr "Votre compte n'est pas encore lié à un partenaire Odoo. Veuillez contacter l'administrateur."
 
 #: includes/modules/class-portal-manager.php:128
 msgid "Not authenticated."
@@ -1841,8 +1680,7 @@ msgstr "Envoyer les paiements terminés vers Odoo comme factures."
 
 #: includes/modules/class-rcp-module.php:168
 msgid "Automatically confirm invoices in Odoo for completed payments."
-msgstr ""
-"Confirmer automatiquement les factures dans Odoo pour les paiements terminés."
+msgstr "Confirmer automatiquement les factures dans Odoo pour les paiements terminés."
 
 #: includes/modules/class-sales-module.php:139
 msgid "Import products"
@@ -1858,9 +1696,7 @@ msgstr "Activer le portail client"
 
 #: includes/modules/class-sales-module.php:146
 msgid "Enable the [wp4odoo_customer_portal] shortcode for logged-in users."
-msgstr ""
-"Activer le shortcode [wp4odoo_customer_portal] pour les utilisateurs "
-"connectés."
+msgstr "Activer le shortcode [wp4odoo_customer_portal] pour les utilisateurs connectés."
 
 #: includes/modules/class-sales-module.php:149
 msgid "Orders per page"
@@ -1868,10 +1704,9 @@ msgstr "Commandes par page"
 
 #: includes/modules/class-sales-module.php:151
 msgid "Number of orders/invoices shown per page in the customer portal."
-msgstr ""
-"Nombre de commandes/factures affichées par page dans le portail client."
+msgstr "Nombre de commandes/factures affichées par page dans le portail client."
 
-#: includes/modules/class-sales-module.php:167
+#: includes/modules/class-sales-module.php:167 templates/customer-portal.php:21
 msgid "Orders"
 msgstr "Commandes"
 
@@ -1896,7 +1731,7 @@ msgstr "Voir la commande"
 msgid "Search Orders"
 msgstr "Rechercher des commandes"
 
-#: includes/modules/class-sales-module.php:173
+#: includes/modules/class-sales-module.php:173 templates/customer-portal.php:33
 msgid "No orders found."
 msgstr "Aucune commande trouvée."
 
@@ -1915,6 +1750,7 @@ msgstr "Envoyer les produits ShopWP vers Odoo."
 #: includes/modules/class-simplepay-handler.php:318
 #: includes/modules/class-sprout-invoices-handler.php:116
 #: includes/modules/class-sprout-invoices-handler.php:291
+#: templates/customer-portal.php:87
 msgid "Payment"
 msgstr "Paiement"
 
@@ -1928,14 +1764,11 @@ msgstr "Synchroniser les formulaires de paiement"
 
 #: includes/modules/class-simplepay-module.php:138
 msgid "Push WP Simple Pay forms to Odoo as service products."
-msgstr ""
-"Envoyer les formulaires WP Simple Pay vers Odoo en tant que produits de "
-"service."
+msgstr "Envoyer les formulaires WP Simple Pay vers Odoo en tant que produits de service."
 
 #: includes/modules/class-simplepay-module.php:143
 msgid "Push Stripe payments to Odoo (includes recurring subscriptions)."
-msgstr ""
-"Envoyer les paiements Stripe vers Odoo (inclut les abonnements récurrents)."
+msgstr "Envoyer les paiements Stripe vers Odoo (inclut les abonnements récurrents)."
 
 #: includes/modules/class-simplepay-module.php:146
 msgid "Auto-validate payments"
@@ -1956,8 +1789,7 @@ msgstr "Synchroniser les factures"
 
 #: includes/modules/class-sprout-invoices-module.php:150
 msgid "Push Sprout Invoices invoices to Odoo as account moves."
-msgstr ""
-"Envoyer les factures Sprout Invoices vers Odoo comme écritures comptables."
+msgstr "Envoyer les factures Sprout Invoices vers Odoo comme écritures comptables."
 
 #: includes/modules/class-sprout-invoices-module.php:155
 msgid "Push Sprout Invoices payments to Odoo."
@@ -1965,8 +1797,7 @@ msgstr "Envoyer les paiements Sprout Invoices vers Odoo."
 
 #: includes/modules/class-sprout-invoices-module.php:160
 msgid "Automatically confirm invoices in Odoo for completed invoices."
-msgstr ""
-"Confirmer automatiquement les factures dans Odoo pour les factures terminées."
+msgstr "Confirmer automatiquement les factures dans Odoo pour les factures terminées."
 
 #: includes/modules/class-sprout-invoices-module.php:163
 msgid "Pull invoices from Odoo"
@@ -1984,7 +1815,6 @@ msgstr "Récupérer les paiements depuis Odoo"
 msgid "Pull payment changes from Odoo back to WordPress."
 msgstr "Récupérer les modifications de paiements depuis Odoo vers WordPress."
 
-#. translators: %d: number of persons
 #: includes/modules/class-wc-bookings-handler.php:119
 #, php-format
 msgid "Persons: %d"
@@ -1996,9 +1826,7 @@ msgstr "Envoyer les produits WC Bookings vers Odoo comme produits de service."
 
 #: includes/modules/class-wc-bookings-module.php:127
 msgid "Push WC Bookings to Odoo as calendar events."
-msgstr ""
-"Envoyer les réservations WC Bookings vers Odoo en tant qu'événements de "
-"calendrier."
+msgstr "Envoyer les réservations WC Bookings vers Odoo en tant qu'événements de calendrier."
 
 #: includes/modules/class-wc-bookings-module.php:130
 msgid "Pull products"
@@ -2037,11 +1865,8 @@ msgid "WC Subscription renewal"
 msgstr "Renouvellement d'abonnement WC"
 
 #: includes/modules/class-wc-subscriptions-module.php:117
-msgid ""
-"WC Subscriptions module enabled but WooCommerce Subscriptions is not active."
-msgstr ""
-"Module WC Subscriptions activé mais WooCommerce Subscriptions n'est pas "
-"actif."
+msgid "WC Subscriptions module enabled but WooCommerce Subscriptions is not active."
+msgstr "Module WC Subscriptions activé mais WooCommerce Subscriptions n'est pas actif."
 
 #: includes/modules/class-wc-subscriptions-module.php:159
 msgid "Sync subscription products"
@@ -2049,13 +1874,11 @@ msgstr "Synchroniser les produits d'abonnement"
 
 #: includes/modules/class-wc-subscriptions-module.php:161
 msgid "Push WC subscription products to Odoo as service products."
-msgstr ""
-"Envoyer les produits d'abonnement WC vers Odoo comme produits de service."
+msgstr "Envoyer les produits d'abonnement WC vers Odoo comme produits de service."
 
 #: includes/modules/class-wc-subscriptions-module.php:166
 msgid "Push subscriptions to Odoo sale.subscription (Enterprise only)."
-msgstr ""
-"Envoyer les abonnements vers Odoo sale.subscription (Enterprise uniquement)."
+msgstr "Envoyer les abonnements vers Odoo sale.subscription (Enterprise uniquement)."
 
 #: includes/modules/class-wc-subscriptions-module.php:169
 msgid "Sync renewal orders"
@@ -2075,9 +1898,7 @@ msgstr "Récupérer les mises à jour d'abonnements depuis Odoo"
 
 #: includes/modules/class-wc-subscriptions-module.php:181
 msgid "Pull subscription status changes from Odoo back to WooCommerce."
-msgstr ""
-"Récupérer les changements de statut d'abonnement depuis Odoo vers "
-"WooCommerce."
+msgstr "Récupérer les changements de statut d'abonnement depuis Odoo vers WooCommerce."
 
 #: includes/modules/class-woocommerce-module.php:262
 msgid "No Odoo mapping for translation."
@@ -2105,8 +1926,7 @@ msgstr "Synchroniser le stock"
 
 #: includes/modules/class-woocommerce-module.php:358
 msgid "Pull stock levels from Odoo into WooCommerce products."
-msgstr ""
-"Récupérer les niveaux de stock depuis Odoo vers les produits WooCommerce."
+msgstr "Récupérer les niveaux de stock depuis Odoo vers les produits WooCommerce."
 
 #: includes/modules/class-woocommerce-module.php:361
 msgid "Sync product images"
@@ -2118,9 +1938,7 @@ msgstr "Importer les images mises en avant des produits depuis Odoo."
 
 #: includes/modules/class-woocommerce-module.php:368
 msgid "Automatically confirm orders in Odoo when created from WooCommerce."
-msgstr ""
-"Confirmer automatiquement les commandes dans Odoo lors de leur création "
-"depuis WooCommerce."
+msgstr "Confirmer automatiquement les commandes dans Odoo lors de leur création depuis WooCommerce."
 
 #: includes/modules/class-woocommerce-module.php:371
 msgid "Sync pricelist prices"
@@ -2128,58 +1946,40 @@ msgstr "Synchroniser les prix de liste"
 
 #: includes/modules/class-woocommerce-module.php:373
 msgid "Pull pricelist prices from Odoo and set as WooCommerce sale prices."
-msgstr ""
-"Récupérer les prix de liste de prix depuis Odoo et les définir comme prix "
-"promotionnels WooCommerce."
+msgstr "Récupérer les prix de liste de prix depuis Odoo et les définir comme prix promotionnels WooCommerce."
 
 #: includes/modules/class-woocommerce-module.php:376
 msgid "Pricelist ID"
 msgstr "ID de la liste de prix"
 
 #: includes/modules/class-woocommerce-module.php:378
-msgid ""
-"The Odoo pricelist ID to use for pricing (Sales > Configuration > "
-"Pricelists)."
-msgstr ""
-"L'ID de la liste de prix Odoo à utiliser (Ventes > Configuration > Listes de "
-"prix)."
+msgid "The Odoo pricelist ID to use for pricing (Sales > Configuration > Pricelists)."
+msgstr "L'ID de la liste de prix Odoo à utiliser (Ventes > Configuration > Listes de prix)."
 
 #: includes/modules/class-woocommerce-module.php:381
 msgid "Sync shipments"
 msgstr "Synchroniser les expéditions"
 
 #: includes/modules/class-woocommerce-module.php:383
-msgid ""
-"Pull shipment tracking from Odoo into WooCommerce orders (AST compatible)."
-msgstr ""
-"Récupérer le suivi des expéditions depuis Odoo vers les commandes "
-"WooCommerce (compatible AST)."
+msgid "Pull shipment tracking from Odoo into WooCommerce orders (AST compatible)."
+msgstr "Récupérer le suivi des expéditions depuis Odoo vers les commandes WooCommerce (compatible AST)."
 
 #: includes/modules/class-woocommerce-module.php:386
 msgid "Convert currency"
 msgstr "Convertir la devise"
 
 #: includes/modules/class-woocommerce-module.php:388
-msgid ""
-"Convert prices using Odoo exchange rates when the product currency differs "
-"from the shop currency."
-msgstr ""
-"Convertir les prix à l'aide des taux de change Odoo lorsque la devise du "
-"produit diffère de celle de la boutique."
+msgid "Convert prices using Odoo exchange rates when the product currency differs from the shop currency."
+msgstr "Convertir les prix à l'aide des taux de change Odoo lorsque la devise du produit diffère de celle de la boutique."
 
 #: includes/modules/class-woocommerce-module.php:391
 msgid "Sync translations"
 msgstr "Synchroniser les traductions"
 
 #: includes/modules/class-woocommerce-module.php:393
-msgid ""
-"Select languages to pull product translations from Odoo (requires WPML or "
-"Polylang)."
-msgstr ""
-"Sélectionnez les langues pour importer les traductions produits depuis Odoo "
-"(nécessite WPML ou Polylang)."
+msgid "Select languages to pull product translations from Odoo (requires WPML or Polylang)."
+msgstr "Sélectionnez les langues pour importer les traductions produits depuis Odoo (nécessite WPML ou Polylang)."
 
-#. translators: %s: invoice ID/reference.
 #: includes/modules/class-wp-invoice-handler.php:169
 #, php-format
 msgid "Invoice %s"
@@ -2195,28 +1995,23 @@ msgstr "Envoyer les factures WP-Invoice vers Odoo comme écritures comptables."
 
 #: includes/modules/class-wp-invoice-module.php:141
 msgid "Automatically confirm invoices in Odoo for paid invoices."
-msgstr ""
-"Confirmer automatiquement les factures dans Odoo pour les factures payées."
+msgstr "Confirmer automatiquement les factures dans Odoo pour les factures payées."
 
-#. translators: %s: number of servings (e.g. "4" or "4 persons").
 #: includes/modules/class-wprm-handler.php:95
 #, php-format
 msgid "Servings: %s"
 msgstr "Portions : %s"
 
-#. translators: %s: preparation time in minutes (e.g. "15min").
 #: includes/modules/class-wprm-handler.php:100
 #, php-format
 msgid "Prep: %smin"
 msgstr "Préparation : %smin"
 
-#. translators: %s: cooking time in minutes (e.g. "30min").
 #: includes/modules/class-wprm-handler.php:105
 #, php-format
 msgid "Cook: %smin"
 msgstr "Cuisson : %smin"
 
-#. translators: %s: total time in minutes (e.g. "45min").
 #: includes/modules/class-wprm-handler.php:110
 #, php-format
 msgid "Total: %smin"
@@ -2232,9 +2027,7 @@ msgstr "Synchroniser les recettes"
 
 #: includes/modules/class-wprm-module.php:118
 msgid "Push WP Recipe Maker recipes to Odoo as service products."
-msgstr ""
-"Envoyer les recettes WP Recipe Maker vers Odoo en tant que produits de "
-"service."
+msgstr "Envoyer les recettes WP Recipe Maker vers Odoo en tant que produits de service."
 
 #: includes/modules/trait-amelia-hooks.php:40
 msgid "Amelia module enabled but Amelia is not active."
@@ -2252,11 +2045,18 @@ msgstr "Module Ecwid activé mais Ecwid n'est pas actif."
 msgid "WC Bookings module enabled but WooCommerce Bookings is not active."
 msgstr "Module WC Bookings activé mais WooCommerce Bookings n'est pas actif."
 
-#. translators: %s: plugin name
 #: includes/trait-module-helpers.php:383
 #, php-format
 msgid "%s must be installed and activated to use this module."
 msgstr "%s doit être installé et activé pour utiliser ce module."
+
+#: templates/customer-portal.php:38 templates/customer-portal.php:83
+msgid "Reference"
+msgstr "Référence"
+
+#: templates/customer-portal.php:40 templates/customer-portal.php:85
+msgid "Total"
+msgstr "Total"
 
 #: wp4odoo.php:297
 msgid "Every 5 Minutes"
@@ -2265,9 +2065,3 @@ msgstr "Toutes les 5 minutes"
 #: wp4odoo.php:301
 msgid "Every 15 Minutes"
 msgstr "Toutes les 15 minutes"
-
-#~ msgid "Reference"
-#~ msgstr "Référence"
-
-#~ msgid "Total"
-#~ msgstr "Total"

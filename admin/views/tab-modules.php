@@ -169,6 +169,94 @@ if ( ! defined( 'ABSPATH' ) ) {
 											<?php
 											break;
 
+										case 'mappings':
+											$mappings_data = is_array( $value ) ? $value : [];
+											$all_modules   = \WP4Odoo_Plugin::instance()->get_modules();
+											$acf_types     = \WP4Odoo\Modules\ACF_Handler::get_valid_types();
+											?>
+										<div class="wp4odoo-mappings-table-wrap">
+											<table class="widefat wp4odoo-mappings-table">
+												<thead>
+													<tr>
+														<th><?php esc_html_e( 'Target module', 'wp4odoo' ); ?></th>
+														<th><?php esc_html_e( 'Entity type', 'wp4odoo' ); ?></th>
+														<th><?php esc_html_e( 'ACF field', 'wp4odoo' ); ?></th>
+														<th><?php esc_html_e( 'Odoo field', 'wp4odoo' ); ?></th>
+														<th><?php esc_html_e( 'Type', 'wp4odoo' ); ?></th>
+														<th></th>
+													</tr>
+												</thead>
+												<tbody class="wp4odoo-mappings-rows">
+													<?php if ( ! empty( $mappings_data ) ) : ?>
+														<?php foreach ( $mappings_data as $rule ) : ?>
+															<tr class="wp4odoo-mapping-row">
+																<td>
+																	<select class="wp4odoo-mapping-module">
+																		<option value=""><?php esc_html_e( '— Select —', 'wp4odoo' ); ?></option>
+																		<?php foreach ( $all_modules as $mid => $mod ) : ?>
+																			<?php
+																			if ( 'acf' === $mid ) {
+																				continue; }
+																			?>
+																			<option value="<?php echo esc_attr( $mid ); ?>"
+																				data-entities="<?php echo esc_attr( wp_json_encode( array_keys( $mod->get_odoo_models() ) ) ); ?>"
+																				<?php selected( $rule['target_module'] ?? '', $mid ); ?>>
+																				<?php echo esc_html( $mod->get_name() ); ?>
+																			</option>
+																		<?php endforeach; ?>
+																	</select>
+																</td>
+																<td>
+																	<select class="wp4odoo-mapping-entity">
+																		<?php
+																		$sel_mod = $rule['target_module'] ?? '';
+																		if ( '' !== $sel_mod && isset( $all_modules[ $sel_mod ] ) ) :
+																			foreach ( array_keys( $all_modules[ $sel_mod ]->get_odoo_models() ) as $etype ) :
+																				?>
+																				<option value="<?php echo esc_attr( $etype ); ?>" <?php selected( $rule['entity_type'] ?? '', $etype ); ?>>
+																					<?php echo esc_html( $etype ); ?>
+																				</option>
+																				<?php
+																			endforeach;
+																		endif;
+																		?>
+																	</select>
+																</td>
+																<td><input type="text" class="wp4odoo-mapping-acf regular-text" value="<?php echo esc_attr( $rule['acf_field'] ?? '' ); ?>" placeholder="company_size" /></td>
+																<td><input type="text" class="wp4odoo-mapping-odoo regular-text" value="<?php echo esc_attr( $rule['odoo_field'] ?? '' ); ?>" placeholder="x_company_size" /></td>
+																<td>
+																	<select class="wp4odoo-mapping-type">
+																		<?php foreach ( $acf_types as $atype ) : ?>
+																			<option value="<?php echo esc_attr( $atype ); ?>" <?php selected( $rule['type'] ?? 'text', $atype ); ?>>
+																				<?php echo esc_html( $atype ); ?>
+																			</option>
+																		<?php endforeach; ?>
+																	</select>
+																</td>
+																<td><button type="button" class="button wp4odoo-remove-mapping-row" title="<?php esc_attr_e( 'Remove', 'wp4odoo' ); ?>">&times;</button></td>
+															</tr>
+														<?php endforeach; ?>
+													<?php endif; ?>
+												</tbody>
+											</table>
+											<p>
+												<button type="button" class="button wp4odoo-add-mapping-row" data-module="<?php echo esc_attr( $module_id ); ?>">
+													+ <?php esc_html_e( 'Add mapping', 'wp4odoo' ); ?>
+												</button>
+											</p>
+										</div>
+										<input type="hidden"
+											class="wp4odoo-module-setting wp4odoo-mappings-json"
+											data-module="<?php echo esc_attr( $module_id ); ?>"
+											data-key="<?php echo esc_attr( $field_key ); ?>"
+											id="<?php echo esc_attr( $input_id ); ?>"
+											value="<?php echo esc_attr( wp_json_encode( $mappings_data ) ); ?>" />
+											<?php if ( ! empty( $field['description'] ) ) : ?>
+											<p class="description"><?php echo esc_html( $field['description'] ); ?></p>
+										<?php endif; ?>
+											<?php
+											break;
+
 										case 'languages':
 											?>
 										<div class="wp4odoo-languages-panel"

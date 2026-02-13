@@ -173,6 +173,22 @@ trait Ajax_Module_Handlers {
 						$raw           = sanitize_text_field( $settings[ $key ] );
 						$clean[ $key ] = '' === $raw ? [] : array_map( 'sanitize_key', explode( ',', $raw ) );
 						break;
+					case 'mappings':
+						$json          = wp_unslash( $settings[ $key ] );
+						$decoded       = is_string( $json ) ? json_decode( $json, true ) : ( is_array( $json ) ? $json : [] );
+						$clean[ $key ] = [];
+						if ( is_array( $decoded ) ) {
+							foreach ( $decoded as $rule ) {
+								if ( ! is_array( $rule ) ) {
+									continue;
+								}
+								$validated = \WP4Odoo\Modules\ACF_Handler::validate_rule( $rule );
+								if ( null !== $validated ) {
+									$clean[ $key ][] = $validated;
+								}
+							}
+						}
+						break;
 					default:
 						$clean[ $key ] = sanitize_text_field( $settings[ $key ] );
 						break;

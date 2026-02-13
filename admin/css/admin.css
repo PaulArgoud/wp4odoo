@@ -437,6 +437,35 @@
 .wp4odoo-lang-ok { color: #00a32a; }
 .wp4odoo-lang-missing { color: #d63638; }
 
+/* --- ACF Mappings table --- */
+.wp4odoo-mappings-table-wrap {
+	margin-top: 8px;
+}
+
+.wp4odoo-mappings-table th,
+.wp4odoo-mappings-table td {
+	padding: 6px 8px;
+	vertical-align: middle;
+}
+
+.wp4odoo-mappings-table select,
+.wp4odoo-mappings-table input[type="text"] {
+	width: 100%;
+	min-width: 100px;
+}
+
+.wp4odoo-mappings-table .wp4odoo-remove-mapping-row {
+	min-width: auto;
+	padding: 2px 8px;
+	font-size: 16px;
+	line-height: 1;
+	color: #d63638;
+}
+
+.wp4odoo-add-mapping-row {
+	margin-top: 6px !important;
+}
+
 /* --- Backup warning --- */
 .wp4odoo-backup-warning {
 	border-left-color: #dba617;

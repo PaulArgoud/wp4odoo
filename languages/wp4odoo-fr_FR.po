@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WordPress For Odoo 2.0.0\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-13 19:13+0100\n"
+"Report-Msgid-Bugs-To: support@avalia.io\n"
+"POT-Creation-Date: 2026-02-13 19:46+0100\n"
 "PO-Revision-Date: 2026-02-09 22:31+0100\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
@@ -335,15 +335,48 @@ msgstr "Odoo → WP"
 msgid "Cannot be active simultaneously with \"%s\"."
 msgstr "Ne peut pas être actif en même temps que « %s »."
 
-#: admin/views/tab-modules.php:179
+#: admin/views/tab-modules.php:181
+#, fuzzy
+msgid "Target module"
+msgstr "Module cible"
+
+#: admin/views/tab-modules.php:182
+msgid "Entity type"
+msgstr "Type d'entité"
+
+#: admin/views/tab-modules.php:183
+msgid "ACF field"
+msgstr "Champ ACF"
+
+#: admin/views/tab-modules.php:184
+msgid "Odoo field"
+msgstr "Champ Odoo"
+
+#: admin/views/tab-modules.php:185 admin/views/tab-queue.php:83
+msgid "Type"
+msgstr "Type"
+
+#: admin/views/tab-modules.php:195
+msgid "— Select —"
+msgstr "— Sélectionner —"
+
+#: admin/views/tab-modules.php:236
+msgid "Remove"
+msgstr "Supprimer"
+
+#: admin/views/tab-modules.php:244
+msgid "Add mapping"
+msgstr "Ajouter un mappage"
+
+#: admin/views/tab-modules.php:267
 msgid "Detect languages"
 msgstr "Détecter les langues"
 
-#: admin/views/tab-modules.php:217
+#: admin/views/tab-modules.php:305
 msgid "Save settings"
 msgstr "Enregistrer les paramètres"
 
-#: admin/views/tab-modules.php:227
+#: admin/views/tab-modules.php:315
 msgid "No modules registered."
 msgstr "Aucun module enregistré."
 
@@ -387,10 +420,6 @@ msgstr "Actualiser"
 #, php-format
 msgid "Last sync: %s"
 msgstr "Dernière synchro : %s"
-
-#: admin/views/tab-queue.php:83
-msgid "Type"
-msgstr "Type"
 
 #: admin/views/tab-queue.php:84 admin/views/tab-sync.php:23
 msgid "Direction"
@@ -577,7 +606,7 @@ msgid "No results."
 msgstr "Aucun résultat."
 
 #: includes/admin/class-admin.php:107
-#: includes/admin/trait-ajax-module-handlers.php:190
+#: includes/admin/trait-ajax-module-handlers.php:206
 msgid "Settings saved."
 msgstr "Paramètres enregistrés."
 
@@ -698,12 +727,12 @@ msgstr "« %1$s » est mutuellement exclusif avec %2$s. Le(s) module(s) en confl
 msgid "Unknown module."
 msgstr "Module inconnu."
 
-#: includes/admin/trait-ajax-module-handlers.php:207
-#: includes/admin/trait-ajax-module-handlers.php:228
+#: includes/admin/trait-ajax-module-handlers.php:223
+#: includes/admin/trait-ajax-module-handlers.php:244
 msgid "WooCommerce module is not registered."
 msgstr "Le module WooCommerce n'est pas enregistré."
 
-#: includes/admin/trait-ajax-module-handlers.php:260
+#: includes/admin/trait-ajax-module-handlers.php:276
 msgid "No translation plugin detected (WPML or Polylang required)."
 msgstr "Aucun plugin de traduction détecté (WPML ou Polylang requis)."
 
@@ -815,7 +844,7 @@ msgstr ""
 "\n"
 "Veuillez vérifier la file de synchronisation à %2$s"
 
-#: includes/class-module-base.php:612
+#: includes/class-module-base.php:628
 #, php-format
 msgid "Entity type \"%1$s\" is not registered in module \"%2$s\"."
 msgstr "Le type d'entité « %1$s » n'est pas enregistré dans le module « %2$s »."
@@ -875,6 +904,19 @@ msgstr "Vous n'avez pas la permission d'effectuer cette action."
 #: includes/class-webhook-handler.php:466
 msgid "Too many requests. Please try again later."
 msgstr "Trop de requêtes. Veuillez réessayer plus tard."
+
+#: includes/modules/class-acf-module.php:81
+#, fuzzy
+msgid "ACF module enabled but Advanced Custom Fields is not active."
+msgstr "Le module ACF est activé mais Advanced Custom Fields n'est pas actif."
+
+#: includes/modules/class-acf-module.php:161
+msgid "Field mappings"
+msgstr "Mappages de champs"
+
+#: includes/modules/class-acf-module.php:163
+msgid "Map ACF fields to Odoo custom fields (x_*). Each rule enriches a specific module and entity type."
+msgstr "Mappez les champs ACF aux champs personnalisés Odoo (x_*). Chaque règle enrichit un module et un type d'entité spécifiques."
 
 #: includes/modules/class-amelia-module.php:117
 #: includes/modules/class-bookly-module.php:118

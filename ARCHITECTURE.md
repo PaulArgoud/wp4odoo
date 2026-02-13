@@ -164,7 +164,10 @@ WordPress For Odoo/
 │   │   ├── # ─── HR (WP Job Manager) ──────────
 │   │   ├── trait-job-manager-hooks.php       # Job Manager: on_job_save, on_job_expired
 │   │   ├── class-job-manager-handler.php     # Job Manager: job_listing CPT, status mapping, department resolution
-│   │   └── class-job-manager-module.php      # Job Manager: independent, bidirectional job ↔ hr.job
+│   │   ├── class-job-manager-module.php      # Job Manager: independent, bidirectional job ↔ hr.job
+│   │   ├── # ─── Meta-modules (enrichment) ───────
+│   │   ├── class-acf-handler.php             # ACF: type conversions, enrich push/pull, write ACF fields
+│   │   └── class-acf-module.php              # ACF: filter-based enrichment, mapping configurator, no own entity types
 │   │
 │   ├── i18n/
 │   │   ├── interface-translation-adapter.php   # Adapter interface (8 methods: post + term translations, default lang, active langs)
@@ -1291,6 +1294,25 @@ All user inputs are sanitized with:
 - Hooks: `save_post_job_listing`, `job_listing_expired`
 
 **Settings:** `sync_jobs`, `pull_jobs`
+
+### ACF (Advanced Custom Fields) — COMPLETE
+
+**Files:** `class-acf-module.php` (filter-based enrichment coordinator, no own entity types), `class-acf-handler.php` (type conversions, enrich push/pull, write ACF fields, rule validation)
+
+**Odoo models:** None (meta-module — enriches other modules' pipelines)
+
+**Key features:**
+- Filter-based enrichment architecture — hooks into `wp4odoo_map_to_odoo_{module}_{entity}` and `wp4odoo_map_from_odoo_{module}_{entity}` filters
+- Post-save writing via `wp4odoo_after_save_{module}_{entity}` action (for pull)
+- Admin UI with repeatable-row mapping configurator: target module, entity type, ACF field, Odoo field, type conversion
+- 9 type conversions: text, number, integer, boolean, date, datetime, html, select, binary
+- ACF user context: CRM contacts use `user_{ID}` format, all others use post ID
+- Date conversion: ACF `Ymd` ↔ Odoo `Y-m-d`
+- Image to base64: attachment ID → file_get_contents → base64_encode
+- No exclusive group — coexists with all modules
+- Requires ACF (free or Pro); `boot()` guards with `class_exists('ACF') || defined('ACF_MAJOR_VERSION')`
+
+**Settings:** `acf_mappings` (array of mapping rules, type `mappings`)
 
 ### Partner Service
 

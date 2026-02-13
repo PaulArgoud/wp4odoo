@@ -122,21 +122,32 @@ composer phpstan            # or: php -d memory_limit=1G vendor/bin/phpstan anal
 
 ```
 includes/
-├── class-plugin.php          # Main plugin orchestrator
-├── class-odoo-client.php     # Odoo API client
-├── class-sync-queue.php      # Persistent queue
-├── modules/
-│   ├── class-module-base.php # Abstract base for all modules
-│   ├── class-crm-module.php
-│   ├── class-sales-module.php
+├── api/                         # Odoo transport & client
+│   ├── class-odoo-client.php
+│   ├── class-odoo-jsonrpc.php
 │   └── ...
+├── admin/                       # Admin PHP classes & AJAX traits
+│   ├── class-admin.php
+│   ├── class-settings-page.php
+│   └── ...
+├── i18n/                        # WPML/Polylang translation adapters
+├── modules/
+│   ├── class-module-base.php    # Abstract base for all modules
+│   ├── class-crm-module.php
+│   └── ...
+├── class-sync-engine.php        # Queue processor (batch, retry, circuit breaker)
+├── class-sync-queue-repository.php  # Persistent queue DB layer
+└── ...
 admin/
-├── class-admin.php           # Admin pages & settings
-├── views/                    # Admin page templates
-templates/                    # Frontend templates (portal, lead form)
+├── views/                       # Admin page templates
+├── js/                          # Admin JavaScript
+├── css/                         # Admin CSS
+templates/                       # Frontend templates (portal)
 tests/
-├── unit/                     # PHPUnit unit tests
-├── integration/              # Integration tests (require wp-env)
+├── Unit/                        # PHPUnit unit tests
+├── Integration/                 # Integration tests (require wp-env)
+├── stubs/                       # Class/function stubs for unit tests
+├── helpers/                     # Shared test helpers
 ```
 
 New classes should follow this structure. Place module-specific code inside `includes/modules/`.
@@ -155,7 +166,7 @@ New classes should follow this structure. Place module-specific code inside `inc
 composer test               # or: php vendor/bin/phpunit
 ```
 
-Unit tests live in `tests/unit/` and should not require a database or network. Mock Odoo API responses using the existing test helpers.
+Unit tests live in `tests/Unit/` and should not require a database or network. Mock Odoo API responses using the existing test helpers.
 
 **When to write tests:**
 
@@ -171,7 +182,7 @@ npm run test:integration
 npx wp-env stop
 ```
 
-Integration tests live in `tests/integration/` and run inside a real WordPress environment. Use these for testing database operations, hook firing, and WP-CLI commands.
+Integration tests live in `tests/Integration/` and run inside a real WordPress environment. Use these for testing database operations, hook firing, and WP-CLI commands.
 
 ### Test Naming Convention
 

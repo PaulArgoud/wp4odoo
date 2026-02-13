@@ -188,8 +188,9 @@ abstract class Module_Base {
 			return Sync_Result::success( $odoo_id );
 		}
 
-		$wp_data     = ! empty( $payload ) ? $payload : $this->load_wp_data( $entity_type, $wp_id );
-		$odoo_values = $this->map_to_odoo( $entity_type, $wp_data );
+		$wp_data                  = ! empty( $payload ) ? $payload : $this->load_wp_data( $entity_type, $wp_id );
+		$wp_data['_wp_entity_id'] = $wp_id;
+		$odoo_values              = $this->map_to_odoo( $entity_type, $wp_data );
 
 		if ( empty( $odoo_values ) ) {
 			$this->logger->warning( 'No data to push.', compact( 'entity_type', 'wp_id' ) );
@@ -286,6 +287,21 @@ abstract class Module_Base {
 			$wp_id = $this->save_wp_data( $entity_type, $wp_data, $wp_id );
 
 			if ( $wp_id > 0 ) {
+				/**
+				 * Fires after a WordPress entity has been saved during an Odoo pull.
+				 *
+				 * Allows meta-modules (e.g. ACF) to write additional data
+				 * that requires the WP entity ID to exist.
+				 *
+				 * @since 3.1.0
+				 *
+				 * @param int    $wp_id       The saved WordPress entity ID.
+				 * @param array  $wp_data     The mapped WordPress data.
+				 * @param string $entity_type The entity type.
+				 * @param array  $odoo_data   The raw Odoo record data.
+				 */
+				do_action( "wp4odoo_after_save_{$this->id}_{$entity_type}", $wp_id, $wp_data, $entity_type, $odoo_data );
+
 				$new_hash = $this->generate_sync_hash( $odoo_data );
 				$this->save_mapping( $entity_type, $wp_id, $odoo_id, $new_hash );
 				$this->logger->info( 'Pulled from Odoo.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );

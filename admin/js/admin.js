@@ -31,6 +31,7 @@
 			this.bindDismissChecklist();
 			this.bindConfirmWebhooks();
 			this.bindDetectLanguages();
+			this.bindMappingsUI();
 		},
 
 		/**
@@ -219,6 +220,25 @@
 				var $card    = $btn.closest( '.wp4odoo-module-card' );
 				var $feedback = $card.find( '.wp4odoo-module-save-feedback' );
 				var settings = {};
+
+				// Serialize mappings rows into their hidden JSON input before collecting.
+				$card.find( '.wp4odoo-mappings-json' ).each( function() {
+					var rows = [];
+					$( this ).closest( 'td' ).find( '.wp4odoo-mapping-row' ).each( function() {
+						var $row = $( this );
+						var rule = {
+							target_module: $row.find( '.wp4odoo-mapping-module' ).val(),
+							entity_type:   $row.find( '.wp4odoo-mapping-entity' ).val(),
+							acf_field:     $row.find( '.wp4odoo-mapping-acf' ).val(),
+							odoo_field:    $row.find( '.wp4odoo-mapping-odoo' ).val(),
+							type:          $row.find( '.wp4odoo-mapping-type' ).val()
+						};
+						if ( rule.target_module && rule.entity_type && rule.acf_field && rule.odoo_field ) {
+							rows.push( rule );
+						}
+					} );
+					$( this ).val( JSON.stringify( rows ) );
+				} );
 
 				$card.find( '.wp4odoo-module-setting' ).each( function() {
 					var $input = $( this );
@@ -646,6 +666,66 @@
 						$hidden.val( selected.join( ',' ) );
 					} );
 				}, $btn );
+			} );
+		},
+
+		// ─── ACF Mappings UI ─────────────────────────────────────
+
+		bindMappingsUI: function() {
+			// Add a new mapping row.
+			$( document ).on( 'click', '.wp4odoo-add-mapping-row', function() {
+				var $card  = $( this ).closest( '.wp4odoo-module-card' );
+				var $tbody = $card.find( '.wp4odoo-mappings-rows' );
+
+				// Clone option list from the first module select (if exists) or build from scratch.
+				var $existing = $card.find( '.wp4odoo-mapping-module:first' );
+				var moduleOptions = '';
+				if ( $existing.length ) {
+					moduleOptions = $existing.html();
+				}
+
+				// Build type options.
+				var types = [ 'text', 'number', 'integer', 'boolean', 'date', 'datetime', 'html', 'select', 'binary' ];
+				var typeOptions = '';
+				$.each( types, function( i, t ) {
+					typeOptions += '<option value="' + t + '">' + t + '</option>';
+				} );
+
+				var $row = $(
+					'<tr class="wp4odoo-mapping-row">' +
+					'<td><select class="wp4odoo-mapping-module">' + moduleOptions + '</select></td>' +
+					'<td><select class="wp4odoo-mapping-entity"><option value="">—</option></select></td>' +
+					'<td><input type="text" class="wp4odoo-mapping-acf regular-text" placeholder="company_size" /></td>' +
+					'<td><input type="text" class="wp4odoo-mapping-odoo regular-text" placeholder="x_company_size" /></td>' +
+					'<td><select class="wp4odoo-mapping-type">' + typeOptions + '</select></td>' +
+					'<td><button type="button" class="button wp4odoo-remove-mapping-row" title="Remove">&times;</button></td>' +
+					'</tr>'
+				);
+
+				// Reset the module select to empty.
+				$row.find( '.wp4odoo-mapping-module' ).val( '' );
+				$tbody.append( $row );
+			} );
+
+			// Remove a mapping row.
+			$( document ).on( 'click', '.wp4odoo-remove-mapping-row', function() {
+				$( this ).closest( '.wp4odoo-mapping-row' ).remove();
+			} );
+
+			// Update entity select when module changes.
+			$( document ).on( 'change', '.wp4odoo-mapping-module', function() {
+				var $select  = $( this );
+				var $entity  = $select.closest( 'tr' ).find( '.wp4odoo-mapping-entity' );
+				var entities = $select.find( ':selected' ).data( 'entities' ) || [];
+
+				$entity.empty();
+				if ( entities.length ) {
+					$.each( entities, function( i, etype ) {
+						$entity.append( '<option value="' + etype + '">' + etype + '</option>' );
+					} );
+				} else {
+					$entity.append( '<option value="">—</option>' );
+				}
 			} );
 		}
 	};

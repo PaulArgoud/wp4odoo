@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WordPress For Odoo 2.0.0\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-13 19:13+0100\n"
+"Report-Msgid-Bugs-To: support@avalia.io\n"
+"POT-Creation-Date: 2026-02-13 19:46+0100\n"
 "PO-Revision-Date: 2026-02-10 22:00+0100\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
@@ -335,15 +335,47 @@ msgstr "Odoo → WP"
 msgid "Cannot be active simultaneously with \"%s\"."
 msgstr "No puede estar activo simultáneamente con «%s»."
 
-#: admin/views/tab-modules.php:179
+#: admin/views/tab-modules.php:181
+msgid "Target module"
+msgstr "Módulo destino"
+
+#: admin/views/tab-modules.php:182
+msgid "Entity type"
+msgstr "Tipo de entidad"
+
+#: admin/views/tab-modules.php:183
+msgid "ACF field"
+msgstr "Campo ACF"
+
+#: admin/views/tab-modules.php:184
+msgid "Odoo field"
+msgstr "Campo Odoo"
+
+#: admin/views/tab-modules.php:185 admin/views/tab-queue.php:83
+msgid "Type"
+msgstr "Tipo"
+
+#: admin/views/tab-modules.php:195
+msgid "— Select —"
+msgstr "— Seleccionar —"
+
+#: admin/views/tab-modules.php:236
+msgid "Remove"
+msgstr "Eliminar"
+
+#: admin/views/tab-modules.php:244
+msgid "Add mapping"
+msgstr "Añadir asignación"
+
+#: admin/views/tab-modules.php:267
 msgid "Detect languages"
 msgstr "Detectar idiomas"
 
-#: admin/views/tab-modules.php:217
+#: admin/views/tab-modules.php:305
 msgid "Save settings"
 msgstr "Guardar ajustes"
 
-#: admin/views/tab-modules.php:227
+#: admin/views/tab-modules.php:315
 msgid "No modules registered."
 msgstr "No hay módulos registrados."
 
@@ -387,10 +419,6 @@ msgstr "Actualizar"
 #, php-format
 msgid "Last sync: %s"
 msgstr "Última sincronización: %s"
-
-#: admin/views/tab-queue.php:83
-msgid "Type"
-msgstr "Tipo"
 
 #: admin/views/tab-queue.php:84 admin/views/tab-sync.php:23
 msgid "Direction"
@@ -577,7 +605,7 @@ msgid "No results."
 msgstr "Sin resultados."
 
 #: includes/admin/class-admin.php:107
-#: includes/admin/trait-ajax-module-handlers.php:190
+#: includes/admin/trait-ajax-module-handlers.php:206
 msgid "Settings saved."
 msgstr "Ajustes guardados."
 
@@ -698,12 +726,12 @@ msgstr "«%1$s» es mutuamente excluyente con %2$s. Los módulos en conflicto ha
 msgid "Unknown module."
 msgstr "Módulo desconocido."
 
-#: includes/admin/trait-ajax-module-handlers.php:207
-#: includes/admin/trait-ajax-module-handlers.php:228
+#: includes/admin/trait-ajax-module-handlers.php:223
+#: includes/admin/trait-ajax-module-handlers.php:244
 msgid "WooCommerce module is not registered."
 msgstr "El módulo WooCommerce no está registrado."
 
-#: includes/admin/trait-ajax-module-handlers.php:260
+#: includes/admin/trait-ajax-module-handlers.php:276
 msgid "No translation plugin detected (WPML or Polylang required)."
 msgstr "No se detectó ningún plugin de traducción (se requiere WPML o Polylang)."
 
@@ -815,7 +843,7 @@ msgstr ""
 "\n"
 "Por favor, revise la cola de sincronización en %2$s"
 
-#: includes/class-module-base.php:612
+#: includes/class-module-base.php:628
 #, php-format
 msgid "Entity type \"%1$s\" is not registered in module \"%2$s\"."
 msgstr "El tipo de entidad «%1$s» no está registrado en el módulo «%2$s»."
@@ -875,6 +903,18 @@ msgstr "No tiene permiso para realizar esta acción."
 #: includes/class-webhook-handler.php:466
 msgid "Too many requests. Please try again later."
 msgstr "Demasiadas solicitudes. Inténtelo de nuevo más tarde."
+
+#: includes/modules/class-acf-module.php:81
+msgid "ACF module enabled but Advanced Custom Fields is not active."
+msgstr "El módulo ACF está habilitado pero Advanced Custom Fields no está activo."
+
+#: includes/modules/class-acf-module.php:161
+msgid "Field mappings"
+msgstr "Asignaciones de campos"
+
+#: includes/modules/class-acf-module.php:163
+msgid "Map ACF fields to Odoo custom fields (x_*). Each rule enriches a specific module and entity type."
+msgstr "Asigne campos ACF a campos personalizados de Odoo (x_*). Cada regla enriquece un módulo y tipo de entidad específico."
 
 #: includes/modules/class-amelia-module.php:117
 #: includes/modules/class-bookly-module.php:118

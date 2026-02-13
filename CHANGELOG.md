@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **WP Job Manager module** — New bidirectional sync module for WP Job Manager (100k+ installs). Syncs `job_listing` CPT ↔ Odoo `hr.job` (job positions). Status mapping: `publish` ↔ `recruit`, `expired`/`filled` ↔ `open`. Pull support: department → `job_listing_category` taxonomy. Filterable status hooks. 61 new tests
 - **Odoo_Model enum** — Added `HrJob` (`hr.job`) and `HrDepartment` (`hr.department`) cases for the HR domain
 - **Backup warning** — Persistent admin banner on plugin settings page reminding users to back up WordPress + Odoo databases before sync. JS confirmation dialog before bulk import/export and retry operations. WP-CLI warning before `sync run`. Translated (FR, ES)
+- **ACF meta-module** — Advanced Custom Fields mapping module: maps ACF custom fields to Odoo custom fields (`x_*`). Filter-based enrichment architecture — hooks into existing modules' push/pull pipelines without owning entity types. Admin UI with repeatable-row mapping configurator (target module, entity type, ACF field, Odoo field, type). 9 type conversions (text, number, integer, boolean, date, datetime, html, select, binary). CRM contacts use ACF user context (`user_{ID}`). 82 new tests
+- **Module_Base infrastructure** — `_wp_entity_id` injected into `$wp_data` in `push_to_odoo()` for filter consumers. New `wp4odoo_after_save_{module}_{entity}` action fired after `save_wp_data()` in `pull_from_odoo()` for meta-module post-save writes
 
 ### Changed
 - **WooCommerce module** — `sync_translations` setting migrated from boolean to array of language codes (backward compatible). UI replaced from checkbox to interactive language detection panel
