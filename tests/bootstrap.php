@@ -113,6 +113,7 @@ require_once __DIR__ . '/stubs/learndash-classes.php';
 require_once __DIR__ . '/stubs/lifterlms-classes.php';
 require_once __DIR__ . '/stubs/wc-subscriptions-classes.php';
 require_once __DIR__ . '/stubs/events-calendar-classes.php';
+require_once __DIR__ . '/stubs/wc-bookings-classes.php';
 
 // ─── Composer autoloader ────────────────────────────────
 

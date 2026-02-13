@@ -6,69 +6,6 @@ Modular WordPress plugin providing bidirectional synchronization between WordPre
 
 ![WP4ODOO Full Architecture](assets/images/architecture-full.svg)
 
-```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                                WordPress                                │
-│                                                                         │
-│  ┌──────────┐ ┌───────────┐ ┌─────────────┐ ┌─────────┐  Commerce      │
-│  │   CRM    │ │   Sales   │ │ WooCommerce │ │   EDD   │  Modules       │
-│  │  Module  │ │   Module  │ │   Module    │ │  Module │                 │
-│  └────┬─────┘ └─────┬─────┘ └──────┬──────┘ └────┬────┘                 │
-│       │             │              │              │                     │
-│  ┌────┴──────┐ ┌────┴──────┐ ┌─────┴──────┐ ┌───┴──────┐  Membership   │
-│  │Memberships│ │MemberPress│ │   PMPro    │ │   RCP    │  Modules       │
-│  │  Module   │ │  Module   │ │   Module   │ │  Module  │                │
-│  └────┬──────┘ └────┬──────┘ └─────┬──────┘ └────┬─────┘                │
-│       │             │              │             │                      │
-│  ┌────┴──────┐ ┌────┴──────┐ ┌─────┴──────┐ ┌───────────┐  Donation    │
-│  │  GiveWP   │ │Charitable │ │ SimplePay  │ │   Forms   │  & Forms     │
-│  │  Module   │ │  Module   │ │   Module   │ │  Module   │  Modules     │
-│  └────┬──────┘ └────┬──────┘ └─────┬──────┘ └─────┬─────┘              │
-│       │             │              │              │                     │
-│  ┌────┴──────┐ ┌────┴──────┐ ┌─────┴──────┐ ┌────┴──────┐  LMS, Book. │
-│  │ LearnDash │ │ LifterLMS │ │   Amelia   │ │  Bookly   │  Content &   │
-│  │  Module   │ │  Module   │ │   Module   │ │  Module   │  Events      │
-│  └────┬──────┘ └────┬──────┘ └─────┬──────┘ └────┬──────┘              │
-│       │             │              │              │                     │
-│  ┌────┴──────┐ ┌────┴──────┐ ┌─────┴──────┐ ┌────┴──────┐              │
-│  │WC Subscr. │ │  Events   │ │    WPRM    │ │ Sprout   │  Subscr.,    │
-│  │  Module   │ │ Calendar  │ │   Module   │ │Invoices  │  Events,     │
-│  └────┬──────┘ └────┬──────┘ └─────┬──────┘ └────┬─────┘  Content,    │
-│       │             │              │              │        Invoicing   │
-│  ┌────┴──────┐ ┌────┴──────┐ ┌─────┴──────┐ ┌────┴──────┐  & More    │
-│  │WP-Invoice │ │Crowdfund. │ │   Ecwid    │ │  ShopWP   │  E-Commerce │
-│  │  Module   │ │  Module   │ │   Module   │ │  Module   │             │
-│  └────┬──────┘ └────┬──────┘ └─────┬──────┘ └────┬──────┘             │
-│       └─────────────┼──────────────┼─────────────┘                    │
-│                     ▼                                                  │
-│  ┌───────────────────────────────────────────────────────────────────┐  │
-│  │  Shared Infrastructure                                            │  │
-│  │  ┌──────────────┐  ┌────────────────┐  ┌─────────────────┐        │  │
-│  │  │  Sync Engine │  │ Queue Manager  │  │ Partner Service │        │  │
-│  │  │  (cron job)  │  └────────────────┘  └─────────────────┘        │  │
-│  │  └──────┬───────┘                                                 │  │
-│  │         │  ┌──────────────┐  ┌────────────────┐                   │  │
-│  │         │  │ Field Mapper │  │Webhook Handler │◄── REST API       │  │
-│  │         │  └──────┬───────┘  └───────┬────────┘                   │  │
-│  │         │         │                  │                            │  │
-│  │  ┌──────▼─────────▼──────────────────▼──────┐                     │  │
-│  │  │             Odoo Client                  │                     │  │
-│  │  │  ┌───────────┐    ┌──────────────┐       │                     │  │
-│  │  │  │ JSON-RPC  │    │   XML-RPC    │       │                     │  │
-│  │  │  │ Transport │    │  Transport   │       │                     │  │
-│  │  │  └┬───────┘       └───────┬──────┘       │                     │  │
-│  │  │   └─ Transport interface ─┘              │                     │  │
-│  │  └────────────────────┬─────────────────────┘                     │  │
-│  └───────────────────────┼───────────────────────────────────────────┘  │
-└──────────────────────────┼──────────────────────────────────────────────┘
-                           │ HTTP
-                           ▼
-                 ┌──────────────────┐
-                 │    Odoo ERP      │
-                 │     (v14+)       │
-                 └──────────────────┘
-```
-
 ## Directory Structure
 
 ```
@@ -176,7 +113,7 @@ WordPress For Odoo/
 │   │   ├── class-rcp-handler.php             # RCP: level/payment/membership data load via RCP v3.0+ classes
 │   │   ├── class-rcp-module.php              # RCP: extends Membership_Module_Base (uses RCP_Hooks trait)
 │   │   │
-│   │   ├── # ─── Booking (Amelia + Bookly) ────────────────────
+│   │   ├── # ─── Booking (Amelia + Bookly + WC Bookings) ──────
 │   │   ├── class-booking-module-base.php     # Shared: abstract base class for booking/appointment modules
 │   │   ├── trait-amelia-hooks.php            # Amelia: hook callbacks (booking saved/canceled/rescheduled, service saved)
 │   │   ├── class-amelia-handler.php          # Amelia: $wpdb queries on amelia_* tables (no CPT)
@@ -184,6 +121,9 @@ WordPress For Odoo/
 │   │   ├── trait-bookly-cron-hooks.php       # Bookly: WP-Cron polling (no hooks available)
 │   │   ├── class-bookly-handler.php          # Bookly: $wpdb queries on bookly_* tables (batch + individual)
 │   │   ├── class-bookly-module.php           # Bookly: extends Booking_Module_Base (uses Bookly_Cron_Hooks trait)
+│   │   ├── trait-wc-bookings-hooks.php       # WC Bookings: hook callbacks (product save, booking status changed)
+│   │   ├── class-wc-bookings-handler.php     # WC Bookings: WC CRUD (WC_Booking, WC_Product_Booking)
+│   │   ├── class-wc-bookings-module.php      # WC Bookings: extends Booking_Module_Base (uses WC_Bookings_Hooks trait)
 │   │   │
 │   │   ├── # ─── LMS (LearnDash + LifterLMS) ─────────────────
 │   │   ├── trait-learndash-hooks.php         # LearnDash: hook callbacks (course/group save, transaction, enrollment)
@@ -304,6 +244,7 @@ WordPress For Odoo/
 │   │   ├── rcp-classes.php          #   RCP_Membership, RCP_Customer, RCP_Payments
 │   │   ├── wc-subscriptions-classes.php # WC_Subscriptions, WC_Subscription
 │   │   ├── events-calendar-classes.php  # Tribe__Events__Main, Tribe__Tickets__Main
+│   │   ├── wc-bookings-classes.php     # WC_Booking, WC_Product_Booking
 │   │   ├── sprout-invoices-classes.php  # SI_Post_Type, SI_Invoice, SI_Payment
 │   │   ├── wp-invoice-classes.php       # WPI_Invoice
 │   │   ├── crowdfunding-classes.php     # wpneo_crowdfunding_init()
@@ -380,6 +321,8 @@ WordPress For Odoo/
 │       ├── WCSubscriptionsHandlerTest.php # 40 tests for WC_Subscriptions_Handler
 │       ├── EventsCalendarModuleTest.php  # 23 tests for Events_Calendar_Module
 │       ├── EventsCalendarHandlerTest.php # 30 tests for Events_Calendar_Handler
+│       ├── WCBookingsModuleTest.php     # 25 tests for WC_Bookings_Module
+│       ├── WCBookingsHandlerTest.php    # 24 tests for WC_Bookings_Handler
 │       ├── SproutInvoicesModuleTest.php  # 46 tests for Sprout_Invoices_Module
 │       ├── WPInvoiceModuleTest.php       # 32 tests for WP_Invoice_Module
 │       ├── CrowdfundingModuleTest.php    # 22 tests for Crowdfunding_Module
@@ -440,7 +383,8 @@ Module_Base (abstract)
 ├── Forms_Module                → crm.lead                                           [WP → Odoo]
 ├── Booking_Module_Base (abstract)
 │   ├── Amelia_Module           → product.product, calendar.event                    [WP → Odoo]
-│   └── Bookly_Module           → product.product, calendar.event                    [WP → Odoo]
+│   ├── Bookly_Module           → product.product, calendar.event                    [WP → Odoo]
+│   └── WC_Bookings_Module     → product.product, calendar.event                    [WP → Odoo]
 ├── LearnDash_Module            → product.product, account.move, sale.order          [WP → Odoo]
 ├── LifterLMS_Module            → product.product, account.move, sale.order          [WP → Odoo]
 ├── WC_Subscriptions_Module     → product.product, sale.subscription, account.move   [WP → Odoo]
@@ -1039,6 +983,25 @@ All user inputs are sanitized with:
 - Event naming: "Service — Customer"
 
 **Settings:** `sync_services`, `sync_bookings`
+
+### WC Bookings — COMPLETE
+
+**Files:** `class-wc-bookings-module.php` (extends `Booking_Module_Base`, uses `WC_Bookings_Hooks` trait), `trait-wc-bookings-hooks.php` (hook callbacks), `class-wc-bookings-handler.php` (WC CRUD: `WC_Booking`, `WC_Product_Booking`)
+
+**Odoo models:** `product.product` (booking products), `calendar.event` (bookings)
+
+**Key features:**
+- Bidirectional: booking products ↔ Odoo, bookings → Odoo only
+- Requires WooCommerce Bookings (`WC_Product_Booking`); coexists with WooCommerce module
+- Hook-based sync: `save_post_product` (booking type filter), `woocommerce_booking_status_changed`
+- Status filtering: only syncs confirmed/paid/complete bookings; cancellation enqueues delete
+- All-day support via `load_wp_data()` override (augments base with `allday` field)
+- Persons count included in calendar event description
+- Data access via WC CRUD classes (`WC_Booking`, `WC_Product_Booking`)
+- Service auto-sync via `Booking_Module_Base::ensure_service_synced()`
+- Customer resolution: WP user → order billing info → Partner_Service
+
+**Settings:** `sync_products`, `sync_bookings`, `pull_services`
 
 ### Paid Memberships Pro — COMPLETE
 

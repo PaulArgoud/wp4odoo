@@ -136,6 +136,9 @@ class Module_Registry {
 		if ( class_exists( 'WC_Subscriptions' ) ) {
 			$this->register( 'wc_subscriptions', new Modules\WC_Subscriptions_Module( $client_provider, $entity_map, $settings ) );
 		}
+		if ( class_exists( 'WC_Product_Booking' ) ) {
+			$this->register( 'wc_bookings', new Modules\WC_Bookings_Module( $client_provider, $entity_map, $settings ) );
+		}
 		if ( class_exists( 'Tribe__Events__Main' ) ) {
 			$this->register( 'events_calendar', new Modules\Events_Calendar_Module( $client_provider, $entity_map, $settings ) );
 		}

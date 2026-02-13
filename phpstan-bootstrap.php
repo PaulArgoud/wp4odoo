@@ -759,5 +759,34 @@ if ( ! class_exists( 'Tribe__Tickets__Main' ) ) {
 	}
 }
 
+// ─── WC Bookings stubs ──────────────────────────────────
+
+if ( ! class_exists( 'WC_Booking' ) ) {
+	class WC_Booking {
+		public function __construct( int $id = 0 ) {}
+		public function get_id(): int { return 0; }
+		public function get_product_id(): int { return 0; }
+		public function get_start_date( string $format = 'Y-m-d H:i:s' ): string { return ''; }
+		public function get_end_date( string $format = 'Y-m-d H:i:s' ): string { return ''; }
+		public function get_status(): string { return ''; }
+		public function is_all_day(): bool { return false; }
+		/** @return array<int, int> */
+		public function get_persons(): array { return []; }
+		public function get_persons_total(): int { return 0; }
+		public function get_customer_id(): int { return 0; }
+		public function get_order_id(): int { return 0; }
+		public function get_cost(): float { return 0.0; }
+	}
+}
+
+if ( ! class_exists( 'WC_Product_Booking' ) ) {
+	class WC_Product_Booking extends WC_Product {
+		public function get_type(): string { return 'booking'; }
+		public function get_duration(): int { return 1; }
+		public function get_duration_unit(): string { return 'hour'; }
+		public function get_base_cost(): string { return '0'; }
+	}
+}
+
 // WP_CLI\Utils namespace stub loaded from separate file (PHP namespace rules).
 require_once __DIR__ . '/phpstan-wp-cli-stubs.php';

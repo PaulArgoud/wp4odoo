@@ -44,7 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CPT_Helper** — 2 new shared static methods: `parse_service_product()` (Odoo → WP service product parsing) and `save_from_odoo()` (CPT insert/update with optional meta writes). Used by LearnDash and LifterLMS handlers
 - **Module_Base::handle_cpt_save()** — New protected method encapsulating the 5 standard guard clauses (anti-loop, revision, autosave, post_type, settings) before `enqueue_push()`. Replaces ~300 lines of duplicated boilerplate across 12 hooks trait methods
 - **LMS handler DRY** — LearnDash_Handler and LifterLMS_Handler parse/save methods (8 total) now delegate to `CPT_Helper::parse_service_product()` and `CPT_Helper::save_from_odoo()`
-- 82 new/updated unit tests (1924 total, 3016 assertions): pricelist handler, shipment handler, transient cache isolation, nullable entity_id, memory threshold, stale timeout configuration, schema cache, reconciler, HMAC signature, pull coordinator
+- **WC Bookings Module** — WooCommerce Bookings ↔ Odoo bidirectional sync: booking products to `product.product` (bidirectional), individual bookings to `calendar.event` (push-only). All-day support, persons count in description, status filtering (confirmed/paid/complete), booking product type filter, service auto-sync before booking push, partner resolution via user or order billing. Independent module (coexists with WooCommerce). `WC_Bookings_Handler`, `WC_Bookings_Hooks` trait
+- 131 new/updated unit tests (1973 total, 3081 assertions): WC Bookings module + handler, pricelist handler, shipment handler, transient cache isolation, nullable entity_id, memory threshold, stale timeout configuration, schema cache, reconciler, HMAC signature, pull coordinator
 
 ## [2.9.5] - 2026-02-12
 

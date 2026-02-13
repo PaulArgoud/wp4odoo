@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WordPress For Odoo 2.0.0\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-13 11:19+0100\n"
+"Report-Msgid-Bugs-To: contact@avalia.io\n"
+"POT-Creation-Date: 2026-02-13 12:10+0100\n"
 "PO-Revision-Date: 2026-02-09 22:31+0100\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
@@ -859,7 +859,7 @@ msgstr ""
 "\n"
 "Veuillez vérifier la file de synchronisation à %2$s"
 
-#: includes/class-module-base.php:578
+#: includes/class-module-base.php:612
 #, php-format
 msgid "Entity type \"%1$s\" is not registered in module \"%2$s\"."
 msgstr ""
@@ -921,7 +921,7 @@ msgstr "Token de webhook invalide."
 
 #: includes/class-webhook-handler.php:359
 msgid "Invalid webhook signature."
-msgstr ""
+msgstr "Signature de webhook invalide."
 
 #: includes/class-webhook-handler.php:381
 msgid "You do not have permission to perform this action."
@@ -972,6 +972,7 @@ msgid "Push Bookly services to Odoo as service products."
 msgstr "Envoyer les services Bookly vers Odoo en tant que produits de service."
 
 #: includes/modules/class-bookly-module.php:123
+#: includes/modules/class-wc-bookings-module.php:125
 msgid "Sync bookings"
 msgstr "Synchroniser les réservations"
 
@@ -986,6 +987,7 @@ msgid "Pull Odoo service products into Bookly services."
 msgstr "Récupérer les produits de service Odoo dans les services Bookly."
 
 #: includes/modules/class-bookly-module.php:157
+#: includes/modules/class-wc-bookings-module.php:168
 msgid "Booking"
 msgstr "Réservation"
 
@@ -1141,6 +1143,7 @@ msgstr "Votre jeton secret API Ecwid."
 
 #: includes/modules/class-ecwid-module.php:136
 #: includes/modules/class-shopwp-module.php:124
+#: includes/modules/class-wc-bookings-module.php:120
 #: includes/modules/class-woocommerce-module.php:247
 msgid "Sync products"
 msgstr "Synchroniser les produits"
@@ -1482,11 +1485,11 @@ msgstr "Adresse e-mail invalide."
 msgid "Failed to save lead."
 msgstr "Échec de l'enregistrement du lead."
 
-#: includes/modules/class-learndash-handler.php:185
+#: includes/modules/class-learndash-handler.php:186
 msgid "LearnDash course"
 msgstr "Cours LearnDash"
 
-#: includes/modules/class-learndash-handler.php:218
+#: includes/modules/class-learndash-handler.php:219
 msgid "LearnDash enrollment"
 msgstr "Inscription LearnDash"
 
@@ -1567,11 +1570,11 @@ msgstr "Récupérer les groupes depuis Odoo"
 msgid "Pull group changes from Odoo back to WordPress."
 msgstr "Récupérer les modifications de groupes depuis Odoo vers WordPress."
 
-#: includes/modules/class-lifterlms-handler.php:214
+#: includes/modules/class-lifterlms-handler.php:215
 msgid "LifterLMS course"
 msgstr "Cours LifterLMS"
 
-#: includes/modules/class-lifterlms-handler.php:247
+#: includes/modules/class-lifterlms-handler.php:248
 msgid "LifterLMS enrollment"
 msgstr "Inscription LifterLMS"
 
@@ -1893,6 +1896,30 @@ msgstr "Récupérer les paiements depuis Odoo"
 msgid "Pull payment changes from Odoo back to WordPress."
 msgstr "Récupérer les modifications de paiements depuis Odoo vers WordPress."
 
+#: includes/modules/class-wc-bookings-handler.php:119
+#, php-format
+msgid "Persons: %d"
+msgstr "Personnes : %d"
+
+#: includes/modules/class-wc-bookings-module.php:122
+msgid "Push WC Booking products to Odoo as service products."
+msgstr ""
+"Envoyer les produits WC Bookings vers Odoo comme produits de service."
+
+#: includes/modules/class-wc-bookings-module.php:127
+msgid "Push WC Bookings to Odoo as calendar events."
+msgstr ""
+"Envoyer les réservations WC Bookings vers Odoo en tant qu'événements de "
+"calendrier."
+
+#: includes/modules/class-wc-bookings-module.php:130
+msgid "Pull products"
+msgstr "Récupérer les produits"
+
+#: includes/modules/class-wc-bookings-module.php:132
+msgid "Pull Odoo service products into WC Booking products."
+msgstr "Récupérer les produits de service Odoo dans les produits WC Bookings."
+
 #: includes/modules/class-wc-pull-coordinator.php:201
 msgid "Shipment sync is disabled."
 msgstr "La synchronisation des expéditions est désactivée."
@@ -2103,6 +2130,11 @@ msgstr "Module Bookly activé mais Bookly n'est pas actif."
 #: includes/modules/trait-ecwid-cron-hooks.php:40
 msgid "Ecwid module enabled but Ecwid is not active."
 msgstr "Module Ecwid activé mais Ecwid n'est pas actif."
+
+#: includes/modules/trait-wc-bookings-hooks.php:40
+msgid "WC Bookings module enabled but WooCommerce Bookings is not active."
+msgstr ""
+"Module WC Bookings activé mais WooCommerce Bookings n'est pas actif."
 
 #: includes/trait-module-helpers.php:359
 #, php-format
