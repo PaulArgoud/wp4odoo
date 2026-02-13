@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.0.0] - Unreleased
+## [3.0.5] - Unreleased
+
+## [3.0.0] - 2026-02-13
 
 ### Changed
 - **Sync_Result** — `entity_id` is now `?int` (nullable) instead of `int` with `0` default. `success()` factory defaults to `null`, `failure()` passes `null`. Clearer semantics: `null` = no entity, vs `0` which was ambiguous
