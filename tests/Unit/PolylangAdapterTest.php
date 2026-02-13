@@ -139,4 +139,56 @@ class PolylangAdapterTest extends TestCase {
 
 		$this->assertFalse( $this->adapter->is_translation( 10 ) );
 	}
+
+	// ─── create_translation ────────────────────────────────
+
+	public function test_create_translation_returns_existing(): void {
+		$GLOBALS['_pll_translations'][10] = [
+			'en' => 10,
+			'fr' => 20,
+		];
+
+		$result = $this->adapter->create_translation( 10, 'fr', 'product' );
+
+		$this->assertSame( 20, $result );
+	}
+
+	public function test_create_translation_creates_new_post(): void {
+		$GLOBALS['_pll_default_lang'] = 'en';
+		$GLOBALS['_pll_translations'][10] = [];
+		$GLOBALS['_pll_saved_translations'] = [];
+
+		// wp_insert_post will return the next auto-increment ID from stub.
+		$result = $this->adapter->create_translation( 10, 'fr', 'product' );
+
+		$this->assertGreaterThan( 0, $result );
+
+		// Verify pll_set_post_language was called.
+		$this->assertSame( 'fr', $GLOBALS['_post_languages'][ $result ] ?? '' );
+
+		// Verify pll_save_post_translations was called.
+		$this->assertNotEmpty( $GLOBALS['_pll_saved_translations'] );
+		$saved = end( $GLOBALS['_pll_saved_translations'] );
+		$this->assertSame( 10, $saved['en'] );
+		$this->assertSame( $result, $saved['fr'] );
+	}
+
+	// ─── set_post_language ─────────────────────────────────
+
+	public function test_set_post_language(): void {
+		$this->adapter->set_post_language( 50, 'es', 'product' );
+
+		$this->assertSame( 'es', $GLOBALS['_post_languages'][50] );
+	}
+
+	// ─── link_translations ─────────────────────────────────
+
+	public function test_link_translations(): void {
+		$GLOBALS['_pll_saved_translations'] = [];
+
+		$this->adapter->link_translations( [ 'en' => 10, 'fr' => 20, 'es' => 30 ] );
+
+		$this->assertCount( 1, $GLOBALS['_pll_saved_translations'] );
+		$this->assertSame( [ 'en' => 10, 'fr' => 20, 'es' => 30 ], $GLOBALS['_pll_saved_translations'][0] );
+	}
 }

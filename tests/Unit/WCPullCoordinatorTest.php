@@ -50,7 +50,8 @@ class WCPullCoordinatorTest extends TestCase {
 			$variant_handler,
 			$image_handler,
 			$pricelist_handler,
-			$shipment_handler
+			$shipment_handler,
+			static fn() => new \WP4Odoo\I18n\Translation_Service( static fn() => $client )
 		);
 	}
 
@@ -112,7 +113,8 @@ class WCPullCoordinatorTest extends TestCase {
 			$variant_handler,
 			$this->createMock( \WP4Odoo\Modules\Image_Handler::class ),
 			$this->createMock( \WP4Odoo\Modules\Pricelist_Handler::class ),
-			$this->createMock( \WP4Odoo\Modules\Shipment_Handler::class )
+			$this->createMock( \WP4Odoo\Modules\Shipment_Handler::class ),
+			static fn() => new \WP4Odoo\I18n\Translation_Service( static fn() => $client )
 		);
 
 		$result = $coordinator->pull_variant( 42, 0, [
@@ -159,7 +161,8 @@ class WCPullCoordinatorTest extends TestCase {
 			$this->createMock( \WP4Odoo\Modules\Variant_Handler::class ),
 			$this->createMock( \WP4Odoo\Modules\Image_Handler::class ),
 			$this->createMock( \WP4Odoo\Modules\Pricelist_Handler::class ),
-			$shipment_handler
+			$shipment_handler,
+			static fn() => new \WP4Odoo\I18n\Translation_Service( static fn() => $client )
 		);
 
 		$result = $coordinator->pull_shipment_for_picking( 1 );
@@ -176,21 +179,99 @@ class WCPullCoordinatorTest extends TestCase {
 
 		$logger = new Logger( 'woocommerce', wp4odoo_test_settings() );
 
+		$noop_client = new class {
+			/** @return array<int> */
+			public function search( string $model, array $domain ): array { return []; }
+		};
+
 		$coordinator = new WC_Pull_Coordinator(
 			$logger,
 			static fn() => [ 'sync_product_images' => false ],
-			static fn() => new class {
-				/** @return array<int> */
-				public function search( string $model, array $domain ): array { return []; }
-			},
+			static fn() => $noop_client,
 			static fn( string $type, int $odoo_id ) => null,
 			$this->createMock( \WP4Odoo\Modules\Variant_Handler::class ),
 			$image_handler,
 			$this->createMock( \WP4Odoo\Modules\Pricelist_Handler::class ),
-			$this->createMock( \WP4Odoo\Modules\Shipment_Handler::class )
+			$this->createMock( \WP4Odoo\Modules\Shipment_Handler::class ),
+			static fn() => new \WP4Odoo\I18n\Translation_Service( static fn() => $noop_client )
 		);
 
 		$coordinator->on_product_pulled( 1, 100 );
+	}
+
+	// ─── on_product_pulled + accumulator ─────────────────
+
+	public function test_on_product_pulled_accumulates_for_translation(): void {
+		$coordinator = $this->make_coordinator( [ 'sync_product_images' => false ] );
+
+		// Call on_product_pulled to accumulate.
+		$coordinator->on_product_pulled( 10, 100 );
+		$coordinator->on_product_pulled( 20, 200 );
+
+		// Verify via reflection that pulled_products is populated.
+		$ref = new \ReflectionClass( $coordinator );
+		$prop = $ref->getProperty( 'pulled_products' );
+		$prop->setAccessible( true );
+		$pulled = $prop->getValue( $coordinator );
+
+		$this->assertSame( [ 100 => 10, 200 => 20 ], $pulled );
+	}
+
+	// ─── flush_translations ──────────────────────────────
+
+	public function test_flush_translations_skips_when_empty(): void {
+		$coordinator = $this->make_coordinator( [ 'sync_translations' => true ] );
+
+		// No products accumulated: flush should be a no-op.
+		$coordinator->flush_translations();
+
+		// If we reach here without error, the test passes.
+		$this->assertTrue( true );
+	}
+
+	public function test_flush_translations_skips_when_setting_disabled(): void {
+		$coordinator = $this->make_coordinator( [ 'sync_translations' => false ] );
+
+		// Manually accumulate products.
+		$ref = new \ReflectionClass( $coordinator );
+		$prop = $ref->getProperty( 'pulled_products' );
+		$prop->setAccessible( true );
+		$prop->setValue( $coordinator, [ 100 => 10 ] );
+
+		$coordinator->flush_translations();
+
+		// Should have cleared the accumulator.
+		$pulled = $prop->getValue( $coordinator );
+		$this->assertEmpty( $pulled );
+	}
+
+	public function test_flush_translations_clears_accumulator(): void {
+		$coordinator = $this->make_coordinator( [ 'sync_translations' => true ] );
+
+		// Manually accumulate products.
+		$ref = new \ReflectionClass( $coordinator );
+		$prop = $ref->getProperty( 'pulled_products' );
+		$prop->setAccessible( true );
+		$prop->setValue( $coordinator, [ 100 => 10 ] );
+
+		$coordinator->flush_translations();
+
+		// Accumulator should be cleared after flush.
+		$pulled = $prop->getValue( $coordinator );
+		$this->assertEmpty( $pulled );
+	}
+
+	// ─── apply_product_translation ───────────────────────
+
+	public function test_apply_product_translation_uses_wp_update_post_fallback(): void {
+		$coordinator = $this->make_coordinator();
+
+		// wc_get_product returns false in stubs → fallback to wp_update_post.
+		// wp_update_post is a no-op stub that returns the ID.
+		// Just verify it does not throw.
+		$coordinator->apply_product_translation( 999, [ 'post_title' => 'Produit FR', 'post_content' => 'Desc FR' ], 'fr' );
+
+		$this->assertTrue( true );
 	}
 
 	// ─── on_order_pulled ──────────────────────────────────
@@ -201,15 +282,18 @@ class WCPullCoordinatorTest extends TestCase {
 
 		$logger = new Logger( 'woocommerce', wp4odoo_test_settings() );
 
+		$noop = $this->make_noop_client();
+
 		$coordinator = new WC_Pull_Coordinator(
 			$logger,
 			static fn() => [ 'sync_shipments' => false ],
-			static fn() => $this->make_noop_client(),
+			static fn() => $noop,
 			static fn( string $type, int $odoo_id ) => null,
 			$this->createMock( \WP4Odoo\Modules\Variant_Handler::class ),
 			$this->createMock( \WP4Odoo\Modules\Image_Handler::class ),
 			$this->createMock( \WP4Odoo\Modules\Pricelist_Handler::class ),
-			$shipment_handler
+			$shipment_handler,
+			static fn() => new \WP4Odoo\I18n\Translation_Service( static fn() => $noop )
 		);
 
 		$coordinator->on_order_pulled( 50, 200 );

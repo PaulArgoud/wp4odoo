@@ -226,6 +226,189 @@ class Translation_Service {
 		return $result;
 	}
 
+	// ─── Pull translations (batch) ──────────────────────────
+
+	/**
+	 * Pull translated field values from Odoo for a batch of records
+	 * and apply them to WPML/Polylang translated WP posts.
+	 *
+	 * For each secondary language, makes ONE Odoo read() call for all
+	 * records, then creates/updates WP translated posts via the adapter.
+	 *
+	 * @param string               $model          Odoo model (e.g. 'product.template').
+	 * @param array<int, int>      $odoo_wp_map    Odoo ID => WP post ID map.
+	 * @param array<int, string>   $odoo_fields    Odoo field names to read (e.g. ['name', 'description_sale']).
+	 * @param array<string, string> $field_map      Odoo field => WP field (e.g. ['name' => 'post_title']).
+	 * @param string               $post_type      WP post type (e.g. 'product').
+	 * @param callable             $apply_callback fn(int $trans_wp_id, array $wp_data, string $lang): void.
+	 * @return void
+	 */
+	public function pull_translations_batch(
+		string $model,
+		array $odoo_wp_map,
+		array $odoo_fields,
+		array $field_map,
+		string $post_type,
+		callable $apply_callback
+	): void {
+		$adapter = $this->get_adapter();
+		if ( ! $adapter ) {
+			return;
+		}
+
+		$default_lang = $adapter->get_default_language();
+		$languages    = $adapter->get_active_languages();
+		$odoo_ids     = array_keys( $odoo_wp_map );
+
+		if ( empty( $odoo_ids ) || empty( $odoo_fields ) ) {
+			return;
+		}
+
+		foreach ( $languages as $lang ) {
+			if ( $lang === $default_lang ) {
+				continue;
+			}
+
+			$odoo_locale = $this->wp_to_odoo_locale( $lang );
+
+			try {
+				$records = $this->read_translated_batch( $model, $odoo_ids, $odoo_fields, $odoo_locale );
+			} catch ( \Exception $e ) {
+				$this->logger->warning(
+					'Failed to read translations from Odoo.',
+					[
+						'model'  => $model,
+						'locale' => $odoo_locale,
+						'error'  => $e->getMessage(),
+					]
+				);
+				continue;
+			}
+
+			// Index records by Odoo ID.
+			$indexed = [];
+			foreach ( $records as $record ) {
+				if ( isset( $record['id'] ) ) {
+					$indexed[ (int) $record['id'] ] = $record;
+				}
+			}
+
+			foreach ( $odoo_wp_map as $odoo_id => $wp_id ) {
+				if ( ! isset( $indexed[ $odoo_id ] ) ) {
+					continue;
+				}
+
+				// Map Odoo fields to WP fields, filtering empty values.
+				$wp_data = [];
+				foreach ( $field_map as $odoo_field => $wp_field ) {
+					$value = $indexed[ $odoo_id ][ $odoo_field ] ?? '';
+					if ( is_string( $value ) && '' !== $value ) {
+						$wp_data[ $wp_field ] = $value;
+					}
+				}
+
+				if ( empty( $wp_data ) ) {
+					continue;
+				}
+
+				// Create or get existing translated post.
+				$trans_wp_id = $adapter->create_translation( $wp_id, $lang, $post_type );
+				if ( $trans_wp_id <= 0 ) {
+					$this->logger->warning(
+						'Could not create translation post.',
+						[
+							'original_wp_id' => $wp_id,
+							'lang'           => $lang,
+						]
+					);
+					continue;
+				}
+
+				$apply_callback( $trans_wp_id, $wp_data, $lang );
+			}
+
+			$this->logger->info(
+				'Pulled translations batch.',
+				[
+					'model'  => $model,
+					'locale' => $odoo_locale,
+					'count'  => count( $indexed ),
+				]
+			);
+		}
+	}
+
+	/**
+	 * Read translated field values for a batch of Odoo records.
+	 *
+	 * Uses context-based read for Odoo 16+ or ir.translation search for 14-15.
+	 *
+	 * @param string           $model       Odoo model name.
+	 * @param array<int, int>  $odoo_ids    Record IDs.
+	 * @param array<int, string> $fields    Field names to read.
+	 * @param string           $odoo_locale Odoo locale (e.g. 'fr_FR').
+	 * @return array<int, array<string, mixed>> Records indexed by position.
+	 */
+	private function read_translated_batch( string $model, array $odoo_ids, array $fields, string $odoo_locale ): array {
+		if ( $this->has_ir_translation() ) {
+			return $this->read_batch_via_ir_translation( $model, $odoo_ids, $fields, $odoo_locale );
+		}
+
+		// Odoo 16+: read with context={'lang': 'fr_FR'} returns translated values.
+		return $this->client()->read( $model, $odoo_ids, array_merge( [ 'id' ], $fields ), [ 'lang' => $odoo_locale ] );
+	}
+
+	/**
+	 * Read translations via ir.translation model (Odoo 14-15).
+	 *
+	 * Performs a single search_read on ir.translation, then reconstructs
+	 * per-record arrays matching the read() format.
+	 *
+	 * @param string           $model       Odoo model name.
+	 * @param array<int, int>  $odoo_ids    Record IDs.
+	 * @param array<int, string> $fields    Field names to read.
+	 * @param string           $odoo_locale Odoo locale (e.g. 'fr_FR').
+	 * @return array<int, array<string, mixed>> Reconstructed records.
+	 */
+	private function read_batch_via_ir_translation( string $model, array $odoo_ids, array $fields, string $odoo_locale ): array {
+		$field_names = array_map(
+			fn( string $field ) => $model . ',' . $field,
+			$fields
+		);
+
+		$translations = $this->client()->search_read(
+			'ir.translation',
+			[
+				[ 'type', '=', 'model' ],
+				[ 'name', 'in', $field_names ],
+				[ 'res_id', 'in', $odoo_ids ],
+				[ 'lang', '=', $odoo_locale ],
+			],
+			[ 'name', 'res_id', 'value' ]
+		);
+
+		// Reconstruct per-record arrays: [id => [field => value, ...]].
+		$result = [];
+		foreach ( $translations as $row ) {
+			$res_id = (int) ( $row['res_id'] ?? 0 );
+			$name   = $row['name'] ?? '';
+			$value  = $row['value'] ?? '';
+
+			// Extract field name from "model,field".
+			$parts = explode( ',', $name, 2 );
+			$field = $parts[1] ?? '';
+
+			if ( $res_id > 0 && '' !== $field ) {
+				if ( ! isset( $result[ $res_id ] ) ) {
+					$result[ $res_id ] = [ 'id' => $res_id ];
+				}
+				$result[ $res_id ][ $field ] = $value;
+			}
+		}
+
+		return array_values( $result );
+	}
+
 	// ─── Push translations ──────────────────────────────────
 
 	/**

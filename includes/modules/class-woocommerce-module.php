@@ -181,7 +181,8 @@ class WooCommerce_Module extends Module_Base {
 			$this->variant_handler,
 			$this->image_handler,
 			$this->pricelist_handler,
-			$this->shipment_handler
+			$this->shipment_handler,
+			fn() => $this->translation_service()
 		);
 	}
 
@@ -217,6 +218,9 @@ class WooCommerce_Module extends Module_Base {
 
 		// Invoices: CPT (WC has no native invoice type).
 		add_action( 'init', [ Invoice_Helper::class, 'register_cpt' ] );
+
+		// Translation flush: deferred batch operation after queue processing.
+		add_action( 'wp4odoo_batch_processed', [ $this, 'on_batch_processed' ] );
 	}
 
 	// ─── Translation push override ─────────────────────────
@@ -293,6 +297,23 @@ class WooCommerce_Module extends Module_Base {
 	}
 
 	/**
+	 * Handle post-batch translation flush.
+	 *
+	 * Wraps the flush in anti-loop guards so that WP save hooks
+	 * triggered by creating translation posts are silenced.
+	 *
+	 * @return void
+	 */
+	public function on_batch_processed(): void {
+		$this->mark_importing();
+		try {
+			$this->pull_coordinator->flush_translations();
+		} finally {
+			$this->clear_importing();
+		}
+	}
+
+	/**
 	 * Get default settings.
 	 *
 	 * @return array
@@ -308,6 +329,7 @@ class WooCommerce_Module extends Module_Base {
 			'auto_confirm_orders' => true,
 			'convert_currency'    => false,
 			'pricelist_id'        => 0,
+			'sync_translations'   => false,
 		];
 	}
 
@@ -362,6 +384,11 @@ class WooCommerce_Module extends Module_Base {
 				'label'       => __( 'Convert currency', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Convert prices using Odoo exchange rates when the product currency differs from the shop currency.', 'wp4odoo' ),
+			],
+			'sync_translations'   => [
+				'label'       => __( 'Sync translations', 'wp4odoo' ),
+				'type'        => 'checkbox',
+				'description' => __( 'Pull product translations from Odoo when WPML or Polylang is active.', 'wp4odoo' ),
 			],
 		];
 	}

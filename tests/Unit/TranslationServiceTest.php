@@ -246,4 +246,192 @@ class TranslationServiceTest extends TestCase {
 
 		$this->assertCount( 0, $this->transport->calls );
 	}
+
+	// ─── Pull translations batch (Odoo 16+) ─────────────────
+
+	public function test_pull_translations_batch_reads_per_language(): void {
+		// Set up WPML adapter with 3 languages.
+		$GLOBALS['_wp_filters']['wpml_active_languages'] = function () {
+			return [
+				'en' => [ 'code' => 'en' ],
+				'fr' => [ 'code' => 'fr' ],
+				'es' => [ 'code' => 'es' ],
+			];
+		};
+		$GLOBALS['_wpml_default_lang'] = 'en';
+
+		// Odoo 16+: no ir.translation.
+		$this->transport->return_value = 0;
+		$this->service->has_ir_translation();
+		$this->transport->calls = [];
+
+		// Mock read to return translated records.
+		$this->transport->return_value = [
+			[ 'id' => 100, 'name' => 'Produit Test', 'description_sale' => 'Description FR' ],
+		];
+
+		// WPML object_id: return existing translation IDs.
+		$GLOBALS['_wp_filters']['wpml_object_id'] = function ( $post_id, $post_type, $return_original, $lang ) {
+			if ( 'en' !== $lang ) {
+				return $post_id + ( 'fr' === $lang ? 1000 : 2000 );
+			}
+			return $post_id;
+		};
+
+		$applied = [];
+		$callback = function ( int $trans_wp_id, array $data, string $lang ) use ( &$applied ) {
+			$applied[] = [ 'id' => $trans_wp_id, 'data' => $data, 'lang' => $lang ];
+		};
+
+		$this->service->pull_translations_batch(
+			'product.template',
+			[ 100 => 10 ],
+			[ 'name', 'description_sale' ],
+			[ 'name' => 'post_title', 'description_sale' => 'post_content' ],
+			'product',
+			$callback
+		);
+
+		// Callback should have been called twice (once for fr, once for es).
+		$this->assertCount( 2, $applied );
+
+		// Verify mapped data.
+		$this->assertSame( 'Produit Test', $applied[0]['data']['post_title'] );
+		$this->assertSame( 'Description FR', $applied[0]['data']['post_content'] );
+		$this->assertSame( 'fr', $applied[0]['lang'] );
+		$this->assertSame( 'es', $applied[1]['lang'] );
+
+		// Verify correct translation post IDs.
+		$this->assertSame( 1010, $applied[0]['id'] ); // 10 + 1000 for fr.
+		$this->assertSame( 2010, $applied[1]['id'] ); // 10 + 2000 for es.
+	}
+
+	public function test_pull_translations_batch_skips_empty_values(): void {
+		$GLOBALS['_wp_filters']['wpml_active_languages'] = function () {
+			return [
+				'en' => [ 'code' => 'en' ],
+				'fr' => [ 'code' => 'fr' ],
+			];
+		};
+		$GLOBALS['_wpml_default_lang'] = 'en';
+
+		$this->transport->return_value = 0;
+		$this->service->has_ir_translation();
+		$this->transport->calls = [];
+
+		// Return record with empty translated name.
+		$this->transport->return_value = [
+			[ 'id' => 100, 'name' => '', 'description_sale' => '' ],
+		];
+
+		$applied = [];
+		$callback = function ( int $trans_wp_id, array $data, string $lang ) use ( &$applied ) {
+			$applied[] = $data;
+		};
+
+		$this->service->pull_translations_batch(
+			'product.template',
+			[ 100 => 10 ],
+			[ 'name', 'description_sale' ],
+			[ 'name' => 'post_title', 'description_sale' => 'post_content' ],
+			'product',
+			$callback
+		);
+
+		// Callback should NOT have been called (empty values filtered).
+		$this->assertCount( 0, $applied );
+	}
+
+	public function test_pull_translations_batch_skips_when_no_adapter(): void {
+		// Force no adapter by removing WPML/Polylang constants.
+		// Use a fresh service with forced no-adapter.
+		$ref = new \ReflectionClass( $this->service );
+		$prop = $ref->getProperty( 'adapter' );
+		$prop->setAccessible( true );
+		$prop->setValue( $this->service, false );
+
+		$applied = [];
+		$this->service->pull_translations_batch(
+			'product.template',
+			[ 100 => 10 ],
+			[ 'name' ],
+			[ 'name' => 'post_title' ],
+			'product',
+			function () use ( &$applied ) { $applied[] = true; }
+		);
+
+		$this->assertCount( 0, $applied );
+	}
+
+	public function test_pull_translations_batch_skips_empty_map(): void {
+		$this->transport->return_value = 0;
+		$this->service->has_ir_translation();
+		$this->transport->calls = [];
+
+		$applied = [];
+		$this->service->pull_translations_batch(
+			'product.template',
+			[], // Empty map.
+			[ 'name' ],
+			[ 'name' => 'post_title' ],
+			'product',
+			function () use ( &$applied ) { $applied[] = true; }
+		);
+
+		$this->assertCount( 0, $applied );
+		// No Odoo calls should have been made.
+		$this->assertCount( 0, $this->transport->calls );
+	}
+
+	// ─── Pull translations batch (Odoo 14-15 ir.translation) ─
+
+	public function test_pull_translations_batch_via_ir_translation(): void {
+		$GLOBALS['_wp_filters']['wpml_active_languages'] = function () {
+			return [
+				'en' => [ 'code' => 'en' ],
+				'fr' => [ 'code' => 'fr' ],
+			];
+		};
+		$GLOBALS['_wpml_default_lang'] = 'en';
+
+		// Odoo 14-15: ir.translation exists.
+		$this->transport->return_value = 1;
+		$this->service->has_ir_translation();
+		$this->transport->calls = [];
+
+		// Return ir.translation search_read results.
+		$this->transport->return_value = [
+			[ 'name' => 'product.template,name', 'res_id' => 100, 'value' => 'Produit FR' ],
+			[ 'name' => 'product.template,description_sale', 'res_id' => 100, 'value' => 'Description FR' ],
+		];
+
+		// Existing translation for FR.
+		$GLOBALS['_wp_filters']['wpml_object_id'] = function ( $post_id, $post_type, $return_original, $lang ) {
+			if ( 'fr' === $lang && 10 === $post_id ) {
+				return 1010;
+			}
+			return $post_id;
+		};
+
+		$applied = [];
+		$callback = function ( int $trans_wp_id, array $data, string $lang ) use ( &$applied ) {
+			$applied[] = [ 'id' => $trans_wp_id, 'data' => $data, 'lang' => $lang ];
+		};
+
+		$this->service->pull_translations_batch(
+			'product.template',
+			[ 100 => 10 ],
+			[ 'name', 'description_sale' ],
+			[ 'name' => 'post_title', 'description_sale' => 'post_content' ],
+			'product',
+			$callback
+		);
+
+		// Callback should have been called with mapped data.
+		$this->assertCount( 1, $applied );
+		$this->assertSame( 1010, $applied[0]['id'] );
+		$this->assertSame( 'Produit FR', $applied[0]['data']['post_title'] );
+		$this->assertSame( 'Description FR', $applied[0]['data']['post_content'] );
+		$this->assertSame( 'fr', $applied[0]['lang'] );
+	}
 }

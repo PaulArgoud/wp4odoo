@@ -11,12 +11,14 @@
 
 // ─── Global test stores ─────────────────────────────────
 
-$GLOBALS['_wpml_translations'] = [];
-$GLOBALS['_pll_translations']  = [];
-$GLOBALS['_pll_languages']     = [ 'en', 'fr', 'es' ];
-$GLOBALS['_wpml_default_lang'] = 'en';
-$GLOBALS['_pll_default_lang']  = 'en';
-$GLOBALS['_post_languages']    = [];
+$GLOBALS['_wpml_translations']     = [];
+$GLOBALS['_pll_translations']      = [];
+$GLOBALS['_pll_languages']         = [ 'en', 'fr', 'es' ];
+$GLOBALS['_wpml_default_lang']     = 'en';
+$GLOBALS['_pll_default_lang']      = 'en';
+$GLOBALS['_post_languages']        = [];
+$GLOBALS['_pll_saved_translations'] = [];
+$GLOBALS['_wpml_language_details']  = [];
 
 // ─── WPML constants and classes ─────────────────────────
 
@@ -112,5 +114,33 @@ if ( ! function_exists( 'pll_get_post' ) ) {
 		}
 
 		return false;
+	}
+}
+
+if ( ! function_exists( 'pll_set_post_language' ) ) {
+	/**
+	 * Set the language for a post.
+	 *
+	 * @param int    $post_id Post ID.
+	 * @param string $lang    Language code.
+	 * @return void
+	 */
+	function pll_set_post_language( int $post_id, string $lang ): void {
+		$GLOBALS['_post_languages'][ $post_id ] = $lang;
+	}
+}
+
+if ( ! function_exists( 'pll_save_post_translations' ) ) {
+	/**
+	 * Save the translation group for a set of posts.
+	 *
+	 * @param array<string, int> $translations Language code => post ID.
+	 * @return void
+	 */
+	function pll_save_post_translations( array $translations ): void {
+		$GLOBALS['_pll_saved_translations'][] = $translations;
+		foreach ( $translations as $lang => $post_id ) {
+			$GLOBALS['_pll_translations'][ $post_id ] = $translations;
+		}
 	}
 }

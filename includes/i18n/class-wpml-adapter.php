@@ -121,6 +121,78 @@ class WPML_Adapter implements Translation_Adapter {
 		return $this->get_original_post_id( $post_id ) !== $post_id;
 	}
 
+	// ─── Write methods (Phase 4: pull direction) ────────────
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function create_translation( int $original_post_id, string $lang, string $post_type ): int {
+		// Check if a translation already exists.
+		$existing = $this->get_translation_in_language( $original_post_id, $lang, $post_type );
+		if ( $existing > 0 ) {
+			return $existing;
+		}
+
+		// Create a new post as a placeholder for the translation.
+		$new_id = wp_insert_post(
+			[
+				'post_type'   => $post_type,
+				'post_status' => 'publish',
+				'post_title'  => '(translation)',
+			]
+		);
+
+		if ( $new_id <= 0 ) {
+			return 0;
+		}
+
+		// Link to the original post's TRID.
+		$element_type = 'post_' . $post_type;
+		$trid         = $this->get_trid( $original_post_id, $element_type );
+
+		if ( ! $trid ) {
+			return 0;
+		}
+
+		do_action(
+			'wpml_set_element_language_details',
+			[
+				'element_id'    => $new_id,
+				'element_type'  => $element_type,
+				'trid'          => $trid,
+				'language_code' => $lang,
+			]
+		);
+
+		return $new_id;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function set_post_language( int $post_id, string $lang, string $post_type ): void {
+		$element_type = 'post_' . $post_type;
+
+		do_action(
+			'wpml_set_element_language_details',
+			[
+				'element_id'    => $post_id,
+				'element_type'  => $element_type,
+				'language_code' => $lang,
+			]
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * WPML links translations implicitly via TRID during create_translation(),
+	 * so this is a no-op.
+	 */
+	public function link_translations( array $translations ): void {
+		// No-op: WPML uses TRID-based linking (implicit in create_translation).
+	}
+
 	/**
 	 * Get the WPML translation group ID (trid) for a post.
 	 *
@@ -132,5 +204,20 @@ class WPML_Adapter implements Translation_Adapter {
 		/** @var int|null $trid */
 		$trid = apply_filters( 'wpml_element_trid', null, $post_id, $element_type );
 		return $trid;
+	}
+
+	/**
+	 * Get the translated post ID for a specific language.
+	 *
+	 * @param int    $post_id   Source post ID.
+	 * @param string $lang      Target language code.
+	 * @param string $post_type WP post type.
+	 * @return int Translated post ID, or 0 if not found.
+	 */
+	private function get_translation_in_language( int $post_id, string $lang, string $post_type ): int {
+		/** @var int|null $translated */
+		$translated = apply_filters( 'wpml_object_id', $post_id, $post_type, false, $lang );
+
+		return ( $translated && $translated !== $post_id ) ? (int) $translated : 0;
 	}
 }

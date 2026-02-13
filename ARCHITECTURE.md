@@ -662,10 +662,17 @@ Translation_Service
 - **Queue reuse**: Uses existing `update` action with `_translate` payload flag — no DB migration needed for new ENUM values.
 - **Odoo version detection**: `has_ir_translation()` probes `ir.model` for the `ir.translation` model (present in Odoo 14-15, removed in 16+). Result cached in 1-hour transient.
 
-**WooCommerce integration** (Phase 3):
+**WooCommerce push integration** (Phase 3):
 - `on_product_save()` detects if the saved post is a translation → enqueues translations for the original instead
 - `enqueue_product_translations()` iterates all translations of the original product, enqueuing update jobs with `_translate`/`_lang`/`_translated_id` payload
 - `push_product_translation()` intercepts these jobs in `push_to_odoo()`, loads the translated WC product, and pushes `name` + `description_sale` via `Translation_Service::push_translation()`
+
+**WooCommerce pull integration** (Phase 4):
+- `Translation_Adapter` write methods: `create_translation()` (idempotent), `set_post_language()`, `link_translations()`
+- Accumulate-and-flush: `WC_Pull_Coordinator` accumulates `[odoo_id => wp_id]` during pull batch, `Sync_Engine` fires `wp4odoo_batch_processed` action after all jobs, `WooCommerce_Module::on_batch_processed()` calls `flush_translations()` with anti-loop guard
+- `Translation_Service::pull_translations_batch()`: one `read()` per language for entire batch (N calls, not N×P), maps Odoo fields to WP fields, creates/updates translated posts via adapter
+- `WC_Pull_Coordinator::apply_product_translation()`: uses WC API (`set_name()`, `set_description()`, `save()`) with `wp_update_post()` fallback
+- Extensible via `wp4odoo_translatable_fields_woocommerce` filter (default: `name → post_title`, `description_sale → post_content`)
 
 ## Database
 

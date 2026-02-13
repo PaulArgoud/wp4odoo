@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WordPress For Odoo 2.0.0\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-13 11:19+0100\n"
+"Report-Msgid-Bugs-To: support@avalia.io\n"
+"POT-Creation-Date: 2026-02-13 12:58+0100\n"
 "PO-Revision-Date: 2026-02-10 22:00+0100\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
@@ -856,7 +856,7 @@ msgstr ""
 "\n"
 "Por favor, revise la cola de sincronización en %2$s"
 
-#: includes/class-module-base.php:578
+#: includes/class-module-base.php:612
 #, php-format
 msgid "Entity type \"%1$s\" is not registered in module \"%2$s\"."
 msgstr "El tipo de entidad «%1$s» no está registrado en el módulo «%2$s»."
@@ -917,7 +917,7 @@ msgstr "Token de webhook no válido."
 
 #: includes/class-webhook-handler.php:359
 msgid "Invalid webhook signature."
-msgstr ""
+msgstr "Firma de webhook inválida."
 
 #: includes/class-webhook-handler.php:381
 msgid "You do not have permission to perform this action."
@@ -967,6 +967,7 @@ msgid "Push Bookly services to Odoo as service products."
 msgstr "Enviar los servicios de Bookly a Odoo como productos de servicio."
 
 #: includes/modules/class-bookly-module.php:123
+#: includes/modules/class-wc-bookings-module.php:125
 msgid "Sync bookings"
 msgstr "Sincronizar reservas"
 
@@ -979,6 +980,7 @@ msgid "Pull Odoo service products into Bookly services."
 msgstr "Obtener productos de servicio de Odoo en los servicios de Bookly."
 
 #: includes/modules/class-bookly-module.php:157
+#: includes/modules/class-wc-bookings-module.php:168
 msgid "Booking"
 msgstr "Reserva"
 
@@ -1128,7 +1130,8 @@ msgstr "Su token secreto de la API Ecwid."
 
 #: includes/modules/class-ecwid-module.php:136
 #: includes/modules/class-shopwp-module.php:124
-#: includes/modules/class-woocommerce-module.php:247
+#: includes/modules/class-wc-bookings-module.php:120
+#: includes/modules/class-woocommerce-module.php:322
 msgid "Sync products"
 msgstr "Sincronizar productos"
 
@@ -1140,7 +1143,7 @@ msgstr "Enviar los productos Ecwid a Odoo."
 #: includes/modules/class-edd-module.php:157
 #: includes/modules/class-lifterlms-module.php:183
 #: includes/modules/class-pmpro-module.php:157
-#: includes/modules/class-woocommerce-module.php:252
+#: includes/modules/class-woocommerce-module.php:327
 msgid "Sync orders"
 msgstr "Sincronizar pedidos"
 
@@ -1165,7 +1168,7 @@ msgid "Synchronize EDD orders with Odoo."
 msgstr "Sincronizar los pedidos EDD con Odoo."
 
 #: includes/modules/class-edd-module.php:162
-#: includes/modules/class-woocommerce-module.php:267
+#: includes/modules/class-woocommerce-module.php:342
 msgid "Auto-confirm orders"
 msgstr "Confirmar pedidos automáticamente"
 
@@ -1468,11 +1471,11 @@ msgstr "Dirección de correo electrónico no válida."
 msgid "Failed to save lead."
 msgstr "Error al guardar la oportunidad."
 
-#: includes/modules/class-learndash-handler.php:185
+#: includes/modules/class-learndash-handler.php:186
 msgid "LearnDash course"
 msgstr "Curso LearnDash"
 
-#: includes/modules/class-learndash-handler.php:218
+#: includes/modules/class-learndash-handler.php:219
 msgid "LearnDash enrollment"
 msgstr "Inscripción LearnDash"
 
@@ -1552,11 +1555,11 @@ msgstr "Obtener grupos desde Odoo"
 msgid "Pull group changes from Odoo back to WordPress."
 msgstr "Obtener cambios de grupos desde Odoo hacia WordPress."
 
-#: includes/modules/class-lifterlms-handler.php:214
+#: includes/modules/class-lifterlms-handler.php:215
 msgid "LifterLMS course"
 msgstr "Curso LifterLMS"
 
-#: includes/modules/class-lifterlms-handler.php:247
+#: includes/modules/class-lifterlms-handler.php:248
 msgid "LifterLMS enrollment"
 msgstr "Inscripción LifterLMS"
 
@@ -1873,6 +1876,27 @@ msgstr "Obtener pagos desde Odoo"
 msgid "Pull payment changes from Odoo back to WordPress."
 msgstr "Obtener cambios de pagos desde Odoo hacia WordPress."
 
+#: includes/modules/class-wc-bookings-handler.php:119
+#, php-format
+msgid "Persons: %d"
+msgstr "Personas: %d"
+
+#: includes/modules/class-wc-bookings-module.php:122
+msgid "Push WC Booking products to Odoo as service products."
+msgstr "Enviar los productos WC Bookings a Odoo como productos de servicio."
+
+#: includes/modules/class-wc-bookings-module.php:127
+msgid "Push WC Bookings to Odoo as calendar events."
+msgstr "Enviar las reservas de WC Bookings a Odoo como eventos de calendario."
+
+#: includes/modules/class-wc-bookings-module.php:130
+msgid "Pull products"
+msgstr "Obtener productos"
+
+#: includes/modules/class-wc-bookings-module.php:132
+msgid "Pull Odoo service products into WC Booking products."
+msgstr "Obtener productos de servicio de Odoo en los productos WC Bookings."
+
 #: includes/modules/class-wc-pull-coordinator.php:201
 msgid "Shipment sync is disabled."
 msgstr "La sincronización de envíos está desactivada."
@@ -1942,51 +1966,63 @@ msgid "Pull subscription status changes from Odoo back to WooCommerce."
 msgstr ""
 "Obtener cambios de estado de suscripciones desde Odoo hacia WooCommerce."
 
-#: includes/modules/class-woocommerce-module.php:249
+#: includes/modules/class-woocommerce-module.php:256
+msgid "No Odoo mapping for translation."
+msgstr "No hay mapeo Odoo para la traducción."
+
+#: includes/modules/class-woocommerce-module.php:263
+msgid "Missing translation parameters."
+msgstr "Faltan parámetros de traducción."
+
+#: includes/modules/class-woocommerce-module.php:268
+msgid "Translated product not found."
+msgstr "Producto traducido no encontrado."
+
+#: includes/modules/class-woocommerce-module.php:324
 msgid "Synchronize WooCommerce products with Odoo."
 msgstr "Sincronizar productos de WooCommerce con Odoo."
 
-#: includes/modules/class-woocommerce-module.php:254
+#: includes/modules/class-woocommerce-module.php:329
 msgid "Synchronize WooCommerce orders with Odoo."
 msgstr "Sincronizar pedidos de WooCommerce con Odoo."
 
-#: includes/modules/class-woocommerce-module.php:257
+#: includes/modules/class-woocommerce-module.php:332
 msgid "Sync stock"
 msgstr "Sincronizar stock"
 
-#: includes/modules/class-woocommerce-module.php:259
+#: includes/modules/class-woocommerce-module.php:334
 msgid "Pull stock levels from Odoo into WooCommerce products."
 msgstr ""
 "Obtener niveles de stock desde Odoo hacia los productos de WooCommerce."
 
-#: includes/modules/class-woocommerce-module.php:262
+#: includes/modules/class-woocommerce-module.php:337
 msgid "Sync product images"
 msgstr "Sincronizar imágenes de productos"
 
-#: includes/modules/class-woocommerce-module.php:264
+#: includes/modules/class-woocommerce-module.php:339
 msgid "Pull product featured images from Odoo."
 msgstr "Importar imágenes destacadas de productos desde Odoo."
 
-#: includes/modules/class-woocommerce-module.php:269
+#: includes/modules/class-woocommerce-module.php:344
 msgid "Automatically confirm orders in Odoo when created from WooCommerce."
 msgstr ""
 "Confirmar automáticamente los pedidos en Odoo al crearlos desde WooCommerce."
 
-#: includes/modules/class-woocommerce-module.php:272
+#: includes/modules/class-woocommerce-module.php:347
 msgid "Sync pricelist prices"
 msgstr "Sincronizar precios de lista"
 
-#: includes/modules/class-woocommerce-module.php:274
+#: includes/modules/class-woocommerce-module.php:349
 msgid "Pull pricelist prices from Odoo and set as WooCommerce sale prices."
 msgstr ""
 "Obtener precios de la lista de precios desde Odoo y establecerlos como "
 "precios de oferta en WooCommerce."
 
-#: includes/modules/class-woocommerce-module.php:277
+#: includes/modules/class-woocommerce-module.php:352
 msgid "Pricelist ID"
 msgstr "ID de la lista de precios"
 
-#: includes/modules/class-woocommerce-module.php:279
+#: includes/modules/class-woocommerce-module.php:354
 msgid ""
 "The Odoo pricelist ID to use for pricing (Sales > Configuration > "
 "Pricelists)."
@@ -1994,22 +2030,22 @@ msgstr ""
 "El ID de la lista de precios de Odoo a utilizar (Ventas > Configuración > "
 "Listas de precios)."
 
-#: includes/modules/class-woocommerce-module.php:282
+#: includes/modules/class-woocommerce-module.php:357
 msgid "Sync shipments"
 msgstr "Sincronizar envíos"
 
-#: includes/modules/class-woocommerce-module.php:284
+#: includes/modules/class-woocommerce-module.php:359
 msgid ""
 "Pull shipment tracking from Odoo into WooCommerce orders (AST compatible)."
 msgstr ""
 "Obtener el seguimiento de envíos desde Odoo hacia los pedidos de WooCommerce "
 "(compatible con AST)."
 
-#: includes/modules/class-woocommerce-module.php:287
+#: includes/modules/class-woocommerce-module.php:362
 msgid "Convert currency"
 msgstr "Convertir divisa"
 
-#: includes/modules/class-woocommerce-module.php:289
+#: includes/modules/class-woocommerce-module.php:364
 msgid ""
 "Convert prices using Odoo exchange rates when the product currency differs "
 "from the shop currency."
@@ -2080,7 +2116,11 @@ msgstr "Módulo Bookly activado pero Bookly no está activo."
 msgid "Ecwid module enabled but Ecwid is not active."
 msgstr "Módulo Ecwid activado pero Ecwid no está activo."
 
-#: includes/trait-module-helpers.php:359
+#: includes/modules/trait-wc-bookings-hooks.php:40
+msgid "WC Bookings module enabled but WooCommerce Bookings is not active."
+msgstr "Módulo WC Bookings activado pero WooCommerce Bookings no está activo."
+
+#: includes/trait-module-helpers.php:383
 #, php-format
 msgid "%s must be installed and activated to use this module."
 msgstr "%s debe estar instalado y activado para usar este módulo."

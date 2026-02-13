@@ -196,4 +196,75 @@ class WPMLAdapterTest extends TestCase {
 
 		$this->assertFalse( $this->adapter->is_translation( 10 ) );
 	}
+
+	// ─── create_translation ────────────────────────────────
+
+	public function test_create_translation_returns_existing(): void {
+		$GLOBALS['_wpml_default_lang'] = 'en';
+		$GLOBALS['_wp_posts'][10] = $this->make_post( 'product' );
+
+		// Override wpml_object_id to return an existing translation for 'fr'.
+		$GLOBALS['_wp_filters']['wpml_object_id'] = function ( $post_id, $post_type, $return_original, $lang ) {
+			if ( $lang === 'fr' && $post_id === 10 ) {
+				return 20; // Existing French translation.
+			}
+			return $GLOBALS['_wpml_originals'][ $post_id ] ?? $post_id;
+		};
+
+		$result = $this->adapter->create_translation( 10, 'fr', 'product' );
+
+		$this->assertSame( 20, $result );
+	}
+
+	public function test_create_translation_creates_new_post(): void {
+		$GLOBALS['_wpml_default_lang'] = 'en';
+		$GLOBALS['_wp_posts'][10] = $this->make_post( 'product' );
+		$GLOBALS['_wpml_trids'][10] = 42;
+
+		// wpml_object_id returns null for non-existing translations.
+		$GLOBALS['_wp_filters']['wpml_object_id'] = function ( $post_id, $post_type, $return_original, $lang ) {
+			if ( $lang === 'fr' ) {
+				return null;
+			}
+			return $GLOBALS['_wpml_originals'][ $post_id ] ?? $post_id;
+		};
+
+		$result = $this->adapter->create_translation( 10, 'fr', 'product' );
+
+		// wp_insert_post returns an auto-increment ID > 0.
+		$this->assertGreaterThan( 0, $result );
+	}
+
+	public function test_create_translation_returns_zero_when_no_trid(): void {
+		$GLOBALS['_wpml_default_lang'] = 'en';
+		$GLOBALS['_wp_posts'][10] = $this->make_post( 'product' );
+		// No TRID for post 10.
+		$GLOBALS['_wpml_trids'] = [];
+
+		$GLOBALS['_wp_filters']['wpml_object_id'] = function ( $post_id, $post_type, $return_original, $lang ) {
+			return null;
+		};
+
+		$result = $this->adapter->create_translation( 10, 'fr', 'product' );
+
+		$this->assertSame( 0, $result );
+	}
+
+	// ─── set_post_language ─────────────────────────────────
+
+	public function test_set_post_language_does_not_error(): void {
+		// do_action is a no-op in stubs, so just verify it doesn't throw.
+		$this->adapter->set_post_language( 50, 'es', 'product' );
+		$this->assertTrue( true );
+	}
+
+	// ─── link_translations ─────────────────────────────────
+
+	public function test_link_translations_is_noop(): void {
+		// WPML uses TRID-based linking, so link_translations is a no-op.
+		$this->adapter->link_translations( [ 'en' => 10, 'fr' => 20 ] );
+
+		// If we reach here without error, the test passes.
+		$this->assertTrue( true );
+	}
 }

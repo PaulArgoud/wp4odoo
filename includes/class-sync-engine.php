@@ -260,6 +260,19 @@ class Sync_Engine {
 				}
 			}
 
+			/**
+			 * Fires after all jobs in a batch have been processed.
+			 *
+			 * Allows deferred batch operations (e.g. translation flush)
+			 * that need to accumulate data during the batch first.
+			 *
+			 * @since 3.0.0
+			 *
+			 * @param int    $processed Number of successfully processed jobs.
+			 * @param string $module    Module identifier.
+			 */
+			do_action( 'wp4odoo_batch_processed', $processed, $module );
+
 			$this->failure_notifier->check( $this->batch_successes, $this->batch_failures );
 
 			// Update circuit breaker based on batch outcome (ratio-based).

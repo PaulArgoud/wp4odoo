@@ -5,6 +5,7 @@ namespace WP4Odoo\Modules;
 
 use WP4Odoo\Error_Type;
 use WP4Odoo\Field_Mapper;
+use WP4Odoo\I18n\Translation_Service;
 use WP4Odoo\Logger;
 use WP4Odoo\Queue_Manager;
 use WP4Odoo\Sync_Result;
@@ -82,11 +83,28 @@ class WC_Pull_Coordinator {
 	private Shipment_Handler $shipment_handler;
 
 	/**
+	 * Closure returning the Translation_Service.
+	 *
+	 * @var \Closure(): Translation_Service
+	 */
+	private \Closure $translation_fn;
+
+	/**
 	 * Raw Odoo data captured during pull for post-save image processing.
 	 *
 	 * @var array<string, mixed>
 	 */
 	private array $last_odoo_data = [];
+
+	/**
+	 * Accumulator for pulled products: Odoo ID => WP ID.
+	 *
+	 * Populated during the batch, flushed after all jobs are processed
+	 * to apply translations in a single batched Odoo read per language.
+	 *
+	 * @var array<int, int>
+	 */
+	private array $pulled_products = [];
 
 	/**
 	 * Constructor.
@@ -99,6 +117,7 @@ class WC_Pull_Coordinator {
 	 * @param Image_Handler     $image_handler     Image handler.
 	 * @param Pricelist_Handler $pricelist_handler Pricelist handler.
 	 * @param Shipment_Handler  $shipment_handler  Shipment handler.
+	 * @param \Closure          $translation_fn    Returns the Translation_Service.
 	 */
 	public function __construct(
 		Logger $logger,
@@ -108,7 +127,8 @@ class WC_Pull_Coordinator {
 		Variant_Handler $variant_handler,
 		Image_Handler $image_handler,
 		Pricelist_Handler $pricelist_handler,
-		Shipment_Handler $shipment_handler
+		Shipment_Handler $shipment_handler,
+		\Closure $translation_fn
 	) {
 		$this->logger            = $logger;
 		$this->settings_fn       = $settings_fn;
@@ -118,6 +138,7 @@ class WC_Pull_Coordinator {
 		$this->image_handler     = $image_handler;
 		$this->pricelist_handler = $pricelist_handler;
 		$this->shipment_handler  = $shipment_handler;
+		$this->translation_fn    = $translation_fn;
 	}
 
 	/**
@@ -269,6 +290,9 @@ class WC_Pull_Coordinator {
 		$this->enqueue_variants_for_template( $odoo_id, $wp_id );
 		$this->maybe_apply_pricelist_price( $wp_id, $odoo_id );
 		$this->clear_odoo_data();
+
+		// Accumulate for batch translation flush.
+		$this->pulled_products[ $odoo_id ] = $wp_id;
 	}
 
 	/**
@@ -376,5 +400,102 @@ class WC_Pull_Coordinator {
 				'variant_count'    => count( $variant_ids ),
 			]
 		);
+	}
+
+	// ─── Translation flush ──────────────────────────────────
+
+	/**
+	 * Flush accumulated product translations in batch.
+	 *
+	 * Called after all jobs in a Sync_Engine batch are processed.
+	 * Makes one Odoo read() per language for ALL accumulated products.
+	 *
+	 * @return void
+	 */
+	public function flush_translations(): void {
+		if ( empty( $this->pulled_products ) ) {
+			return;
+		}
+
+		$settings = ( $this->settings_fn )();
+		if ( empty( $settings['sync_translations'] ) ) {
+			$this->pulled_products = [];
+			return;
+		}
+
+		/** @var Translation_Service $ts */
+		$ts = ( $this->translation_fn )();
+		if ( ! $ts->is_available() ) {
+			$this->pulled_products = [];
+			return;
+		}
+
+		/**
+		 * Filter the translatable field map for WooCommerce products.
+		 *
+		 * Keys are Odoo field names, values are WP field names.
+		 *
+		 * @since 3.0.0
+		 *
+		 * @param array<string, string> $field_map Odoo field => WP field.
+		 */
+		$field_map = apply_filters(
+			'wp4odoo_translatable_fields_woocommerce',
+			[
+				'name'             => 'post_title',
+				'description_sale' => 'post_content',
+			]
+		);
+
+		$ts->pull_translations_batch(
+			'product.template',
+			$this->pulled_products,
+			array_keys( $field_map ),
+			$field_map,
+			'product',
+			[ $this, 'apply_product_translation' ]
+		);
+
+		$this->logger->info(
+			'Flushed product translations.',
+			[ 'count' => count( $this->pulled_products ) ]
+		);
+
+		$this->pulled_products = [];
+	}
+
+	/**
+	 * Apply translated field values to a WC product post.
+	 *
+	 * Used as the callback for Translation_Service::pull_translations_batch().
+	 *
+	 * @param int                  $trans_wp_id Translated WP post ID.
+	 * @param array<string, string> $data       WP field => translated value.
+	 * @param string               $lang        Language code.
+	 * @return void
+	 */
+	public function apply_product_translation( int $trans_wp_id, array $data, string $lang ): void {
+		$product = wc_get_product( $trans_wp_id );
+		if ( $product ) {
+			if ( isset( $data['post_title'] ) ) {
+				$product->set_name( $data['post_title'] );
+			}
+			if ( isset( $data['post_content'] ) ) {
+				$product->set_description( $data['post_content'] );
+			}
+			$product->save();
+			return;
+		}
+
+		// Fallback: direct post update if WC product cannot be loaded.
+		$update = [ 'ID' => $trans_wp_id ];
+		if ( isset( $data['post_title'] ) ) {
+			$update['post_title'] = $data['post_title'];
+		}
+		if ( isset( $data['post_content'] ) ) {
+			$update['post_content'] = $data['post_content'];
+		}
+
+		wp_update_post( $update );
 	}
 }

@@ -71,4 +71,38 @@ interface Translation_Adapter {
 	 * @return bool True if the post is a translation of another post.
 	 */
 	public function is_translation( int $post_id ): bool;
+
+	// ─── Write methods (Phase 4: pull direction) ────────────
+
+	/**
+	 * Create a translated post linked to an original.
+	 *
+	 * Returns the existing translation ID if one already exists
+	 * for the given language (idempotent).
+	 *
+	 * @param int    $original_post_id Original (source) post ID.
+	 * @param string $lang             Target language code (e.g. 'fr').
+	 * @param string $post_type        WP post type (e.g. 'product').
+	 * @return int Translated post ID, or 0 on failure.
+	 */
+	public function create_translation( int $original_post_id, string $lang, string $post_type ): int;
+
+	/**
+	 * Set the language for a post.
+	 *
+	 * @param int    $post_id   Post ID.
+	 * @param string $lang      Language code (e.g. 'fr').
+	 * @param string $post_type WP post type (e.g. 'product').
+	 * @return void
+	 */
+	public function set_post_language( int $post_id, string $lang, string $post_type ): void;
+
+	/**
+	 * Link posts as translations of each other.
+	 *
+	 * @param array<string, int> $translations Language code => post ID map
+	 *                                         (must include all languages).
+	 * @return void
+	 */
+	public function link_translations( array $translations ): void;
 }
