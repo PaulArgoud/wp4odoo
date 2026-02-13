@@ -33,27 +33,7 @@ trait Sprout_Invoices_Hooks {
 	 * @return void
 	 */
 	public function on_invoice_save( int $post_id ): void {
-		if ( $this->is_importing() ) {
-			return;
-		}
-
-		if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
-			return;
-		}
-
-		if ( 'sa_invoice' !== get_post_type( $post_id ) ) {
-			return;
-		}
-
-		$settings = $this->get_settings();
-		if ( empty( $settings['sync_invoices'] ) ) {
-			return;
-		}
-
-		$odoo_id = $this->get_mapping( 'invoice', $post_id ) ?? 0;
-		$action  = $odoo_id ? 'update' : 'create';
-
-		Queue_Manager::push( 'sprout_invoices', 'invoice', $action, $post_id, $odoo_id );
+		$this->handle_cpt_save( $post_id, 'sa_invoice', 'sync_invoices', 'invoice' );
 	}
 
 	/**

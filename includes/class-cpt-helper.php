@@ -109,4 +109,65 @@ final class CPT_Helper {
 
 		return $post_id;
 	}
+
+	/**
+	 * Parse Odoo product.product data into service product format.
+	 *
+	 * Shared by LMS and other modules that map Odoo service products
+	 * to WordPress CPTs (courses, groups, memberships).
+	 *
+	 * @param array<string, mixed> $odoo_data Odoo record data.
+	 * @return array{title: string, description: string, list_price: float}
+	 */
+	public static function parse_service_product( array $odoo_data ): array {
+		return [
+			'title'       => $odoo_data['name'] ?? '',
+			'description' => $odoo_data['description_sale'] ?? '',
+			'list_price'  => (float) ( $odoo_data['list_price'] ?? 0 ),
+		];
+	}
+
+	/**
+	 * Save a service product CPT post from parsed Odoo data.
+	 *
+	 * Creates or updates a post with title + content, plus optional meta.
+	 * Shared by LMS handlers to avoid duplicating the insert/update logic.
+	 *
+	 * @param string               $post_type CPT slug.
+	 * @param array<string, mixed> $data      Parsed data with 'title', 'description' keys.
+	 * @param int                  $wp_id     Existing post ID (0 to create).
+	 * @param Logger|null          $logger    Optional logger.
+	 * @param array<string, mixed> $meta      Meta to save: meta_key => value.
+	 * @return int Post ID or 0 on failure.
+	 */
+	public static function save_from_odoo( string $post_type, array $data, int $wp_id, ?Logger $logger = null, array $meta = [] ): int {
+		$post_args = [
+			'post_title'   => $data['title'] ?? '',
+			'post_content' => $data['description'] ?? '',
+			'post_type'    => $post_type,
+			'post_status'  => 'publish',
+		];
+
+		if ( $wp_id > 0 ) {
+			$post_args['ID'] = $wp_id;
+			$result          = wp_update_post( $post_args, true );
+		} else {
+			$result = wp_insert_post( $post_args, true );
+		}
+
+		if ( is_wp_error( $result ) ) {
+			if ( $logger ) {
+				$logger->error( "Failed to save {$post_type} post.", [ 'wp_id' => $wp_id ] );
+			}
+			return 0;
+		}
+
+		$post_id = (int) $result;
+
+		foreach ( $meta as $meta_key => $value ) {
+			update_post_meta( $post_id, $meta_key, $value );
+		}
+
+		return $post_id;
+	}
 }

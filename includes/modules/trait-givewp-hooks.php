@@ -37,27 +37,7 @@ trait GiveWP_Hooks {
 	 * @return void
 	 */
 	public function on_form_save( int $post_id ): void {
-		if ( $this->is_importing() ) {
-			return;
-		}
-
-		if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
-			return;
-		}
-
-		if ( 'give_forms' !== get_post_type( $post_id ) ) {
-			return;
-		}
-
-		$settings = $this->get_settings();
-		if ( empty( $settings['sync_forms'] ) ) {
-			return;
-		}
-
-		$odoo_id = $this->get_mapping( 'form', $post_id ) ?? 0;
-		$action  = $odoo_id ? 'update' : 'create';
-
-		Queue_Manager::push( 'givewp', 'form', $action, $post_id, $odoo_id );
+		$this->handle_cpt_save( $post_id, 'give_forms', 'sync_forms', 'form' );
 	}
 
 	/**

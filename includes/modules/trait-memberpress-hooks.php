@@ -33,27 +33,7 @@ trait MemberPress_Hooks {
 	 * @return void
 	 */
 	public function on_plan_save( int $post_id ): void {
-		if ( $this->is_importing() ) {
-			return;
-		}
-
-		if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
-			return;
-		}
-
-		if ( 'memberpressproduct' !== get_post_type( $post_id ) ) {
-			return;
-		}
-
-		$settings = $this->get_settings();
-		if ( empty( $settings['sync_plans'] ) ) {
-			return;
-		}
-
-		$odoo_id = $this->get_mapping( 'plan', $post_id ) ?? 0;
-		$action  = $odoo_id ? 'update' : 'create';
-
-		Queue_Manager::push( 'memberpress', 'plan', $action, $post_id, $odoo_id );
+		$this->handle_cpt_save( $post_id, 'memberpressproduct', 'sync_plans', 'plan' );
 	}
 
 	/**

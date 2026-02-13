@@ -3,6 +3,7 @@ declare( strict_types=1 );
 
 namespace WP4Odoo\Modules;
 
+use WP4Odoo\CPT_Helper;
 use WP4Odoo\Logger;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -269,18 +270,11 @@ class LifterLMS_Handler {
 	/**
 	 * Parse Odoo product data into WordPress course format.
 	 *
-	 * Reverse of load_course() + map_to_odoo(). Extracts name,
-	 * description, and list_price from Odoo product.product data.
-	 *
 	 * @param array<string, mixed> $odoo_data Odoo record data.
 	 * @return array<string, mixed> WordPress course data.
 	 */
 	public function parse_course_from_odoo( array $odoo_data ): array {
-		return [
-			'title'       => $odoo_data['name'] ?? '',
-			'description' => $odoo_data['description_sale'] ?? '',
-			'list_price'  => (float) ( $odoo_data['list_price'] ?? 0 ),
-		];
+		return CPT_Helper::parse_service_product( $odoo_data );
 	}
 
 	// ─── Parse membership from Odoo ───────────────────────
@@ -292,11 +286,7 @@ class LifterLMS_Handler {
 	 * @return array<string, mixed> WordPress membership data.
 	 */
 	public function parse_membership_from_odoo( array $odoo_data ): array {
-		return [
-			'title'       => $odoo_data['name'] ?? '',
-			'description' => $odoo_data['description_sale'] ?? '',
-			'list_price'  => (float) ( $odoo_data['list_price'] ?? 0 ),
-		];
+		return CPT_Helper::parse_service_product( $odoo_data );
 	}
 
 	// ─── Save course ──────────────────────────────────────
@@ -304,39 +294,16 @@ class LifterLMS_Handler {
 	/**
 	 * Save course data to an llms_course CPT post.
 	 *
-	 * Creates a new post when $wp_id is 0, updates an existing one otherwise.
-	 *
 	 * @param array<string, mixed> $data  Parsed course data.
 	 * @param int                  $wp_id Existing post ID (0 to create new).
 	 * @return int The post ID, or 0 on failure.
 	 */
 	public function save_course( array $data, int $wp_id = 0 ): int {
-		$post_args = [
-			'post_title'   => $data['title'] ?? '',
-			'post_content' => $data['description'] ?? '',
-			'post_type'    => 'llms_course',
-			'post_status'  => 'publish',
-		];
-
-		if ( $wp_id > 0 ) {
-			$post_args['ID'] = $wp_id;
-			$result          = \wp_update_post( $post_args, true );
-		} else {
-			$result = \wp_insert_post( $post_args, true );
-		}
-
-		if ( \is_wp_error( $result ) ) {
-			$this->logger->error( 'Failed to save course post.', [ 'wp_id' => $wp_id ] );
-			return 0;
-		}
-
-		$post_id = $result;
-
+		$meta = [];
 		if ( isset( $data['list_price'] ) ) {
-			\update_post_meta( $post_id, '_llms_regular_price', (string) $data['list_price'] );
+			$meta['_llms_regular_price'] = (string) $data['list_price'];
 		}
-
-		return $post_id;
+		return CPT_Helper::save_from_odoo( 'llms_course', $data, $wp_id, $this->logger, $meta );
 	}
 
 	// ─── Save membership ─────────────────────────────────
@@ -344,39 +311,16 @@ class LifterLMS_Handler {
 	/**
 	 * Save membership data to an llms_membership CPT post.
 	 *
-	 * Creates a new post when $wp_id is 0, updates an existing one otherwise.
-	 *
 	 * @param array<string, mixed> $data  Parsed membership data.
 	 * @param int                  $wp_id Existing post ID (0 to create new).
 	 * @return int The post ID, or 0 on failure.
 	 */
 	public function save_membership( array $data, int $wp_id = 0 ): int {
-		$post_args = [
-			'post_title'   => $data['title'] ?? '',
-			'post_content' => $data['description'] ?? '',
-			'post_type'    => 'llms_membership',
-			'post_status'  => 'publish',
-		];
-
-		if ( $wp_id > 0 ) {
-			$post_args['ID'] = $wp_id;
-			$result          = \wp_update_post( $post_args, true );
-		} else {
-			$result = \wp_insert_post( $post_args, true );
-		}
-
-		if ( \is_wp_error( $result ) ) {
-			$this->logger->error( 'Failed to save membership post.', [ 'wp_id' => $wp_id ] );
-			return 0;
-		}
-
-		$post_id = $result;
-
+		$meta = [];
 		if ( isset( $data['list_price'] ) ) {
-			\update_post_meta( $post_id, '_llms_regular_price', (string) $data['list_price'] );
+			$meta['_llms_regular_price'] = (string) $data['list_price'];
 		}
-
-		return $post_id;
+		return CPT_Helper::save_from_odoo( 'llms_membership', $data, $wp_id, $this->logger, $meta );
 	}
 
 	// ─── Reverse status mapping ──────────────────────────

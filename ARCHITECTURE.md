@@ -248,7 +248,7 @@ WordPress For Odoo/
 │   ├── class-queue-manager.php        # Helpers for enqueuing sync jobs
 │   ├── class-query-service.php        # Paginated queries with column projection (queue jobs, log entries) — injectable instance
 │   ├── class-field-mapper.php         # Type conversions (Many2one, dates, HTML)
-│   ├── class-cpt-helper.php           # Shared CPT register/load/save helpers
+│   ├── class-cpt-helper.php           # Shared CPT register/load/save/parse helpers
 │   ├── class-webhook-handler.php      # REST API endpoints for Odoo webhooks, rate limiting, HMAC signature
 │   ├── class-schema-cache.php        # fields_get() cache (memory + transient) for field validation
 │   ├── class-reconciler.php          # Entity map reconciliation against live Odoo records
@@ -466,6 +466,7 @@ Module_Base (abstract)
 - Data transformation: `map_to_odoo()`, `map_from_odoo()`, `generate_sync_hash()`
 - Settings: `get_settings()`, `get_settings_fields()`, `get_default_settings()`, `get_dependency_status()` (external dependency check for admin UI) — delegates to injected `Settings_Repository`
 - Helpers: `is_importing()` (anti-loop guard, per-module static array keyed by module ID), `mark_importing()`, `clear_importing()` (try/finally in pull), `resolve_many2one_field()` (Many2one → scalar), `delete_wp_post()` (safe post deletion), `log_unsupported_entity()` (centralized warning), `partner_service()` (lazy `Partner_Service` factory), `resolve_partner_from_user()` (WP user → Odoo partner via Partner_Service), `resolve_partner_from_email()` (email → Odoo partner via Partner_Service), `check_dependency()` (one-liner dependency status), `client()`, `auto_post_invoice(): bool` (setting check + mapping lookup + `action_post`, returns success/failure), `ensure_entity_synced()` (mapping check + auto-push if missing), `encode_synthetic_id()` / `decode_synthetic_id()` (static, with overflow guard — used by LMS modules for enrollment IDs)
+- Push helpers: `enqueue_push()` (mapping lookup + Queue_Manager), `handle_cpt_save()` (anti-loop + revision/autosave + post_type + settings guards → enqueue_push; used by 12 hooks traits)
 - Subclass hooks: `boot()`, `load_wp_data()`, `save_wp_data()`, `delete_wp_data()`
 
 **Module lifecycle:**

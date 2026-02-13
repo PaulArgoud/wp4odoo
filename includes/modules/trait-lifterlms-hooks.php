@@ -34,27 +34,7 @@ trait LifterLMS_Hooks {
 	 * @return void
 	 */
 	public function on_course_save( int $post_id ): void {
-		if ( $this->is_importing() ) {
-			return;
-		}
-
-		if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
-			return;
-		}
-
-		if ( 'llms_course' !== get_post_type( $post_id ) ) {
-			return;
-		}
-
-		$settings = $this->get_settings();
-		if ( empty( $settings['sync_courses'] ) ) {
-			return;
-		}
-
-		$odoo_id = $this->get_mapping( 'course', $post_id ) ?? 0;
-		$action  = $odoo_id ? 'update' : 'create';
-
-		Queue_Manager::push( 'lifterlms', 'course', $action, $post_id, $odoo_id );
+		$this->handle_cpt_save( $post_id, 'llms_course', 'sync_courses', 'course' );
 	}
 
 	/**
@@ -64,27 +44,7 @@ trait LifterLMS_Hooks {
 	 * @return void
 	 */
 	public function on_membership_save( int $post_id ): void {
-		if ( $this->is_importing() ) {
-			return;
-		}
-
-		if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
-			return;
-		}
-
-		if ( 'llms_membership' !== get_post_type( $post_id ) ) {
-			return;
-		}
-
-		$settings = $this->get_settings();
-		if ( empty( $settings['sync_memberships'] ) ) {
-			return;
-		}
-
-		$odoo_id = $this->get_mapping( 'membership', $post_id ) ?? 0;
-		$action  = $odoo_id ? 'update' : 'create';
-
-		Queue_Manager::push( 'lifterlms', 'membership', $action, $post_id, $odoo_id );
+		$this->handle_cpt_save( $post_id, 'llms_membership', 'sync_memberships', 'membership' );
 	}
 
 	/**

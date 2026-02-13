@@ -503,6 +503,40 @@ abstract class Module_Base {
 		Queue_Manager::push( $this->id, $entity_type, $action, $wp_id, $odoo_id );
 	}
 
+	/**
+	 * Handle a CPT save_post hook with standard guard clauses.
+	 *
+	 * Combines anti-loop, revision/autosave, post type, and settings
+	 * checks before enqueuing a push. Replaces the 10-line boilerplate
+	 * pattern repeated across hooks traits.
+	 *
+	 * @param int    $post_id     The saved post ID.
+	 * @param string $post_type   Expected CPT slug.
+	 * @param string $setting_key Settings array key to check.
+	 * @param string $entity_type Entity type for the queue job.
+	 * @return void
+	 */
+	protected function handle_cpt_save( int $post_id, string $post_type, string $setting_key, string $entity_type ): void {
+		if ( $this->is_importing() ) {
+			return;
+		}
+
+		if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
+			return;
+		}
+
+		if ( get_post_type( $post_id ) !== $post_type ) {
+			return;
+		}
+
+		$settings = $this->get_settings();
+		if ( empty( $settings[ $setting_key ] ) ) {
+			return;
+		}
+
+		$this->enqueue_push( $entity_type, $post_id );
+	}
+
 	// -------------------------------------------------------------------------
 	// Anti-loop
 	// -------------------------------------------------------------------------
