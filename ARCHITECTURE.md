@@ -2,7 +2,7 @@
 
 ## Overview
 
-Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 27 modules across 17 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Points & Rewards, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (7 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS), Booking (Amelia + Bookly), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP), and HR (WP Job Manager).
+Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 29 modules across 18 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Points & Rewards, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (7 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS), Booking (Amelia + Bookly), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP), Helpdesk (Awesome Support + SupportCandy), and HR (WP Job Manager).
 
 ![WP4ODOO Full Architecture](assets/images/architecture-full.svg)
 
@@ -171,6 +171,15 @@ WordPress For Odoo/
 │   │   ├── trait-job-manager-hooks.php       # Job Manager: on_job_save, on_job_expired
 │   │   ├── class-job-manager-handler.php     # Job Manager: job_listing CPT, status mapping, department resolution
 │   │   ├── class-job-manager-module.php      # Job Manager: independent, bidirectional job ↔ hr.job
+│   │   ├── # ─── Helpdesk (Awesome Support + SupportCandy) ──
+│   │   ├── class-helpdesk-module-base.php    # Shared: abstract base for helpdesk modules (dual-model, stage resolution)
+│   │   ├── trait-awesome-support-hooks.php   # AS: hook callbacks (ticket created, status updated)
+│   │   ├── class-awesome-support-handler.php # AS: CPT-based ticket data load/save, priority mapping
+│   │   ├── class-awesome-support-module.php  # AS: extends Helpdesk_Module_Base (uses AS_Hooks trait)
+│   │   ├── trait-supportcandy-hooks.php      # SC: hook callbacks (ticket created, status changed)
+│   │   ├── class-supportcandy-handler.php    # SC: $wpdb custom table ticket data load/save
+│   │   ├── class-supportcandy-module.php     # SC: extends Helpdesk_Module_Base (uses SC_Hooks trait)
+│   │   │
 │   │   ├── # ─── Meta-modules (enrichment) ───────
 │   │   ├── class-acf-handler.php             # ACF: type conversions, enrich push/pull, write ACF fields
 │   │   └── class-acf-module.php              # ACF: filter-based enrichment, mapping configurator, no own entity types
@@ -193,7 +202,7 @@ WordPress For Odoo/
 │   │
 │   ├── class-sync-result.php          # Value object: success/fail, ?int entity_id, error message, Error_Type
 │   ├── class-error-type.php           # Backed enum: Transient, Permanent (retry strategy)
-│   ├── class-odoo-model.php           # String-backed enum: 18 Odoo model names (product.pricelist, stock.picking, etc.)
+│   ├── class-odoo-model.php           # String-backed enum: 22 Odoo model names (product.pricelist, stock.picking, etc.)
 │   ├── class-database-migration.php   # Table creation (dbDelta), default options, versioned migrations (schema_version)
 │   ├── class-settings-repository.php  # Centralized option access: keys, defaults, typed accessors (DI)
 │   ├── class-module-registry.php      # Module registration, mutual exclusivity, lifecycle
@@ -658,7 +667,33 @@ Two booking modules (Amelia, Bookly) share a common service/appointment sync pat
 - Shared `ensure_service_synced()`: auto-pushes service to Odoo before dependent booking
 - 8 abstract methods for subclass configuration: `get_booking_entity_type()`, `get_fallback_label()`, `handler_load_service()`, `handler_extract_booking_fields()` (consolidated: returns service_id, customer email/name, start/end/notes in one call), `handler_get_service_id()`, `handler_parse_service_from_odoo()`, `handler_save_service()`, `handler_delete_service()`
 
-### 11. Translation Infrastructure (i18n)
+### 11. Shared Helpdesk Infrastructure
+
+Two helpdesk modules (Awesome Support, SupportCandy) share a common ticket sync pattern:
+
+**`Helpdesk_Module_Base`** (`class-helpdesk-module-base.php`):
+
+Shared abstract base `Helpdesk_Module_Base` extends `Module_Base`, providing dual-model detection (`helpdesk.ticket` Enterprise vs `project.task` Community fallback), bidirectional ticket sync, and stage-based status resolution.
+
+**Dual-model detection:** `has_helpdesk_model()` probes Odoo for `helpdesk.ticket` at runtime. If available, uses `helpdesk.ticket` with `team_id`. Otherwise falls back to `project.task` with `project_id`.
+
+**Push flow:** Load ticket → resolve customer to partner → inject team_id/project_id from settings → create/write in Odoo. On ticket close: resolve closed stage (last stage by `sequence DESC`, cached 1h in transient) and inject `stage_id`.
+
+**Pull flow:** Read ticket from Odoo → extract `stage_id` Many2one name → keyword heuristic ("close"/"done"/"resolved"/"solved"/"cancel"/"fermé"/"terminé"/"résolu" → closed, else → open) → update WP ticket status. Only status updates pulled (no create/delete from Odoo). Filterable via `wp4odoo_helpdesk_reverse_stage_map`.
+
+**Exclusive group:** `helpdesk` — Awesome Support (priority 10) wins over SupportCandy (priority 15).
+
+| Class / Trait | Role |
+|-------|------|
+| `Helpdesk_Module_Base` | Abstract base: dual-model detection, stage resolution, keyword-based status mapping, shared push/pull logic |
+| `Awesome_Support_Hooks` (trait) | Hook callbacks: `wpas_open_ticket_after`, `wpas_after_close_ticket`, `wpas_after_reopen_ticket` |
+| `Awesome_Support_Handler` | CPT-based ticket data load (post meta), status save via `wpas_update_ticket_status()`, priority mapping |
+| `Awesome_Support_Module` | Extends `Helpdesk_Module_Base`: detection `WPAS_VERSION`, exclusive priority 10, 4 settings |
+| `SupportCandy_Hooks` (trait) | Hook callbacks: `wpsc_after_create_ticket`, `wpsc_set_ticket_status` |
+| `SupportCandy_Handler` | Custom table data access via `$wpdb` (`wpsc_ticket`, `wpsc_ticketmeta`), priority mapping |
+| `SupportCandy_Module` | Extends `Helpdesk_Module_Base`: detection `STARTER_STARTER_VERSION`, exclusive priority 15, 4 settings |
+
+### 12. Translation Infrastructure (i18n)
 
 The `Translation_Service` (`includes/i18n/class-translation-service.php`) is a cross-cutting service (like `Partner_Service`) that enables any module to push translated content to Odoo. It is **not a module** — it is accessible via `$this->translation_service()` from `Module_Helpers`.
 

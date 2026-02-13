@@ -59,7 +59,7 @@ class WP_DB_Stub {
 	}
 
 	/** @return int|false */
-	public function update( string $table, array $data, array $where ) {
+	public function update( string $table, array $data, array $where, ?array $format = null, ?array $where_format = null ) {
 		$this->calls[] = [ 'method' => 'update', 'args' => [ $table, $data, $where ] ];
 		return 1;
 	}

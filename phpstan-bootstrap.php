@@ -831,6 +831,51 @@ if ( ! class_exists( 'WC_Points_Rewards_Manager' ) ) {
 	}
 }
 
+// ─── Awesome Support stubs ──────────────────────────────
+
+if ( ! defined( 'WPAS_VERSION' ) ) {
+	define( 'WPAS_VERSION', '6.2.6' );
+}
+
+if ( ! function_exists( 'wpas_insert_ticket' ) ) {
+	/**
+	 * @param array  $data Ticket data.
+	 * @param int    $user_id User ID.
+	 * @param string $status Status.
+	 * @return int|WP_Error
+	 */
+	function wpas_insert_ticket( array $data = [], int $user_id = 0, string $status = 'queued' ) {
+		return 0;
+	}
+}
+
+if ( ! function_exists( 'wpas_update_ticket_status' ) ) {
+	/**
+	 * @param int    $ticket_id Ticket ID.
+	 * @param string $new_status New status.
+	 * @return bool
+	 */
+	function wpas_update_ticket_status( int $ticket_id, string $new_status ): bool {
+		return true;
+	}
+}
+
+if ( ! function_exists( 'wpas_get_ticket_status' ) ) {
+	/**
+	 * @param int $ticket_id Ticket ID.
+	 * @return string
+	 */
+	function wpas_get_ticket_status( int $ticket_id ): string {
+		return 'open';
+	}
+}
+
+// ─── SupportCandy stubs ─────────────────────────────────
+
+if ( ! defined( 'STARTER_STARTER_VERSION' ) ) {
+	define( 'STARTER_STARTER_VERSION', '3.2.8' );
+}
+
 // ─── WPML stubs ─────────────────────────────────────────
 
 if ( ! defined( 'ICL_SITEPRESS_VERSION' ) ) {

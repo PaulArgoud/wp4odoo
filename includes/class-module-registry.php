@@ -150,6 +150,14 @@ class Module_Registry {
 			$this->register( 'job_manager', new Modules\Job_Manager_Module( $client_provider, $entity_map, $settings ) );
 		}
 
+		// Helpdesk group (Awesome Support > SupportCandy).
+		if ( defined( 'WPAS_VERSION' ) ) {
+			$this->register( 'awesome_support', new Modules\Awesome_Support_Module( $client_provider, $entity_map, $settings ) );
+		}
+		if ( defined( 'STARTER_STARTER_VERSION' ) ) {
+			$this->register( 'supportcandy', new Modules\SupportCandy_Module( $client_provider, $entity_map, $settings ) );
+		}
+
 		// Meta-modules (enrich other modules, no own entity types).
 		if ( class_exists( 'ACF' ) || defined( 'ACF_MAJOR_VERSION' ) ) {
 			$this->register( 'acf', new Modules\ACF_Module( $client_provider, $entity_map, $settings ) );

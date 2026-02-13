@@ -45,6 +45,8 @@ class Admin_Ajax {
 		'stock.quant'      => 'Inventory',
 		'account.move'     => 'Invoicing',
 		'loyalty.program'  => 'Loyalty',
+		'helpdesk.ticket'  => 'Helpdesk (Enterprise)',
+		'project.task'     => 'Project',
 	];
 
 	/**

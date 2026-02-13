@@ -79,9 +79,12 @@ $GLOBALS['_llms_orders']         = [];
 $GLOBALS['_llms_enrollments']    = [];
 $GLOBALS['_wc_subscriptions']    = [];
 $GLOBALS['_wc_points_rewards']   = [];
-$GLOBALS['_tribe_events']        = [];
-$GLOBALS['_tribe_tickets']       = [];
-$GLOBALS['_tribe_attendees']     = [];
+$GLOBALS['_tribe_events']            = [];
+$GLOBALS['_tribe_tickets']           = [];
+$GLOBALS['_tribe_attendees']         = [];
+$GLOBALS['_wpas_tickets']            = [];
+$GLOBALS['_supportcandy_tickets']    = [];
+$GLOBALS['_supportcandy_ticketmeta'] = [];
 
 // ─── Load stubs ─────────────────────────────────────────
 // Stubs must be loaded before the autoloader so that external
@@ -119,6 +122,8 @@ require_once __DIR__ . '/stubs/job-manager-classes.php';
 require_once __DIR__ . '/stubs/wc-points-rewards-classes.php';
 require_once __DIR__ . '/stubs/acf-classes.php';
 require_once __DIR__ . '/stubs/i18n-classes.php';
+require_once __DIR__ . '/stubs/awesome-support-classes.php';
+require_once __DIR__ . '/stubs/supportcandy-classes.php';
 
 // ─── Composer autoloader ────────────────────────────────
 

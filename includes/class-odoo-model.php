@@ -104,6 +104,22 @@ enum Odoo_Model: string {
 	/** Loyalty cards (customer point balances). */
 	case LoyaltyCard = 'loyalty.card';
 
+	// ─── Helpdesk ──────────────────────────────────────────
+
+	/** Helpdesk tickets (Enterprise). */
+	case HelpdeskTicket = 'helpdesk.ticket';
+
+	/** Helpdesk stages (Enterprise). */
+	case HelpdeskStage = 'helpdesk.stage';
+
+	// ─── Project ───────────────────────────────────────────
+
+	/** Project tasks (Community fallback for tickets). */
+	case ProjectTask = 'project.task';
+
+	/** Project task stages (Community). */
+	case ProjectTaskType = 'project.task.type';
+
 	// ─── Inventory ─────────────────────────────────────────
 
 	/** Stock pickings (delivery orders). */
