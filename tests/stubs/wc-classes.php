@@ -67,6 +67,8 @@ if ( ! class_exists( 'WC_Product' ) ) {
 		public function set_sku( string $sku ): void { $this->data['sku'] = $sku; }
 		public function get_regular_price(): string { return $this->data['regular_price'] ?? ''; }
 		public function set_regular_price( string $price ): void { $this->data['regular_price'] = $price; }
+		public function get_sale_price(): string { return $this->data['sale_price'] ?? ''; }
+		public function set_sale_price( $price ): void { $this->data['sale_price'] = (string) $price; }
 		public function get_stock_quantity(): ?int { return $this->data['stock_quantity'] ?? null; }
 		public function set_stock_quantity( ?int $quantity ): void { $this->data['stock_quantity'] = $quantity; }
 		public function set_manage_stock( bool $manage ): void {}
@@ -196,6 +198,20 @@ if ( ! class_exists( 'WC_Order' ) ) {
 		public function get_customer_id(): int { return $this->data['customer_id'] ?? 0; }
 		/** @return array<int, array<string, mixed>> */
 		public function get_items(): array { return $this->data['items'] ?? []; }
+		/** @param string $key Meta key. */
+		public function update_meta_data( string $key, $value ): void {
+			$this->data['meta'][ $key ] = $value;
+		}
+		/**
+		 * @param string $key    Meta key.
+		 * @param bool   $single Unused.
+		 * @return mixed
+		 */
+		public function get_meta( string $key, bool $single = true ) {
+			return $this->data['meta'][ $key ] ?? '';
+		}
+		/** @param string $note Note text. */
+		public function add_order_note( string $note ): int { return 1; }
 		public function save(): int { return $this->id ?: 1; }
 		/** @param array<string, mixed> $data */
 		public function set_data( array $data ): void { $this->data = $data; }

@@ -2,19 +2,30 @@
 declare( strict_types=1 );
 
 /**
- * Namespace-level wc_get_product() override for Product_Handler tests.
+ * Namespace-level wc_get_product() override for WP4Odoo\Modules tests.
  *
  * PHP resolves unqualified function calls in the caller's namespace first.
- * Product_Handler lives in WP4Odoo\Modules, so this override takes
+ * All handler classes live in WP4Odoo\Modules, so this override takes
  * precedence over the global \wc_get_product() stub from bootstrap.php.
  *
- * Uses $GLOBALS['_test_wc_product'] to allow per-test control:
- *   - null / unset → delegates to global stub (returns false).
- *   - WC_Product   → returns that instance.
+ * Resolution order:
+ *   1. $GLOBALS['_test_wc_product'] (set → returned as-is, including false).
+ *   2. $GLOBALS['_wc_products'][$product_id] (array-based product store).
+ *   3. false (product not found).
  */
 namespace WP4Odoo\Modules {
 	function wc_get_product( $product_id = 0 ) {
-		return $GLOBALS['_test_wc_product'] ?? false;
+		// ProductHandlerTest sets this to a specific WC_Product or false.
+		if ( isset( $GLOBALS['_test_wc_product'] ) ) {
+			return $GLOBALS['_test_wc_product'];
+		}
+		// PricelistHandlerTest and others use the array-based store.
+		if ( isset( $GLOBALS['_wc_products'][ $product_id ] ) ) {
+			$product = new \WC_Product( (int) $product_id );
+			$product->set_data( $GLOBALS['_wc_products'][ $product_id ] );
+			return $product;
+		}
+		return false;
 	}
 }
 

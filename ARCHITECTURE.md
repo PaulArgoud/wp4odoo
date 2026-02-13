@@ -112,6 +112,8 @@ WordPress For Odoo/
 │   │   ├── class-image-handler.php           # WooCommerce: product image import (Odoo image_1920 → WC thumbnail)
 │   │   ├── class-currency-guard.php          # WooCommerce: static currency mismatch detection utility
 │   │   ├── class-exchange-rate-service.php   # WooCommerce: Odoo exchange rate fetching + caching + conversion
+│   │   ├── class-pricelist-handler.php      # WooCommerce: pricelist price import (product.pricelist → WC sale_price)
+│   │   ├── class-shipment-handler.php       # WooCommerce: shipment tracking import (stock.picking → WC order meta, AST format)
 │   │   │
 │   │   ├── # ─── EDD ───────────────────────────────────────────
 │   │   ├── trait-edd-hooks.php               # EDD: hook callbacks (download save/delete, order status)
@@ -230,6 +232,7 @@ WordPress For Odoo/
 │   │
 │   ├── class-sync-result.php          # Value object: success/fail, ?int entity_id, error message, Error_Type
 │   ├── class-error-type.php           # Backed enum: Transient, Permanent (retry strategy)
+│   ├── class-odoo-model.php           # String-backed enum: 18 Odoo model names (product.pricelist, stock.picking, etc.)
 │   ├── class-database-migration.php   # Table creation (dbDelta), default options, versioned migrations (schema_version)
 │   ├── class-settings-repository.php  # Centralized option access: keys, defaults, typed accessors (DI)
 │   ├── class-module-registry.php      # Module registration, mutual exclusivity, lifecycle
@@ -273,7 +276,7 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # 1853 unit tests (2894 assertions) + 26 integration tests (wp-env)
+├── tests/                             # 1902 unit tests (2972 assertions) + 26 integration tests (wp-env)
 │   ├── bootstrap.php                 #   Unit test bootstrap: constants, stub loading, plugin class requires
 │   ├── bootstrap-integration.php     #   Integration test bootstrap: loads WP test framework (wp-env)
 │   ├── stubs/
@@ -419,7 +422,7 @@ Each Odoo domain is encapsulated in an independent module extending `Module_Base
 Module_Base (abstract)
 ├── CRM_Module                  → res.partner, crm.lead                              [bidirectional]
 ├── Sales_Module                → product.template, sale.order, account.move         [Odoo → WP]
-├── WooCommerce_Module          → + stock.quant, product.product (variants)          [bidirectional]
+├── WooCommerce_Module          → + stock.quant, product.product, product.pricelist, stock.picking [bidirectional]
 ├── EDD_Module                  → product.template, sale.order, account.move         [bidirectional]
 ├── Memberships_Module          → product.product, membership.membership_line        [WP → Odoo]
 ├── Membership_Module_Base (abstract)
@@ -481,7 +484,7 @@ Handler classes receive their dependencies via closures from their parent module
 
 1. **Logger-only** (simple handlers): `Contact_Manager`, `Lead_Manager`, `Form_Handler`, `WPRM_Handler`, `Booking handlers` — receive only a `Logger` (or nothing). The parent module calls handler methods directly and passes data.
 
-2. **Multi-dependency** (complex handlers): `Product_Handler`, `Order_Handler`, `EDD_Order_Handler`, `SimplePay_Handler` — receive closures for settings, client access, entity map, and/or partner service. These handlers perform Odoo API calls directly.
+2. **Multi-dependency** (complex handlers): `Product_Handler`, `Order_Handler`, `Pricelist_Handler`, `Shipment_Handler`, `EDD_Order_Handler`, `SimplePay_Handler` — receive closures for settings, client access, entity map, and/or partner service. These handlers perform Odoo API calls directly.
 
 Both patterns are intentional. Simple handlers are pure data transformers (load WP data → return array); complex handlers encapsulate domain logic requiring API access. The choice depends on whether the handler needs to interact with Odoo directly.
 
@@ -851,9 +854,9 @@ All user inputs are sanitized with:
 
 ### WooCommerce — COMPLETE
 
-**Files:** `class-woocommerce-module.php` (sync coordinator, uses `WooCommerce_Hooks` trait), `trait-woocommerce-hooks.php` (WC hook callbacks), `class-product-handler.php` (product CRUD), `class-order-handler.php` (order CRUD + status mapping), `class-variant-handler.php` (variant import), `class-image-handler.php` (product image pull), `class-currency-guard.php` (currency mismatch detection), `class-exchange-rate-service.php` (Odoo exchange rates), `class-invoice-helper.php` (shared with Sales + EDD)
+**Files:** `class-woocommerce-module.php` (sync coordinator, uses `WooCommerce_Hooks` trait), `trait-woocommerce-hooks.php` (WC hook callbacks), `class-product-handler.php` (product CRUD), `class-order-handler.php` (order CRUD + status mapping), `class-variant-handler.php` (variant import), `class-image-handler.php` (product image pull), `class-pricelist-handler.php` (pricelist price pull), `class-shipment-handler.php` (shipment tracking pull), `class-currency-guard.php` (currency mismatch detection), `class-exchange-rate-service.php` (Odoo exchange rates), `class-invoice-helper.php` (shared with Sales + EDD)
 
-**Odoo models:** `product.template`, `product.product`, `sale.order`, `stock.quant`, `account.move`
+**Odoo models:** `product.template`, `product.product`, `sale.order`, `stock.quant`, `account.move`, `product.pricelist`, `product.pricelist.item`, `stock.picking`
 
 **Key features:**
 - Mutually exclusive with Sales_Module and EDD_Module (same Odoo models)
@@ -865,8 +868,10 @@ All user inputs are sanitized with:
 - **Bulk operations**: queue-based import/export of all products via admin UI (Sync tab)
 - **Multi-currency guard**: skips price update when Odoo `currency_id` differs from WC shop currency
 - **Exchange rate conversion**: optional `convert_currency` setting; prices converted via `Exchange_Rate_Service` (Odoo `res.currency` rates, 1-hour cache)
+- **Pricelist price pull**: imports computed prices from Odoo pricelists (`product.pricelist`) as WC sale prices; transient-cached (5min), currency guard integration, pricelist tracking meta
+- **Shipment tracking pull**: imports completed shipments (`stock.picking`) from Odoo into WC order meta (AST-compatible format); SHA-256 hash change detection, HPOS compatible
 
-**Settings:** `sync_products`, `sync_orders`, `sync_stock`, `sync_product_images`, `convert_currency`, `auto_confirm_orders`
+**Settings:** `sync_products`, `sync_orders`, `sync_stock`, `sync_product_images`, `sync_pricelist`, `sync_shipments`, `convert_currency`, `auto_confirm_orders`
 
 ### EDD — COMPLETE
 

@@ -67,6 +67,9 @@ if ( ! class_exists( 'WC_Product' ) ) {
 		public function set_sku( string $sku ): void {}
 		public function get_regular_price(): string { return ''; }
 		public function set_regular_price( string $price ): void {}
+		public function get_sale_price(): string { return ''; }
+		/** @param string|int|float $price */
+		public function set_sale_price( $price ): void {}
 		public function get_stock_quantity(): ?int { return null; }
 		public function set_stock_quantity( ?int $quantity ): void {}
 		public function set_manage_stock( bool $manage ): void {}
@@ -91,6 +94,15 @@ if ( ! class_exists( 'WC_Order' ) ) {
 		public function get_customer_id(): int { return 0; }
 		/** @return array<int, array<string, mixed>> */
 		public function get_items(): array { return []; }
+		/** @param mixed $value */
+		public function update_meta_data( string $key, $value ): void {}
+		/**
+		 * @param string $key
+		 * @param bool   $single
+		 * @return mixed
+		 */
+		public function get_meta( string $key, bool $single = true ) { return ''; }
+		public function add_order_note( string $note ): int { return 0; }
 		public function save(): int { return 0; }
 	}
 }

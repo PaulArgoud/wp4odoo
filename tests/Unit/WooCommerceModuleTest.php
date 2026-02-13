@@ -70,6 +70,16 @@ class WooCommerceModuleTest extends TestCase {
 		$this->assertSame( 'account.move', $models['invoice'] );
 	}
 
+	public function test_declares_pricelist_model(): void {
+		$models = $this->module->get_odoo_models();
+		$this->assertSame( 'product.pricelist', $models['pricelist'] );
+	}
+
+	public function test_declares_shipment_model(): void {
+		$models = $this->module->get_odoo_models();
+		$this->assertSame( 'stock.picking', $models['shipment'] );
+	}
+
 	// ─── Default Settings ──────────────────────────────────
 
 	public function test_default_settings_has_sync_products(): void {
@@ -92,15 +102,33 @@ class WooCommerceModuleTest extends TestCase {
 		$this->assertTrue( $settings['auto_confirm_orders'] );
 	}
 
+	public function test_default_settings_has_sync_pricelists_disabled(): void {
+		$settings = $this->module->get_default_settings();
+		$this->assertFalse( $settings['sync_pricelists'] );
+	}
+
+	public function test_default_settings_has_pricelist_id_zero(): void {
+		$settings = $this->module->get_default_settings();
+		$this->assertSame( 0, $settings['pricelist_id'] );
+	}
+
+	public function test_default_settings_has_sync_shipments_disabled(): void {
+		$settings = $this->module->get_default_settings();
+		$this->assertFalse( $settings['sync_shipments'] );
+	}
+
 	// ─── Settings Fields ───────────────────────────────────
 
-	public function test_settings_fields_exposes_six_fields(): void {
+	public function test_settings_fields_exposes_nine_fields(): void {
 		$fields = $this->module->get_settings_fields();
-		$this->assertCount( 6, $fields );
+		$this->assertCount( 9, $fields );
 		$this->assertArrayHasKey( 'sync_products', $fields );
 		$this->assertArrayHasKey( 'sync_orders', $fields );
 		$this->assertArrayHasKey( 'sync_stock', $fields );
 		$this->assertArrayHasKey( 'sync_product_images', $fields );
+		$this->assertArrayHasKey( 'sync_pricelists', $fields );
+		$this->assertArrayHasKey( 'pricelist_id', $fields );
+		$this->assertArrayHasKey( 'sync_shipments', $fields );
 		$this->assertArrayHasKey( 'auto_confirm_orders', $fields );
 		$this->assertArrayHasKey( 'convert_currency', $fields );
 	}

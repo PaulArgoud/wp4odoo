@@ -21,10 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sync_Engine** — Constructor accepts optional `?Logger $logger` parameter (4th arg) for dependency injection in tests. Batch loop now checks memory usage against 80% of `memory_limit` (`MEMORY_THRESHOLD`), stopping gracefully before OOM
 
 ### Added
+- **Pricelist price sync** — Pull computed prices from Odoo pricelists (`product.pricelist`) and apply as WooCommerce sale prices; transient-cached (5min), currency guard integration, pricelist tracking meta
+- **Shipment tracking sync** — Pull completed shipments (`stock.picking`) from Odoo into WooCommerce order meta (AST-compatible format); SHA-256 hash change detection, HPOS compatible
+- 3 new `Odoo_Model` enum cases: `ProductPricelist`, `ProductPricelistItem`, `StockPicking`
 - **Database migration 4** — `idx_processed_status (status, processed_at)` index on `wp4odoo_sync_queue` for efficient health metrics queries
 - **WP-Cron log cleanup** — Daily `wp4odoo_log_cleanup` event triggers `Logger::cleanup()` (respects `retention_days` setting), replacing the previous in-sync-run cleanup that added latency to every cron tick
 - **`wp_convert_hr_to_bytes()`** stub for unit tests (memory limit parsing)
-- 21 new/updated unit tests (1853 total, 2894 assertions): transient cache isolation, nullable entity_id, memory threshold, stale timeout configuration
+- 70 new/updated unit tests (1902 total, 2972 assertions): pricelist handler, shipment handler, transient cache isolation, nullable entity_id, memory threshold, stale timeout configuration
 
 ## [2.9.5] - 2026-02-12
 

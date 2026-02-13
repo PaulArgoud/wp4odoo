@@ -53,6 +53,12 @@ enum Odoo_Model: string {
 	/** Product variants. */
 	case ProductProduct = 'product.product';
 
+	/** Product pricelists. */
+	case ProductPricelist = 'product.pricelist';
+
+	/** Product pricelist items (rules). */
+	case ProductPricelistItem = 'product.pricelist.item';
+
 	// ─── Accounting ────────────────────────────────────────
 
 	/** Invoices / Bills / Journal entries. */
@@ -81,4 +87,9 @@ enum Odoo_Model: string {
 
 	/** Event registrations / attendees. */
 	case EventRegistration = 'event.registration';
+
+	// ─── Inventory ─────────────────────────────────────────
+
+	/** Stock pickings (delivery orders). */
+	case StockPicking = 'stock.picking';
 }

@@ -47,6 +47,18 @@ class OdooModelTest extends TestCase {
 		$this->assertSame( 'ir.model', Odoo_Model::IrModel->value );
 	}
 
+	public function test_product_pricelist_value(): void {
+		$this->assertSame( 'product.pricelist', Odoo_Model::ProductPricelist->value );
+	}
+
+	public function test_product_pricelist_item_value(): void {
+		$this->assertSame( 'product.pricelist.item', Odoo_Model::ProductPricelistItem->value );
+	}
+
+	public function test_stock_picking_value(): void {
+		$this->assertSame( 'stock.picking', Odoo_Model::StockPicking->value );
+	}
+
 	public function test_try_from_valid_string(): void {
 		$model = Odoo_Model::tryFrom( 'res.partner' );
 		$this->assertSame( Odoo_Model::Partner, $model );

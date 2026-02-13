@@ -517,6 +517,7 @@ if ( ! function_exists( 'update_post_meta' ) ) {
 
 if ( ! function_exists( 'delete_post_meta' ) ) {
 	function delete_post_meta( $post_id, $meta_key, $meta_value = '' ) {
+		unset( $GLOBALS['_wp_post_meta'][ $post_id ][ $meta_key ] );
 		return true;
 	}
 }
