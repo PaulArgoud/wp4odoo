@@ -150,6 +150,10 @@ class Module_Registry {
 			$this->register( 'job_manager', new Modules\Job_Manager_Module( $client_provider, $entity_map, $settings ) );
 		}
 
+		if ( class_exists( 'WC_Bundles' ) || class_exists( 'WC_Composite_Products' ) ) {
+			$this->register( 'wc_bundle_bom', new Modules\WC_Bundle_BOM_Module( $client_provider, $entity_map, $settings ) );
+		}
+
 		// Helpdesk group (Awesome Support > SupportCandy).
 		if ( defined( 'WPAS_VERSION' ) ) {
 			$this->register( 'awesome_support', new Modules\Awesome_Support_Module( $client_provider, $entity_map, $settings ) );

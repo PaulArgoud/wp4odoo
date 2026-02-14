@@ -2,7 +2,7 @@
 
 ## Overview
 
-Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 29 modules across 18 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Points & Rewards, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (7 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS), Booking (Amelia + Bookly), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP), Helpdesk (Awesome Support + SupportCandy), and HR (WP Job Manager).
+Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 30 modules across 19 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Points & Rewards, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (7 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS), Booking (Amelia + Bookly), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP), Helpdesk (Awesome Support + SupportCandy), and HR (WP Job Manager).
 
 ![WP4ODOO Full Architecture](assets/images/architecture-full.svg)
 
@@ -139,6 +139,11 @@ WordPress For Odoo/
 │   │   ├── class-wc-subscriptions-handler.php # WCS: product/subscription/renewal data load, status mapping
 │   │   ├── class-wc-subscriptions-module.php # WCS: push sync coordinator, dual-model (sale.subscription / skip)
 │   │   │
+│   │   ├── # ─── WC Bundle BOM ──────────────────────────────
+│   │   ├── trait-wc-bundle-bom-hooks.php     # Bundle BOM: save_post_product hook, type guard (bundle/composite)
+│   │   ├── class-wc-bundle-bom-handler.php   # Bundle BOM: bundle/composite data access, BOM formatting with One2many
+│   │   ├── class-wc-bundle-bom-module.php    # Bundle BOM: push-only, WC Bundles/Composite → mrp.bom, cross-module entity_map
+│   │   │
 │   │   ├── # ─── WC Points & Rewards ─────────────────────────
 │   │   ├── trait-wc-points-rewards-hooks.php  # Points: on_points_change (all 3 WC hooks)
 │   │   ├── class-wc-points-rewards-handler.php # Points: balance load/save, Odoo formatting, float→int rounding
@@ -202,7 +207,7 @@ WordPress For Odoo/
 │   │
 │   ├── class-sync-result.php          # Value object: success/fail, ?int entity_id, error message, Error_Type
 │   ├── class-error-type.php           # Backed enum: Transient, Permanent (retry strategy)
-│   ├── class-odoo-model.php           # String-backed enum: 22 Odoo model names (product.pricelist, stock.picking, etc.)
+│   ├── class-odoo-model.php           # String-backed enum: 24 Odoo model names (mrp.bom, mrp.bom.line, product.pricelist, stock.picking, etc.)
 │   ├── class-database-migration.php   # Table creation (dbDelta), default options, versioned migrations (schema_version)
 │   ├── class-settings-repository.php  # Centralized option access: keys, defaults, typed accessors (DI)
 │   ├── class-module-registry.php      # Module registration, mutual exclusivity, lifecycle
@@ -1220,6 +1225,23 @@ All user inputs are sanitized with:
 - Status mapping filterable via `wp4odoo_wcs_status_map` (7 statuses) and `wp4odoo_wcs_renewal_status_map` (3 statuses)
 
 **Settings:** `sync_products`, `sync_subscriptions`, `sync_renewals`, `auto_post_invoices`
+
+### WC Bundle BOM — COMPLETE
+
+**Files:** `class-wc-bundle-bom-module.php` (push sync coordinator, uses `WC_Bundle_BOM_Hooks` trait), `trait-wc-bundle-bom-hooks.php` (hook callbacks), `class-wc-bundle-bom-handler.php` (bundle/composite data access, BOM formatting)
+
+**Odoo models:** `mrp.bom` (Bill of Materials), `mrp.bom.line` (BOM components)
+
+**Key features:**
+- Push-only (WP → Odoo) — WC Product Bundles / WC Composite Products → Odoo Manufacturing BOMs
+- Requires WooCommerce Product Bundles or WooCommerce Composite Products; `boot()` guards with plugin class checks
+- Independent module (no exclusive group) — coexists with WooCommerce module
+- **Cross-module entity_map lookup**: resolves bundle/composite components to existing Odoo products synced via WooCommerce module
+- BOM pre-formatted with `bom_line_ids` One2many tuples (component product_id, quantity)
+- Hook: `save_post_product` filtered by product type (`bundle` or `composite`)
+- Skips BOMs with unsynced components (warning logged)
+
+**Settings:** `sync_bundles`
 
 ### Events Calendar — COMPLETE
 

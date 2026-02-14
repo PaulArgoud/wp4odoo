@@ -120,6 +120,14 @@ enum Odoo_Model: string {
 	/** Project task stages (Community). */
 	case ProjectTaskType = 'project.task.type';
 
+	// ─── Manufacturing ─────────────────────────────────────
+
+	/** Bills of Materials. */
+	case MrpBom = 'mrp.bom';
+
+	/** BOM lines (components). */
+	case MrpBomLine = 'mrp.bom.line';
+
 	// ─── Inventory ─────────────────────────────────────────
 
 	/** Stock pickings (delivery orders). */

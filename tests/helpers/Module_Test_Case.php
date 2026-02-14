@@ -61,6 +61,8 @@ abstract class Module_Test_Case extends TestCase {
 		'_wpas_tickets',
 		'_supportcandy_tickets',
 		'_supportcandy_ticketmeta',
+		'_wc_bundles',
+		'_wc_composites',
 	];
 
 	/**

@@ -47,6 +47,7 @@ class Admin_Ajax {
 		'loyalty.program'  => 'Loyalty',
 		'helpdesk.ticket'  => 'Helpdesk (Enterprise)',
 		'project.task'     => 'Project',
+		'mrp.bom'          => 'Manufacturing (mrp)',
 	];
 
 	/**

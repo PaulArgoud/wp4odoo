@@ -85,6 +85,8 @@ $GLOBALS['_tribe_attendees']         = [];
 $GLOBALS['_wpas_tickets']            = [];
 $GLOBALS['_supportcandy_tickets']    = [];
 $GLOBALS['_supportcandy_ticketmeta'] = [];
+$GLOBALS['_wc_bundles']              = [];
+$GLOBALS['_wc_composites']           = [];
 
 // ─── Load stubs ─────────────────────────────────────────
 // Stubs must be loaded before the autoloader so that external
@@ -124,6 +126,7 @@ require_once __DIR__ . '/stubs/acf-classes.php';
 require_once __DIR__ . '/stubs/i18n-classes.php';
 require_once __DIR__ . '/stubs/awesome-support-classes.php';
 require_once __DIR__ . '/stubs/supportcandy-classes.php';
+require_once __DIR__ . '/stubs/wc-bundles-classes.php';
 
 // ─── Composer autoloader ────────────────────────────────
 

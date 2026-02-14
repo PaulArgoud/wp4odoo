@@ -876,6 +876,40 @@ if ( ! defined( 'STARTER_STARTER_VERSION' ) ) {
 	define( 'STARTER_STARTER_VERSION', '3.2.8' );
 }
 
+// ─── WC Product Bundles / Composite Products stubs ──────
+
+if ( ! class_exists( 'WC_Bundles' ) ) {
+	class WC_Bundles {}
+}
+
+if ( ! class_exists( 'WC_Composite_Products' ) ) {
+	class WC_Composite_Products {}
+}
+
+if ( ! class_exists( 'WC_Product_Bundle' ) ) {
+	class WC_Product_Bundle extends WC_Product {
+		public function get_type(): string { return 'bundle'; }
+		/** @return WC_Bundled_Item[] */
+		public function get_bundled_items(): array { return []; }
+	}
+}
+
+if ( ! class_exists( 'WC_Bundled_Item' ) ) {
+	class WC_Bundled_Item {
+		public function get_product_id(): int { return 0; }
+		public function get_quantity( string $context = 'min' ): int { return 1; }
+		public function is_optional(): bool { return false; }
+	}
+}
+
+if ( ! class_exists( 'WC_Product_Composite' ) ) {
+	class WC_Product_Composite extends WC_Product {
+		public function get_type(): string { return 'composite'; }
+		/** @return array<int, array<string, mixed>> */
+		public function get_composite_data(): array { return []; }
+	}
+}
+
 // ─── WPML stubs ─────────────────────────────────────────
 
 if ( ! defined( 'ICL_SITEPRESS_VERSION' ) ) {

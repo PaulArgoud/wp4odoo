@@ -10,8 +10,12 @@
 if ( ! function_exists( 'wc_get_product' ) ) {
 	function wc_get_product( $product_id = 0 ) {
 		if ( isset( $GLOBALS['_wc_products'][ $product_id ] ) ) {
+			$data = $GLOBALS['_wc_products'][ $product_id ];
+			if ( $data instanceof WC_Product ) {
+				return $data;
+			}
 			$product = new WC_Product( $product_id );
-			$product->set_data( $GLOBALS['_wc_products'][ $product_id ] );
+			$product->set_data( $data );
 			return $product;
 		}
 		return false;
