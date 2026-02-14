@@ -29,8 +29,8 @@ trait SupportCandy_Hooks {
 		$settings = $this->get_settings();
 
 		if ( ! empty( $settings['sync_tickets'] ) ) {
-			\add_action( 'wpsc_after_create_ticket', [ $this, 'on_ticket_created' ], 10, 1 );
-			\add_action( 'wpsc_set_ticket_status', [ $this, 'on_ticket_status_changed' ], 10, 2 );
+			\add_action( 'wpsc_create_new_ticket', [ $this, 'on_ticket_created' ], 10, 1 );
+			\add_action( 'wpsc_change_ticket_status', [ $this, 'on_ticket_status_changed' ], 10, 4 );
 		}
 	}
 
@@ -61,11 +61,16 @@ trait SupportCandy_Hooks {
 	/**
 	 * Handle ticket status change.
 	 *
-	 * @param mixed  $ticket    Ticket object or array.
-	 * @param string $new_status New status.
+	 * SupportCandy fires wpsc_change_ticket_status with 4 args:
+	 * ($ticket, $prev_status_id, $new_status_id, $customer_id).
+	 *
+	 * @param mixed $ticket        Ticket object.
+	 * @param int   $prev_status   Previous status ID.
+	 * @param int   $new_status    New status ID.
+	 * @param int   $customer_id   Customer ID who changed the status.
 	 * @return void
 	 */
-	public function on_ticket_status_changed( $ticket, string $new_status = '' ): void {
+	public function on_ticket_status_changed( $ticket, int $prev_status = 0, int $new_status = 0, int $customer_id = 0 ): void {
 		if ( $this->is_importing() ) {
 			return;
 		}

@@ -78,7 +78,7 @@ class SupportCandy_Module extends Helpdesk_Module_Base {
 	 * @return void
 	 */
 	public function boot(): void {
-		if ( ! defined( 'STARTER_STARTER_VERSION' ) ) {
+		if ( ! defined( 'WPSC_VERSION' ) ) {
 			$this->logger->warning( __( 'SupportCandy module enabled but SupportCandy is not active.', 'wp4odoo' ) );
 			return;
 		}
@@ -136,7 +136,7 @@ class SupportCandy_Module extends Helpdesk_Module_Base {
 	 * @return array{available: bool, notices: array<array{type: string, message: string}>}
 	 */
 	public function get_dependency_status(): array {
-		return $this->check_dependency( defined( 'STARTER_STARTER_VERSION' ), 'SupportCandy' );
+		return $this->check_dependency( defined( 'WPSC_VERSION' ), 'SupportCandy' );
 	}
 
 	/**

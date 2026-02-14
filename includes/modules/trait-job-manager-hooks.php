@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * WP Job Manager hook callbacks for push operations.
  *
  * Extracted from Job_Manager_Module for single responsibility.
- * Handles job listing save and expiry events.
+ * Handles job listing save events.
  *
  * Expects the using class to provide:
  * - is_importing(): bool           (from Module_Base)
@@ -32,27 +32,5 @@ trait Job_Manager_Hooks {
 	 */
 	public function on_job_save( int $post_id ): void {
 		$this->handle_cpt_save( $post_id, 'job_listing', 'sync_jobs', 'job' );
-	}
-
-	/**
-	 * Handle job listing expiry.
-	 *
-	 * WP Job Manager fires job_listing_expired when a listing expires.
-	 * We enqueue a push to update the Odoo state to 'open' (not recruiting).
-	 *
-	 * @param int $post_id The post ID.
-	 * @return void
-	 */
-	public function on_job_expired( int $post_id ): void {
-		if ( $this->is_importing() ) {
-			return;
-		}
-
-		$settings = $this->get_settings();
-		if ( empty( $settings['sync_jobs'] ) ) {
-			return;
-		}
-
-		$this->enqueue_push( 'job', $post_id );
 	}
 }

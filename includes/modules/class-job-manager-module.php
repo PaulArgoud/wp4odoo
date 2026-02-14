@@ -99,7 +99,6 @@ class Job_Manager_Module extends Module_Base {
 
 		if ( ! empty( $settings['sync_jobs'] ) ) {
 			add_action( 'save_post_job_listing', [ $this, 'on_job_save' ], 10, 1 );
-			add_action( 'job_listing_expired', [ $this, 'on_job_expired' ], 10, 1 );
 		}
 	}
 

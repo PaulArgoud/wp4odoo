@@ -125,7 +125,7 @@ class SupportCandyModuleTest extends TestCase {
 
 	public function test_dependency_available_when_constant_defined(): void {
 		$status = $this->module->get_dependency_status();
-		// STARTER_STARTER_VERSION is defined in test stubs.
+		// WPSC_VERSION is defined in test stubs.
 		$this->assertTrue( $status['available'] );
 	}
 

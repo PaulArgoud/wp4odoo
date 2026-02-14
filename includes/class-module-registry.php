@@ -106,9 +106,18 @@ class Module_Registry {
 			[ 'job_manager', Modules\Job_Manager_Module::class, fn() => defined( 'JOB_MANAGER_VERSION' ) ],
 			[ 'wc_bundle_bom', Modules\WC_Bundle_BOM_Module::class, fn() => class_exists( 'WC_Bundles' ) || class_exists( 'WC_Composite_Products' ) ],
 
+			// Invoicing group.
+			[ 'sprout_invoices', Modules\Sprout_Invoices_Module::class, fn() => class_exists( 'SI_Invoice' ) ],
+			[ 'wp_invoice', Modules\WP_Invoice_Module::class, fn() => class_exists( 'WPI_Invoice' ) ],
+
+			// E-commerce group (secondary).
+			[ 'ecwid', Modules\Ecwid_Module::class, fn() => defined( 'ECWID_PLUGIN_DIR' ) ],
+			[ 'shopwp', Modules\ShopWP_Module::class, fn() => defined( 'SHOPWP_PLUGIN_DIR' ) ],
+			[ 'crowdfunding', Modules\Crowdfunding_Module::class, fn() => function_exists( 'wpneo_crowdfunding_init' ) ],
+
 			// Helpdesk group.
 			[ 'awesome_support', Modules\Awesome_Support_Module::class, fn() => defined( 'WPAS_VERSION' ) ],
-			[ 'supportcandy', Modules\SupportCandy_Module::class, fn() => defined( 'STARTER_STARTER_VERSION' ) ],
+			[ 'supportcandy', Modules\SupportCandy_Module::class, fn() => defined( 'WPSC_VERSION' ) ],
 
 			// Affiliate.
 			[ 'affiliatewp', Modules\AffiliateWP_Module::class, fn() => function_exists( 'affiliate_wp' ) ],

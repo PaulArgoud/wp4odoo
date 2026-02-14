@@ -6,8 +6,8 @@
  */
 
 // Detection constant — SupportCandy uses this constant.
-if ( ! defined( 'STARTER_STARTER_VERSION' ) ) {
-	define( 'STARTER_STARTER_VERSION', '3.2.8' );
+if ( ! defined( 'WPSC_VERSION' ) ) {
+	define( 'WPSC_VERSION', '3.2.8' );
 }
 
 // Global test store for custom table simulation.

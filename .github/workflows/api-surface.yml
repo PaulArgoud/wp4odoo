@@ -1,0 +1,77 @@
+name: API Surface Tests
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Weekly on Monday at 6:00 UTC
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  api-surface:
+    name: Third-Party API Surface
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: zip
+          tools: composer:v2
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Download plugins from WordPress.org
+        run: |
+          mkdir -p /tmp/wp-plugins
+
+          SLUGS=(
+            woocommerce
+            easy-digital-downloads
+            give
+            charitable
+            wp-recipe-maker
+            contact-form-7
+            wpforms-lite
+            fluentform
+            formidable
+            ninja-forms
+            forminator
+            paid-memberships-pro
+            lifterlms
+            the-events-calendar
+            event-tickets
+            ameliabooking
+            bookly-responsive-appointment-booking-tool
+            awesome-support
+            supportcandy
+            wp-job-manager
+            advanced-custom-fields
+            ecwid-shopping-cart
+            wp-crowdfunding
+            wp-invoice
+          )
+
+          for slug in "${SLUGS[@]}"; do
+            echo "::group::$slug"
+            url="https://downloads.wordpress.org/plugin/${slug}.latest-stable.zip"
+            if curl -sfL "$url" -o "/tmp/wp-plugins/${slug}.zip"; then
+              unzip -q "/tmp/wp-plugins/${slug}.zip" -d /tmp/wp-plugins/
+              rm -f "/tmp/wp-plugins/${slug}.zip"
+              echo "OK — downloaded $slug"
+            else
+              echo "::warning::Failed to download $slug from WordPress.org"
+            fi
+            echo "::endgroup::"
+          done
+
+          echo "Downloaded plugins:"
+          ls /tmp/wp-plugins/
+
+      - name: Run API surface tests
+        env:
+          WP4ODOO_PLUGIN_DIR: /tmp/wp-plugins
+        run: php vendor/bin/phpunit -c phpunit-api-surface.xml --no-progress

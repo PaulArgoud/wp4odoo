@@ -130,7 +130,7 @@ class SupportCandyHooksTest extends Module_Test_Case {
 			'odoo_project_id' => 0,
 		];
 
-		$this->module->on_ticket_status_changed( 42, 'closed' );
+		$this->module->on_ticket_status_changed( 42, 1, 3, 1 );
 
 		$this->assertNotEmpty( $this->wpdb->calls );
 	}
@@ -149,7 +149,7 @@ class SupportCandyHooksTest extends Module_Test_Case {
 
 		$initial_call_count = count( $this->wpdb->calls );
 
-		$this->module->on_ticket_status_changed( 42, 'closed' );
+		$this->module->on_ticket_status_changed( 42, 1, 3, 1 );
 
 		$this->assertCount( $initial_call_count, $this->wpdb->calls );
 
@@ -166,7 +166,7 @@ class SupportCandyHooksTest extends Module_Test_Case {
 
 		$initial_call_count = count( $this->wpdb->calls );
 
-		$this->module->on_ticket_status_changed( 0, 'closed' );
+		$this->module->on_ticket_status_changed( 0, 1, 3, 1 );
 
 		$this->assertCount( $initial_call_count, $this->wpdb->calls );
 	}

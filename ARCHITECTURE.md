@@ -710,9 +710,9 @@ Shared abstract base `Helpdesk_Module_Base` extends `Module_Base`, providing dua
 | `Awesome_Support_Hooks` (trait) | Hook callbacks: `wpas_open_ticket_after`, `wpas_after_close_ticket`, `wpas_after_reopen_ticket` |
 | `Awesome_Support_Handler` | CPT-based ticket data load (post meta), status save via `wpas_update_ticket_status()`, priority mapping |
 | `Awesome_Support_Module` | Extends `Helpdesk_Module_Base`: detection `WPAS_VERSION`, exclusive priority 10, 4 settings |
-| `SupportCandy_Hooks` (trait) | Hook callbacks: `wpsc_after_create_ticket`, `wpsc_set_ticket_status` |
+| `SupportCandy_Hooks` (trait) | Hook callbacks: `wpsc_create_new_ticket`, `wpsc_change_ticket_status` |
 | `SupportCandy_Handler` | Custom table data access via `$wpdb` (`wpsc_ticket`, `wpsc_ticketmeta`), priority mapping |
-| `SupportCandy_Module` | Extends `Helpdesk_Module_Base`: detection `STARTER_STARTER_VERSION`, exclusive priority 15, 4 settings |
+| `SupportCandy_Module` | Extends `Helpdesk_Module_Base`: detection `WPSC_VERSION`, exclusive priority 15, 4 settings |
 
 ### 12. Translation Infrastructure (i18n)
 
@@ -1381,7 +1381,7 @@ All user inputs are sanitized with:
 - Status mapping: `publish` → `recruit`, `expired`/`filled` → `open` (filterable via `wp4odoo_job_manager_status_map` / `wp4odoo_job_manager_reverse_status_map`)
 - Department pull: Odoo `department_id` Many2one → `job_listing_category` taxonomy term
 - Description builder: post content + location + company meta (same `\n\n` pattern as WPRM)
-- Hooks: `save_post_job_listing`, `job_listing_expired`
+- Hooks: `save_post_job_listing` (WP Job Manager cron handles expiry via post status change, caught by the same hook)
 
 **Settings:** `sync_jobs`, `pull_jobs`
 
