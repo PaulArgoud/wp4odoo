@@ -203,4 +203,46 @@ final class Odoo_Accounting_Formatter {
 			],
 		];
 	}
+
+	/**
+	 * Auto-post or auto-validate a record in Odoo.
+	 *
+	 * Centralizes the post/validate logic for all accounting models:
+	 * - `donation.donation` → calls `validate`
+	 * - `account.move` (and any other model) → calls `action_post`
+	 *
+	 * @since 3.1.0
+	 *
+	 * @param \WP4Odoo\API\Odoo_Client $client  Odoo API client.
+	 * @param string                    $model   Odoo model name.
+	 * @param int                       $odoo_id Odoo record ID.
+	 * @param \WP4Odoo\Logger           $logger  Logger instance.
+	 * @return bool True on success.
+	 */
+	public static function auto_post( $client, string $model, int $odoo_id, $logger ): bool {
+		$method = 'donation.donation' === $model ? 'validate' : 'action_post';
+
+		try {
+			$client->execute( $model, $method, [ [ $odoo_id ] ] );
+			$logger->info(
+				'Auto-posted record in Odoo.',
+				[
+					'model'   => $model,
+					'method'  => $method,
+					'odoo_id' => $odoo_id,
+				]
+			);
+			return true;
+		} catch ( \Exception $e ) {
+			$logger->warning(
+				'Could not auto-post record.',
+				[
+					'model'   => $model,
+					'odoo_id' => $odoo_id,
+					'error'   => $e->getMessage(),
+				]
+			);
+			return false;
+		}
+	}
 }

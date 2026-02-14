@@ -182,4 +182,54 @@ class OdooAccountingFormatterTest extends TestCase {
 		$this->assertSame( 50.0, $lines[0][2]['price_unit'] );
 	}
 
+	// ─── auto_post ────────────────────────────────────
+
+	public function test_auto_post_calls_action_post_for_account_move(): void {
+		$client = new class {
+			public array $calls = [];
+			public function execute( string $model, string $method, array $args ): bool {
+				$this->calls[] = [ $model, $method, $args ];
+				return true;
+			}
+		};
+		$logger = new \WP4Odoo\Logger( 'test' );
+
+		$result = Odoo_Accounting_Formatter::auto_post( $client, 'account.move', 42, $logger );
+
+		$this->assertTrue( $result );
+		$this->assertSame( 'account.move', $client->calls[0][0] );
+		$this->assertSame( 'action_post', $client->calls[0][1] );
+		$this->assertSame( [ [ 42 ] ], $client->calls[0][2] );
+	}
+
+	public function test_auto_post_calls_validate_for_donation_model(): void {
+		$client = new class {
+			public array $calls = [];
+			public function execute( string $model, string $method, array $args ): bool {
+				$this->calls[] = [ $model, $method, $args ];
+				return true;
+			}
+		};
+		$logger = new \WP4Odoo\Logger( 'test' );
+
+		$result = Odoo_Accounting_Formatter::auto_post( $client, 'donation.donation', 99, $logger );
+
+		$this->assertTrue( $result );
+		$this->assertSame( 'donation.donation', $client->calls[0][0] );
+		$this->assertSame( 'validate', $client->calls[0][1] );
+	}
+
+	public function test_auto_post_returns_false_on_exception(): void {
+		$client = new class {
+			public function execute( string $model, string $method, array $args ): never {
+				throw new \RuntimeException( 'Odoo down' );
+			}
+		};
+		$logger = new \WP4Odoo\Logger( 'test' );
+
+		$result = Odoo_Accounting_Formatter::auto_post( $client, 'account.move', 42, $logger );
+
+		$this->assertFalse( $result );
+	}
+
 }

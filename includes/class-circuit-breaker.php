@@ -109,13 +109,22 @@ class Circuit_Breaker {
 		$opened_at = (int) get_transient( self::KEY_OPENED_AT );
 
 		// Fallback: if transient was lost (cache flush), check DB.
+		// Concurrent restorations are harmless — all processes read the
+		// same DB state and set_transient is idempotent with same values.
 		if ( 0 === $opened_at ) {
 			$db_state  = get_option( self::OPT_CB_STATE, [] );
 			$opened_at = (int) ( is_array( $db_state ) ? ( $db_state['opened_at'] ?? 0 ) : 0 );
 			if ( $opened_at > 0 ) {
-				// Restore transients from DB state.
-				set_transient( self::KEY_OPENED_AT, $opened_at, HOUR_IN_SECONDS );
-				set_transient( self::KEY_FAILURES, (int) ( $db_state['failures'] ?? self::FAILURE_THRESHOLD ), HOUR_IN_SECONDS );
+				// Discard stale DB state (older than 1h) — prevents a
+				// forever-open circuit if record_success() was never called.
+				if ( ( time() - $opened_at ) > HOUR_IN_SECONDS ) {
+					delete_option( self::OPT_CB_STATE );
+					$opened_at = 0;
+				} else {
+					// Restore transients from DB state.
+					set_transient( self::KEY_OPENED_AT, $opened_at, HOUR_IN_SECONDS );
+					set_transient( self::KEY_FAILURES, (int) ( $db_state['failures'] ?? self::FAILURE_THRESHOLD ), HOUR_IN_SECONDS );
+				}
 			}
 		}
 

@@ -112,33 +112,12 @@ abstract class Dual_Accounting_Module_Base extends Module_Base {
 			return;
 		}
 
-		$model  = $this->odoo_models[ $entity_key ];
-		$method = Odoo_Model::Donation->value === $model ? 'validate' : 'action_post';
-
-		try {
-			$this->client()->execute(
-				$model,
-				$method,
-				[ [ $odoo_id ] ]
-			);
-			$this->logger->info(
-				'Auto-validated entity in Odoo.',
-				[
-					'wp_id'   => $wp_id,
-					'odoo_id' => $odoo_id,
-					'model'   => $model,
-				]
-			);
-		} catch ( \Exception $e ) {
-			$this->logger->warning(
-				'Could not auto-validate entity.',
-				[
-					'wp_id'   => $wp_id,
-					'odoo_id' => $odoo_id,
-					'error'   => $e->getMessage(),
-				]
-			);
-		}
+		Odoo_Accounting_Formatter::auto_post(
+			$this->client(),
+			$this->odoo_models[ $entity_key ],
+			$odoo_id,
+			$this->logger
+		);
 	}
 
 	// ─── Subclass configuration ─────────────────────────────

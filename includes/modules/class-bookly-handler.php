@@ -56,7 +56,7 @@ class Bookly_Handler {
 		$table = $wpdb->prefix . 'bookly_services';
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix.
-		$rows = $wpdb->get_results( "SELECT id, title, info, price, duration FROM {$table}", ARRAY_A );
+		$rows = $wpdb->get_results( "SELECT id, title, info, price, duration FROM {$table} LIMIT 50000", ARRAY_A );
 
 		if ( ! $rows ) {
 			return [];
@@ -96,7 +96,7 @@ class Bookly_Handler {
 			'a.service_id, a.start_date, a.end_date, a.internal_note ' .
 			"FROM {$ca_table} ca " . // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			"INNER JOIN {$apt_table} a ON ca.appointment_id = a.id " . // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			"WHERE ca.status IN ('approved', 'done')",
+			"WHERE ca.status IN ('approved', 'done') LIMIT 50000",
 			ARRAY_A
 		);
 

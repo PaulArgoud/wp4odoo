@@ -106,7 +106,7 @@ class CircuitBreakerTest extends TestCase {
 		$GLOBALS['_wp_transients']['wp4odoo_cb_opened_at'] = time() - 301;
 
 		// Advisory lock NOT acquired (another process holds it).
-		$wpdb->get_var_return = '0';
+		$wpdb->lock_return = '0';
 
 		$this->assertFalse( $this->breaker->is_available() );
 	}

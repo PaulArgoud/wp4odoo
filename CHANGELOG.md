@@ -64,6 +64,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Module_Registry::get_booted_count()** — New public method returning count of booted modules (used by health endpoint)
 
 ### Fixed
+- **Retryable_Http** — HTTP 429 (Too Many Requests) responses now trigger retry with backoff, same as 5xx errors (was previously treated as a non-retryable client error)
+- **Partner_Service** — `get_or_create()` now returns `null` (letting Sync_Engine retry) when the advisory lock cannot be acquired, instead of proceeding without lock protection (race condition risk)
+- **Circuit_Breaker** — Stale DB fallback state (older than 1 hour) is now cleaned up automatically in `is_available()`, preventing a forever-open circuit if `record_success()` was never called
+- **Entity_Map_Repository** — LRU cache eviction now removes orphaned bidirectional entries: when `wp:X → Y` is evicted but `odoo:Y → X` survives (or vice versa), the orphan is cleaned up to prevent stale lookups
+- **Failure_Notifier** — `last_failure_email` timestamp is now saved BEFORE calling `wp_mail()` (was after), narrowing the race window where concurrent processes could both send duplicate notification emails
+- **Odoo_Accounting_Formatter** — New `auto_post()` static method unifies the auto-post/auto-validate logic (donation.donation → `validate`, account.move → `action_post`). `Module_Helpers::auto_post_invoice()` and `Dual_Accounting_Module_Base::auto_validate()` now delegate to this single implementation
+- **Polling queries** — `Entity_Map_Repository::get_module_entity_mappings()`, `Bookly_Handler::get_all_services()`, and `Bookly_Handler::get_active_bookings()` now include `LIMIT 50000` safety bounds to prevent unbounded result sets on high-volume sites
 - **Webhook_Handler** — `Queue_Manager::pull()` now wrapped in try/catch: on exception, logs CRITICAL, fires `wp4odoo_webhook_enqueue_failed` action, returns 503 (was uncaught → 500 with lost payload)
 - **Odoo_Client::is_session_error()** — Replaced broad `str_contains($message, '403')` with word-boundary regex `/\bhttp\s*403\b|\b403\s*forbidden\b/` to prevent false positives (e.g. "Product #1403"). Added `$e->getCode() === 403` check first
 - **Database_Migration::migration_5()** — Index replacement now uses atomic `ALTER TABLE ... DROP KEY, ADD KEY` (single statement). Previously dropped index before adding replacement, risking index loss on failure

@@ -58,7 +58,7 @@ trait Retryable_Http {
 
 		$status_code = wp_remote_retrieve_response_code( $response );
 
-		if ( $status_code >= 500 ) {
+		if ( 429 === $status_code || $status_code >= 500 ) {
 			$error_msg = sprintf(
 				/* translators: 1: HTTP status code, 2: endpoint */
 				__( 'Server error HTTP %1$d on %2$s.', 'wp4odoo' ),

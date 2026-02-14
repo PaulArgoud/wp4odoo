@@ -33,7 +33,7 @@ class SyncEngineTest extends TestCase {
 
 	public function test_process_queue_returns_zero_when_lock_not_acquired(): void {
 		// GET_LOCK() returns '0' when lock cannot be acquired.
-		$this->wpdb->get_var_return = '0';
+		$this->wpdb->lock_return = '0';
 
 		$engine    = new Sync_Engine( wp4odoo_test_module_resolver(), wp4odoo_test_queue_repo(), wp4odoo_test_settings() );
 		$processed = $engine->process_queue();

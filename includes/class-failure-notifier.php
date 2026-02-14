@@ -111,6 +111,12 @@ class Failure_Notifier {
 			admin_url( 'admin.php?page=wp4odoo-settings&tab=queue' )
 		);
 
+		// Save timestamp BEFORE sending to prevent duplicate emails under
+		// concurrency: two processes could both pass the cooldown check and
+		// both call wp_mail() before either saves. Saving first narrows the
+		// race window. If wp_mail() fails, the next cooldown cycle retries.
+		$this->settings->save_last_failure_email( time() );
+
 		if ( ! wp_mail( $admin_email, $subject, $message ) ) {
 			$this->logger->error(
 				'Failed to send failure notification email.',
@@ -118,8 +124,6 @@ class Failure_Notifier {
 			);
 			return;
 		}
-
-		$this->settings->save_last_failure_email( time() );
 
 		$this->logger->warning(
 			'Failure notification sent to admin.',

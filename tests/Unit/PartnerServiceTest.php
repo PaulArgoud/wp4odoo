@@ -190,6 +190,16 @@ class PartnerServiceTest extends TestCase {
 		$this->assertEmpty( $this->client->calls );
 	}
 
+	public function test_get_or_create_returns_null_when_lock_fails(): void {
+		$this->wpdb->get_var_return = null;
+		$this->wpdb->lock_return    = '0';
+
+		$result = $this->service->get_or_create( 'locked@example.com', [], 10 );
+
+		$this->assertNull( $result );
+		$this->assertEmpty( $this->client->calls );
+	}
+
 	// ─── get_or_create_batch() ────────────────────────────
 
 	public function test_batch_returns_cached_mapping_without_odoo_call(): void {

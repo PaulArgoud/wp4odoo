@@ -370,9 +370,11 @@ class Entity_Map_Repository {
 
 		$table = $wpdb->prefix . 'wp4odoo_entity_map';
 
+		// Safety LIMIT prevents loading unbounded rows on high-volume sites.
+		// Polling modules (Bookly, Ecwid) typically have < 10k entities.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT wp_id, odoo_id, sync_hash FROM {$table} WHERE module = %s AND entity_type = %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				"SELECT wp_id, odoo_id, sync_hash FROM {$table} WHERE module = %s AND entity_type = %s LIMIT 50000", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
 				$module,
 				$entity_type
 			)
@@ -425,6 +427,33 @@ class Entity_Map_Repository {
 		}
 
 		// Keep the most recent half of entries.
-		$this->cache = array_slice( $this->cache, (int) ( self::MAX_CACHE_SIZE / 2 ), null, true );
+		$kept = array_slice( $this->cache, (int) ( self::MAX_CACHE_SIZE / 2 ), null, true );
+
+		// Remove orphaned entries whose bidirectional partner was evicted.
+		// Each mapping has two keys: "mod:type:wp:X" ↔ "mod:type:odoo:Y".
+		// If one side was evicted, discard the surviving orphan to prevent
+		// stale lookups on the remaining direction.
+		foreach ( $kept as $key => $value ) {
+			if ( null === $value ) {
+				continue;
+			}
+
+			$wp_pos   = strrpos( $key, ':wp:' );
+			$odoo_pos = strrpos( $key, ':odoo:' );
+
+			if ( false !== $wp_pos ) {
+				$partner = substr( $key, 0, $wp_pos ) . ':odoo:' . $value;
+			} elseif ( false !== $odoo_pos ) {
+				$partner = substr( $key, 0, $odoo_pos ) . ':wp:' . $value;
+			} else {
+				continue;
+			}
+
+			if ( ! array_key_exists( $partner, $kept ) ) {
+				unset( $kept[ $key ] );
+			}
+		}
+
+		$this->cache = $kept;
 	}
 }

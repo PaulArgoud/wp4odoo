@@ -110,33 +110,12 @@ trait Module_Helpers {
 			return false;
 		}
 
-		try {
-			$this->client()->execute(
-				Odoo_Model::AccountMove->value,
-				'action_post',
-				[ [ $odoo_id ] ]
-			);
-			$this->logger->info(
-				'Auto-posted invoice in Odoo.',
-				[
-					'entity_type' => $entity_type,
-					'wp_id'       => $wp_id,
-					'odoo_id'     => $odoo_id,
-				]
-			);
-			return true;
-		} catch ( \Exception $e ) {
-			$this->logger->warning(
-				'Could not auto-post invoice.',
-				[
-					'entity_type' => $entity_type,
-					'wp_id'       => $wp_id,
-					'odoo_id'     => $odoo_id,
-					'error'       => $e->getMessage(),
-				]
-			);
-			return false;
-		}
+		return Modules\Odoo_Accounting_Formatter::auto_post(
+			$this->client(),
+			Odoo_Model::AccountMove->value,
+			$odoo_id,
+			$this->logger
+		);
 	}
 
 	/**

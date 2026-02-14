@@ -25,6 +25,9 @@ class WP_DB_Stub {
 	/** @var string Table name pattern to match for insert_throws (empty = all tables). */
 	public string $insert_throws_table = '';
 
+	/** @var string Return value for GET_LOCK/RELEASE_LOCK queries ('1' = success, '0' = failure). */
+	public string $lock_return = '1';
+
 	/** @var mixed */
 	public $get_var_return = null;
 	/** @var array|object|null */
@@ -44,6 +47,12 @@ class WP_DB_Stub {
 	/** @return mixed */
 	public function get_var( $query ) {
 		$this->calls[] = [ 'method' => 'get_var', 'args' => [ $query ] ];
+
+		// Advisory locks return configurable value (default: success).
+		if ( is_string( $query ) && ( str_contains( $query, 'GET_LOCK' ) || str_contains( $query, 'RELEASE_LOCK' ) ) ) {
+			return $this->lock_return;
+		}
+
 		return $this->get_var_return;
 	}
 
@@ -95,6 +104,7 @@ class WP_DB_Stub {
 
 	public function reset(): void {
 		$this->calls              = [];
+		$this->lock_return        = '1';
 		$this->get_var_return     = null;
 		$this->get_row_return     = null;
 		$this->get_results_return = [];

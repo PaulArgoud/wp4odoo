@@ -213,7 +213,11 @@ class Partner_Service {
 		);
 
 		if ( '1' !== (string) $locked ) {
-			$this->logger->warning( 'Could not acquire partner lock, proceeding without lock.', [ 'email' => $email ] );
+			$this->logger->warning(
+				'Could not acquire partner lock — returning null to let Sync_Engine retry.',
+				[ 'email' => $email ]
+			);
+			return null;
 		}
 
 		try {
