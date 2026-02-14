@@ -39,11 +39,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Circuit_Breaker** — State now persisted to `wp_options` (DB fallback) so the circuit stays open during Odoo outages even when object cache (Redis/Memcached) is flushed. `PROBE_TTL` increased from 60 s to 120 s to prevent concurrent probe batches
+- **Circuit_Breaker::record_failure()** — MySQL advisory lock (`GET_LOCK('wp4odoo_cb_failure')`) around failure counting prevents lost increments under concurrent queue workers
 - **Module_Base::push_to_odoo()** — Mapping save failure on update path now returns `Sync_Result::failure(Transient)` (was silent — asymmetric with create path)
 - **Partner_Service::get_or_create()** — MySQL advisory lock (`GET_LOCK`) around search+create prevents duplicate partner creation under concurrent queue workers
 - **Sync_Engine / Sync_Queue_Repository** — Processing start time recorded in `processed_at` when job status → `processing`; stale job recovery now uses `processed_at` (not `created_at`) for accurate timeout detection
+- **Sync_Engine** — Early memory check (`is_memory_exhausted()`) now runs before `fetch_pending()`, preventing OOM when loading a large batch into memory
 - **Sync_Queue_Repository::enqueue()** — Dedup WHERE clause includes both `wp_id` AND `odoo_id` when both are known (was exclusive OR, allowing near-duplicates)
 - **Odoo_Client** — Timeout fallback uses `??` instead of `?:` (0 is a valid timeout value, not falsy)
+- **Odoo_Client** — Automatic re-authentication on session errors (HTTP 403, expired session, access denied): detects session-related exceptions, resets transport, re-authenticates, and retries the call once
+- **Booking_Module_Base** — Replaced `?:` (elvis) operator with explicit `!empty()` check for service name fallback — `?:` would incorrectly fall through on `'0'`
+- **WP All Import hooks** — Added `is_importing()` anti-loop guard to `on_post_saved()` preventing re-enqueue during Odoo pull
+- **Image_Handler** — Added `MAX_IMAGE_BYTES` (10 MB) size limit before `base64_decode()` to prevent OOM on oversized Odoo image fields
 
 ### Changed
 - **Settings_Repository** — Instance-level cache (`$cache`) for `get_connection()`, `get_sync_settings()`, `get_log_settings()` — avoids repeated `get_option()` calls within the same request. Cache invalidated on save
@@ -52,6 +58,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **LMS_Helpers trait** — Extracted shared enrollment loading logic (decode synthetic ID → load enrollment → resolve partner → resolve course product → format sale order) from LearnDash and LifterLMS modules into `trait-lms-helpers.php`. Both modules now delegate via callable parameters instead of duplicating 33 lines each
 - **WooCommerce module** — `sync_translations` setting migrated from boolean to array of language codes (backward compatible). UI replaced from checkbox to interactive language detection panel
 - **WC_Pull_Coordinator** — `flush_translations()` extended to flush category and attribute value translations alongside product translations. New accumulators: `pulled_categories`, `pulled_attribute_values`
+- **Module_Base** — `$entity_map` and `$settings_repo` changed from `private` to `protected`, allowing subclass access (WP All Import module no longer needs redundant refs)
+- **Entity_Map_Repository** — Cache eviction upgraded from FIFO to true LRU: `get_odoo_id()` and `get_wp_id()` move accessed entries to end of array on hit
+- **Database_Migration** — New migration 5: composite index `idx_wp_lookup (module, entity_type, wp_id)` replaces `(entity_type, wp_id)` on entity_map; added `idx_status_created (status, created_at)` on sync_queue for cleanup queries
+- **WooCommerce_Hooks** — Callback-level settings checks: `on_product_save()` checks `sync_products`, `on_new_order()`/`on_order_status_changed()` check `sync_orders` before enqueuing
+- **Job_Manager_Handler** — Status mapping refactored to use `Status_Mapper::resolve()` for consistency with all other handlers
+- **WPAI_Hooks / WooCommerce_Hooks** — Added debug logging for skipped records (unrouted post types, disabled modules, disabled sync settings)
 
 ## [3.0.0] - 2026-02-13
 

@@ -22,7 +22,7 @@ WordPress For Odoo/
 │   │   ├── interface-transport.php         # Transport interface (authenticate, execute_kw, get_uid)
 │   │   ├── class-odoo-transport-base.php  # Abstract base: shared properties, constructor, ensure_authenticated()
 │   │   ├── trait-retryable-http.php       # Retryable_Http trait (single-attempt HTTP POST, fail-fast for queue-level retry)
-│   │   ├── class-odoo-client.php          # High-level client (CRUD, search, fields_get, reset())
+│   │   ├── class-odoo-client.php          # High-level client (CRUD, search, fields_get, reset(), session re-auth on 403)
 │   │   ├── class-odoo-jsonrpc.php         # JSON-RPC 2.0 transport (Odoo 17+) extends Odoo_Transport_Base
 │   │   ├── class-odoo-xmlrpc.php          # XML-RPC transport (legacy) extends Odoo_Transport_Base
 │   │   └── class-odoo-auth.php            # Auth, API key encryption (+ credential cache), connection testing
@@ -459,6 +459,7 @@ Module_Base (abstract)
 - All other modules are independent and can coexist freely (LMS, Subscriptions, Points & Rewards, Events, Booking, Donations, Forms, WPRM, Crowdfunding).
 
 **Module_Base provides:**
+- Protected properties: `$entity_map` (`Entity_Map_Repository`), `$settings_repo` (`Settings_Repository`) — accessible by subclasses for cross-module lookups (e.g. WP All Import meta-module)
 - Push/Pull orchestration: `push_to_odoo()` returns `Sync_Result` (value object with success, odoo_id, error, Error_Type), `pull_from_odoo()` returns `Sync_Result`
 - Entity mapping CRUD: `get_mapping()`, `save_mapping()`, `get_wp_mapping()`, `remove_mapping()` (delegates to `Entity_Map_Repository`)
 - Data transformation: `map_to_odoo()`, `map_from_odoo()`, `generate_sync_hash()`
@@ -577,6 +578,8 @@ POST /jsonrpc           POST /xmlrpc/2/common (auth)
 
 `Retryable_Http` provides `http_post_with_retry()` — single-attempt HTTP POST with TCP keep-alive. Fails immediately on WP_Error or HTTP 5xx, letting the `Sync_Engine` handle retry via queue-level exponential backoff. This avoids blocking the queue processor with in-process `usleep()`.
 
+`Odoo_Client::call()` includes automatic session re-authentication: if an API call throws a session-related error (HTTP 403, "session expired", "access denied"), the client resets the transport, re-authenticates, and retries the call once. This handles long-running batch processing where Odoo sessions may expire mid-sync.
+
 The protocol is configurable in options (`wp4odoo_connection.protocol`). JSON-RPC is the default for Odoo 17+.
 
 ### 5. Entity Mapping
@@ -599,7 +602,7 @@ The `wp4odoo_entity_map` table maintains the correspondence between WordPress an
 - `odoo_model` stores the Odoo model name (e.g. `res.partner`) for reverse lookups
 - `sync_hash` (SHA-256 of data) to detect changes without making an API call
 - `last_synced_at` tracks when the mapping was last synchronized
-- Fast lookup in both directions via separate indexes (`idx_wp_lookup`, `idx_odoo_lookup`)
+- Fast lookup in both directions via separate indexes: `idx_wp_lookup (module, entity_type, wp_id)`, `idx_odoo_lookup (entity_type, odoo_id)` — migration_5 added `module` prefix to `idx_wp_lookup`
 - Per-request static cache with LRU eviction (`MAX_CACHE_SIZE = 2000`, drops oldest half when exceeded)
 
 ### 6. Query Service (Data Access Layer)
@@ -631,7 +634,7 @@ The codebase uses a tiered error-handling strategy. Each tier is appropriate for
 - **Modules**: return `Sync_Result` from push/pull, `null` from ID lookups, `0` from failed saves.
 - **Infrastructure**: throw for configuration errors, use typed returns for data access.
 
-> **Note:** `Image_Handler::pull_image()` returns `bool` (true if image was updated, false if unchanged or failed). This is the only handler that uses a boolean return — it acts as a side-effect operation (download + attach to WP media library) rather than a data transformer, so `Sync_Result` would be over-engineered. The caller (`WooCommerce_Module`) logs accordingly.
+> **Note:** `Image_Handler::pull_image()` returns `bool` (true if image was updated, false if unchanged or failed). This is the only handler that uses a boolean return — it acts as a side-effect operation (download + attach to WP media library) rather than a data transformer, so `Sync_Result` would be over-engineered. The caller (`WooCommerce_Module`) logs accordingly. A `MAX_IMAGE_BYTES` guard (10 MB) rejects oversized base64 image data before decoding to prevent OOM.
 
 ### 8. Shared Accounting Infrastructure
 
@@ -769,11 +772,12 @@ Managed via `dbDelta()` in `Database_Migration::create_tables()`. Schema upgrade
 - Retry/cleanup index: `(status, attempts)` — added by migration_2
 - Time-range index: `(created_at)` — added by migration_2
 - Processed status index: `(status, processed_at)` — added by migration_4 (health metrics)
+- Cleanup index: `(status, created_at)` — added by migration_5
 - Correlation index: `(correlation_id)` — added by migration_1
 
 **`{prefix}wp4odoo_entity_map`** — WP ↔ Odoo mapping
 - Unique: `(module, entity_type, wp_id, odoo_id)`
-- WP lookup: `(entity_type, wp_id)`
+- WP lookup: `(module, entity_type, wp_id)` — migration_5 added `module` prefix
 - Odoo lookup: `(odoo_model, odoo_id)`
 
 **`{prefix}wp4odoo_logs`** — Structured logs
@@ -954,7 +958,9 @@ All user inputs are sanitized with:
 - **Category pull**: `Product_Handler` resolves Odoo `categ_id` Many2one to WP `product_cat` terms during product pull; `WC_Pull_Coordinator` accumulates category mappings for translation flush
 - **Attribute value translation**: `Variant_Handler` tracks attribute value Odoo IDs in `entity_map`; accumulated per-taxonomy for translated term name pull
 
-**Settings:** `sync_products`, `sync_orders`, `sync_stock`, `sync_product_images`, `sync_pricelist`, `sync_shipments`, `convert_currency`, `auto_confirm_orders`
+**Settings:** `sync_products`, `sync_orders`, `sync_stock`, `sync_product_images`, `sync_pricelist`, `sync_shipments`, `convert_currency`, `auto_confirm_orders` — `sync_products` and `sync_orders` are checked at callback level (each hook checks the relevant setting before enqueuing)
+
+
 
 ### EDD — COMPLETE
 

@@ -228,38 +228,60 @@ class Circuit_Breaker {
 	 * Record a failed batch (failure ratio at or above threshold).
 	 *
 	 * Increments the failure counter and opens the circuit when the
-	 * consecutive failure threshold is reached.
+	 * consecutive failure threshold is reached. Uses an advisory lock
+	 * to prevent lost increments when concurrent workers report failures
+	 * after an object cache flush.
 	 *
 	 * @param int $successes Batch successes (for logging).
 	 * @param int $failures  Batch failures (for logging).
 	 * @return void
 	 */
 	public function record_failure( int $successes = 0, int $failures = 0 ): void {
-		$count = (int) get_transient( self::KEY_FAILURES ) + 1;
-		set_transient( self::KEY_FAILURES, $count, HOUR_IN_SECONDS );
+		global $wpdb;
 
-		if ( $count >= self::FAILURE_THRESHOLD ) {
-			$now = time();
-			set_transient( self::KEY_OPENED_AT, $now, HOUR_IN_SECONDS );
+		// Advisory lock prevents concurrent workers from losing increments
+		// (read-increment-write race after object cache flush).
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$locked = $wpdb->get_var(
+			$wpdb->prepare( 'SELECT GET_LOCK( %s, %d )', 'wp4odoo_cb_failure', 0 )
+		);
 
-			// Persist to DB so state survives object cache flushes.
-			update_option(
-				self::OPT_CB_STATE,
-				[
-					'opened_at' => $now,
-					'failures'  => $count,
-				]
-			);
+		// If lock not acquired, proceed without atomicity — a lost increment
+		// is acceptable (worst case: circuit opens one batch later).
+		try {
+			$count = (int) get_transient( self::KEY_FAILURES ) + 1;
+			set_transient( self::KEY_FAILURES, $count, HOUR_IN_SECONDS );
 
-			$this->logger->warning(
-				'Circuit breaker opened: Odoo appears unreachable.',
-				[
-					'consecutive_batch_failures' => $count,
-					'last_batch_successes'       => $successes,
-					'last_batch_failures'        => $failures,
-					'recovery_delay_seconds'     => self::RECOVERY_DELAY,
-				]
-			);
+			if ( $count >= self::FAILURE_THRESHOLD ) {
+				$now = time();
+				set_transient( self::KEY_OPENED_AT, $now, HOUR_IN_SECONDS );
+
+				// Persist to DB so state survives object cache flushes.
+				update_option(
+					self::OPT_CB_STATE,
+					[
+						'opened_at' => $now,
+						'failures'  => $count,
+					]
+				);
+
+				$this->logger->warning(
+					'Circuit breaker opened: Odoo appears unreachable.',
+					[
+						'consecutive_batch_failures' => $count,
+						'last_batch_successes'       => $successes,
+						'last_batch_failures'        => $failures,
+						'recovery_delay_seconds'     => self::RECOVERY_DELAY,
+					]
+				);
+			}
+		} finally {
+			if ( '1' === (string) $locked ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+				$wpdb->get_var(
+					$wpdb->prepare( 'SELECT RELEASE_LOCK( %s )', 'wp4odoo_cb_failure' )
+				);
+			}
 		}
 	}
 }

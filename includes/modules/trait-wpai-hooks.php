@@ -49,6 +49,10 @@ trait WPAI_Hooks {
 	 * @return void
 	 */
 	public function on_post_saved( int $post_id, $xml_node, bool $is_update ): void {
+		if ( $this->is_importing() ) {
+			return;
+		}
+
 		$post_type = get_post_type( $post_id );
 
 		if ( ! $post_type ) {
@@ -58,12 +62,14 @@ trait WPAI_Hooks {
 		$routing = $this->get_routing_table();
 
 		if ( ! isset( $routing[ $post_type ] ) ) {
+			$this->logger->debug( "WPAI: skipping unrouted post type '{$post_type}'.", [ 'post_id' => $post_id ] );
 			return;
 		}
 
 		[ $module_id, $entity_type ] = $routing[ $post_type ];
 
 		if ( ! $this->is_target_module_enabled( $module_id ) ) {
+			$this->logger->debug( "WPAI: target module '{$module_id}' is disabled, skipping.", [ 'post_id' => $post_id ] );
 			return;
 		}
 

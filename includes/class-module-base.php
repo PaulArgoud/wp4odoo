@@ -101,6 +101,12 @@ abstract class Module_Base {
 	 * blocking hook callbacks on unrelated module B. Each module sets its
 	 * own flag via mark_importing() / clear_importing().
 	 *
+	 * LIMITATION: This flag is process-local (PHP static). In concurrent
+	 * PHP-FPM workers, process A pulling from Odoo cannot prevent process B
+	 * from re-enqueuing via a WP hook. The queue's dedup mechanism
+	 * (SELECT…FOR UPDATE in Sync_Queue_Repository::enqueue()) is the
+	 * definitive safety net against duplicate jobs.
+	 *
 	 * @var array<string, bool>
 	 */
 	private static array $importing = [];
@@ -115,16 +121,23 @@ abstract class Module_Base {
 	/**
 	 * Entity map repository (injected by Module_Registry).
 	 *
+	 * Accessible to subclasses for cross-module lookups (e.g. WPAI routing,
+	 * meta-modules). Direct entity mapping should use the public get_mapping()
+	 * / save_mapping() / remove_mapping() methods instead.
+	 *
 	 * @var Entity_Map_Repository
 	 */
-	private Entity_Map_Repository $entity_map;
+	protected Entity_Map_Repository $entity_map;
 
 	/**
 	 * Settings repository (injected by Module_Registry).
 	 *
+	 * Accessible to subclasses for cross-module settings checks (e.g. WPAI
+	 * verifying whether a target module is enabled).
+	 *
 	 * @var Settings_Repository
 	 */
-	private Settings_Repository $settings_repo;
+	protected Settings_Repository $settings_repo;
 
 	/**
 	 * Constructor.
@@ -563,6 +576,10 @@ abstract class Module_Base {
 	 *
 	 * Modules should call this at the top of every WP hook callback
 	 * to prevent re-enqueuing during a pull operation (anti-loop).
+	 *
+	 * NOTE: This is process-local only. In multi-process environments
+	 * (PHP-FPM), the queue dedup mechanism provides the definitive
+	 * safety net. See $importing property docblock for details.
 	 *
 	 * @return bool True if this module has a pull/import in progress.
 	 */

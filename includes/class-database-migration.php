@@ -62,7 +62,8 @@ final class Database_Migration {
 			KEY idx_dedup_odoo (module, entity_type, direction, status, odoo_id),
 			KEY idx_wp_id (wp_id),
 			KEY idx_odoo_id (odoo_id),
-			KEY idx_correlation (correlation_id)
+			KEY idx_correlation (correlation_id),
+			KEY idx_status_created (status, created_at)
 		) $charset_collate;
 
 		CREATE TABLE IF NOT EXISTS {$wpdb->prefix}wp4odoo_entity_map (
@@ -77,7 +78,7 @@ final class Database_Migration {
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
 			UNIQUE KEY idx_unique_mapping (module, entity_type, wp_id, odoo_id),
-			KEY idx_wp_lookup (entity_type, wp_id),
+			KEY idx_wp_lookup (module, entity_type, wp_id),
 			KEY idx_odoo_lookup (module, entity_type, odoo_id)
 		) $charset_collate;
 
@@ -149,6 +150,7 @@ final class Database_Migration {
 			2 => [ self::class, 'migration_2' ],
 			3 => [ self::class, 'migration_3' ],
 			4 => [ self::class, 'migration_4' ],
+			5 => [ self::class, 'migration_5' ],
 		];
 	}
 
@@ -251,6 +253,41 @@ final class Database_Migration {
 
 		if ( ! in_array( 'idx_processed_status', $names, true ) ) {
 			$wpdb->query( "ALTER TABLE {$queue_table} ADD KEY idx_processed_status (status, processed_at)" );
+		}
+		// phpcs:enable
+	}
+
+	/**
+	 * Migration 5: Optimize entity_map wp_lookup index and add sync_queue cleanup index.
+	 *
+	 * - idx_wp_lookup: adds `module` prefix column for queries that filter by module first.
+	 * - idx_status_created: covers `WHERE status = … AND created_at < …` cleanup queries.
+	 *
+	 * @return void
+	 */
+	private static function migration_5(): void {
+		global $wpdb;
+
+		$entity_table = $wpdb->prefix . 'wp4odoo_entity_map';
+		$queue_table  = $wpdb->prefix . 'wp4odoo_sync_queue';
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.SchemaChange
+
+		// Replace idx_wp_lookup (entity_type, wp_id) with (module, entity_type, wp_id).
+		$indexes = $wpdb->get_results( "SHOW INDEX FROM {$entity_table}" );
+		$names   = array_column( $indexes, 'Key_name' );
+
+		if ( in_array( 'idx_wp_lookup', $names, true ) ) {
+			$wpdb->query( "ALTER TABLE {$entity_table} DROP KEY idx_wp_lookup" );
+		}
+		$wpdb->query( "ALTER TABLE {$entity_table} ADD KEY idx_wp_lookup (module, entity_type, wp_id)" );
+
+		// Add cleanup index for sync_queue.
+		$indexes = $wpdb->get_results( "SHOW INDEX FROM {$queue_table}" );
+		$names   = array_column( $indexes, 'Key_name' );
+
+		if ( ! in_array( 'idx_status_created', $names, true ) ) {
+			$wpdb->query( "ALTER TABLE {$queue_table} ADD KEY idx_status_created (status, created_at)" );
 		}
 		// phpcs:enable
 	}

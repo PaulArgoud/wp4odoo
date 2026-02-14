@@ -382,6 +382,22 @@ class Odoo_Client {
 
 			return $result;
 		} catch ( \Throwable $e ) {
+			// Auto-retry on session/authentication errors (403, expired session).
+			if ( $this->is_session_error( $e ) ) {
+				$this->logger->info(
+					'Session expired, re-authenticating and retrying.',
+					[
+						'model'  => $model,
+						'method' => $method,
+					]
+				);
+
+				$this->reset();
+				$this->ensure_connected();
+
+				return $this->transport->execute_kw( $model, $method, $args, $kwargs );
+			}
+
 			$this->logger->error(
 				'API call failed.',
 				[
@@ -393,5 +409,24 @@ class Odoo_Client {
 
 			throw $e;
 		}
+	}
+
+	/**
+	 * Check if an exception indicates a session/authentication error.
+	 *
+	 * Detects HTTP 403, Odoo session expiry, and access denied errors
+	 * that can be resolved by re-authenticating.
+	 *
+	 * @param \Throwable $e The exception to inspect.
+	 * @return bool True if re-authentication might resolve the error.
+	 */
+	private function is_session_error( \Throwable $e ): bool {
+		$message = strtolower( $e->getMessage() );
+
+		return str_contains( $message, '403' )
+			|| str_contains( $message, 'session expired' )
+			|| str_contains( $message, 'session_expired' )
+			|| str_contains( $message, 'odoo session' )
+			|| str_contains( $message, 'access denied' );
 	}
 }

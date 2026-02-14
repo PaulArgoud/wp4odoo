@@ -279,7 +279,7 @@ abstract class Booking_Module_Base extends Module_Base {
 			return [];
 		}
 
-		$service_name   = $fields['service_name'] ?: $this->get_fallback_label();
+		$service_name   = ! empty( $fields['service_name'] ) ? $fields['service_name'] : $this->get_fallback_label();
 		$customer_name  = $fields['customer_name'] ?? '';
 		$customer_email = $fields['customer_email'] ?? '';
 

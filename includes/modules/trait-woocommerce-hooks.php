@@ -38,6 +38,12 @@ trait WooCommerce_Hooks {
 			return;
 		}
 
+		$settings = $this->get_settings();
+		if ( empty( $settings['sync_products'] ) ) {
+			$this->logger->debug( 'WC: product sync disabled, skipping.', [ 'product_id' => $product_id ] );
+			return;
+		}
+
 		// If this is a translated post, enqueue translations for the original instead.
 		$ts = $this->translation_service();
 		if ( $ts->is_available() ) {
@@ -138,6 +144,12 @@ trait WooCommerce_Hooks {
 			return;
 		}
 
+		$settings = $this->get_settings();
+		if ( empty( $settings['sync_orders'] ) ) {
+			$this->logger->debug( 'WC: order sync disabled, skipping.', [ 'order_id' => $order_id ] );
+			return;
+		}
+
 		// Link customer to Odoo partner via Partner_Service.
 		$order = wc_get_order( $order_id );
 		if ( $order ) {
@@ -162,6 +174,11 @@ trait WooCommerce_Hooks {
 	 */
 	public function on_order_status_changed( int $order_id, string $old_status, string $new_status ): void {
 		if ( $this->is_importing() ) {
+			return;
+		}
+
+		$settings = $this->get_settings();
+		if ( empty( $settings['sync_orders'] ) ) {
 			return;
 		}
 

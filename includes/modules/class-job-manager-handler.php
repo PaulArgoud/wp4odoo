@@ -88,17 +88,6 @@ class Job_Manager_Handler {
 		// Build description from post content + meta.
 		$description = $this->build_description( $post->post_content, $location, $company );
 
-		/**
-		 * Filter WP-to-Odoo status mapping for job listings.
-		 *
-		 * @since 2.10.0
-		 *
-		 * @param string $state       Odoo state ('recruit' or 'open').
-		 * @param string $post_status WP post status.
-		 * @param bool   $filled      Whether the position is filled.
-		 */
-		$state = apply_filters( 'wp4odoo_job_manager_status_map', $state, $post->post_status, '1' === $filled );
-
 		return [
 			'name'              => $post->post_title,
 			'description'       => $description,
@@ -112,6 +101,9 @@ class Job_Manager_Handler {
 	/**
 	 * Map WP post status to Odoo hr.job state.
 	 *
+	 * Uses Status_Mapper for consistency with other handlers. The `$filled`
+	 * override takes precedence before the map lookup.
+	 *
 	 * @param string $post_status WP post status.
 	 * @param bool   $filled      Whether the position is filled.
 	 * @return string Odoo state ('recruit' or 'open').
@@ -121,7 +113,7 @@ class Job_Manager_Handler {
 			return 'open';
 		}
 
-		return self::STATUS_MAP[ $post_status ] ?? 'open';
+		return Status_Mapper::resolve( $post_status, self::STATUS_MAP, 'wp4odoo_job_manager_status_map', 'open' );
 	}
 
 	/**
@@ -131,17 +123,7 @@ class Job_Manager_Handler {
 	 * @return string WP post status.
 	 */
 	private function map_status_from_odoo( string $odoo_state ): string {
-		$wp_status = self::REVERSE_STATUS_MAP[ $odoo_state ] ?? 'expired';
-
-		/**
-		 * Filter Odoo-to-WP status mapping for job listings.
-		 *
-		 * @since 2.10.0
-		 *
-		 * @param string $wp_status  WP post status.
-		 * @param string $odoo_state Odoo hr.job state.
-		 */
-		return (string) apply_filters( 'wp4odoo_job_manager_reverse_status_map', $wp_status, $odoo_state );
+		return Status_Mapper::resolve( $odoo_state, self::REVERSE_STATUS_MAP, 'wp4odoo_job_manager_reverse_status_map', 'expired' );
 	}
 
 	// ─── Description builder ─────────────────────────────────

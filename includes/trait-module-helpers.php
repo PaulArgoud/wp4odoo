@@ -145,6 +145,15 @@ trait Module_Helpers {
 	 * Checks the entity mapping; if the parent is not yet synced, pushes it
 	 * synchronously via `Module_Base::push_to_odoo()`.
 	 *
+	 * PATTERN: Call in `push_to_odoo()` overrides before `parent::push_to_odoo()`
+	 * for any entity that depends on a parent being already mapped in Odoo. Used by:
+	 * - Booking modules: service must exist before booking push
+	 * - LMS modules (LearnDash, LifterLMS): course before enrollment/transaction
+	 * - Donation modules (GiveWP, Charitable, SimplePay): form/campaign before donation
+	 * - Events Calendar: event before attendee
+	 * - Invoice modules (Sprout Invoices): invoice before payment
+	 * - Membership modules: level/plan before subscription
+	 *
 	 * @param string $entity_type Parent entity type (e.g., 'course', 'level').
 	 * @param int    $wp_id       WordPress ID of the parent entity.
 	 * @return void

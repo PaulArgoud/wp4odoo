@@ -58,7 +58,11 @@ class Entity_Map_Repository {
 		$cache_key = "{$module}:{$entity_type}:wp:{$wp_id}";
 
 		if ( array_key_exists( $cache_key, $this->cache ) ) {
-			return $this->cache[ $cache_key ];
+			// LRU: move to end of array on access.
+			$value = $this->cache[ $cache_key ];
+			unset( $this->cache[ $cache_key ] );
+			$this->cache[ $cache_key ] = $value;
+			return $value;
 		}
 
 		global $wpdb;
@@ -97,7 +101,11 @@ class Entity_Map_Repository {
 		$cache_key = "{$module}:{$entity_type}:odoo:{$odoo_id}";
 
 		if ( array_key_exists( $cache_key, $this->cache ) ) {
-			return $this->cache[ $cache_key ];
+			// LRU: move to end of array on access.
+			$value = $this->cache[ $cache_key ];
+			unset( $this->cache[ $cache_key ] );
+			$this->cache[ $cache_key ] = $value;
+			return $value;
 		}
 
 		global $wpdb;
@@ -403,10 +411,11 @@ class Entity_Map_Repository {
 	}
 
 	/**
-	 * Evict oldest cache entries when the cache exceeds MAX_CACHE_SIZE.
+	 * Evict least-recently-used cache entries when the cache exceeds MAX_CACHE_SIZE.
 	 *
-	 * Uses FIFO eviction (array_slice on insertion-ordered PHP array)
-	 * which approximates LRU for sequential batch processing patterns.
+	 * get_odoo_id() and get_wp_id() move accessed entries to the end of the
+	 * PHP array on each hit, so array_slice from the tail keeps the most
+	 * recently used entries.
 	 *
 	 * @return void
 	 */

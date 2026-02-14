@@ -86,24 +86,6 @@ class WP_All_Import_Module extends \WP4Odoo\Module_Base {
 	private static array $import_counts = [];
 
 	/**
-	 * Entity map repository reference for cross-module lookups.
-	 *
-	 * Stored separately because Module_Base::$entity_map is private.
-	 *
-	 * @var \WP4Odoo\Entity_Map_Repository
-	 */
-	private \WP4Odoo\Entity_Map_Repository $entity_map_ref;
-
-	/**
-	 * Settings repository reference for cross-module checks.
-	 *
-	 * Stored separately because Module_Base::$settings_repo is private.
-	 *
-	 * @var \WP4Odoo\Settings_Repository
-	 */
-	private \WP4Odoo\Settings_Repository $settings_ref;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param \Closure                       $client_provider Client provider closure.
@@ -112,8 +94,6 @@ class WP_All_Import_Module extends \WP4Odoo\Module_Base {
 	 */
 	public function __construct( \Closure $client_provider, \WP4Odoo\Entity_Map_Repository $entity_map, \WP4Odoo\Settings_Repository $settings ) {
 		parent::__construct( 'wpai', 'WP All Import', $client_provider, $entity_map, $settings );
-		$this->entity_map_ref = $entity_map;
-		$this->settings_ref   = $settings;
 	}
 
 	/**
@@ -188,7 +168,7 @@ class WP_All_Import_Module extends \WP4Odoo\Module_Base {
 	 * @return bool
 	 */
 	public function is_target_module_enabled( string $module_id ): bool {
-		return $this->settings_ref->is_module_enabled( $module_id );
+		return $this->settings_repo->is_module_enabled( $module_id );
 	}
 
 	/**
@@ -199,7 +179,7 @@ class WP_All_Import_Module extends \WP4Odoo\Module_Base {
 	 * @return \WP4Odoo\Entity_Map_Repository
 	 */
 	public function get_entity_map_ref(): \WP4Odoo\Entity_Map_Repository {
-		return $this->entity_map_ref;
+		return $this->entity_map;
 	}
 
 	// ─── Import counters ────────────────────────────────────

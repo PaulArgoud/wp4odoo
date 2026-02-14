@@ -30,6 +30,14 @@ class Image_Handler {
 	private const IMAGE_HASH_META = '_wp4odoo_image_hash';
 
 	/**
+	 * Maximum allowed size for decoded image data (bytes).
+	 *
+	 * Prevents OOM when base64_decode() is called on very large Odoo
+	 * image fields. 10 MB decoded ≈ 13.7 MB base64.
+	 */
+	private const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+
+	/**
 	 * Logger instance.
 	 *
 	 * @var Logger
@@ -80,6 +88,20 @@ class Image_Handler {
 		$old_hash = get_post_meta( $wp_product_id, self::IMAGE_HASH_META, true );
 
 		if ( $new_hash === $old_hash ) {
+			return false;
+		}
+
+		// Guard against oversized images before decoding (base64 is ~4/3 of decoded size).
+		$estimated_size = (int) ( strlen( $image_data ) * 3 / 4 );
+		if ( $estimated_size > self::MAX_IMAGE_BYTES ) {
+			$this->logger->warning(
+				'Odoo image exceeds size limit, skipping.',
+				[
+					'wp_product_id' => $wp_product_id,
+					'estimated_mb'  => round( $estimated_size / 1048576, 1 ),
+					'limit_mb'      => self::MAX_IMAGE_BYTES / 1048576,
+				]
+			);
 			return false;
 		}
 

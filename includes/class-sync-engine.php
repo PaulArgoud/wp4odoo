@@ -192,6 +192,17 @@ class Sync_Engine {
 		$processed = 0;
 
 		try {
+			// Early memory check: avoid loading the full batch into memory when
+			// the process is already near the limit (e.g. after a large pull).
+			// The finally block will release the lock on early return.
+			if ( $this->is_memory_exhausted() ) {
+				$this->logger->warning(
+					'Memory threshold reached before fetching jobs, skipping batch.',
+					[ 'memory_usage_mb' => round( memory_get_usage( true ) / 1048576, 1 ) ]
+				);
+				return 0;
+			}
+
 			$sync_settings = $this->settings->get_sync_settings();
 			$batch         = (int) $sync_settings['batch_size'];
 			$now           = current_time( 'mysql', true );
