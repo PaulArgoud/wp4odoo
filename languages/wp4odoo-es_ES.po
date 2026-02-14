@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WordPress For Odoo 2.0.0\n"
-"Report-Msgid-Bugs-To: support@avalia.io\n"
-"POT-Creation-Date: 2026-02-14 01:34+0100\n"
+"Report-Msgid-Bugs-To: contact@avalia.io\n"
+"POT-Creation-Date: 2026-02-14 11:27+0100\n"
 "PO-Revision-Date: 2026-02-10 22:00+0100\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
@@ -488,12 +488,12 @@ msgstr ""
 
 #: includes/modules/class-affiliatewp-handler.php:76
 msgid "Affiliate commission"
-msgstr ""
+msgstr "Comisión de afiliado"
 
 #: includes/modules/class-affiliatewp-handler.php:78
-#, fuzzy, php-format
+#, php-format
 msgid "Commission #%1$d — %2$s"
-msgstr "%1$s — %2$s"
+msgstr "Comisión #%1$d — %2$s"
 
 #: includes/modules/class-affiliatewp-module.php:97
 msgid "AffiliateWP module enabled but AffiliateWP is not active."
@@ -521,7 +521,9 @@ msgstr "Validar automáticamente las facturas de proveedor"
 
 #: includes/modules/class-affiliatewp-module.php:146
 msgid "Automatically confirm vendor bills in Odoo when referral is paid."
-msgstr "Confirmar automáticamente las facturas de proveedor en Odoo cuando la comisión es pagada."
+msgstr ""
+"Confirmar automáticamente las facturas de proveedor en Odoo cuando la "
+"comisión es pagada."
 
 #: includes/modules/class-amelia-module.php:117
 #: includes/modules/class-bookly-module.php:118
@@ -1838,6 +1840,10 @@ msgstr ""
 "Seleccione los idiomas para importar las traducciones de productos desde "
 "Odoo (requiere WPML o Polylang)."
 
+#: includes/modules/class-wp-all-import-module.php:126
+msgid "WP All Import module enabled but WP All Import is not active."
+msgstr "Módulo WP All Import activado pero WP All Import no está activo."
+
 #: includes/modules/class-wp-invoice-handler.php:169
 #, php-format
 msgid "Invoice %s"
@@ -1904,6 +1910,11 @@ msgstr "Módulo Ecwid activado pero Ecwid no está activo."
 #: includes/modules/trait-wc-bookings-hooks.php:40
 msgid "WC Bookings module enabled but WooCommerce Bookings is not active."
 msgstr "Módulo WC Bookings activado pero WooCommerce Bookings no está activo."
+
+#: includes/modules/trait-wpai-hooks.php:102
+#, php-format
+msgid "WP All Import #%1$d: enqueued %2$d records for Odoo sync."
+msgstr "WP All Import #%1$d: %2$d registros puestos en cola para la sincronización Odoo."
 
 #: includes/trait-module-helpers.php:383
 #, php-format

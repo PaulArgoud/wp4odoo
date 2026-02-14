@@ -89,6 +89,7 @@ $GLOBALS['_wc_bundles']              = [];
 $GLOBALS['_wc_composites']           = [];
 $GLOBALS['_affwp_affiliates']        = [];
 $GLOBALS['_affwp_referrals']         = [];
+$GLOBALS['_wpai_import_id']          = 0;
 
 // ─── Load stubs ─────────────────────────────────────────
 // Stubs must be loaded before the autoloader so that external
@@ -130,6 +131,7 @@ require_once __DIR__ . '/stubs/awesome-support-classes.php';
 require_once __DIR__ . '/stubs/supportcandy-classes.php';
 require_once __DIR__ . '/stubs/wc-bundles-classes.php';
 require_once __DIR__ . '/stubs/affiliatewp-classes.php';
+require_once __DIR__ . '/stubs/wpai-classes.php';
 
 // ─── Composer autoloader ────────────────────────────────
 

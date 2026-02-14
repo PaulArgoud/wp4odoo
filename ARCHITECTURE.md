@@ -2,7 +2,7 @@
 
 ## Overview
 
-Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 32 modules across 20 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Points & Rewards, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (7 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS), Booking (Amelia + Bookly), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP), Helpdesk (Awesome Support + SupportCandy), HR (WP Job Manager), and Affiliates (AffiliateWP).
+Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 33 modules across 20 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Points & Rewards, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (7 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS), Booking (Amelia + Bookly), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP), Helpdesk (Awesome Support + SupportCandy), HR (WP Job Manager), Affiliates (AffiliateWP), and Meta-modules (ACF + WP All Import).
 
 ![WP4ODOO Full Architecture](assets/images/architecture-full.svg)
 
@@ -190,9 +190,11 @@ WordPress For Odoo/
 │   │   ├── class-affiliatewp-handler.php     # AffiliateWP: referral data load, vendor bill formatting, status mapping
 │   │   ├── trait-affiliatewp-hooks.php       # AffiliateWP: status change hooks (affiliate + referral)
 │   │   │
-│   │   ├── # ─── Meta-modules (enrichment) ───────
+│   │   ├── # ─── Meta-modules (enrichment / interception) ──
 │   │   ├── class-acf-handler.php             # ACF: type conversions, enrich push/pull, write ACF fields
-│   │   └── class-acf-module.php              # ACF: filter-based enrichment, mapping configurator, no own entity types
+│   │   ├── class-acf-module.php              # ACF: filter-based enrichment, mapping configurator, no own entity types
+│   │   ├── class-wp-all-import-module.php    # WP All Import: intercept CSV/XML imports, route to sync queue
+│   │   └── trait-wpai-hooks.php              # WPAI hooks: pmxi_saved_post routing, import summary logging
 │   │
 │   ├── i18n/
 │   │   ├── interface-translation-adapter.php   # Adapter interface (8 methods: post + term translations, default lang, active langs)
@@ -1424,6 +1426,27 @@ All user inputs are sanitized with:
 - Requires ACF (free or Pro); `boot()` guards with `class_exists('ACF') || defined('ACF_MAJOR_VERSION')`
 
 **Settings:** `acf_mappings` (array of mapping rules, type `mappings`)
+
+### WP All Import (Interceptor) — COMPLETE
+
+**Files:** `class-wp-all-import-module.php` (meta-module, routing table, import counters), `trait-wpai-hooks.php` (hook callbacks: post routing, import summary)
+
+**Odoo models:** None (meta-module — routes to other modules' sync queues)
+
+**Key features:**
+- Intercepts WP All Import CSV/XML imports via `pmxi_saved_post` hook (fires even with speed optimization ON)
+- Static routing table: 18 WordPress post types → `[module_id, entity_type]` pairs
+- Cross-module entity_map lookup to determine create vs update action
+- Target module enabled check before enqueue
+- Import completion summary logging via `pmxi_after_xml_import`
+- Per-import-run counters (static array, same PHP request)
+- Routing table filterable via `wp4odoo_wpai_routing_table`
+- Queue dedup (`SELECT…FOR UPDATE`) safely handles double-enqueue if standard hooks also fire
+- No anti-loop guard needed (WPAI never fires from Odoo pull)
+- No exclusive group — coexists with all modules
+- Requires WP All Import; `boot()` guards with `defined('PMXI_VERSION') || class_exists('PMXI_Plugin')`
+
+**Settings:** None (module toggle only)
 
 ### Partner Service
 

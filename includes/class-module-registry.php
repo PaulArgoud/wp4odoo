@@ -170,6 +170,9 @@ class Module_Registry {
 		if ( class_exists( 'ACF' ) || defined( 'ACF_MAJOR_VERSION' ) ) {
 			$this->register( 'acf', new Modules\ACF_Module( $client_provider, $entity_map, $settings ) );
 		}
+		if ( defined( 'PMXI_VERSION' ) || class_exists( 'PMXI_Plugin' ) ) {
+			$this->register( 'wpai', new Modules\WP_All_Import_Module( $client_provider, $entity_map, $settings ) );
+		}
 
 		// Allow third-party modules (closures and shared entity map available as arguments).
 		do_action( 'wp4odoo_register_modules', $this->plugin, $client_provider, $entity_map );

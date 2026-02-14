@@ -1040,5 +1040,20 @@ if ( ! function_exists( 'pll_save_term_translations' ) ) {
 	function pll_save_term_translations( array $translations ): void {}
 }
 
+// ─── WP All Import stubs ─────────────────────────────────
+
+if ( ! defined( 'PMXI_VERSION' ) ) {
+	define( 'PMXI_VERSION', '4.8.0' );
+}
+
+if ( ! function_exists( 'wp_all_import_get_import_id' ) ) {
+	/**
+	 * @return int
+	 */
+	function wp_all_import_get_import_id(): int {
+		return 0;
+	}
+}
+
 // WP_CLI\Utils namespace stub loaded from separate file (PHP namespace rules).
 require_once __DIR__ . '/phpstan-wp-cli-stubs.php';
