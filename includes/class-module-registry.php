@@ -75,42 +75,57 @@ class Module_Registry {
 		// CRM — always available.
 		$this->register( 'crm', new Modules\CRM_Module( $client_provider, $entity_map, $settings ) );
 
-		// Commerce group (WC > EDD > Sales).
-		if ( class_exists( 'WooCommerce' ) ) {
-			$this->register( 'woocommerce', new Modules\WooCommerce_Module( $client_provider, $entity_map, $settings ) );
-		}
-		if ( class_exists( 'Easy_Digital_Downloads' ) ) {
-			$this->register( 'edd', new Modules\EDD_Module( $client_provider, $entity_map, $settings ) );
-		}
-		$this->register( 'sales', new Modules\Sales_Module( $client_provider, $entity_map, $settings ) );
+		// Declarative module registry: [ id, class, detection_callback ].
+		// Modules with null detection are always registered.
+		// phpcs:disable Squiz.PHP.CommentedOutCode.Found
+		$module_defs = [
+			// Commerce group (WC > EDD > Sales).
+			[ 'woocommerce', Modules\WooCommerce_Module::class, fn() => class_exists( 'WooCommerce' ) ],
+			[ 'edd', Modules\EDD_Module::class, fn() => class_exists( 'Easy_Digital_Downloads' ) ],
+			[ 'sales', Modules\Sales_Module::class, null ],
 
-		// Membership group.
-		if ( class_exists( 'WooCommerce' ) ) {
-			$this->register( 'memberships', new Modules\Memberships_Module( $client_provider, $entity_map, $settings ) );
-		}
-		if ( defined( 'MEPR_VERSION' ) ) {
-			$this->register( 'memberpress', new Modules\MemberPress_Module( $client_provider, $entity_map, $settings ) );
-		}
-		if ( defined( 'PMPRO_VERSION' ) ) {
-			$this->register( 'pmpro', new Modules\PMPro_Module( $client_provider, $entity_map, $settings ) );
-		}
-		if ( function_exists( 'rcp_get_membership' ) ) {
-			$this->register( 'rcp', new Modules\RCP_Module( $client_provider, $entity_map, $settings ) );
+			// Membership group.
+			[ 'memberships', Modules\Memberships_Module::class, fn() => class_exists( 'WooCommerce' ) ],
+			[ 'memberpress', Modules\MemberPress_Module::class, fn() => defined( 'MEPR_VERSION' ) ],
+			[ 'pmpro', Modules\PMPro_Module::class, fn() => defined( 'PMPRO_VERSION' ) ],
+			[ 'rcp', Modules\RCP_Module::class, fn() => function_exists( 'rcp_get_membership' ) ],
+
+			// Independent modules.
+			[ 'givewp', Modules\GiveWP_Module::class, fn() => defined( 'GIVE_VERSION' ) ],
+			[ 'charitable', Modules\Charitable_Module::class, fn() => class_exists( 'Charitable' ) ],
+			[ 'simplepay', Modules\SimplePay_Module::class, fn() => defined( 'SIMPLE_PAY_VERSION' ) ],
+			[ 'wprm', Modules\WPRM_Module::class, fn() => defined( 'WPRM_VERSION' ) ],
+			[ 'amelia', Modules\Amelia_Module::class, fn() => defined( 'AMELIA_VERSION' ) ],
+			[ 'bookly', Modules\Bookly_Module::class, fn() => class_exists( 'Bookly\Lib\Plugin' ) ],
+			[ 'learndash', Modules\LearnDash_Module::class, fn() => defined( 'LEARNDASH_VERSION' ) ],
+			[ 'lifterlms', Modules\LifterLMS_Module::class, fn() => defined( 'LLMS_VERSION' ) ],
+			[ 'wc_subscriptions', Modules\WC_Subscriptions_Module::class, fn() => class_exists( 'WC_Subscriptions' ) ],
+			[ 'wc_points_rewards', Modules\WC_Points_Rewards_Module::class, fn() => class_exists( 'WC_Points_Rewards' ) ],
+			[ 'wc_bookings', Modules\WC_Bookings_Module::class, fn() => class_exists( 'WC_Product_Booking' ) ],
+			[ 'events_calendar', Modules\Events_Calendar_Module::class, fn() => class_exists( 'Tribe__Events__Main' ) ],
+			[ 'job_manager', Modules\Job_Manager_Module::class, fn() => defined( 'JOB_MANAGER_VERSION' ) ],
+			[ 'wc_bundle_bom', Modules\WC_Bundle_BOM_Module::class, fn() => class_exists( 'WC_Bundles' ) || class_exists( 'WC_Composite_Products' ) ],
+
+			// Helpdesk group.
+			[ 'awesome_support', Modules\Awesome_Support_Module::class, fn() => defined( 'WPAS_VERSION' ) ],
+			[ 'supportcandy', Modules\SupportCandy_Module::class, fn() => defined( 'STARTER_STARTER_VERSION' ) ],
+
+			// Affiliate.
+			[ 'affiliatewp', Modules\AffiliateWP_Module::class, fn() => function_exists( 'affiliate_wp' ) ],
+
+			// Meta-modules (enrich other modules, no own entity types).
+			[ 'acf', Modules\ACF_Module::class, fn() => class_exists( 'ACF' ) || defined( 'ACF_MAJOR_VERSION' ) ],
+			[ 'wpai', Modules\WP_All_Import_Module::class, fn() => defined( 'PMXI_VERSION' ) || class_exists( 'PMXI_Plugin' ) ],
+		];
+		// phpcs:enable
+
+		foreach ( $module_defs as [ $id, $class, $detect ] ) {
+			if ( null === $detect || $detect() ) {
+				$this->register( $id, new $class( $client_provider, $entity_map, $settings ) );
+			}
 		}
 
-		// Independent modules.
-		if ( defined( 'GIVE_VERSION' ) ) {
-			$this->register( 'givewp', new Modules\GiveWP_Module( $client_provider, $entity_map, $settings ) );
-		}
-		if ( class_exists( 'Charitable' ) ) {
-			$this->register( 'charitable', new Modules\Charitable_Module( $client_provider, $entity_map, $settings ) );
-		}
-		if ( defined( 'SIMPLE_PAY_VERSION' ) ) {
-			$this->register( 'simplepay', new Modules\SimplePay_Module( $client_provider, $entity_map, $settings ) );
-		}
-		if ( defined( 'WPRM_VERSION' ) ) {
-			$this->register( 'wprm', new Modules\WPRM_Module( $client_provider, $entity_map, $settings ) );
-		}
+		// Forms module — aggregate detection (any of 7 form plugins).
 		$forms_active = class_exists( 'GFAPI' )
 			|| function_exists( 'wpforms' )
 			|| defined( 'WPCF7_VERSION' )
@@ -120,58 +135,6 @@ class Module_Registry {
 			|| defined( 'FORMINATOR_VERSION' );
 		if ( $forms_active ) {
 			$this->register( 'forms', new Modules\Forms_Module( $client_provider, $entity_map, $settings ) );
-		}
-		if ( defined( 'AMELIA_VERSION' ) ) {
-			$this->register( 'amelia', new Modules\Amelia_Module( $client_provider, $entity_map, $settings ) );
-		}
-		if ( class_exists( 'Bookly\Lib\Plugin' ) ) {
-			$this->register( 'bookly', new Modules\Bookly_Module( $client_provider, $entity_map, $settings ) );
-		}
-		if ( defined( 'LEARNDASH_VERSION' ) ) {
-			$this->register( 'learndash', new Modules\LearnDash_Module( $client_provider, $entity_map, $settings ) );
-		}
-		if ( defined( 'LLMS_VERSION' ) ) {
-			$this->register( 'lifterlms', new Modules\LifterLMS_Module( $client_provider, $entity_map, $settings ) );
-		}
-		if ( class_exists( 'WC_Subscriptions' ) ) {
-			$this->register( 'wc_subscriptions', new Modules\WC_Subscriptions_Module( $client_provider, $entity_map, $settings ) );
-		}
-		if ( class_exists( 'WC_Points_Rewards' ) ) {
-			$this->register( 'wc_points_rewards', new Modules\WC_Points_Rewards_Module( $client_provider, $entity_map, $settings ) );
-		}
-		if ( class_exists( 'WC_Product_Booking' ) ) {
-			$this->register( 'wc_bookings', new Modules\WC_Bookings_Module( $client_provider, $entity_map, $settings ) );
-		}
-		if ( class_exists( 'Tribe__Events__Main' ) ) {
-			$this->register( 'events_calendar', new Modules\Events_Calendar_Module( $client_provider, $entity_map, $settings ) );
-		}
-
-		if ( defined( 'JOB_MANAGER_VERSION' ) ) {
-			$this->register( 'job_manager', new Modules\Job_Manager_Module( $client_provider, $entity_map, $settings ) );
-		}
-
-		if ( class_exists( 'WC_Bundles' ) || class_exists( 'WC_Composite_Products' ) ) {
-			$this->register( 'wc_bundle_bom', new Modules\WC_Bundle_BOM_Module( $client_provider, $entity_map, $settings ) );
-		}
-
-		// Helpdesk group (Awesome Support > SupportCandy).
-		if ( defined( 'WPAS_VERSION' ) ) {
-			$this->register( 'awesome_support', new Modules\Awesome_Support_Module( $client_provider, $entity_map, $settings ) );
-		}
-		if ( defined( 'STARTER_STARTER_VERSION' ) ) {
-			$this->register( 'supportcandy', new Modules\SupportCandy_Module( $client_provider, $entity_map, $settings ) );
-		}
-
-		if ( function_exists( 'affiliate_wp' ) ) {
-			$this->register( 'affiliatewp', new Modules\AffiliateWP_Module( $client_provider, $entity_map, $settings ) );
-		}
-
-		// Meta-modules (enrich other modules, no own entity types).
-		if ( class_exists( 'ACF' ) || defined( 'ACF_MAJOR_VERSION' ) ) {
-			$this->register( 'acf', new Modules\ACF_Module( $client_provider, $entity_map, $settings ) );
-		}
-		if ( defined( 'PMXI_VERSION' ) || class_exists( 'PMXI_Plugin' ) ) {
-			$this->register( 'wpai', new Modules\WP_All_Import_Module( $client_provider, $entity_map, $settings ) );
 		}
 
 		// Allow third-party modules (closures and shared entity map available as arguments).
@@ -220,6 +183,15 @@ class Module_Registry {
 	 */
 	public function all(): array {
 		return $this->modules;
+	}
+
+	/**
+	 * Get the number of booted modules.
+	 *
+	 * @return int
+	 */
+	public function get_booted_count(): int {
+		return count( $this->booted );
 	}
 
 	/**

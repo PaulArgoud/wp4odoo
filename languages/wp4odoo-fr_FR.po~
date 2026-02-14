@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WordPress For Odoo 2.0.0\n"
-"Report-Msgid-Bugs-To: support@avalia.io\n"
-"POT-Creation-Date: 2026-02-14 01:34+0100\n"
+"Report-Msgid-Bugs-To: contact@avalia.io\n"
+"POT-Creation-Date: 2026-02-14 11:27+0100\n"
 "PO-Revision-Date: 2026-02-09 22:31+0100\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
@@ -484,12 +484,12 @@ msgstr ""
 
 #: includes/modules/class-affiliatewp-handler.php:76
 msgid "Affiliate commission"
-msgstr ""
+msgstr "Commission d'affiliation"
 
 #: includes/modules/class-affiliatewp-handler.php:78
-#, fuzzy, php-format
+#, php-format
 msgid "Commission #%1$d — %2$s"
-msgstr "%1$s — %2$s"
+msgstr "Commission #%1$d — %2$s"
 
 #: includes/modules/class-affiliatewp-module.php:97
 msgid "AffiliateWP module enabled but AffiliateWP is not active."
@@ -509,7 +509,8 @@ msgstr "Synchroniser les commissions"
 
 #: includes/modules/class-affiliatewp-module.php:141
 msgid "Push confirmed referrals to Odoo as vendor bills."
-msgstr "Envoyer les commissions confirmées vers Odoo comme factures fournisseur."
+msgstr ""
+"Envoyer les commissions confirmées vers Odoo comme factures fournisseur."
 
 #: includes/modules/class-affiliatewp-module.php:144
 msgid "Auto-post vendor bills"
@@ -517,7 +518,9 @@ msgstr "Valider automatiquement les factures fournisseur"
 
 #: includes/modules/class-affiliatewp-module.php:146
 msgid "Automatically confirm vendor bills in Odoo when referral is paid."
-msgstr "Confirmer automatiquement les factures fournisseur dans Odoo lorsque la commission est payée."
+msgstr ""
+"Confirmer automatiquement les factures fournisseur dans Odoo lorsque la "
+"commission est payée."
 
 #: includes/modules/class-amelia-module.php:117
 #: includes/modules/class-bookly-module.php:118
@@ -1860,6 +1863,10 @@ msgstr ""
 "Sélectionnez les langues pour importer les traductions produits depuis Odoo "
 "(nécessite WPML ou Polylang)."
 
+#: includes/modules/class-wp-all-import-module.php:126
+msgid "WP All Import module enabled but WP All Import is not active."
+msgstr "Module WP All Import activé mais WP All Import n'est pas actif."
+
 #: includes/modules/class-wp-invoice-handler.php:169
 #, php-format
 msgid "Invoice %s"
@@ -1927,6 +1934,11 @@ msgstr "Module Ecwid activé mais Ecwid n'est pas actif."
 #: includes/modules/trait-wc-bookings-hooks.php:40
 msgid "WC Bookings module enabled but WooCommerce Bookings is not active."
 msgstr "Module WC Bookings activé mais WooCommerce Bookings n'est pas actif."
+
+#: includes/modules/trait-wpai-hooks.php:102
+#, php-format
+msgid "WP All Import #%1$d: enqueued %2$d records for Odoo sync."
+msgstr "WP All Import #%1$d : %2$d enregistrements mis en file d'attente pour la synchronisation Odoo."
 
 #: includes/trait-module-helpers.php:383
 #, php-format

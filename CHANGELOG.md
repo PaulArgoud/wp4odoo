@@ -37,7 +37,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **WC Product Bundles / Composite Products → Odoo Manufacturing BOM module** — Push-only sync of WC bundles and composite products as Manufacturing BOMs (`mrp.bom`) with One2many `bom_line_ids`. Cross-module entity_map lookup for product resolution, transient retry for unmapped products, configurable BOM type (phantom kit / normal manufacture)
 - **Odoo_Model enum** — Added `MrpBom` (`mrp.bom`) and `MrpBomLine` (`mrp.bom.line`) cases
 
+- **Health endpoint** — `GET /wp-json/wp4odoo/v1/health` returns system status (queue depth, failed count, circuit breaker state, module counts, version, timestamp). Protected by webhook token authentication. Status: `healthy` / `degraded` (CB open or 100+ failed jobs)
+- **Batch API pipeline** — `Sync_Engine` now groups `wp_to_odoo` create jobs by module+entity_type and processes groups of 2+ via `push_batch_creates()`, which calls `Odoo_Client::create_batch()` in a single RPC call. Falls back to individual creates on batch error
+- **Idempotent creates** — `Module_Base::push_to_odoo()` now calls `get_dedup_domain()` before creating: if a matching record exists in Odoo, it switches to update (prevents duplicates from retried creates). CRM dedup by email, WooCommerce dedup by SKU (`default_code`)
+- **Translation accumulator** — Generic pull translation infrastructure in `Module_Base`: `get_translatable_fields()`, `accumulate_pull_translation()`, `flush_pull_translations()`. Sync_Engine flushes translations at end of each batch. Any module can override `get_translatable_fields()` to enable automatic translation support
+- **Module_Registry::get_booted_count()** — New public method returning count of booted modules (used by health endpoint)
+
 ### Fixed
+- **Webhook_Handler** — `Queue_Manager::pull()` now wrapped in try/catch: on exception, logs CRITICAL, fires `wp4odoo_webhook_enqueue_failed` action, returns 503 (was uncaught → 500 with lost payload)
+- **Odoo_Client::is_session_error()** — Replaced broad `str_contains($message, '403')` with word-boundary regex `/\bhttp\s*403\b|\b403\s*forbidden\b/` to prevent false positives (e.g. "Product #1403"). Added `$e->getCode() === 403` check first
+- **Database_Migration::migration_5()** — Index replacement now uses atomic `ALTER TABLE ... DROP KEY, ADD KEY` (single statement). Previously dropped index before adding replacement, risking index loss on failure
 - **Circuit_Breaker** — State now persisted to `wp_options` (DB fallback) so the circuit stays open during Odoo outages even when object cache (Redis/Memcached) is flushed. `PROBE_TTL` increased from 60 s to 120 s to prevent concurrent probe batches
 - **Circuit_Breaker::record_failure()** — MySQL advisory lock (`GET_LOCK('wp4odoo_cb_failure')`) around failure counting prevents lost increments under concurrent queue workers
 - **Module_Base::push_to_odoo()** — Mapping save failure on update path now returns `Sync_Result::failure(Transient)` (was silent — asymmetric with create path)
@@ -52,6 +61,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Image_Handler** — Added `MAX_IMAGE_BYTES` (10 MB) size limit before `base64_decode()` to prevent OOM on oversized Odoo image fields
 
 ### Changed
+- **Module_Registry** — `register_all()` refactored from 40+ individual if/new/register blocks to declarative `$module_defs` array: `[id, class, detection_callback]`. Detection callbacks are closures (or null for always-available modules). Reduces ~120 lines to ~40 lines, error-proof
+- **Circuit_Breaker::record_batch()** — Docblock now explicitly documents the design decision: operates at batch level (80% threshold detects systemic Odoo failures), not individual job level (handled by Sync_Engine retry logic)
 - **Settings_Repository** — Instance-level cache (`$cache`) for `get_connection()`, `get_sync_settings()`, `get_log_settings()` — avoids repeated `get_option()` calls within the same request. Cache invalidated on save
 - **Odoo_Accounting_Formatter** — New `wp4odoo_invoice_line_data` filter on `for_account_move()` invoice lines, allowing injection of `tax_ids`, analytic accounts, or other Odoo fields
 - **Admin_Ajax** — SSRF protection: URL fields now validated against private/reserved IP ranges (`FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE`) with DNS resolution before validation

@@ -218,7 +218,18 @@ class Sync_Engine {
 			// Recover any jobs left in 'processing' from a previous crash.
 			$this->queue_repo->recover_stale_processing( $this->settings->get_stale_timeout() );
 
+			// Batch-create optimization: group eligible creates by module+entity.
+			$batched_job_ids = [];
+			if ( ! $this->dry_run ) {
+				$processed += $this->process_batch_creates( $jobs, $batched_job_ids );
+			}
+
 			foreach ( $jobs as $job ) {
+				// Skip jobs already processed by batch creates.
+				if ( isset( $batched_job_ids[ (int) $job->id ] ) ) {
+					continue;
+				}
+
 				if ( ( microtime( true ) - $start_time ) >= self::BATCH_TIME_LIMIT ) {
 					$this->logger->info(
 						'Batch time limit reached, deferring remaining jobs.',
@@ -283,6 +294,9 @@ class Sync_Engine {
 			 * @param string $module    Module identifier.
 			 */
 			do_action( 'wp4odoo_batch_processed', $processed, $module );
+
+			// Flush accumulated pull translations for all modules touched in this batch.
+			$this->flush_module_translations( $jobs );
 
 			$this->failure_notifier->check( $this->batch_successes, $this->batch_failures );
 
@@ -378,6 +392,106 @@ class Sync_Engine {
 				(int) $job->id
 			)
 		);
+	}
+
+	/**
+	 * Flush pull translations for all modules touched during a batch.
+	 *
+	 * Collects unique module IDs from the jobs list, resolves each module,
+	 * and calls flush_pull_translations() if the module has buffered data.
+	 *
+	 * @param array<int, object> $jobs Processed jobs.
+	 * @return void
+	 */
+	private function flush_module_translations( array $jobs ): void {
+		$module_ids = array_unique( array_column( $jobs, 'module' ) );
+
+		foreach ( $module_ids as $module_id ) {
+			$module = ( $this->module_resolver )( $module_id );
+			if ( null !== $module ) {
+				$module->flush_pull_translations();
+			}
+		}
+	}
+
+	/**
+	 * Process batch creates for groups of ≥2 create jobs with the same module+entity.
+	 *
+	 * Groups wp_to_odoo create jobs by (module, entity_type), then calls
+	 * push_batch_creates() on the module. Individual creates (groups of 1)
+	 * and non-create jobs are left for the main per-job loop.
+	 *
+	 * @param array<int, object>  $jobs             All fetched jobs.
+	 * @param array<int, bool>    &$batched_job_ids  Output: job IDs processed (key = job ID).
+	 * @return int Number of successfully processed jobs.
+	 */
+	private function process_batch_creates( array $jobs, array &$batched_job_ids ): int {
+		// Group eligible create jobs by module:entity_type.
+		$groups = [];
+		foreach ( $jobs as $job ) {
+			if ( 'wp_to_odoo' === $job->direction && 'create' === $job->action ) {
+				$key              = $job->module . ':' . $job->entity_type;
+				$groups[ $key ][] = $job;
+			}
+		}
+
+		$processed = 0;
+
+		foreach ( $groups as $group_jobs ) {
+			// Only batch groups of 2+; single creates go through the normal loop.
+			if ( count( $group_jobs ) < 2 ) {
+				continue;
+			}
+
+			$first_job = $group_jobs[0];
+			$module    = ( $this->module_resolver )( $first_job->module );
+
+			if ( null === $module ) {
+				continue;
+			}
+
+			// Mark all jobs as processing.
+			$items = [];
+			foreach ( $group_jobs as $job ) {
+				$this->queue_repo->update_status( (int) $job->id, 'processing', [ 'processed_at' => current_time( 'mysql', true ) ] );
+
+				$payload = [];
+				if ( ! empty( $job->payload ) ) {
+					$decoded = json_decode( $job->payload, true );
+					$payload = is_array( $decoded ) ? $decoded : [];
+				}
+
+				$items[] = [
+					'wp_id'   => (int) $job->wp_id,
+					'payload' => $payload,
+				];
+			}
+
+			$results = $module->push_batch_creates( $first_job->entity_type, $items );
+
+			// Map results back to individual jobs.
+			foreach ( $group_jobs as $job ) {
+				$wp_id  = (int) $job->wp_id;
+				$result = $results[ $wp_id ] ?? Sync_Result::failure( 'No result from batch.', Error_Type::Transient );
+
+				if ( $result->succeeded() ) {
+					$this->queue_repo->update_status( (int) $job->id, 'completed', [ 'processed_at' => current_time( 'mysql', true ) ] );
+					++$processed;
+					++$this->batch_successes;
+				} else {
+					$this->handle_failure( $job, $result->get_message(), $result->get_error_type(), $result->get_entity_id() );
+					++$this->batch_failures;
+				}
+
+				$batched_job_ids[ (int) $job->id ] = true;
+			}
+		}
+
+		if ( $processed > 0 ) {
+			$this->logger->info( 'Batch-created records.', [ 'count' => $processed ] );
+		}
+
+		return $processed;
 	}
 
 	/**

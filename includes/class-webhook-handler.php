@@ -117,6 +117,16 @@ class Webhook_Handler {
 
 		register_rest_route(
 			self::API_NAMESPACE,
+			'/health',
+			[
+				'methods'             => 'GET',
+				'callback'            => [ $this, 'handle_health' ],
+				'permission_callback' => [ $this, 'validate_webhook_token' ],
+			]
+		);
+
+		register_rest_route(
+			self::API_NAMESPACE,
 			'/sync/(?P<module>[a-zA-Z0-9_-]+)/(?P<entity>[a-zA-Z0-9_-]+)',
 			[
 				'methods'             => 'POST',
@@ -192,7 +202,42 @@ class Webhook_Handler {
 
 		set_transient( $dedup_key, 1, self::DEDUP_WINDOW );
 
-		$job_id = Queue_Manager::pull( $module, $entity_type, $action, $odoo_id, null, $body );
+		try {
+			$job_id = Queue_Manager::pull( $module, $entity_type, $action, $odoo_id, null, $body );
+		} catch ( \Throwable $e ) {
+			$this->logger->critical(
+				'Webhook enqueue failed.',
+				[
+					'module'      => $module,
+					'entity_type' => $entity_type,
+					'odoo_id'     => $odoo_id,
+					'error'       => $e->getMessage(),
+				]
+			);
+
+			/**
+			 * Fires when a webhook payload could not be enqueued.
+			 *
+			 * Allows external monitoring or retry mechanisms to react
+			 * to enqueue failures (e.g. database unavailable).
+			 *
+			 * @since 3.1.0
+			 *
+			 * @param string     $module      Module identifier.
+			 * @param string     $entity_type Entity type.
+			 * @param int        $odoo_id     Odoo record ID.
+			 * @param \Throwable $e           The exception.
+			 */
+			do_action( 'wp4odoo_webhook_enqueue_failed', $module, $entity_type, $odoo_id, $e );
+
+			return new \WP_REST_Response(
+				[
+					'success' => false,
+					'error'   => __( 'Internal enqueue error.', 'wp4odoo' ),
+				],
+				503
+			);
+		}
 
 		$this->logger->info(
 			'Webhook received, job enqueued.',
@@ -226,6 +271,47 @@ class Webhook_Handler {
 				'status'  => 'ok',
 				'version' => WP4ODOO_VERSION,
 				'time'    => current_time( 'mysql', true ),
+			],
+			200
+		);
+	}
+
+	/**
+	 * System health endpoint for monitoring.
+	 *
+	 * Returns queue depth, circuit breaker state, and module counts.
+	 * Useful for external monitoring (Nagios, UptimeRobot, etc.).
+	 *
+	 * @param \WP_REST_Request $request The incoming request.
+	 * @return \WP_REST_Response
+	 */
+	public function handle_health( \WP_REST_Request $request ): \WP_REST_Response {
+		$queue_repo = new Sync_Queue_Repository();
+		$stats      = $queue_repo->get_stats();
+
+		$cb_state = get_option( 'wp4odoo_cb_state', [] );
+		$registry = \WP4Odoo_Plugin::instance()->module_registry();
+
+		$cb_open = is_array( $cb_state ) && ! empty( $cb_state['opened_at'] );
+
+		$status = 'healthy';
+		if ( $cb_open ) {
+			$status = 'degraded';
+		}
+		if ( $stats['failed'] > 100 ) {
+			$status = 'degraded';
+		}
+
+		return new \WP_REST_Response(
+			[
+				'status'          => $status,
+				'version'         => WP4ODOO_VERSION,
+				'queue_pending'   => $stats['pending'],
+				'queue_failed'    => $stats['failed'],
+				'circuit_breaker' => $cb_open ? 'open' : 'closed',
+				'modules_booted'  => $registry->get_booted_count(),
+				'modules_total'   => count( $registry->all() ),
+				'timestamp'       => gmdate( 'c' ),
 			],
 			200
 		);

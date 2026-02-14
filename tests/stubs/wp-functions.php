@@ -102,7 +102,9 @@ if ( ! function_exists( 'wp_cache_delete' ) ) {
 // ─── Hooks ──────────────────────────────────────────────
 
 if ( ! function_exists( 'do_action' ) ) {
-	function do_action( $tag, ...$args ) {}
+	function do_action( $tag, ...$args ) {
+		$GLOBALS['_wp_actions'][] = $tag;
+	}
 }
 
 if ( ! function_exists( 'apply_filters' ) ) {

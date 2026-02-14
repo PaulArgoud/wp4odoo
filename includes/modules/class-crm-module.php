@@ -264,6 +264,21 @@ class CRM_Module extends Module_Base {
 	}
 
 	/**
+	 * Dedup domain for contacts: match by email.
+	 *
+	 * @param string               $entity_type Entity type.
+	 * @param array<string, mixed> $odoo_values Odoo values.
+	 * @return array<int, mixed>
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( 'contact' === $entity_type && ! empty( $odoo_values['email'] ) ) {
+			return [ [ 'email', '=', $odoo_values['email'] ] ];
+		}
+
+		return [];
+	}
+
+	/**
 	 * Delete a WordPress entity.
 	 *
 	 * @param string $entity_type Entity type.

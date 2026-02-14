@@ -95,6 +95,16 @@ abstract class Module_Base {
 	private array $mapping_cache = [];
 
 	/**
+	 * Translation buffer for pull operations.
+	 *
+	 * Accumulates (odoo_id → wp_id) pairs during batch pull, keyed by
+	 * Odoo model. Flushed at end of batch via flush_pull_translations().
+	 *
+	 * @var array<string, array<int, int>>
+	 */
+	protected array $translation_buffer = [];
+
+	/**
 	 * Per-module anti-loop flags: tracks which modules are currently importing.
 	 *
 	 * Unlike a single global bool, this allows module A to import without
@@ -229,6 +239,21 @@ abstract class Module_Base {
 			}
 			$this->logger->info( 'Updated Odoo record.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
 		} else {
+			// Dedup: search Odoo for an existing record before creating.
+			// Catches orphaned records from a previous attempt whose
+			// save_mapping() failed after a successful create().
+			$dedup_domain = $this->get_dedup_domain( $entity_type, $odoo_values );
+			if ( ! empty( $dedup_domain ) ) {
+				$existing = $this->client()->search( $model, $dedup_domain, 0, 1 );
+				if ( ! empty( $existing ) ) {
+					$odoo_id = $existing[0];
+					$this->logger->info( 'Dedup: found existing Odoo record, switching to update.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
+					$this->client()->write( $model, [ $odoo_id ], $odoo_values );
+					$this->save_mapping( $entity_type, $wp_id, $odoo_id, $new_hash );
+					return Sync_Result::success( $odoo_id );
+				}
+			}
+
 			$odoo_id = $this->client()->create( $model, $odoo_values );
 			$saved   = $this->save_mapping( $entity_type, $wp_id, $odoo_id, $new_hash );
 			if ( ! $saved ) {
@@ -239,6 +264,90 @@ abstract class Module_Base {
 		}
 
 		return Sync_Result::success( $odoo_id );
+	}
+
+	/**
+	 * Batch-create multiple entities in a single Odoo API call.
+	 *
+	 * Loads data and maps values for each item, then calls create_batch()
+	 * on the Odoo client. Falls back to individual push_to_odoo() calls
+	 * if the batch call fails.
+	 *
+	 * @param string                                   $entity_type Entity type.
+	 * @param array<int, array{wp_id: int, payload: array<string, mixed>}> $items Items to create.
+	 * @return array<int, Sync_Result> Results indexed by wp_id.
+	 */
+	public function push_batch_creates( string $entity_type, array $items ): array {
+		$model       = $this->get_odoo_model( $entity_type );
+		$results     = [];
+		$values_list = [];
+		$item_map    = []; // Ordered list of items that passed validation.
+
+		foreach ( $items as $item ) {
+			$wp_id = $item['wp_id'];
+
+			// Skip if already mapped (might have been created since enqueue).
+			$existing = $this->get_mapping( $entity_type, $wp_id );
+			if ( $existing ) {
+				$results[ $wp_id ] = Sync_Result::success( $existing );
+				continue;
+			}
+
+			$wp_data                  = ! empty( $item['payload'] ) ? $item['payload'] : $this->load_wp_data( $entity_type, $wp_id );
+			$wp_data['_wp_entity_id'] = $wp_id;
+			$odoo_values              = $this->map_to_odoo( $entity_type, $wp_data );
+
+			if ( empty( $odoo_values ) ) {
+				$results[ $wp_id ] = Sync_Result::failure( 'No data to push.', Error_Type::Permanent );
+				continue;
+			}
+
+			$values_list[] = $odoo_values;
+			$item_map[]    = [
+				'wp_id' => $wp_id,
+				'hash'  => $this->generate_sync_hash( $odoo_values ),
+			];
+		}
+
+		if ( empty( $values_list ) ) {
+			return $results;
+		}
+
+		try {
+			$ids = $this->client()->create_batch( $model, $values_list );
+
+			foreach ( $ids as $i => $odoo_id ) {
+				$wp_id = $item_map[ $i ]['wp_id'];
+				$hash  = $item_map[ $i ]['hash'];
+				$this->save_mapping( $entity_type, $wp_id, $odoo_id, $hash );
+				$results[ $wp_id ] = Sync_Result::success( $odoo_id );
+			}
+
+			$this->logger->info(
+				'Batch created Odoo records.',
+				[
+					'entity_type' => $entity_type,
+					'count'       => count( $ids ),
+				]
+			);
+		} catch ( \Throwable $e ) {
+			// Fallback: process individually.
+			$this->logger->warning(
+				'Batch create failed, falling back to individual creates.',
+				[
+					'entity_type' => $entity_type,
+					'error'       => $e->getMessage(),
+				]
+			);
+
+			foreach ( $item_map as $entry ) {
+				if ( ! isset( $results[ $entry['wp_id'] ] ) ) {
+					$results[ $entry['wp_id'] ] = $this->push_to_odoo( $entity_type, 'create', $entry['wp_id'] );
+				}
+			}
+		}
+
+		return $results;
 	}
 
 	/**
@@ -318,6 +427,12 @@ abstract class Module_Base {
 
 				$new_hash = $this->generate_sync_hash( $odoo_data );
 				$this->save_mapping( $entity_type, $wp_id, $odoo_id, $new_hash );
+
+				// Accumulate for batch translation flush if module provides translatable fields.
+				if ( ! empty( $this->get_translatable_fields( $entity_type ) ) ) {
+					$this->accumulate_pull_translation( $model, $odoo_id, $wp_id );
+				}
+
 				$this->logger->info( 'Pulled from Odoo.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
 				return Sync_Result::success( $wp_id );
 			}
@@ -485,6 +600,25 @@ abstract class Module_Base {
 	}
 
 	/**
+	 * Get a deduplication domain for Odoo search-before-create.
+	 *
+	 * When push_to_odoo() is about to create a record, it first searches
+	 * Odoo using this domain to detect orphaned records (created by a
+	 * previous attempt whose save_mapping() failed). If a match is found,
+	 * the create is converted to an update.
+	 *
+	 * Override in subclasses to provide module-specific dedup criteria.
+	 * Return an empty array to skip dedup (default, fastest path).
+	 *
+	 * @param string               $entity_type Entity type.
+	 * @param array<string, mixed> $odoo_values Mapped Odoo values about to be created.
+	 * @return array<int, mixed> Odoo search domain (Polish notation), or empty to skip.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		return [];
+	}
+
+	/**
 	 * Save data to WordPress.
 	 *
 	 * Subclasses MUST override this to create/update WP entities.
@@ -509,6 +643,108 @@ abstract class Module_Base {
 	 */
 	protected function delete_wp_data( string $entity_type, int $wp_id ): bool {
 		return false;
+	}
+
+	// -------------------------------------------------------------------------
+	// Translation accumulator
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Get translatable fields for a given entity type.
+	 *
+	 * Override in subclasses to enable automatic pull translation support.
+	 * Keys are Odoo field names, values are WordPress field names.
+	 * Return empty array to skip translation (default).
+	 *
+	 * @param string $entity_type Entity type.
+	 * @return array<string, string> Odoo field => WP field map.
+	 */
+	protected function get_translatable_fields( string $entity_type ): array {
+		return [];
+	}
+
+	/**
+	 * Accumulate a pulled record for batch translation at end of batch.
+	 *
+	 * @param string $odoo_model Odoo model name.
+	 * @param int    $odoo_id    Odoo record ID.
+	 * @param int    $wp_id      WordPress entity ID.
+	 * @return void
+	 */
+	protected function accumulate_pull_translation( string $odoo_model, int $odoo_id, int $wp_id ): void {
+		$this->translation_buffer[ $odoo_model ][ $odoo_id ] = $wp_id;
+	}
+
+	/**
+	 * Flush accumulated pull translations.
+	 *
+	 * Called by Sync_Engine after each batch. For each Odoo model in the
+	 * buffer, fetches translations for all accumulated records and applies
+	 * them to the corresponding WordPress entities via Translation_Service.
+	 *
+	 * @return void
+	 */
+	public function flush_pull_translations(): void {
+		if ( empty( $this->translation_buffer ) ) {
+			return;
+		}
+
+		$ts = $this->translation_service();
+		if ( ! $ts->is_available() ) {
+			$this->translation_buffer = [];
+			return;
+		}
+
+		// Resolve entity type from Odoo model (reverse lookup).
+		$model_to_entity = array_flip( $this->odoo_models );
+
+		foreach ( $this->translation_buffer as $odoo_model => $odoo_wp_map ) {
+			$entity_type = $model_to_entity[ $odoo_model ] ?? '';
+			if ( '' === $entity_type ) {
+				continue;
+			}
+
+			$field_map = $this->get_translatable_fields( $entity_type );
+			if ( empty( $field_map ) ) {
+				continue;
+			}
+
+			$ts->pull_translations_batch(
+				$odoo_model,
+				$odoo_wp_map,
+				array_keys( $field_map ),
+				$field_map,
+				$entity_type,
+				fn( int $wp_id, array $data, string $lang ) => $this->apply_pull_translation( $wp_id, $data, $lang ),
+				[]
+			);
+
+			$this->logger->info(
+				'Flushed pull translations.',
+				[
+					'entity_type' => $entity_type,
+					'count'       => count( $odoo_wp_map ),
+				]
+			);
+		}
+
+		$this->translation_buffer = [];
+	}
+
+	/**
+	 * Apply a translated value to a WordPress entity.
+	 *
+	 * Default implementation updates post fields (post_title, post_content)
+	 * via wp_update_post(). Override for non-post entities (taxonomy terms,
+	 * custom tables, etc.).
+	 *
+	 * @param int                    $wp_id WordPress entity ID.
+	 * @param array<string, string>  $data  WP field => translated value.
+	 * @param string                 $lang  Language code.
+	 * @return void
+	 */
+	protected function apply_pull_translation( int $wp_id, array $data, string $lang ): void {
+		// Default: no-op. Modules override if they have a Translation_Adapter.
 	}
 
 	// -------------------------------------------------------------------------

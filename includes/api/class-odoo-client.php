@@ -421,12 +421,20 @@ class Odoo_Client {
 	 * @return bool True if re-authentication might resolve the error.
 	 */
 	private function is_session_error( \Throwable $e ): bool {
+		// HTTP 403 by exception code (most reliable).
+		if ( 403 === $e->getCode() ) {
+			return true;
+		}
+
 		$message = strtolower( $e->getMessage() );
 
-		return str_contains( $message, '403' )
-			|| str_contains( $message, 'session expired' )
+		// Keyword-based detection for session/auth errors.
+		// Uses word-boundary regex for '403' to avoid false positives
+		// (e.g. "Product #1403" should NOT trigger re-auth).
+		return str_contains( $message, 'session expired' )
 			|| str_contains( $message, 'session_expired' )
 			|| str_contains( $message, 'odoo session' )
-			|| str_contains( $message, 'access denied' );
+			|| str_contains( $message, 'access denied' )
+			|| (bool) preg_match( '/\bhttp\s*403\b|\b403\s*forbidden\b/', $message );
 	}
 }

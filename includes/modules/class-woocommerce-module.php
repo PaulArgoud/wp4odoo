@@ -588,6 +588,21 @@ class WooCommerce_Module extends Module_Base {
 		return false;
 	}
 
+	/**
+	 * Dedup domain for products: match by internal reference (SKU).
+	 *
+	 * @param string               $entity_type Entity type.
+	 * @param array<string, mixed> $odoo_values Odoo values.
+	 * @return array<int, mixed>
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( 'product' === $entity_type && ! empty( $odoo_values['default_code'] ) ) {
+			return [ [ 'default_code', '=', $odoo_values['default_code'] ] ];
+		}
+
+		return [];
+	}
+
 	// ─── Helpers ─────────────────────────────────────────────
 
 	/**

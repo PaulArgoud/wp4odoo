@@ -489,7 +489,13 @@ Handler classes receive their dependencies via closures from their parent module
 
 2. **Multi-dependency** (complex handlers): `Product_Handler`, `Order_Handler`, `Pricelist_Handler`, `Shipment_Handler`, `EDD_Order_Handler`, `SimplePay_Handler` — receive closures for settings, client access, entity map, and/or partner service. These handlers perform Odoo API calls directly.
 
-Both patterns are intentional. Simple handlers are pure data transformers (load WP data → return array); complex handlers encapsulate domain logic requiring API access. The choice depends on whether the handler needs to interact with Odoo directly.
+Both patterns are intentional and follow a clear convention:
+
+- **Data Handlers** (pure transformers): `load_data()`, `parse_from_odoo()`, `save_data()`, `status_map()`. No Odoo API dependency. Examples: `Product_Handler`, `Order_Handler`, `WPRM_Handler`, `LearnDash_Handler`, `LifterLMS_Handler`, `Job_Manager_Handler`.
+
+- **Integration Handlers** (with side effects): access plugin DB tables via `$wpdb`, call third-party APIs, or manage external state. Examples: `Amelia_Handler`, `Bookly_Handler`, `Ecwid_Handler`, `ShopWP_Handler`, `SimplePay_Handler`.
+
+**Key rule**: a handler must NEVER call `Odoo_Client` directly — all Odoo interaction goes through the parent module. This preserves the module as the single synchronization orchestrator.
 
 ### Abstract Method Naming Convention
 
@@ -812,6 +818,7 @@ Namespace: `wp-json/wp4odoo/v1/`
 |----------|--------|------|-------------|
 | `/webhook` | `POST` | Token | Receives change notifications from Odoo |
 | `/webhook/test` | `GET` | Token | Health check |
+| `/health` | `GET` | Token | System health: status, queue depth, circuit breaker, module count |
 | `/sync/{module}/{entity}` | `POST` | WP Auth | Triggers sync for a specific module/entity |
 
 The webhook is authenticated via an `X-Odoo-Token` header compared against `wp4odoo_webhook_token`. Rate limiting: 20 requests per IP per 60-second window (returns HTTP 429 when exceeded).
@@ -824,18 +831,19 @@ The webhook is authenticated via an `X-Odoo-Token` header compared against `wp4o
 1. WP hook triggered (e.g., woocommerce_update_product)
 2. Module::push_to_odoo() called
 3. Data transformed via map_to_odoo() + Field_Mapper
-4. Job added to queue via Sync_Engine::enqueue()
-5. Cron runs process_queue()
-6. Odoo_Client::create() or write() via JSON-RPC/XML-RPC
-7. Mapping saved in entity_map
-8. Status updated (completed/failed)
+4. Dedup: if get_dedup_domain() non-empty, search Odoo first (idempotent create)
+5. Job added to queue via Sync_Engine::enqueue()
+6. Cron runs process_queue() — batch creates grouped by module:entity_type
+7. Odoo_Client::create() or write() via JSON-RPC/XML-RPC
+8. Mapping saved in entity_map
+9. Status updated (completed/failed)
 ```
 
 ### Pull (Odoo → WP)
 
 ```
 1. Odoo sends a webhook POST /wp4odoo/v1/webhook
-2. Webhook_Handler validates the token
+2. Webhook_Handler validates the token (try/catch → 503 on enqueue failure)
 3. Job added to queue (direction: odoo_to_wp)
 4. Cron runs process_queue()
 5. Module::pull_from_odoo() called
@@ -843,7 +851,9 @@ The webhook is authenticated via an `X-Odoo-Token` header compared against `wp4o
 7. Transformed via map_from_odoo() + Field_Mapper
 8. Per-module importing flag set in static array (anti-loop, cleared via try/finally)
 9. WP entity created/updated
-10. Mapping and hash saved
+10. Translation accumulated if get_translatable_fields() non-empty
+11. Mapping and hash saved
+12. End of batch: flush_pull_translations() for all modules with buffered translations
 ```
 
 ## Security

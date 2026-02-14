@@ -274,13 +274,16 @@ final class Database_Migration {
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.SchemaChange
 
 		// Replace idx_wp_lookup (entity_type, wp_id) with (module, entity_type, wp_id).
+		// Uses a single atomic ALTER TABLE to avoid a window without any index.
 		$indexes = $wpdb->get_results( "SHOW INDEX FROM {$entity_table}" );
 		$names   = array_column( $indexes, 'Key_name' );
 
 		if ( in_array( 'idx_wp_lookup', $names, true ) ) {
-			$wpdb->query( "ALTER TABLE {$entity_table} DROP KEY idx_wp_lookup" );
+			// Atomic drop+add in a single ALTER TABLE: no window without index.
+			$wpdb->query( "ALTER TABLE {$entity_table} DROP KEY idx_wp_lookup, ADD KEY idx_wp_lookup (module, entity_type, wp_id)" );
+		} else {
+			$wpdb->query( "ALTER TABLE {$entity_table} ADD KEY idx_wp_lookup (module, entity_type, wp_id)" );
 		}
-		$wpdb->query( "ALTER TABLE {$entity_table} ADD KEY idx_wp_lookup (module, entity_type, wp_id)" );
 
 		// Add cleanup index for sync_queue.
 		$indexes = $wpdb->get_results( "SHOW INDEX FROM {$queue_table}" );

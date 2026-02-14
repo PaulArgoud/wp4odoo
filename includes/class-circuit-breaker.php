@@ -187,6 +187,15 @@ class Circuit_Breaker {
 	 * threshold (default 80%). This catches partial degradation where a
 	 * single lucky success would otherwise reset the counter.
 	 *
+	 * Design decision: the circuit breaker operates at the BATCH level,
+	 * not the individual job level. This is intentional:
+	 * - A few individual failures within a healthy batch are normal
+	 *   (bad data, missing fields, etc.) and should not trip the circuit.
+	 * - The 80% failure ratio detects systemic issues (Odoo down,
+	 *   network failure, auth expired) where most/all jobs fail.
+	 * - Individual job failures are handled by Sync_Engine retry logic
+	 *   (Error_Type::Transient → exponential backoff).
+	 *
 	 * @param int $successes Number of successful jobs in the batch.
 	 * @param int $failures  Number of failed jobs in the batch.
 	 * @return void

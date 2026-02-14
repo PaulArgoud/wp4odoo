@@ -19,6 +19,12 @@ class WP_DB_Stub {
 	public string $prefix = 'wp_';
 	public int $insert_id = 0;
 
+	/** @var \Throwable|null Optional exception to throw from insert(). */
+	public ?\Throwable $insert_throws = null;
+
+	/** @var string Table name pattern to match for insert_throws (empty = all tables). */
+	public string $insert_throws_table = '';
+
 	/** @var mixed */
 	public $get_var_return = null;
 	/** @var array|object|null */
@@ -55,6 +61,11 @@ class WP_DB_Stub {
 	/** @return int|false */
 	public function insert( string $table, array $data ) {
 		$this->calls[] = [ 'method' => 'insert', 'args' => [ $table, $data ] ];
+
+		if ( $this->insert_throws && ( '' === $this->insert_throws_table || str_contains( $table, $this->insert_throws_table ) ) ) {
+			throw $this->insert_throws;
+		}
+
 		return 1;
 	}
 
