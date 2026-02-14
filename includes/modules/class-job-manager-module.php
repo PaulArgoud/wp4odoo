@@ -26,6 +26,9 @@ class Job_Manager_Module extends Module_Base {
 
 	use Job_Manager_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '2.0';
+	protected const PLUGIN_TESTED_UP_TO = '2.5';
+
 	/**
 	 * Sync direction: bidirectional.
 	 *
@@ -141,6 +144,13 @@ class Job_Manager_Module extends Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( defined( 'JOB_MANAGER_VERSION' ), 'WP Job Manager' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'JOB_MANAGER_VERSION' ) ? JOB_MANAGER_VERSION : '';
 	}
 
 	// ─── Pull override ───────────────────────────────────────

@@ -30,6 +30,9 @@ class AffiliateWP_Module extends \WP4Odoo\Module_Base {
 
 	use AffiliateWP_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '2.9';
+	protected const PLUGIN_TESTED_UP_TO = '2.26';
+
 	/**
 	 * Odoo models by entity type.
 	 *
@@ -155,6 +158,13 @@ class AffiliateWP_Module extends \WP4Odoo\Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( function_exists( 'affiliate_wp' ), 'AffiliateWP' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'AFFILIATEWP_VERSION' ) ? AFFILIATEWP_VERSION : '';
 	}
 
 	/**

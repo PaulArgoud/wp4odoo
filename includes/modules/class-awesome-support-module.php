@@ -27,6 +27,9 @@ class Awesome_Support_Module extends Helpdesk_Module_Base {
 
 	use Awesome_Support_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '6.0';
+	protected const PLUGIN_TESTED_UP_TO = '6.3';
+
 	/**
 	 * Odoo models by entity type.
 	 *
@@ -137,6 +140,13 @@ class Awesome_Support_Module extends Helpdesk_Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( defined( 'WPAS_VERSION' ), 'Awesome Support' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'WPAS_VERSION' ) ? WPAS_VERSION : '';
 	}
 
 	/**

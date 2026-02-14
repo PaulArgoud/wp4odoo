@@ -81,6 +81,28 @@ abstract class Module_Base {
 	protected int $exclusive_priority = 0;
 
 	/**
+	 * Minimum supported version of the third-party plugin.
+	 *
+	 * When non-empty and the detected plugin version is lower,
+	 * the module is marked as unavailable (admin UI + boot prevented).
+	 * Subclasses override with their own value.
+	 *
+	 * @var string
+	 */
+	protected const PLUGIN_MIN_VERSION = '';
+
+	/**
+	 * Last tested version of the third-party plugin.
+	 *
+	 * When non-empty and the detected plugin version is higher,
+	 * the module still boots but an admin warning is displayed.
+	 * Subclasses override with their own value.
+	 *
+	 * @var string
+	 */
+	protected const PLUGIN_TESTED_UP_TO = '';
+
+	/**
 	 * Logger instance.
 	 *
 	 * @var Logger
@@ -962,6 +984,18 @@ abstract class Module_Base {
 			'available' => true,
 			'notices'   => [],
 		];
+	}
+
+	/**
+	 * Get the detected version of the third-party plugin.
+	 *
+	 * Subclasses override to return the plugin's version constant/property.
+	 * Returns empty string when unavailable or not applicable.
+	 *
+	 * @return string
+	 */
+	protected function get_plugin_version(): string {
+		return '';
 	}
 
 	/**

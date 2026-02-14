@@ -29,6 +29,9 @@ class Amelia_Module extends Booking_Module_Base {
 
 	use Amelia_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '1.0';
+	protected const PLUGIN_TESTED_UP_TO = '1.3';
+
 	/**
 	 * Odoo models by entity type.
 	 *
@@ -138,6 +141,13 @@ class Amelia_Module extends Booking_Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( defined( 'AMELIA_VERSION' ), 'Amelia Booking' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'AMELIA_VERSION' ) ? AMELIA_VERSION : '';
 	}
 
 	// ─── Booking_Module_Base abstracts ──────────────────────

@@ -26,6 +26,8 @@ class Memberships_Module extends Module_Base {
 
 	use Membership_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '1.20';
+	protected const PLUGIN_TESTED_UP_TO = '1.27';
 
 	protected string $exclusive_group = 'memberships';
 	protected int $exclusive_priority = 20;
@@ -168,6 +170,13 @@ class Memberships_Module extends Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( function_exists( 'wc_memberships' ), 'WooCommerce Memberships' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'WC_MEMBERSHIPS_VERSION' ) ? WC_MEMBERSHIPS_VERSION : '';
 	}
 
 	// ─── Pull override ──────────────────────────────────────

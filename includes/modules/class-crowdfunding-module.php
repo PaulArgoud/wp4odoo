@@ -30,6 +30,9 @@ class Crowdfunding_Module extends Module_Base {
 
 	use Crowdfunding_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '4.0';
+	protected const PLUGIN_TESTED_UP_TO = '4.1';
+
 	/**
 	 * Sync direction: push-only (WP → Odoo).
 	 *
@@ -132,6 +135,13 @@ class Crowdfunding_Module extends Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( function_exists( 'wpneo_crowdfunding_init' ), 'WP Crowdfunding' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'STARTER_VERSION' ) ? STARTER_VERSION : '';
 	}
 
 	/**

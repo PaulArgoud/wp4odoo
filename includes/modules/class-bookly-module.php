@@ -30,6 +30,9 @@ class Bookly_Module extends Booking_Module_Base {
 
 	use Bookly_Cron_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '21.0';
+	protected const PLUGIN_TESTED_UP_TO = '24.7';
+
 	/**
 	 * Odoo models by entity type.
 	 *
@@ -139,6 +142,13 @@ class Bookly_Module extends Booking_Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( class_exists( 'Bookly\\Lib\\Plugin' ), 'Bookly' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'BOOKLY_VERSION' ) ? BOOKLY_VERSION : '';
 	}
 
 	// ─── Booking_Module_Base abstracts ──────────────────────

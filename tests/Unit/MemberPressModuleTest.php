@@ -204,16 +204,15 @@ class MemberPressModuleTest extends TestCase {
 
 	// ─── Dependency Status ────────────────────────────────
 
-	public function test_dependency_unavailable_without_memberpress(): void {
-		// MEPR_VERSION is not defined in our test bootstrap.
+	public function test_dependency_available_with_memberpress(): void {
+		// MEPR_VERSION is defined in test stubs.
 		$status = $this->module->get_dependency_status();
-		$this->assertFalse( $status['available'] );
+		$this->assertTrue( $status['available'] );
 	}
 
-	public function test_dependency_has_warning_without_memberpress(): void {
+	public function test_dependency_has_empty_notices(): void {
 		$status = $this->module->get_dependency_status();
-		$this->assertNotEmpty( $status['notices'] );
-		$this->assertSame( 'warning', $status['notices'][0]['type'] );
+		$this->assertEmpty( $status['notices'] );
 	}
 
 	// ─── Boot Guard ───────────────────────────────────────

@@ -746,6 +746,7 @@ if ( ! function_exists( 'llms_get_student' ) ) {
 
 if ( ! class_exists( 'Tribe__Events__Main' ) ) {
 	class Tribe__Events__Main {
+		const VERSION             = '6.8.0';
 		const POSTTYPE            = 'tribe_events';
 		const VENUE_POST_TYPE     = 'tribe_venue';
 		const ORGANIZER_POST_TYPE = 'tribe_organizer';

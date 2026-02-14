@@ -38,6 +38,8 @@ class WooCommerce_Module extends Module_Base {
 
 	use WooCommerce_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '7.0';
+	protected const PLUGIN_TESTED_UP_TO = '10.5';
 
 	protected string $exclusive_group = 'commerce';
 	protected int $exclusive_priority = 30;
@@ -402,6 +404,13 @@ class WooCommerce_Module extends Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( class_exists( 'WooCommerce' ), 'WooCommerce' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'WC_VERSION' ) ? WC_VERSION : '';
 	}
 
 	// ─── Pull Override ───────────────────────────────────────

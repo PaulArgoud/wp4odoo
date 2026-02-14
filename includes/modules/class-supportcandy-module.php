@@ -30,6 +30,9 @@ class SupportCandy_Module extends Helpdesk_Module_Base {
 
 	use SupportCandy_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '3.0';
+	protected const PLUGIN_TESTED_UP_TO = '3.4';
+
 	/**
 	 * Odoo models by entity type.
 	 *
@@ -137,6 +140,13 @@ class SupportCandy_Module extends Helpdesk_Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( defined( 'WPSC_VERSION' ), 'SupportCandy' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'WPSC_VERSION' ) ? WPSC_VERSION : '';
 	}
 
 	/**

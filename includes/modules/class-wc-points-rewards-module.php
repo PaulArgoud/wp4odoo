@@ -33,6 +33,9 @@ class WC_Points_Rewards_Module extends Module_Base {
 
 	use WC_Points_Rewards_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '1.7';
+	protected const PLUGIN_TESTED_UP_TO = '1.8';
+
 	/**
 	 * Sync direction: bidirectional for balances.
 	 *
@@ -150,6 +153,13 @@ class WC_Points_Rewards_Module extends Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( class_exists( 'WC_Points_Rewards_Manager' ), 'WooCommerce Points & Rewards' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'WC_POINTS_REWARDS_VERSION' ) ? WC_POINTS_REWARDS_VERSION : '';
 	}
 
 	// ─── Model detection ──────────────────────────────────

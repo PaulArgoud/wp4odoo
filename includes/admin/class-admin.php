@@ -44,6 +44,7 @@ class Admin {
 		add_action( 'admin_notices', [ $this, 'maybe_show_setup_notice' ] );
 		add_action( 'admin_notices', [ $this, 'maybe_show_cron_warning' ] );
 		add_action( 'admin_notices', [ $this, 'show_backup_warning' ] );
+		add_action( 'admin_notices', [ $this, 'show_version_warnings' ] );
 	}
 
 	/**
@@ -246,6 +247,47 @@ class Admin {
 			esc_html__( 'Back up your databases before any synchronization.', 'wp4odoo' ),
 			esc_html__( 'WP4Odoo is designed and tested with care, but WordPress and Odoo (along with their respective modules) evolve at their own pace — a third-party update can introduce unexpected incompatibilities. A full backup (WordPress + Odoo) allows you to roll back if anything goes wrong.', 'wp4odoo' )
 		);
+	}
+
+	/**
+	 * Show version compatibility warnings on the plugin settings page.
+	 *
+	 * Collects warnings from Module_Registry for modules running on
+	 * untested third-party plugin versions and renders them.
+	 *
+	 * @return void
+	 */
+	public function show_version_warnings(): void {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( ! isset( $_GET['page'] ) || 'wp4odoo' !== $_GET['page'] ) {
+			return;
+		}
+
+		$warnings = wp4odoo()->module_registry()->get_version_warnings();
+		if ( empty( $warnings ) ) {
+			return;
+		}
+
+		$messages = [];
+		foreach ( $warnings as $notices ) {
+			foreach ( $notices as $notice ) {
+				if ( 'warning' === $notice['type'] ) {
+					$messages[] = $notice['message'];
+				}
+			}
+		}
+
+		if ( empty( $messages ) ) {
+			return;
+		}
+
+		echo '<div class="notice notice-warning"><p><strong>';
+		echo esc_html__( 'WordPress For Odoo — Untested plugin versions detected:', 'wp4odoo' );
+		echo '</strong></p><ul>';
+		foreach ( $messages as $msg ) {
+			echo '<li>' . esc_html( $msg ) . '</li>';
+		}
+		echo '</ul></div>';
 	}
 
 	/**

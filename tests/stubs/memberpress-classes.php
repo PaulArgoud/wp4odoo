@@ -5,6 +5,10 @@
  * @package WP4Odoo\Tests
  */
 
+if ( ! defined( 'MEPR_VERSION' ) ) {
+	define( 'MEPR_VERSION', '1.11.0' );
+}
+
 // ─── Global stores ──────────────────────────────────────
 
 $GLOBALS['_mepr_transactions']  = [];

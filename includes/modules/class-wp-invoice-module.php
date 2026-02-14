@@ -30,6 +30,9 @@ class WP_Invoice_Module extends Module_Base {
 
 	use WP_Invoice_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '4.3';
+	protected const PLUGIN_TESTED_UP_TO = '4.4';
+
 	protected string $exclusive_group = 'invoicing';
 	protected int $exclusive_priority = 5;
 
@@ -150,6 +153,13 @@ class WP_Invoice_Module extends Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( class_exists( 'WPI_Invoice' ), 'WP-Invoice' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'WP_INVOICE_VERSION_NUM' ) ? WP_INVOICE_VERSION_NUM : '';
 	}
 
 	// ─── Push override ─────────────────────────────────────

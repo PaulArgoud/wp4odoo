@@ -5,6 +5,18 @@
  * @package WP4Odoo\Tests
  */
 
+// ─── WooCommerce main class ─────────────────────────────
+
+if ( ! class_exists( 'WooCommerce' ) ) {
+	class WooCommerce {
+		public string $version = '10.5.0';
+	}
+}
+
+if ( ! defined( 'WC_VERSION' ) ) {
+	define( 'WC_VERSION', '10.5.0' );
+}
+
 // ─── WC functions ───────────────────────────────────────
 
 if ( ! function_exists( 'wc_get_product' ) ) {

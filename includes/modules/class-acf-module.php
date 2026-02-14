@@ -26,6 +26,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class ACF_Module extends Module_Base {
 
+	protected const PLUGIN_MIN_VERSION  = '6';
+	protected const PLUGIN_TESTED_UP_TO = '6';
+
 	/**
 	 * Sync direction: bidirectional (enriches both push and pull).
 	 *
@@ -175,6 +178,13 @@ class ACF_Module extends Module_Base {
 			class_exists( 'ACF' ) || defined( 'ACF_MAJOR_VERSION' ),
 			'Advanced Custom Fields'
 		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'ACF_MAJOR_VERSION' ) ? (string) ACF_MAJOR_VERSION : '';
 	}
 
 	/**

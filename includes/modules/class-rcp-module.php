@@ -32,6 +32,9 @@ class RCP_Module extends Membership_Module_Base {
 
 	use RCP_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '3.4';
+	protected const PLUGIN_TESTED_UP_TO = '3.5';
+
 	protected int $exclusive_priority = 12;
 
 	/**
@@ -177,6 +180,13 @@ class RCP_Module extends Membership_Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( function_exists( 'rcp_get_membership' ), 'Restrict Content Pro' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'RCP_PLUGIN_VERSION' ) ? RCP_PLUGIN_VERSION : '';
 	}
 
 	// ─── Membership_Module_Base abstract implementations ───

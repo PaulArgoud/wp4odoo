@@ -29,6 +29,9 @@ class WP_All_Import_Module extends \WP4Odoo\Module_Base {
 
 	use WPAI_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '4.7';
+	protected const PLUGIN_TESTED_UP_TO = '4.9';
+
 	/**
 	 * Odoo models: empty — meta-module, no own entity types.
 	 *
@@ -140,6 +143,13 @@ class WP_All_Import_Module extends \WP4Odoo\Module_Base {
 			defined( 'PMXI_VERSION' ) || class_exists( 'PMXI_Plugin' ),
 			'WP All Import'
 		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'PMXI_VERSION' ) ? PMXI_VERSION : '';
 	}
 
 	/**

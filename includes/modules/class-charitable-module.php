@@ -29,6 +29,9 @@ class Charitable_Module extends Dual_Accounting_Module_Base {
 
 	use Charitable_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '1.7';
+	protected const PLUGIN_TESTED_UP_TO = '1.8';
+
 	/**
 	 * Odoo models by entity type.
 	 *
@@ -154,6 +157,13 @@ class Charitable_Module extends Dual_Accounting_Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( class_exists( 'Charitable' ), 'WP Charitable' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'CHARITABLE_VERSION' ) ? CHARITABLE_VERSION : '';
 	}
 
 	// ─── Dual_Accounting_Module_Base abstracts ──────────────

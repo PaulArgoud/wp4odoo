@@ -35,6 +35,9 @@ class LifterLMS_Module extends Module_Base {
 	use LifterLMS_Hooks;
 	use LMS_Helpers;
 
+	protected const PLUGIN_MIN_VERSION  = '7.0';
+	protected const PLUGIN_TESTED_UP_TO = '9.2';
+
 	/**
 	 * Sync direction: bidirectional for courses/memberships, push-only for orders/enrollments.
 	 *
@@ -215,6 +218,13 @@ class LifterLMS_Module extends Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( defined( 'LLMS_VERSION' ), 'LifterLMS' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'LLMS_VERSION' ) ? LLMS_VERSION : '';
 	}
 
 	// ─── Push override ──────────────────────────────────────

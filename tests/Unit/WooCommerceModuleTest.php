@@ -204,16 +204,15 @@ class WooCommerceModuleTest extends TestCase {
 
 	// ─── Dependency Status ────────────────────────────────
 
-	public function test_dependency_status_unavailable_without_woocommerce(): void {
-		// WooCommerce class does not exist in test env.
+	public function test_dependency_status_available_with_woocommerce(): void {
+		// WooCommerce class is defined in test stubs.
 		$status = $this->module->get_dependency_status();
-		$this->assertFalse( $status['available'] );
+		$this->assertTrue( $status['available'] );
 	}
 
-	public function test_dependency_status_has_warning_without_woocommerce(): void {
+	public function test_dependency_status_has_empty_notices(): void {
 		$status = $this->module->get_dependency_status();
-		$this->assertNotEmpty( $status['notices'] );
-		$this->assertSame( 'warning', $status['notices'][0]['type'] );
+		$this->assertEmpty( $status['notices'] );
 	}
 
 	// ─── Boot without WooCommerce ──────────────────────────

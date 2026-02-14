@@ -30,6 +30,9 @@ class Ecwid_Module extends Module_Base {
 
 	use Ecwid_Cron_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '6.12';
+	protected const PLUGIN_TESTED_UP_TO = '7.0';
+
 	protected string $exclusive_group = 'ecommerce';
 	protected int $exclusive_priority = 5;
 
@@ -152,6 +155,13 @@ class Ecwid_Module extends Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( defined( 'ECWID_PLUGIN_DIR' ), 'Ecwid' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'ECWID_PLUGIN_VERSION' ) ? ECWID_PLUGIN_VERSION : '';
 	}
 
 	/**

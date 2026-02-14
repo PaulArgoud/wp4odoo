@@ -28,6 +28,9 @@ class LearnDash_Module extends Module_Base {
 	use LearnDash_Hooks;
 	use LMS_Helpers;
 
+	protected const PLUGIN_MIN_VERSION  = '4.0';
+	protected const PLUGIN_TESTED_UP_TO = '4.20';
+
 	/**
 	 * Sync direction: bidirectional for courses/groups, push-only for transactions/enrollments.
 	 *
@@ -202,6 +205,13 @@ class LearnDash_Module extends Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( defined( 'LEARNDASH_VERSION' ), 'LearnDash LMS' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'LEARNDASH_VERSION' ) ? LEARNDASH_VERSION : '';
 	}
 
 	// ─── Push override ──────────────────────────────────────

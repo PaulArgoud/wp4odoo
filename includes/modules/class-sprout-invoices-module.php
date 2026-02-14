@@ -30,6 +30,9 @@ class Sprout_Invoices_Module extends Module_Base {
 
 	use Sprout_Invoices_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '20.0';
+	protected const PLUGIN_TESTED_UP_TO = '20.5';
+
 	protected string $exclusive_group = 'invoicing';
 	protected int $exclusive_priority = 10;
 
@@ -179,6 +182,13 @@ class Sprout_Invoices_Module extends Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( class_exists( 'SI_Invoice' ), 'Sprout Invoices' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'SI_VERSION' ) ? SI_VERSION : '';
 	}
 
 	// ─── Push override ─────────────────────────────────────

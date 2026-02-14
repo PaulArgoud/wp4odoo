@@ -397,9 +397,53 @@ trait Module_Helpers {
 			];
 		}
 
+		// Version bounds check.
+		$version = $this->get_plugin_version();
+		$min     = static::PLUGIN_MIN_VERSION;
+		$tested  = static::PLUGIN_TESTED_UP_TO;
+
+		if ( '' !== $version && '' !== $min && version_compare( $version, $min, '<' ) ) {
+			return [
+				'available' => false,
+				'notices'   => [
+					[
+						'type'    => 'error',
+						'message' => sprintf(
+							/* translators: %1$s: plugin name, %2$s: detected version, %3$s: minimum version */
+							__( '%1$s %2$s is not supported (minimum required: %3$s).', 'wp4odoo' ),
+							$plugin_name,
+							$version,
+							$min
+						),
+					],
+				],
+			];
+		}
+
+		$notices = [];
+
+		// Pad TESTED_UP_TO to cover patch releases (e.g. '10.5' covers '10.5.x').
+		$tested_cmp = $tested;
+		if ( '' !== $tested && substr_count( $version, '.' ) > substr_count( $tested, '.' ) ) {
+			$tested_cmp .= '.9999';
+		}
+
+		if ( '' !== $version && '' !== $tested && version_compare( $version, $tested_cmp, '>' ) ) {
+			$notices[] = [
+				'type'    => 'warning',
+				'message' => sprintf(
+					/* translators: %1$s: plugin name, %2$s: detected version, %3$s: last tested version */
+					__( '%1$s %2$s has not been tested (tested up to %3$s). Incompatibilities may occur.', 'wp4odoo' ),
+					$plugin_name,
+					$version,
+					$tested
+				),
+			];
+		}
+
 		return [
 			'available' => true,
-			'notices'   => [],
+			'notices'   => $notices,
 		];
 	}
 }

@@ -31,6 +31,8 @@ class EDD_Module extends Module_Base {
 
 	use EDD_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '3.0';
+	protected const PLUGIN_TESTED_UP_TO = '3.6';
 
 	protected string $exclusive_group = 'commerce';
 	protected int $exclusive_priority = 20;
@@ -173,6 +175,13 @@ class EDD_Module extends Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( class_exists( 'Easy_Digital_Downloads' ), 'Easy Digital Downloads' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'EDD_VERSION' ) ? EDD_VERSION : '';
 	}
 
 	/**

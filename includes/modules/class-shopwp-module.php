@@ -29,6 +29,9 @@ class ShopWP_Module extends Module_Base {
 
 	use ShopWP_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '5.0';
+	protected const PLUGIN_TESTED_UP_TO = '5.3';
+
 	protected string $exclusive_group = 'ecommerce';
 	protected int $exclusive_priority = 5;
 
@@ -135,6 +138,13 @@ class ShopWP_Module extends Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( defined( 'SHOPWP_PLUGIN_DIR' ), 'ShopWP' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'SHOPWP_PLUGIN_VERSION' ) ? SHOPWP_PLUGIN_VERSION : '';
 	}
 
 	// ─── Data access ────────────────────────────────────────

@@ -35,6 +35,9 @@ class WC_Bundle_BOM_Module extends Module_Base {
 
 	use WC_Bundle_BOM_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '7.0';
+	protected const PLUGIN_TESTED_UP_TO = '8.0';
+
 	/**
 	 * Sync direction: push-only (WP → Odoo).
 	 *
@@ -154,6 +157,13 @@ class WC_Bundle_BOM_Module extends Module_Base {
 			class_exists( 'WC_Bundles' ) || class_exists( 'WC_Composite_Products' ),
 			'WC Product Bundles / WC Composite Products'
 		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'WC_PB_VERSION' ) ? WC_PB_VERSION : '';
 	}
 
 	/**

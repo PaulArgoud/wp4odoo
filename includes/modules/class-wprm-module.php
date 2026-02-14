@@ -26,6 +26,9 @@ class WPRM_Module extends Module_Base {
 
 	use WPRM_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '8.0';
+	protected const PLUGIN_TESTED_UP_TO = '10.4';
+
 	/**
 	 * Sync direction: push-only (WP → Odoo).
 	 *
@@ -127,6 +130,13 @@ class WPRM_Module extends Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( defined( 'WPRM_VERSION' ), 'WP Recipe Maker' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'WPRM_VERSION' ) ? WPRM_VERSION : '';
 	}
 
 	// ─── Data access ────────────────────────────────────────

@@ -27,6 +27,9 @@ class MemberPress_Module extends Membership_Module_Base {
 
 	use MemberPress_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '1.9';
+	protected const PLUGIN_TESTED_UP_TO = '1.11';
+
 	protected int $exclusive_priority = 10;
 
 	/**
@@ -168,6 +171,13 @@ class MemberPress_Module extends Membership_Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( defined( 'MEPR_VERSION' ), 'MemberPress' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'MEPR_VERSION' ) ? MEPR_VERSION : '';
 	}
 
 	// ─── Membership_Module_Base abstract implementations ───

@@ -32,6 +32,9 @@ class SimplePay_Module extends Dual_Accounting_Module_Base {
 
 	use SimplePay_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '4.7';
+	protected const PLUGIN_TESTED_UP_TO = '4.17';
+
 	/**
 	 * Odoo models by entity type.
 	 *
@@ -157,6 +160,13 @@ class SimplePay_Module extends Dual_Accounting_Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( defined( 'SIMPLE_PAY_VERSION' ), 'WP Simple Pay' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'SIMPLE_PAY_VERSION' ) ? SIMPLE_PAY_VERSION : '';
 	}
 
 	// ─── Dual_Accounting_Module_Base abstracts ──────────────

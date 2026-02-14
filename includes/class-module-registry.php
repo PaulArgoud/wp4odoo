@@ -34,6 +34,15 @@ class Module_Registry {
 	private array $booted = [];
 
 	/**
+	 * Version warnings collected during registration.
+	 *
+	 * Keyed by module ID, each value is an array of notice arrays.
+	 *
+	 * @var array<string, array<array{type: string, message: string}>>
+	 */
+	private array $version_warnings = [];
+
+	/**
 	 * Plugin instance (for third-party hook compatibility).
 	 *
 	 * @var \WP4Odoo_Plugin
@@ -165,6 +174,15 @@ class Module_Registry {
 			return;
 		}
 
+		// Version / dependency check: prevents boot for missing or too-old plugins.
+		$dep = $module->get_dependency_status();
+		if ( ! $dep['available'] ) {
+			return;
+		}
+		if ( ! empty( $dep['notices'] ) ) {
+			$this->version_warnings[ $id ] = $dep['notices'];
+		}
+
 		// Exclusive group check: skip boot if a higher-priority module is already booted.
 		$group = $module->get_exclusive_group();
 		if ( '' !== $group && $this->has_booted_in_group( $group, $module->get_exclusive_priority() ) ) {
@@ -201,6 +219,15 @@ class Module_Registry {
 	 */
 	public function get_booted_count(): int {
 		return count( $this->booted );
+	}
+
+	/**
+	 * Get version warnings collected during module registration.
+	 *
+	 * @return array<string, array<array{type: string, message: string}>>
+	 */
+	public function get_version_warnings(): array {
+		return $this->version_warnings;
 	}
 
 	/**

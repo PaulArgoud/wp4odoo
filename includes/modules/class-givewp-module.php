@@ -29,6 +29,9 @@ class GiveWP_Module extends Dual_Accounting_Module_Base {
 
 	use GiveWP_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '2.25';
+	protected const PLUGIN_TESTED_UP_TO = '4.14';
+
 	/**
 	 * Odoo models by entity type.
 	 *
@@ -154,6 +157,13 @@ class GiveWP_Module extends Dual_Accounting_Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( defined( 'GIVE_VERSION' ), 'GiveWP' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'GIVE_VERSION' ) ? GIVE_VERSION : '';
 	}
 
 	// ─── Dual_Accounting_Module_Base abstracts ──────────────

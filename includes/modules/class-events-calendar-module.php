@@ -38,6 +38,9 @@ class Events_Calendar_Module extends Module_Base {
 
 	use Events_Calendar_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '6.0';
+	protected const PLUGIN_TESTED_UP_TO = '6.15';
+
 	/**
 	 * Sync direction: bidirectional for events/tickets, push-only for attendees.
 	 *
@@ -198,6 +201,13 @@ class Events_Calendar_Module extends Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( class_exists( 'Tribe__Events__Main' ), 'The Events Calendar' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return class_exists( 'Tribe__Events__Main' ) ? \Tribe__Events__Main::VERSION : '';
 	}
 
 	// ─── Dual-model detection ──────────────────────────────

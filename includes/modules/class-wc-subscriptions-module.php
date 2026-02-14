@@ -35,6 +35,9 @@ class WC_Subscriptions_Module extends Module_Base {
 
 	use WC_Subscriptions_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '5.0';
+	protected const PLUGIN_TESTED_UP_TO = '6.9';
+
 	/**
 	 * Sync direction: bidirectional for subscriptions, push-only for products/renewals.
 	 *
@@ -190,6 +193,13 @@ class WC_Subscriptions_Module extends Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( class_exists( 'WC_Subscriptions' ), 'WooCommerce Subscriptions' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'WCS_PLUGIN_VERSION' ) ? WCS_PLUGIN_VERSION : '';
 	}
 
 	// ─── Dual-model detection ──────────────────────────────

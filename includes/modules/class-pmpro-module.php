@@ -32,6 +32,9 @@ class PMPro_Module extends Membership_Module_Base {
 
 	use PMPro_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '2.10';
+	protected const PLUGIN_TESTED_UP_TO = '3.5';
+
 	protected int $exclusive_priority = 15;
 
 	/**
@@ -178,6 +181,13 @@ class PMPro_Module extends Membership_Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( defined( 'PMPRO_VERSION' ), 'Paid Memberships Pro' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'PMPRO_VERSION' ) ? PMPRO_VERSION : '';
 	}
 
 	// ─── Membership_Module_Base abstract implementations ───

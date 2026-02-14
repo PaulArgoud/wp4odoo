@@ -31,6 +31,9 @@ class WC_Bookings_Module extends Booking_Module_Base {
 
 	use WC_Bookings_Hooks;
 
+	protected const PLUGIN_MIN_VERSION  = '2.0';
+	protected const PLUGIN_TESTED_UP_TO = '2.1';
+
 	/**
 	 * Odoo models by entity type.
 	 *
@@ -141,6 +144,13 @@ class WC_Bookings_Module extends Booking_Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		return $this->check_dependency( class_exists( 'WC_Product_Booking' ), 'WooCommerce Bookings' );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'WC_BOOKINGS_VERSION' ) ? WC_BOOKINGS_VERSION : '';
 	}
 
 	/**
