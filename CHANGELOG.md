@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.0.5] - Unreleased
+## [3.1.0] - Unreleased
+
+## [3.0.5] - 2026-02-14
 
 ### Added
 - **Awesome Support module** — Bidirectional sync between Awesome Support tickets and Odoo helpdesk tickets (`helpdesk.ticket` Enterprise) or project tasks (`project.task` Community fallback). Dual-model detection at runtime. Push: ticket data + customer→partner resolution + team_id/project_id injection. Pull: stage name→WP status via keyword heuristic (close/done/resolved/solved/cancel + FR keywords). Closed stage resolution by `sequence DESC` with 1h transient cache. Exclusive group `helpdesk` (priority 10). 43 new tests
