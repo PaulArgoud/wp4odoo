@@ -13,7 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Provides static methods to format payment/donation data for either
  * the OCA donation.donation model or core account.move (invoice).
  *
- * Used by GiveWP_Handler, Charitable_Handler, and SimplePay_Handler.
+ * Used by GiveWP_Handler, Charitable_Handler, SimplePay_Handler,
+ * and AffiliateWP_Handler.
  *
  * @package WP4Odoo
  * @since   2.0.0
@@ -90,6 +91,59 @@ final class Odoo_Accounting_Formatter {
 
 		return [
 			'move_type'        => 'out_invoice',
+			'partner_id'       => $partner_id,
+			'invoice_date'     => $date,
+			'ref'              => $ref,
+			'invoice_line_ids' => [
+				[ 0, 0, $line_data ],
+			],
+		];
+	}
+
+	/**
+	 * Format data for vendor bill (account.move with in_invoice).
+	 *
+	 * Unlike customer invoices (out_invoice), vendor bills represent
+	 * money owed TO a partner (e.g. affiliate commissions). No product_id
+	 * is required — lines use name + price_unit only.
+	 *
+	 * @since 3.1.0
+	 *
+	 * @param int    $partner_id Odoo partner ID (vendor/affiliate).
+	 * @param float  $amount     Amount.
+	 * @param string $date       Date (Y-m-d).
+	 * @param string $ref        Bill reference.
+	 * @param string $line_name  Line description.
+	 * @return array<string, mixed>
+	 */
+	public static function for_vendor_bill( int $partner_id, float $amount, string $date, string $ref, string $line_name ): array {
+		$line_data = [
+			'name'       => $line_name,
+			'quantity'   => 1,
+			'price_unit' => $amount,
+		];
+
+		/**
+		 * Filter vendor bill line data before sending to Odoo.
+		 *
+		 * Use this to inject tax_ids, analytic accounts, or expense
+		 * account IDs. Example:
+		 *
+		 *     add_filter( 'wp4odoo_vendor_bill_line_data', function( $line ) {
+		 *         $line['account_id'] = 42; // Commission expense account.
+		 *         return $line;
+		 *     } );
+		 *
+		 * @since 3.1.0
+		 *
+		 * @param array  $line_data  Bill line data (name, quantity, price_unit).
+		 * @param int    $partner_id Odoo partner ID.
+		 * @param string $ref        Bill reference.
+		 */
+		$line_data = apply_filters( 'wp4odoo_vendor_bill_line_data', $line_data, $partner_id, $ref );
+
+		return [
+			'move_type'        => 'in_invoice',
 			'partner_id'       => $partner_id,
 			'invoice_date'     => $date,
 			'ref'              => $ref,

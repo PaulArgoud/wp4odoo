@@ -6,7 +6,7 @@
  * @package WP4Odoo
  */
 
-define( 'WP4ODOO_VERSION', '3.0.0' );
+define( 'WP4ODOO_VERSION', '3.0.5' );
 define( 'WP4ODOO_PLUGIN_FILE', __DIR__ . '/wp4odoo.php' );
 define( 'WP4ODOO_PLUGIN_DIR', __DIR__ . '/' );
 define( 'WP4ODOO_PLUGIN_URL', 'https://example.com/wp-content/plugins/wp4odoo/' );
@@ -908,6 +908,66 @@ if ( ! class_exists( 'WC_Product_Composite' ) ) {
 		/** @return array<int, array<string, mixed>> */
 		public function get_composite_data(): array { return []; }
 	}
+}
+
+// ─── AffiliateWP stubs ──────────────────────────────────
+
+if ( ! defined( 'AFFILIATEWP_VERSION' ) ) {
+	define( 'AFFILIATEWP_VERSION', '2.25.3' );
+}
+
+if ( ! function_exists( 'affiliate_wp' ) ) {
+	/** @return stdClass */
+	function affiliate_wp() { return new stdClass(); }
+}
+
+if ( ! class_exists( 'AffWP_Affiliate' ) ) {
+	class AffWP_Affiliate {
+		public int $affiliate_id = 0;
+		public int $user_id = 0;
+		public string $payment_email = '';
+		public string $status = 'active';
+		public string $rate_type = 'percentage';
+		public float $rate = 20.0;
+		public float $earnings = 0.0;
+		public float $unpaid_earnings = 0.0;
+		public int $referrals = 0;
+		public int $visits = 0;
+		public string $date_registered = '';
+	}
+}
+
+if ( ! class_exists( 'AffWP_Referral' ) ) {
+	class AffWP_Referral {
+		public int $referral_id = 0;
+		public int $affiliate_id = 0;
+		public int $visit_id = 0;
+		public float $amount = 0.0;
+		public string $currency = 'USD';
+		public string $status = 'pending';
+		public string $description = '';
+		public string $reference = '';
+		public string $context = '';
+		public string $campaign = '';
+		public string $date = '';
+		public int $payout_id = 0;
+	}
+}
+
+if ( ! function_exists( 'affwp_get_affiliate' ) ) {
+	/**
+	 * @param int $affiliate_id
+	 * @return AffWP_Affiliate|false
+	 */
+	function affwp_get_affiliate( $affiliate_id = 0 ) { return false; }
+}
+
+if ( ! function_exists( 'affwp_get_referral' ) ) {
+	/**
+	 * @param int $referral_id
+	 * @return AffWP_Referral|false
+	 */
+	function affwp_get_referral( $referral_id = 0 ) { return false; }
 }
 
 // ─── WPML stubs ─────────────────────────────────────────

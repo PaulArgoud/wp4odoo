@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WordPress For Odoo 2.0.0\n"
 "Report-Msgid-Bugs-To: support@avalia.io\n"
-"POT-Creation-Date: 2026-02-14 01:00+0100\n"
+"POT-Creation-Date: 2026-02-14 01:34+0100\n"
 "PO-Revision-Date: 2026-02-09 22:31+0100\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
@@ -15,14 +15,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-
-#: wp4odoo.php:297
-msgid "Every 5 Minutes"
-msgstr "Toutes les 5 minutes"
-
-#: wp4odoo.php:301
-msgid "Every 15 Minutes"
-msgstr "Toutes les 15 minutes"
 
 #: includes/admin/class-admin-ajax.php:95
 #: includes/modules/class-portal-manager.php:138
@@ -489,6 +481,43 @@ msgid ""
 msgstr ""
 "Mappez les champs ACF aux champs personnalisés Odoo (x_*). Chaque règle "
 "enrichit un module et un type d'entité spécifiques."
+
+#: includes/modules/class-affiliatewp-handler.php:76
+msgid "Affiliate commission"
+msgstr ""
+
+#: includes/modules/class-affiliatewp-handler.php:78
+#, fuzzy, php-format
+msgid "Commission #%1$d — %2$s"
+msgstr "%1$s — %2$s"
+
+#: includes/modules/class-affiliatewp-module.php:97
+msgid "AffiliateWP module enabled but AffiliateWP is not active."
+msgstr "Module AffiliateWP activé mais AffiliateWP n'est pas actif."
+
+#: includes/modules/class-affiliatewp-module.php:134
+msgid "Sync affiliates"
+msgstr "Synchroniser les affiliés"
+
+#: includes/modules/class-affiliatewp-module.php:136
+msgid "Push approved affiliates to Odoo as partners."
+msgstr "Envoyer les affiliés approuvés vers Odoo comme partenaires."
+
+#: includes/modules/class-affiliatewp-module.php:139
+msgid "Sync referrals"
+msgstr "Synchroniser les commissions"
+
+#: includes/modules/class-affiliatewp-module.php:141
+msgid "Push confirmed referrals to Odoo as vendor bills."
+msgstr "Envoyer les commissions confirmées vers Odoo comme factures fournisseur."
+
+#: includes/modules/class-affiliatewp-module.php:144
+msgid "Auto-post vendor bills"
+msgstr "Valider automatiquement les factures fournisseur"
+
+#: includes/modules/class-affiliatewp-module.php:146
+msgid "Automatically confirm vendor bills in Odoo when referral is paid."
+msgstr "Confirmer automatiquement les factures fournisseur dans Odoo lorsque la commission est payée."
 
 #: includes/modules/class-amelia-module.php:117
 #: includes/modules/class-bookly-module.php:118
@@ -1903,6 +1932,14 @@ msgstr "Module WC Bookings activé mais WooCommerce Bookings n'est pas actif."
 #, php-format
 msgid "%s must be installed and activated to use this module."
 msgstr "%s doit être installé et activé pour utiliser ce module."
+
+#: wp4odoo.php:297
+msgid "Every 5 Minutes"
+msgstr "Toutes les 5 minutes"
+
+#: wp4odoo.php:301
+msgid "Every 15 Minutes"
+msgstr "Toutes les 15 minutes"
 
 #~ msgid "Setup Checklist"
 #~ msgstr "Liste de vérification"

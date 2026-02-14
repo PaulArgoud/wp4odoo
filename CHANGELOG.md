@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.1.0] - Unreleased
 
+### Added
+- **AffiliateWP module** — Push-only sync of AffiliateWP affiliates and referral commissions to Odoo. Affiliates synced as `res.partner` (vendor), referrals as vendor bills (`account.move` with `move_type=in_invoice`). First `in_invoice` support in the plugin. Auto-sync affiliate before referral push. Auto-post vendor bills when referral is paid (optional). Status mapping: unpaid→draft, paid→posted, rejected→cancel. 3 settings (sync_affiliates, sync_referrals, auto_post_bills). 62 new tests
+- **Odoo_Accounting_Formatter::for_vendor_bill()** — New static method for formatting vendor bill data (`in_invoice`). No `product_id` in lines (name + price_unit only). Filter hook `wp4odoo_vendor_bill_line_data`
+
 ## [3.0.5] - 2026-02-14
 
 ### Added

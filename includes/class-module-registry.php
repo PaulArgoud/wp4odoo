@@ -162,6 +162,10 @@ class Module_Registry {
 			$this->register( 'supportcandy', new Modules\SupportCandy_Module( $client_provider, $entity_map, $settings ) );
 		}
 
+		if ( function_exists( 'affiliate_wp' ) ) {
+			$this->register( 'affiliatewp', new Modules\AffiliateWP_Module( $client_provider, $entity_map, $settings ) );
+		}
+
 		// Meta-modules (enrich other modules, no own entity types).
 		if ( class_exists( 'ACF' ) || defined( 'ACF_MAJOR_VERSION' ) ) {
 			$this->register( 'acf', new Modules\ACF_Module( $client_provider, $entity_map, $settings ) );

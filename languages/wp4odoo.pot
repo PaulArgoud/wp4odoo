@@ -1,14 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# Copyright (C) YEAR Avalia
 # This file is distributed under the same license as the WordPress For Odoo package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: WordPress For Odoo 3.0.5\n"
+"Project-Id-Version: WordPress For Odoo 3.1.0\n"
 "Report-Msgid-Bugs-To: support@avalia.io\n"
-"POT-Creation-Date: 2026-02-14 01:00+0100\n"
+"POT-Creation-Date: 2026-02-14 01:34+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,14 +16,6 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-#: wp4odoo.php:297
-msgid "Every 5 Minutes"
-msgstr ""
-
-#: wp4odoo.php:301
-msgid "Every 15 Minutes"
-msgstr ""
 
 #: includes/admin/class-admin-ajax.php:95
 #: includes/modules/class-portal-manager.php:138
@@ -453,6 +445,43 @@ msgstr ""
 msgid ""
 "Map ACF fields to Odoo custom fields (x_*). Each rule enriches a specific "
 "module and entity type."
+msgstr ""
+
+#: includes/modules/class-affiliatewp-handler.php:76
+msgid "Affiliate commission"
+msgstr ""
+
+#: includes/modules/class-affiliatewp-handler.php:78
+#, php-format
+msgid "Commission #%1$d — %2$s"
+msgstr ""
+
+#: includes/modules/class-affiliatewp-module.php:97
+msgid "AffiliateWP module enabled but AffiliateWP is not active."
+msgstr ""
+
+#: includes/modules/class-affiliatewp-module.php:134
+msgid "Sync affiliates"
+msgstr ""
+
+#: includes/modules/class-affiliatewp-module.php:136
+msgid "Push approved affiliates to Odoo as partners."
+msgstr ""
+
+#: includes/modules/class-affiliatewp-module.php:139
+msgid "Sync referrals"
+msgstr ""
+
+#: includes/modules/class-affiliatewp-module.php:141
+msgid "Push confirmed referrals to Odoo as vendor bills."
+msgstr ""
+
+#: includes/modules/class-affiliatewp-module.php:144
+msgid "Auto-post vendor bills"
+msgstr ""
+
+#: includes/modules/class-affiliatewp-module.php:146
+msgid "Automatically confirm vendor bills in Odoo when referral is paid."
 msgstr ""
 
 #: includes/modules/class-amelia-module.php:117
@@ -1769,4 +1798,12 @@ msgstr ""
 #: includes/trait-module-helpers.php:383
 #, php-format
 msgid "%s must be installed and activated to use this module."
+msgstr ""
+
+#: wp4odoo.php:297
+msgid "Every 5 Minutes"
+msgstr ""
+
+#: wp4odoo.php:301
+msgid "Every 15 Minutes"
 msgstr ""

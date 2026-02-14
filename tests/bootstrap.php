@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'WP4ODOO_PLUGIN_DIR', dirname( __DIR__ ) . '/' );
-define( 'WP4ODOO_VERSION', '3.0.0' );
+define( 'WP4ODOO_VERSION', '3.0.5' );
 
 if ( ! defined( 'DAY_IN_SECONDS' ) ) {
 	define( 'DAY_IN_SECONDS', 86400 );
@@ -87,6 +87,8 @@ $GLOBALS['_supportcandy_tickets']    = [];
 $GLOBALS['_supportcandy_ticketmeta'] = [];
 $GLOBALS['_wc_bundles']              = [];
 $GLOBALS['_wc_composites']           = [];
+$GLOBALS['_affwp_affiliates']        = [];
+$GLOBALS['_affwp_referrals']         = [];
 
 // ─── Load stubs ─────────────────────────────────────────
 // Stubs must be loaded before the autoloader so that external
@@ -127,6 +129,7 @@ require_once __DIR__ . '/stubs/i18n-classes.php';
 require_once __DIR__ . '/stubs/awesome-support-classes.php';
 require_once __DIR__ . '/stubs/supportcandy-classes.php';
 require_once __DIR__ . '/stubs/wc-bundles-classes.php';
+require_once __DIR__ . '/stubs/affiliatewp-classes.php';
 
 // ─── Composer autoloader ────────────────────────────────
 

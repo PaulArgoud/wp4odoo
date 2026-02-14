@@ -2,7 +2,7 @@
 
 ## Overview
 
-Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 30 modules across 19 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Points & Rewards, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (7 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS), Booking (Amelia + Bookly), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP), Helpdesk (Awesome Support + SupportCandy), and HR (WP Job Manager).
+Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 32 modules across 20 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Points & Rewards, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (7 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS), Booking (Amelia + Bookly), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP), Helpdesk (Awesome Support + SupportCandy), HR (WP Job Manager), and Affiliates (AffiliateWP).
 
 ![WP4ODOO Full Architecture](assets/images/architecture-full.svg)
 
@@ -184,6 +184,11 @@ WordPress For Odoo/
 │   │   ├── trait-supportcandy-hooks.php      # SC: hook callbacks (ticket created, status changed)
 │   │   ├── class-supportcandy-handler.php    # SC: $wpdb custom table ticket data load/save
 │   │   ├── class-supportcandy-module.php     # SC: extends Helpdesk_Module_Base (uses SC_Hooks trait)
+│   │   │
+│   │   ├── # ─── AffiliateWP ────────────────────────
+│   │   ├── class-affiliatewp-module.php      # AffiliateWP: push-only, affiliates → res.partner, referrals → vendor bills
+│   │   ├── class-affiliatewp-handler.php     # AffiliateWP: referral data load, vendor bill formatting, status mapping
+│   │   ├── trait-affiliatewp-hooks.php       # AffiliateWP: status change hooks (affiliate + referral)
 │   │   │
 │   │   ├── # ─── Meta-modules (enrichment) ───────
 │   │   ├── class-acf-handler.php             # ACF: type conversions, enrich push/pull, write ACF fields
@@ -1380,6 +1385,26 @@ All user inputs are sanitized with:
 - User-facing limitation notices: balance-only sync, single program, rules not synced, integer rounding
 
 **Settings:** `sync_balances`, `pull_balances`, `odoo_program_id`
+
+### AffiliateWP — COMPLETE
+
+**Files:** `class-affiliatewp-module.php` (push-only module, extends `Module_Base` directly), `class-affiliatewp-handler.php` (referral data load, vendor bill formatting, status mapping), `trait-affiliatewp-hooks.php` (affiliate + referral status change hooks)
+
+**Odoo models:** `res.partner` (affiliates as vendors), `account.move` (referrals as vendor bills with `move_type=in_invoice`)
+
+**Key features:**
+- First `in_invoice` (vendor bill) support in the plugin — all other modules use `out_invoice` (customer invoices)
+- Affiliates synced as Odoo partners (vendors), not products — no parent product entity
+- Referral vendor bill lines have no `product_id` — just `name` + `price_unit` (Odoo allows invoice lines without products)
+- Auto-sync affiliate before referral push via `ensure_entity_synced('affiliate', $id)`
+- Auto-post vendor bills when referral status is `paid` (optional `auto_post_bills` setting)
+- Status mapping: `unpaid` → `draft`, `paid` → `posted`, `rejected` → `cancel`, `pending` → `draft` (default)
+- Handler delegates to `Odoo_Accounting_Formatter::for_vendor_bill()` for data formatting
+- Uses `Partner_Service` implicitly via CRM contacts — `payment_email` preferred over WP user email
+- Detection: `function_exists('affiliate_wp')`
+- No exclusive group — coexists with all modules
+
+**Settings:** `sync_affiliates` (bool), `sync_referrals` (bool), `auto_post_bills` (bool)
 
 ### ACF (Advanced Custom Fields) — COMPLETE
 
