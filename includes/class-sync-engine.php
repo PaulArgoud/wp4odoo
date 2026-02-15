@@ -447,6 +447,18 @@ class Sync_Engine {
 			$module    = ( $this->module_resolver )( $first_job->module );
 
 			if ( null === $module ) {
+				$this->logger->warning(
+					'Batch creates skipped: module not found.',
+					[
+						'module' => $first_job->module,
+						'jobs'   => count( $group_jobs ),
+					]
+				);
+				foreach ( $group_jobs as $job ) {
+					$this->handle_failure( $job, 'Module not found: ' . $first_job->module, Error_Type::Permanent );
+					++$this->batch_failures;
+					$batched_job_ids[ (int) $job->id ] = true;
+				}
 				continue;
 			}
 

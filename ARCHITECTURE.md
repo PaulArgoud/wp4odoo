@@ -260,7 +260,7 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # 1902 unit tests (2972 assertions) + 26 integration tests (wp-env)
+├── tests/                             # 2580 unit tests (3970 assertions) + 26 integration tests (wp-env)
 │   ├── bootstrap.php                 #   Unit test bootstrap: constants, stub loading, plugin class requires
 │   ├── bootstrap-integration.php     #   Integration test bootstrap: loads WP test framework (wp-env)
 │   ├── stubs/
@@ -291,6 +291,14 @@ WordPress For Odoo/
 │   │   ├── crowdfunding-classes.php     # wpneo_crowdfunding_init()
 │   │   ├── ecwid-classes.php            # ECWID_PLUGIN_DIR constant
 │   │   ├── shopwp-classes.php           # SHOPWP_PLUGIN_DIR constant
+│   │   ├── job-manager-classes.php     # WP_Job_Manager stubs
+│   │   ├── acf-classes.php             # ACF functions (get_field, update_field, acf_get_field)
+│   │   ├── wc-points-rewards-classes.php # WC_Points_Rewards, WC_Points_Rewards_Manager
+│   │   ├── wc-bundles-classes.php      # WC_Bundles, WC_Composite_Products, WC_Product_Bundle
+│   │   ├── awesome-support-classes.php # Awesome_Support, wpas_get_ticket_status
+│   │   ├── supportcandy-classes.php    # WPSC_VERSION, SupportCandy stubs
+│   │   ├── affiliatewp-classes.php     # AffiliateWP, affwp_get_affiliate
+│   │   ├── wpai-classes.php            # PMXI_VERSION, wp_all_import_get_import_id
 │   │   └── i18n-classes.php            # WPML + Polylang stubs (constants, classes, functions)
 │   ├── helpers/
 │   │   └── MockTransport.php            #   Shared mock Transport for API tests
@@ -358,7 +366,6 @@ WordPress For Odoo/
 │       ├── RCPModuleTest.php            #   25 tests for RCP_Module
 │       ├── RCPHandlerTest.php           #   37 tests for RCP_Handler
 │       ├── LearnDashModuleTest.php      #   28 tests for LearnDash_Module
-│       ├── LearnDashHandlerTest.php     #   41 tests for LearnDash_Handler
 │       ├── LifterLMSModuleTest.php      #   26 tests for LifterLMS_Module
 │       ├── LifterLMSHandlerTest.php     #   35 tests for LifterLMS_Handler
 │       ├── WCSubscriptionsModuleTest.php #  27 tests for WC_Subscriptions_Module
@@ -379,7 +386,39 @@ WordPress For Odoo/
 │       ├── WCPointsRewardsHooksTest.php  # 5 tests for WC_Points_Rewards_Hooks
 │       ├── WPMLAdapterTest.php          # 17 tests for WPML_Adapter
 │       ├── PolylangAdapterTest.php      # 16 tests for Polylang_Adapter
-│       └── TranslationServiceTest.php   # 27 tests for Translation_Service
+│       ├── TranslationServiceTest.php   # 27 tests for Translation_Service
+│       ├── WCPullCoordinatorTest.php    # Tests for WC_Pull_Coordinator (translation flush)
+│       ├── ACFModuleTest.php            # Tests for ACF_Module
+│       ├── ACFHandlerTest.php           # Tests for ACF_Handler
+│       ├── WCBundleBomModuleTest.php    # Tests for WC_Bundle_Bom_Module
+│       ├── WCBundleBomHandlerTest.php   # Tests for WC_Bundle_Bom_Handler
+│       ├── WCBundleBomHooksTest.php     # Tests for WC_Bundle_Bom_Hooks
+│       ├── AwesomeSupportModuleTest.php # Tests for Awesome_Support_Module
+│       ├── AwesomeSupportHandlerTest.php # Tests for Awesome_Support_Handler
+│       ├── AwesomeSupportHooksTest.php  # Tests for Awesome_Support_Hooks
+│       ├── SupportCandyModuleTest.php   # Tests for SupportCandy_Module
+│       ├── SupportCandyHandlerTest.php  # Tests for SupportCandy_Handler
+│       ├── SupportCandyHooksTest.php    # Tests for SupportCandy_Hooks
+│       ├── AffiliateWPModuleTest.php    # Tests for AffiliateWP_Module
+│       ├── AffiliateWPHandlerTest.php   # Tests for AffiliateWP_Handler
+│       ├── AffiliateWPHooksTest.php     # Tests for AffiliateWP_Hooks
+│       ├── WPAllImportModuleTest.php    # Tests for WP_All_Import_Module
+│       ├── OdooAccountingFormatterTest.php # Tests for Odoo_Accounting_Formatter
+│       ├── OdooModelTest.php            # Tests for Odoo_Model enum
+│       ├── CircuitBreakerTest.php       # Tests for Circuit_Breaker
+│       ├── ModuleRegistryTest.php       # Tests for Module_Registry
+│       ├── ModuleBaseHelpersTest.php    # Tests for should_sync(), poll_entity_changes()
+│       ├── SafeCallbackTest.php         # Tests for safe_callback() graceful degradation
+│       ├── VersionBoundsTest.php        # Tests for PLUGIN_MIN_VERSION / PLUGIN_TESTED_UP_TO
+│       ├── DedupDomainTest.php          # Tests for get_dedup_domain() idempotent creates
+│       ├── SessionErrorTest.php         # Tests for Odoo_Client session error recovery
+│       ├── BatchCreateTest.php          # Tests for batch create pipeline
+│       ├── TranslationAccumulatorTest.php # Tests for translation accumulator
+│       ├── WebhookReliabilityTest.php   # Tests for webhook error handling
+│       ├── PricelistHandlerTest.php     # Tests for Pricelist_Handler
+│       ├── SchemaCacheTest.php          # Tests for Schema_Cache
+│       ├── ReconcilerTest.php           # Tests for Reconciler
+│       └── ShipmentHandlerTest.php      # Tests for Shipment_Handler
 │
 ├── uninstall.php                      # Cleanup on plugin uninstall
 │
@@ -664,8 +703,10 @@ Three donation/payment modules (GiveWP, Charitable, SimplePay) share a common du
 - `for_donation_model(partner_id, product_id, amount, date, ref)` — OCA `donation.donation` format with `line_ids`
 - `for_account_move(partner_id, product_id, amount, date, ref, line_name, fallback_name)` — core `account.move` format with `invoice_line_ids`
 - `build_invoice_lines(items, fallback_name, total)` — Shared One2many `(0, 0, {...})` tuple builder for `invoice_line_ids`. Normalizes name/quantity/price_unit, skips empty names, falls back to single total line. Used by `WP_Invoice_Handler` and `Sprout_Invoices_Handler`
+- `for_vendor_bill(partner_id, amount, date, ref, line_name)` — Vendor bill format (`in_invoice`) with `invoice_line_ids` (no `product_id` in lines). Filter hook `wp4odoo_vendor_bill_line_data`. Used by `AffiliateWP_Handler`
+- `auto_post(client, model, odoo_id, logger)` — Auto-post/validate: `donation.donation` → `validate`, `account.move` → `action_post`. Returns bool. Centralizes logic for all accounting modules
 
-Used by `GiveWP_Handler`, `Charitable_Handler`, `SimplePay_Handler`, `WP_Invoice_Handler`, and `Sprout_Invoices_Handler`.
+Used by `GiveWP_Handler`, `Charitable_Handler`, `SimplePay_Handler`, `WP_Invoice_Handler`, `Sprout_Invoices_Handler`, and `AffiliateWP_Handler`.
 
 ### 9. Shared Membership Infrastructure
 

@@ -90,12 +90,13 @@ class Sync_Queue_Repository {
 			$wpdb->query( 'START TRANSACTION' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		}
 
-		// Deduplication: look for an existing pending job with same key fields.
+		// Deduplication: look for an existing pending or processing job with same key fields.
+		// Including 'processing' prevents re-enqueuing an entity that is currently being synced.
 		$where_parts = [
 			$wpdb->prepare( 'module = %s', $module ),
 			$wpdb->prepare( 'entity_type = %s', $entity_type ),
 			$wpdb->prepare( 'direction = %s', $direction ),
-			"status = 'pending'",
+			"status IN ('pending', 'processing')",
 		];
 
 		if ( null !== $wp_id && $wp_id > 0 ) {

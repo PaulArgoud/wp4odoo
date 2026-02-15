@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Amelia hooks inconsistency** — `on_booking_canceled()` and `on_booking_rescheduled()` now use `should_sync('sync_appointments')` instead of bare `is_importing()`, aligning with all other hook callbacks
+- **Circuit_Breaker** — `PROBE_TTL` increased from 120 s to 360 s to exceed `RECOVERY_DELAY + BATCH_TIME_LIMIT` (355 s), preventing overlapping probes when a half-open probe batch takes its full allotted time
+- **Sync_Engine** — Batch creates with an unresolvable module (disabled or removed) now mark all grouped jobs as permanently failed instead of silently skipping them (jobs were left stuck in `processing` for 10 min until stale recovery)
+- **Sync_Queue_Repository** — Dedup `SELECT … FOR UPDATE` now checks for both `pending` and `processing` statuses, preventing duplicate enqueues when an entity is already being synced
+- **Webhook_Handler** — Rate limiting switched from `wp_cache_*` (non-persistent by default) to `set_transient()` / `get_transient()`, ensuring rate limits persist across PHP processes
 
 ### Changed
 - **SimplePay_Hooks** — Deduplicated `on_payment_succeeded()` and `on_invoice_payment_succeeded()` (95% identical) into a shared `process_stripe_payment()` method

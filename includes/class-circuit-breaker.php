@@ -66,10 +66,11 @@ class Circuit_Breaker {
 	/**
 	 * TTL for the probe mutex transient (seconds).
 	 *
-	 * Must exceed BATCH_TIME_LIMIT (55 s) to prevent a second probe
-	 * batch from starting before the first one finishes.
+	 * Must exceed RECOVERY_DELAY + BATCH_TIME_LIMIT (355 s) to prevent
+	 * overlapping probes: after the first probe transient expires, a
+	 * second probe could start before the recovery window closes.
 	 */
-	private const PROBE_TTL = 120;
+	private const PROBE_TTL = 360;
 
 	/**
 	 * wp_options key for DB-backed circuit breaker state.
