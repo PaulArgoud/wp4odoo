@@ -96,6 +96,54 @@ class Failure_Notifier {
 	}
 
 	/**
+	 * Send a circuit breaker open notification email.
+	 *
+	 * Uses a separate cooldown key (wp4odoo_last_cb_email) so circuit
+	 * breaker alerts do not interfere with regular failure emails.
+	 *
+	 * @param int $failure_count Number of consecutive batch failures that triggered the circuit.
+	 * @return void
+	 */
+	public function notify_circuit_breaker_open( int $failure_count ): void {
+		$last_cb_email = (int) get_option( 'wp4odoo_last_cb_email', 0 );
+		if ( ( time() - $last_cb_email ) < $this->settings->get_failure_cooldown() ) {
+			return;
+		}
+
+		$admin_email = get_option( 'admin_email' );
+		if ( empty( $admin_email ) ) {
+			return;
+		}
+
+		$subject = __( '[WP4Odoo] Circuit breaker opened', 'wp4odoo' );
+
+		$message = sprintf(
+			/* translators: 1: number of consecutive batch failures, 2: health admin URL */
+			__( "The WP4Odoo circuit breaker has opened after %1\$d consecutive high-failure batches. Queue processing is paused until Odoo connectivity recovers.\n\nCheck the health dashboard at %2\$s", 'wp4odoo' ),
+			$failure_count,
+			admin_url( 'admin.php?page=wp4odoo&tab=health' )
+		);
+
+		update_option( 'wp4odoo_last_cb_email', time() );
+
+		if ( ! wp_mail( $admin_email, $subject, $message ) ) {
+			$this->logger->error(
+				'Failed to send circuit breaker notification email.',
+				[ 'email' => $admin_email ]
+			);
+			return;
+		}
+
+		$this->logger->warning(
+			'Circuit breaker notification sent to admin.',
+			[
+				'batch_failures' => $failure_count,
+				'email'          => $admin_email,
+			]
+		);
+	}
+
+	/**
 	 * Send a notification email if the cooldown has elapsed.
 	 *
 	 * @param int $consecutive Number of consecutive failures.

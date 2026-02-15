@@ -50,7 +50,7 @@ trait Events_Calendar_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'events_calendar', 'ticket', 'sync_tickets', $post_id );
+		$this->push_entity( 'ticket', 'sync_tickets', $post_id );
 	}
 
 	/**
@@ -63,6 +63,6 @@ trait Events_Calendar_Hooks {
 	 * @return void
 	 */
 	public function on_rsvp_attendee_created( int $attendee_id, int $order_id, int $product_id, int $order_attendee_id ): void {
-		$this->push_entity( 'events_calendar', 'attendee', 'sync_attendees', $attendee_id );
+		$this->push_entity( 'attendee', 'sync_attendees', $attendee_id );
 	}
 }

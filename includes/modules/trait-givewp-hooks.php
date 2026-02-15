@@ -56,6 +56,6 @@ trait GiveWP_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'givewp', 'donation', 'sync_donations', $payment_id );
+		$this->push_entity( 'donation', 'sync_donations', $payment_id );
 	}
 }

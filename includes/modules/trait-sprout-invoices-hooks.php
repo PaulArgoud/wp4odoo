@@ -47,6 +47,6 @@ trait Sprout_Invoices_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'sprout_invoices', 'payment', 'sync_payments', $payment_id );
+		$this->push_entity( 'payment', 'sync_payments', $payment_id );
 	}
 }

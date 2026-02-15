@@ -79,7 +79,7 @@ class Circuit_Breaker {
 	 * during Odoo outages even when Redis/Memcached is restarted.
 	 * Transients remain the fast path; DB is the fallback.
 	 */
-	private const OPT_CB_STATE = 'wp4odoo_cb_state';
+	public const OPT_CB_STATE = 'wp4odoo_cb_state';
 
 	/**
 	 * Logger instance.
@@ -89,12 +89,29 @@ class Circuit_Breaker {
 	private Logger $logger;
 
 	/**
+	 * Optional failure notifier for circuit breaker open alerts.
+	 *
+	 * @var Failure_Notifier|null
+	 */
+	private ?Failure_Notifier $failure_notifier = null;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param Logger $logger Logger instance.
 	 */
 	public function __construct( Logger $logger ) {
 		$this->logger = $logger;
+	}
+
+	/**
+	 * Set the failure notifier for circuit breaker open alerts.
+	 *
+	 * @param Failure_Notifier $notifier Failure notifier instance.
+	 * @return void
+	 */
+	public function set_failure_notifier( Failure_Notifier $notifier ): void {
+		$this->failure_notifier = $notifier;
 	}
 
 	/**
@@ -293,6 +310,10 @@ class Circuit_Breaker {
 						'recovery_delay_seconds'     => self::RECOVERY_DELAY,
 					]
 				);
+
+				if ( null !== $this->failure_notifier ) {
+					$this->failure_notifier->notify_circuit_breaker_open( $count );
+				}
 			}
 		} finally {
 			if ( '1' === (string) $locked ) {

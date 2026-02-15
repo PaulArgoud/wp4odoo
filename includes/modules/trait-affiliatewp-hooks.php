@@ -54,7 +54,7 @@ trait AffiliateWP_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'affiliatewp', 'affiliate', 'sync_affiliates', $affiliate_id );
+		$this->push_entity( 'affiliate', 'sync_affiliates', $affiliate_id );
 	}
 
 	/**
@@ -73,6 +73,6 @@ trait AffiliateWP_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'affiliatewp', 'referral', 'sync_referrals', $referral_id );
+		$this->push_entity( 'referral', 'sync_referrals', $referral_id );
 	}
 }

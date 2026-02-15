@@ -37,7 +37,7 @@ trait EDD_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'edd', 'download', 'sync_downloads', $post_id );
+		$this->push_entity( 'download', 'sync_downloads', $post_id );
 	}
 
 	/**

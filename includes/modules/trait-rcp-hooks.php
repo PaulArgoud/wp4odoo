@@ -33,7 +33,7 @@ trait RCP_Hooks {
 	 * @return void
 	 */
 	public function on_level_saved( int $level_id ): void {
-		$this->push_entity( 'rcp', 'level', 'sync_levels', $level_id );
+		$this->push_entity( 'level', 'sync_levels', $level_id );
 	}
 
 	/**
@@ -62,7 +62,7 @@ trait RCP_Hooks {
 	 * @return void
 	 */
 	public function on_membership_activated( \RCP_Membership $membership ): void {
-		$this->push_entity( 'rcp', 'membership', 'sync_memberships', $membership->get_id() );
+		$this->push_entity( 'membership', 'sync_memberships', $membership->get_id() );
 	}
 
 	/**

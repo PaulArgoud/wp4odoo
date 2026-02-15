@@ -129,6 +129,7 @@ class Sync_Engine {
 		$this->logger           = $logger ?? new Logger( 'sync', $settings );
 		$this->failure_notifier = new Failure_Notifier( $this->logger, $settings );
 		$this->circuit_breaker  = new Circuit_Breaker( $this->logger );
+		$this->circuit_breaker->set_failure_notifier( $this->failure_notifier );
 	}
 
 	/**

@@ -56,7 +56,7 @@ trait LifterLMS_Hooks {
 	 * @return void
 	 */
 	public function on_order_completed( int $order_id ): void {
-		$this->push_entity( 'lifterlms', 'order', 'sync_orders', $order_id );
+		$this->push_entity( 'order', 'sync_orders', $order_id );
 	}
 
 	/**
@@ -71,7 +71,7 @@ trait LifterLMS_Hooks {
 	public function on_enrollment( int $user_id, int $course_id ): void {
 		$synthetic_id = self::encode_synthetic_id( $user_id, $course_id );
 
-		$this->push_entity( 'lifterlms', 'enrollment', 'sync_enrollments', $synthetic_id );
+		$this->push_entity( 'enrollment', 'sync_enrollments', $synthetic_id );
 	}
 
 	/**

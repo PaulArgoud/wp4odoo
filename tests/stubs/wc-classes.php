@@ -219,8 +219,18 @@ if ( ! class_exists( 'WC_Order' ) ) {
 		public function get_billing_email(): string { return $this->data['billing_email'] ?? ''; }
 		public function get_formatted_billing_full_name(): string { return $this->data['billing_name'] ?? ''; }
 		public function get_customer_id(): int { return $this->data['customer_id'] ?? 0; }
-		/** @return array<int, array<string, mixed>> */
-		public function get_items(): array { return $this->data['items'] ?? []; }
+		/**
+		 * @param string $type Item type: '' for line items, 'tax', 'shipping'.
+		 * @return array
+		 */
+		public function get_items( string $type = '' ): array {
+			if ( 'tax' === $type ) {
+				return $this->data['tax_items'] ?? [];
+			}
+			return $this->data['items'] ?? [];
+		}
+		/** @return array<int, object> */
+		public function get_shipping_methods(): array { return $this->data['shipping_methods'] ?? []; }
 		/** @param string $key Meta key. */
 		public function update_meta_data( string $key, $value ): void {
 			$this->data['meta'][ $key ] = $value;
@@ -238,5 +248,41 @@ if ( ! class_exists( 'WC_Order' ) ) {
 		public function save(): int { return $this->id ?: 1; }
 		/** @param array<string, mixed> $data */
 		public function set_data( array $data ): void { $this->data = $data; }
+	}
+
+	/**
+	 * Stub for WC_Order_Item (line item).
+	 */
+	class WC_Order_Item {
+		protected array $data = [];
+		public function __construct( array $data = [] ) { $this->data = $data; }
+		public function get_name(): string { return $this->data['name'] ?? ''; }
+		public function get_quantity(): int { return (int) ( $this->data['quantity'] ?? 1 ); }
+		public function get_total(): string { return $this->data['total'] ?? '0.00'; }
+		public function get_tax_class(): string { return $this->data['tax_class'] ?? ''; }
+		public function get_product_id(): int { return (int) ( $this->data['product_id'] ?? 0 ); }
+	}
+
+	/**
+	 * Stub for WC_Order_Item_Tax.
+	 */
+	class WC_Order_Item_Tax {
+		protected array $data = [];
+		public function __construct( array $data = [] ) { $this->data = $data; }
+		public function get_rate_id(): int { return (int) ( $this->data['rate_id'] ?? 0 ); }
+		public function get_label(): string { return $this->data['label'] ?? ''; }
+		public function get_tax_total(): string { return $this->data['tax_total'] ?? '0.00'; }
+		public function get_rate_code(): string { return $this->data['rate_code'] ?? ''; }
+	}
+
+	/**
+	 * Stub for WC_Order_Item_Shipping.
+	 */
+	class WC_Order_Item_Shipping {
+		protected array $data = [];
+		public function __construct( array $data = [] ) { $this->data = $data; }
+		public function get_method_id(): string { return $this->data['method_id'] ?? ''; }
+		public function get_method_title(): string { return $this->data['method_title'] ?? ''; }
+		public function get_total(): string { return $this->data['total'] ?? '0.00'; }
 	}
 }

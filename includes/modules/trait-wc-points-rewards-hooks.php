@@ -42,6 +42,6 @@ trait WC_Points_Rewards_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'wc_points_rewards', 'balance', 'sync_balances', $user_id );
+		$this->push_entity( 'balance', 'sync_balances', $user_id );
 	}
 }

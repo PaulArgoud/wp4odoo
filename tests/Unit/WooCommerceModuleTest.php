@@ -119,16 +119,21 @@ class WooCommerceModuleTest extends TestCase {
 
 	// ─── Settings Fields ───────────────────────────────────
 
-	public function test_settings_fields_exposes_ten_fields(): void {
+	public function test_settings_fields_exposes_fifteen_fields(): void {
 		$fields = $this->module->get_settings_fields();
-		$this->assertCount( 10, $fields );
+		$this->assertCount( 15, $fields );
 		$this->assertArrayHasKey( 'sync_products', $fields );
 		$this->assertArrayHasKey( 'sync_orders', $fields );
 		$this->assertArrayHasKey( 'sync_stock', $fields );
 		$this->assertArrayHasKey( 'sync_product_images', $fields );
+		$this->assertArrayHasKey( 'sync_gallery_images', $fields );
 		$this->assertArrayHasKey( 'sync_pricelists', $fields );
 		$this->assertArrayHasKey( 'pricelist_id', $fields );
 		$this->assertArrayHasKey( 'sync_shipments', $fields );
+		$this->assertArrayHasKey( 'sync_taxes', $fields );
+		$this->assertArrayHasKey( 'tax_mapping', $fields );
+		$this->assertArrayHasKey( 'sync_shipping', $fields );
+		$this->assertArrayHasKey( 'shipping_mapping', $fields );
 		$this->assertArrayHasKey( 'auto_confirm_orders', $fields );
 		$this->assertArrayHasKey( 'convert_currency', $fields );
 		$this->assertArrayHasKey( 'sync_translations', $fields );
@@ -228,5 +233,94 @@ class WooCommerceModuleTest extends TestCase {
 
 	public function test_sync_direction(): void {
 		$this->assertSame( 'bidirectional', $this->module->get_sync_direction() );
+	}
+
+	// ─── Tax Mapping ──────────────────────────────────────
+
+	public function test_map_to_odoo_applies_tax_mapping(): void {
+		// Set settings with tax mapping enabled.
+		update_option( 'wp4odoo_module_woocommerce', [
+			'sync_taxes'  => true,
+			'tax_mapping' => [ 'standard' => 5 ],
+		] );
+
+		$wp_data = [
+			'line_items' => [
+				[ 'name' => 'Widget', 'quantity' => 1, 'total' => '10.00', 'tax_class' => '', 'product_id' => 1 ],
+			],
+		];
+
+		// Simulate parent map_to_odoo returning order_line with a One2many tuple.
+		$mapped = $this->module->map_to_odoo( 'order', $wp_data );
+
+		// The parent map_to_odoo builds order_line. Since we can't easily mock it,
+		// test the apply_tax_mapping method directly via reflection.
+		$ref    = new \ReflectionMethod( $this->module, 'apply_tax_mapping' );
+		$ref->setAccessible( true );
+
+		$input = [
+			'order_line' => [
+				[ 0, 0, [ 'name' => 'Widget', 'product_uom_qty' => 1, 'price_unit' => 10.0 ] ],
+			],
+		];
+
+		$result = $ref->invoke( $this->module, $input, $wp_data, [
+			'sync_taxes'  => true,
+			'tax_mapping' => [ 'standard' => 5 ],
+		] );
+
+		$this->assertSame( [ [ 6, 0, [ 5 ] ] ], $result['order_line'][0][2]['tax_id'] );
+	}
+
+	public function test_map_to_odoo_skips_tax_when_disabled(): void {
+		$ref   = new \ReflectionMethod( $this->module, 'apply_tax_mapping' );
+		$ref->setAccessible( true );
+
+		$input = [
+			'order_line' => [
+				[ 0, 0, [ 'name' => 'Widget' ] ],
+			],
+		];
+
+		$result = $ref->invoke( $this->module, $input, [ 'line_items' => [ [ 'tax_class' => '' ] ] ], [
+			'sync_taxes'  => false,
+			'tax_mapping' => [ 'standard' => 5 ],
+		] );
+
+		$this->assertArrayNotHasKey( 'tax_id', $result['order_line'][0][2] );
+	}
+
+	// ─── Shipping Mapping ─────────────────────────────────
+
+	public function test_map_to_odoo_applies_shipping_mapping(): void {
+		$ref   = new \ReflectionMethod( $this->module, 'apply_shipping_mapping' );
+		$ref->setAccessible( true );
+
+		$result = $ref->invoke( $this->module, [], [
+			'shipping_methods' => [
+				[ 'method_id' => 'flat_rate', 'method_title' => 'Flat Rate', 'total' => '5.00' ],
+			],
+		], [
+			'sync_shipping'    => true,
+			'shipping_mapping' => [ 'flat_rate' => 12 ],
+		] );
+
+		$this->assertSame( 12, $result['carrier_id'] );
+	}
+
+	public function test_map_to_odoo_skips_shipping_when_disabled(): void {
+		$ref   = new \ReflectionMethod( $this->module, 'apply_shipping_mapping' );
+		$ref->setAccessible( true );
+
+		$result = $ref->invoke( $this->module, [], [
+			'shipping_methods' => [
+				[ 'method_id' => 'flat_rate' ],
+			],
+		], [
+			'sync_shipping'    => false,
+			'shipping_mapping' => [ 'flat_rate' => 12 ],
+		] );
+
+		$this->assertArrayNotHasKey( 'carrier_id', $result );
 	}
 }

@@ -157,4 +157,32 @@ class FailureNotifierTest extends TestCase {
 		$this->assertArrayHasKey( 'wp4odoo_last_failure_email', $GLOBALS['_wp_options'] );
 		$this->assertGreaterThan( 0, $GLOBALS['_wp_options']['wp4odoo_last_failure_email'] );
 	}
+
+	// ─── Circuit breaker notification ───────────────────────
+
+	public function test_cb_notification_sends_email(): void {
+		$this->notifier->notify_circuit_breaker_open( 3 );
+
+		$this->assertCount( 1, $GLOBALS['_wp_mail_calls'] );
+		$this->assertSame( 'admin@example.com', $GLOBALS['_wp_mail_calls'][0]['to'] );
+		$this->assertStringContainsString( 'Circuit breaker', $GLOBALS['_wp_mail_calls'][0]['subject'] );
+		$this->assertStringContainsString( '3', $GLOBALS['_wp_mail_calls'][0]['message'] );
+	}
+
+	public function test_cb_notification_respects_cooldown(): void {
+		$this->notifier->notify_circuit_breaker_open( 3 );
+		$this->assertCount( 1, $GLOBALS['_wp_mail_calls'] );
+
+		// Second call within cooldown — no email.
+		$this->notifier->notify_circuit_breaker_open( 4 );
+		$this->assertCount( 1, $GLOBALS['_wp_mail_calls'] );
+	}
+
+	public function test_cb_notification_no_email_without_admin(): void {
+		$GLOBALS['_wp_options']['admin_email'] = '';
+
+		$this->notifier->notify_circuit_breaker_open( 3 );
+
+		$this->assertEmpty( $GLOBALS['_wp_mail_calls'] );
+	}
 }

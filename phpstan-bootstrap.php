@@ -92,8 +92,10 @@ if ( ! class_exists( 'WC_Order' ) ) {
 		public function get_billing_email(): string { return ''; }
 		public function get_formatted_billing_full_name(): string { return ''; }
 		public function get_customer_id(): int { return 0; }
-		/** @return array<int, array<string, mixed>> */
-		public function get_items(): array { return []; }
+		/** @return WC_Order_Item[] */
+		public function get_items( string $type = '' ): array { return []; }
+		/** @return WC_Order_Item_Shipping[] */
+		public function get_shipping_methods(): array { return []; }
 		/** @param mixed $value */
 		public function update_meta_data( string $key, $value ): void {}
 		/**
@@ -104,6 +106,27 @@ if ( ! class_exists( 'WC_Order' ) ) {
 		public function get_meta( string $key, bool $single = true ) { return ''; }
 		public function add_order_note( string $note ): int { return 0; }
 		public function save(): int { return 0; }
+	}
+
+	class WC_Order_Item {
+		public function get_name(): string { return ''; }
+		public function get_quantity(): int { return 1; }
+		public function get_total(): string { return '0.00'; }
+		public function get_tax_class(): string { return ''; }
+		public function get_product_id(): int { return 0; }
+	}
+
+	class WC_Order_Item_Tax {
+		public function get_rate_id(): int { return 0; }
+		public function get_label(): string { return ''; }
+		public function get_tax_total(): string { return '0.00'; }
+		public function get_rate_code(): string { return ''; }
+	}
+
+	class WC_Order_Item_Shipping {
+		public function get_method_id(): string { return ''; }
+		public function get_method_title(): string { return ''; }
+		public function get_total(): string { return '0.00'; }
 	}
 }
 
@@ -687,8 +710,8 @@ if ( ! class_exists( 'WC_Subscription' ) ) {
 		public function get_billing_interval(): int { return 1; }
 		public function get_date( string $type ): string { return ''; }
 		public function get_parent_id(): int { return 0; }
-		/** @return array<int, array<string, mixed>> */
-		public function get_items(): array { return []; }
+		/** @return WC_Order_Item[] */
+		public function get_items( string $type = '' ): array { return []; }
 		public function get_user_id(): int { return 0; }
 		public function update_status( string $new_status ): void {}
 	}

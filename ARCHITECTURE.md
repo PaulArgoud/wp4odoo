@@ -262,7 +262,7 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # 2961 unit tests (4564 assertions) + 26 integration tests (wp-env)
+├── tests/                             # 2972 unit tests (4597 assertions) + 26 integration tests (wp-env)
 │   ├── bootstrap.php                 #   Unit test bootstrap: constants, stub loading, plugin class requires
 │   ├── bootstrap-integration.php     #   Integration test bootstrap: loads WP test framework (wp-env)
 │   ├── stubs/
@@ -1028,7 +1028,7 @@ All user inputs are sanitized with:
 
 **Files:** `class-woocommerce-module.php` (sync coordinator, uses `WooCommerce_Hooks` trait), `trait-woocommerce-hooks.php` (WC hook callbacks), `class-product-handler.php` (product CRUD), `class-order-handler.php` (order CRUD + status mapping), `class-variant-handler.php` (variant import), `class-image-handler.php` (featured image + gallery image pull/push), `class-pricelist-handler.php` (pricelist price pull), `class-shipment-handler.php` (shipment tracking pull), `class-currency-guard.php` (currency mismatch detection), `class-exchange-rate-service.php` (Odoo exchange rates), `class-invoice-helper.php` (shared with Sales + EDD)
 
-**Odoo models:** `product.template`, `product.product`, `product.category`, `sale.order`, `stock.quant`, `account.move`, `product.pricelist`, `product.pricelist.item`, `stock.picking`
+**Odoo models:** `product.template`, `product.product`, `product.category`, `sale.order`, `stock.quant`, `account.move`, `product.pricelist`, `product.pricelist.item`, `stock.picking`, `account.tax`, `delivery.carrier`
 
 **Key features:**
 - Mutually exclusive with Sales_Module and EDD_Module (same Odoo models)
@@ -1045,8 +1045,10 @@ All user inputs are sanitized with:
 - **Product gallery images**: bidirectional sync of Odoo `product_image_ids` (One2many → `product.image`) ↔ WC `_product_image_gallery` meta; hash-based change detection per position (`_wp4odoo_gallery_hashes` JSON meta); push exports gallery attachments as base64 One2many tuples
 - **Category pull**: `Product_Handler` resolves Odoo `categ_id` Many2one to WP `product_cat` terms during product pull; `WC_Pull_Coordinator` accumulates category mappings for translation flush
 - **Attribute value translation**: `Variant_Handler` tracks attribute value Odoo IDs in `entity_map`; accumulated per-taxonomy for translated term name pull
+- **Tax mapping**: configurable WC tax class → Odoo `account.tax` ID mapping; applied per order line during push as `tax_id` Many2many `[6, 0, [id]]` tuples
+- **Shipping mapping**: configurable WC shipping method → Odoo `delivery.carrier` ID mapping; sets `carrier_id` on `sale.order` during push
 
-**Settings:** `sync_products`, `sync_orders`, `sync_stock`, `sync_product_images`, `sync_gallery_images`, `sync_pricelist`, `sync_shipments`, `convert_currency`, `auto_confirm_orders` — `sync_products` and `sync_orders` are checked at callback level (each hook checks the relevant setting before enqueuing)
+**Settings:** `sync_products`, `sync_orders`, `sync_stock`, `sync_product_images`, `sync_gallery_images`, `sync_pricelist`, `sync_shipments`, `convert_currency`, `auto_confirm_orders`, `sync_taxes`, `tax_mapping`, `sync_shipping`, `shipping_mapping` — `sync_products` and `sync_orders` are checked at callback level (each hook checks the relevant setting before enqueuing)
 
 
 

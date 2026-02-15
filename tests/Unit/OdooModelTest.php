@@ -59,6 +59,14 @@ class OdooModelTest extends TestCase {
 		$this->assertSame( 'stock.picking', Odoo_Model::StockPicking->value );
 	}
 
+	public function test_account_tax_value(): void {
+		$this->assertSame( 'account.tax', Odoo_Model::AccountTax->value );
+	}
+
+	public function test_delivery_carrier_value(): void {
+		$this->assertSame( 'delivery.carrier', Odoo_Model::DeliveryCarrier->value );
+	}
+
 	public function test_try_from_valid_string(): void {
 		$model = Odoo_Model::tryFrom( 'res.partner' );
 		$this->assertSame( Odoo_Model::Partner, $model );

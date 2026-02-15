@@ -152,6 +152,6 @@ trait Amelia_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'amelia', 'service', 'sync_services', $service_id );
+		$this->push_entity( 'service', 'sync_services', $service_id );
 	}
 }

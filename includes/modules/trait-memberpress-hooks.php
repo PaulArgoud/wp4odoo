@@ -48,7 +48,7 @@ trait MemberPress_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'memberpress', 'transaction', 'sync_transactions', (int) $txn->id );
+		$this->push_entity( 'transaction', 'sync_transactions', (int) $txn->id );
 	}
 
 	/**
@@ -60,6 +60,6 @@ trait MemberPress_Hooks {
 	 * @return void
 	 */
 	public function on_subscription_status_change( string $old_status, string $new_status, $sub ): void {
-		$this->push_entity( 'memberpress', 'subscription', 'sync_subscriptions', (int) $sub->id );
+		$this->push_entity( 'subscription', 'sync_subscriptions', (int) $sub->id );
 	}
 }

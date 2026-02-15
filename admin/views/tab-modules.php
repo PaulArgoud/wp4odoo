@@ -264,6 +264,44 @@ if ( ! defined( 'ABSPATH' ) ) {
 											<?php
 											break;
 
+										case 'key_value':
+											$kv_data     = is_array( $value ) ? $value : [];
+											$ajax_action = $field['ajax_action'] ?? '';
+											?>
+										<div class="wp4odoo-kv-mapping-panel"
+											data-module="<?php echo esc_attr( $module_id ); ?>"
+											data-key="<?php echo esc_attr( $field_key ); ?>"
+											data-ajax="<?php echo esc_attr( $ajax_action ); ?>">
+											<button type="button" class="button wp4odoo-load-kv-options"
+												data-module="<?php echo esc_attr( $module_id ); ?>"
+												data-key="<?php echo esc_attr( $field_key ); ?>">
+												<?php esc_html_e( 'Load from Odoo', 'wp4odoo' ); ?>
+											</button>
+											<span class="wp4odoo-kv-status"></span>
+											<div class="wp4odoo-kv-rows" style="margin-top:8px;">
+												<?php if ( ! empty( $kv_data ) ) : ?>
+													<?php foreach ( $kv_data as $wc_key => $odoo_id ) : ?>
+														<div class="wp4odoo-kv-row" style="margin-bottom:4px;">
+															<code><?php echo esc_html( $wc_key ); ?></code>
+															&rarr;
+															<strong><?php echo esc_html( (string) $odoo_id ); ?></strong>
+														</div>
+													<?php endforeach; ?>
+												<?php endif; ?>
+											</div>
+										</div>
+										<input type="hidden"
+											class="wp4odoo-module-setting wp4odoo-kv-json"
+											data-module="<?php echo esc_attr( $module_id ); ?>"
+											data-key="<?php echo esc_attr( $field_key ); ?>"
+											id="<?php echo esc_attr( $input_id ); ?>"
+											value="<?php echo esc_attr( wp_json_encode( $kv_data ) ); ?>" />
+											<?php if ( ! empty( $field['description'] ) ) : ?>
+											<p class="description"><?php echo esc_html( $field['description'] ); ?></p>
+										<?php endif; ?>
+											<?php
+											break;
+
 										case 'languages':
 											?>
 										<div class="wp4odoo-languages-panel"

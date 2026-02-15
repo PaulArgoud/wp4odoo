@@ -54,7 +54,7 @@ trait LearnDash_Hooks {
 	 * @return void
 	 */
 	public function on_transaction_created( int $transaction_id ): void {
-		$this->push_entity( 'learndash', 'transaction', 'sync_transactions', $transaction_id );
+		$this->push_entity( 'transaction', 'sync_transactions', $transaction_id );
 	}
 
 	/**

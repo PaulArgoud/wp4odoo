@@ -328,8 +328,13 @@ class WooCommerce_Module extends Module_Base {
 			'sync_orders'         => true,
 			'sync_stock'          => true,
 			'sync_product_images' => true,
+			'sync_gallery_images' => true,
 			'sync_pricelists'     => false,
 			'sync_shipments'      => false,
+			'sync_taxes'          => false,
+			'tax_mapping'         => [],
+			'sync_shipping'       => false,
+			'shipping_mapping'    => [],
 			'auto_confirm_orders' => true,
 			'convert_currency'    => false,
 			'pricelist_id'        => 0,
@@ -364,6 +369,11 @@ class WooCommerce_Module extends Module_Base {
 				'type'        => 'checkbox',
 				'description' => __( 'Pull product featured images from Odoo.', 'wp4odoo' ),
 			],
+			'sync_gallery_images' => [
+				'label'       => __( 'Sync gallery images', 'wp4odoo' ),
+				'type'        => 'checkbox',
+				'description' => __( 'Push and pull product gallery images to/from Odoo.', 'wp4odoo' ),
+			],
 			'auto_confirm_orders' => [
 				'label'       => __( 'Auto-confirm orders', 'wp4odoo' ),
 				'type'        => 'checkbox',
@@ -383,6 +393,28 @@ class WooCommerce_Module extends Module_Base {
 				'label'       => __( 'Sync shipments', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Pull shipment tracking from Odoo into WooCommerce orders (AST compatible).', 'wp4odoo' ),
+			],
+			'sync_taxes'          => [
+				'label'       => __( 'Map taxes', 'wp4odoo' ),
+				'type'        => 'checkbox',
+				'description' => __( 'Map WooCommerce tax classes to Odoo taxes on order push.', 'wp4odoo' ),
+			],
+			'tax_mapping'         => [
+				'label'       => __( 'Tax mapping', 'wp4odoo' ),
+				'type'        => 'key_value',
+				'description' => __( 'Map WooCommerce tax classes to Odoo account.tax IDs.', 'wp4odoo' ),
+				'ajax_action' => 'wp4odoo_fetch_odoo_taxes',
+			],
+			'sync_shipping'       => [
+				'label'       => __( 'Map shipping', 'wp4odoo' ),
+				'type'        => 'checkbox',
+				'description' => __( 'Map WooCommerce shipping methods to Odoo delivery carriers on order push.', 'wp4odoo' ),
+			],
+			'shipping_mapping'    => [
+				'label'       => __( 'Shipping mapping', 'wp4odoo' ),
+				'type'        => 'key_value',
+				'description' => __( 'Map WooCommerce shipping methods to Odoo delivery.carrier IDs.', 'wp4odoo' ),
+				'ajax_action' => 'wp4odoo_fetch_odoo_carriers',
 			],
 			'convert_currency'    => [
 				'label'       => __( 'Convert currency', 'wp4odoo' ),
@@ -479,14 +511,99 @@ class WooCommerce_Module extends Module_Base {
 	public function map_to_odoo( string $entity_type, array $wp_data ): array {
 		$mapped = parent::map_to_odoo( $entity_type, $wp_data );
 
+		$settings = $this->get_settings();
+
 		if ( 'product' === $entity_type ) {
-			$settings = $this->get_settings();
-			if ( ! empty( $settings['sync_product_images'] ) ) {
+			if ( ! empty( $settings['sync_gallery_images'] ) ) {
 				$wp_id   = (int) ( $wp_data['ID'] ?? $wp_data['id'] ?? 0 );
 				$gallery = $this->image_handler->export_gallery( $wp_id );
 				if ( ! empty( $gallery ) ) {
 					$mapped['product_image_ids'] = $gallery;
 				}
+			}
+		}
+
+		if ( 'order' === $entity_type ) {
+			$mapped = $this->apply_tax_mapping( $mapped, $wp_data, $settings );
+			$mapped = $this->apply_shipping_mapping( $mapped, $wp_data, $settings );
+		}
+
+		return $mapped;
+	}
+
+	/**
+	 * Apply WooCommerce tax class → Odoo tax ID mapping on order lines.
+	 *
+	 * Reads line_items from wp_data, looks up each item's tax_class in the
+	 * configured mapping, and adds tax_id Many2many fields to order_line tuples.
+	 *
+	 * @param array $mapped   Current Odoo-mapped data.
+	 * @param array $wp_data  WordPress order data (from Order_Handler::load()).
+	 * @param array $settings Module settings.
+	 * @return array Modified mapped data.
+	 */
+	private function apply_tax_mapping( array $mapped, array $wp_data, array $settings ): array {
+		if ( empty( $settings['sync_taxes'] ) || empty( $settings['tax_mapping'] ) ) {
+			return $mapped;
+		}
+
+		$tax_map    = $settings['tax_mapping'];
+		$line_items = $wp_data['line_items'] ?? [];
+
+		if ( empty( $line_items ) || ! isset( $mapped['order_line'] ) || ! is_array( $mapped['order_line'] ) ) {
+			return $mapped;
+		}
+
+		foreach ( $mapped['order_line'] as $idx => $line ) {
+			// order_line format: [0, 0, { ... }] — One2many create tuple.
+			if ( ! is_array( $line ) || 3 !== count( $line ) || ! is_array( $line[2] ) ) {
+				continue;
+			}
+
+			// Match by index: line_items and order_line are in the same order.
+			$tax_class = $line_items[ $idx ]['tax_class'] ?? '';
+			$key       = '' === $tax_class ? 'standard' : $tax_class;
+
+			if ( isset( $tax_map[ $key ] ) ) {
+				$odoo_tax_id = (int) $tax_map[ $key ];
+				if ( $odoo_tax_id > 0 ) {
+					$mapped['order_line'][ $idx ][2]['tax_id'] = [ [ 6, 0, [ $odoo_tax_id ] ] ];
+				}
+			}
+		}
+
+		return $mapped;
+	}
+
+	/**
+	 * Apply WooCommerce shipping method → Odoo delivery carrier mapping.
+	 *
+	 * Sets carrier_id on the mapped order from the first shipping method.
+	 *
+	 * @param array $mapped   Current Odoo-mapped data.
+	 * @param array $wp_data  WordPress order data (from Order_Handler::load()).
+	 * @param array $settings Module settings.
+	 * @return array Modified mapped data.
+	 */
+	private function apply_shipping_mapping( array $mapped, array $wp_data, array $settings ): array {
+		if ( empty( $settings['sync_shipping'] ) || empty( $settings['shipping_mapping'] ) ) {
+			return $mapped;
+		}
+
+		$shipping_map = $settings['shipping_mapping'];
+		$methods      = $wp_data['shipping_methods'] ?? [];
+
+		if ( empty( $methods ) ) {
+			return $mapped;
+		}
+
+		// Use the first shipping method.
+		$method_id = $methods[0]['method_id'] ?? '';
+
+		if ( '' !== $method_id && isset( $shipping_map[ $method_id ] ) ) {
+			$carrier_id = (int) $shipping_map[ $method_id ];
+			if ( $carrier_id > 0 ) {
+				$mapped['carrier_id'] = $carrier_id;
 			}
 		}
 

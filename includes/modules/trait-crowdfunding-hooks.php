@@ -44,6 +44,6 @@ trait Crowdfunding_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'crowdfunding', 'campaign', 'sync_campaigns', $post_id );
+		$this->push_entity( 'campaign', 'sync_campaigns', $post_id );
 	}
 }

@@ -189,6 +189,20 @@ trait Ajax_Module_Handlers {
 							}
 						}
 						break;
+					case 'key_value':
+						$json          = wp_unslash( $settings[ $key ] );
+						$decoded       = is_string( $json ) ? json_decode( $json, true ) : ( is_array( $json ) ? $json : [] );
+						$clean[ $key ] = [];
+						if ( is_array( $decoded ) ) {
+							foreach ( $decoded as $k => $v ) {
+								$sanitized_key = sanitize_text_field( (string) $k );
+								$sanitized_val = absint( $v );
+								if ( '' !== $sanitized_key && $sanitized_val > 0 ) {
+									$clean[ $key ][ $sanitized_key ] = $sanitized_val;
+								}
+							}
+						}
+						break;
 					default:
 						$clean[ $key ] = sanitize_text_field( $settings[ $key ] );
 						break;
@@ -248,6 +262,78 @@ trait Ajax_Module_Handlers {
 
 		$handler = new Bulk_Handler( $plugin->client(), new \WP4Odoo\Entity_Map_Repository() );
 		wp_send_json_success( $handler->export_products() );
+	}
+
+	/**
+	 * Detect translation languages and Odoo availability.
+	 *
+	 * Probes the active translation plugin (WPML/Polylang) for available
+	 * languages, then checks which ones are installed in Odoo via res.lang.
+	 *
+	 * @since 3.0.5
+	 *
+	 * @return void
+	 */
+	/**
+	 * Fetch available Odoo taxes for tax mapping.
+	 *
+	 * Reads account.tax records with type_tax_use = 'sale' from Odoo,
+	 * returning ID, name, and amount for the admin mapping UI.
+	 *
+	 * @since 3.2.0
+	 *
+	 * @return void
+	 */
+	public function fetch_odoo_taxes(): void {
+		$this->verify_request();
+
+		try {
+			$client  = \WP4Odoo_Plugin::instance()->client();
+			$records = $client->search_read(
+				'account.tax',
+				[ [ 'type_tax_use', '=', 'sale' ] ],
+				[ 'id', 'name', 'amount' ]
+			);
+
+			wp_send_json_success( [ 'items' => $records ] );
+		} catch ( \Throwable $e ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'Failed to fetch Odoo taxes.', 'wp4odoo' ) . ' ' . $e->getMessage(),
+				]
+			);
+		}
+	}
+
+	/**
+	 * Fetch available Odoo delivery carriers for shipping mapping.
+	 *
+	 * Reads delivery.carrier records from Odoo, returning ID and name
+	 * for the admin mapping UI.
+	 *
+	 * @since 3.2.0
+	 *
+	 * @return void
+	 */
+	public function fetch_odoo_carriers(): void {
+		$this->verify_request();
+
+		try {
+			$client  = \WP4Odoo_Plugin::instance()->client();
+			$records = $client->search_read(
+				'delivery.carrier',
+				[],
+				[ 'id', 'name' ]
+			);
+
+			wp_send_json_success( [ 'items' => $records ] );
+		} catch ( \Throwable $e ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'Failed to fetch Odoo carriers.', 'wp4odoo' ) . ' ' . $e->getMessage(),
+				]
+			);
+		}
 	}
 
 	/**

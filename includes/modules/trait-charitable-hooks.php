@@ -60,6 +60,6 @@ trait Charitable_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'charitable', 'donation', 'sync_donations', $post->ID );
+		$this->push_entity( 'donation', 'sync_donations', $post->ID );
 	}
 }

@@ -43,6 +43,7 @@
 			this.bindDismissChecklist();
 			this.bindConfirmWebhooks();
 			this.bindDetectLanguages();
+			this.bindKeyValueMapping();
 			this.bindMappingsUI();
 		},
 
@@ -682,6 +683,117 @@
 		},
 
 		// ─── ACF Mappings UI ─────────────────────────────────────
+
+		/**
+		 * Key-value mapping panels (tax/shipping mapping).
+		 *
+		 * Fetches Odoo items via AJAX and renders a two-column table
+		 * with WC keys and Odoo dropdowns.
+		 */
+		bindKeyValueMapping: function() {
+			$( document ).on( 'click', '.wp4odoo-load-kv-options', function() {
+				var $btn   = $( this );
+				var $panel = $btn.closest( '.wp4odoo-kv-mapping-panel' );
+				var action = $panel.data( 'ajax' );
+				var key    = $panel.data( 'key' );
+				var $rows  = $panel.find( '.wp4odoo-kv-rows' );
+				var $status = $panel.find( '.wp4odoo-kv-status' );
+				var $hidden = $panel.closest( 'td' ).find( '.wp4odoo-kv-json[data-key="' + key + '"]' );
+				var existing = {};
+
+				try {
+					existing = JSON.parse( $hidden.val() || '{}' );
+				} catch ( e ) {
+					existing = {};
+				}
+
+				$status.text( wp4odooAdmin.i18n.loading || 'Loading…' );
+
+				WP4Odoo.ajax( action, {}, function( data ) {
+					var items = data.items || [];
+					$status.text( '' );
+					$rows.empty();
+
+					if ( ! items.length ) {
+						$rows.html( '<em>' + ( wp4odooAdmin.i18n.noResults || 'No items found in Odoo.' ) + '</em>' );
+						return;
+					}
+
+					// Build Odoo options.
+					var odooOpts = '<option value="">' + ( wp4odooAdmin.i18n.selectOdoo || '— None —' ) + '</option>';
+					$.each( items, function( i, item ) {
+						var label = item.name + ( item.amount !== undefined ? ' (' + item.amount + '%)' : '' );
+						odooOpts += '<option value="' + item.id + '">' + label + '</option>';
+					} );
+
+					// Detect WC keys based on the field key.
+					var wcKeys = [];
+					if ( key === 'tax_mapping' ) {
+						wcKeys = [ 'standard' ];
+						if ( typeof wc_tax_classes !== 'undefined' ) {
+							wcKeys = wc_tax_classes;
+						}
+					} else if ( key === 'shipping_mapping' ) {
+						wcKeys = [ 'flat_rate', 'free_shipping', 'local_pickup' ];
+						if ( typeof wc_shipping_methods !== 'undefined' ) {
+							wcKeys = wc_shipping_methods;
+						}
+					}
+
+					// Render rows.
+					$.each( wcKeys, function( i, wcKey ) {
+						var sel = existing[ wcKey ] || '';
+						var $row = $(
+							'<div class="wp4odoo-kv-row" style="margin-bottom:4px;">' +
+							'<code>' + wcKey + '</code> &rarr; ' +
+							'<select class="wp4odoo-kv-select" data-wc-key="' + wcKey + '">' +
+							odooOpts +
+							'</select>' +
+							'</div>'
+						);
+						if ( sel ) {
+							$row.find( 'select' ).val( String( sel ) );
+						}
+						$rows.append( $row );
+					} );
+
+					// Sync selects to hidden JSON on change.
+					$rows.off( 'change' ).on( 'change', '.wp4odoo-kv-select', function() {
+						var mapping = {};
+						$rows.find( '.wp4odoo-kv-select' ).each( function() {
+							var v = $( this ).val();
+							if ( v ) {
+								mapping[ $( this ).data( 'wc-key' ) ] = parseInt( v, 10 );
+							}
+						} );
+						$hidden.val( JSON.stringify( mapping ) );
+					} );
+				}, $btn );
+			} );
+
+			// Serialize key_value JSON before save (in case user saved without clicking Load).
+			$( document ).on( 'click', '.wp4odoo-save-module-settings', function() {
+				var $card = $( this ).closest( '.wp4odoo-module-card' );
+				$card.find( '.wp4odoo-kv-mapping-panel' ).each( function() {
+					var $panel = $( this );
+					var key    = $panel.data( 'key' );
+					var $rows  = $panel.find( '.wp4odoo-kv-rows' );
+					var $hidden = $panel.closest( 'td' ).find( '.wp4odoo-kv-json[data-key="' + key + '"]' );
+					var mapping = {};
+
+					$rows.find( '.wp4odoo-kv-select' ).each( function() {
+						var v = $( this ).val();
+						if ( v ) {
+							mapping[ $( this ).data( 'wc-key' ) ] = parseInt( v, 10 );
+						}
+					} );
+
+					if ( Object.keys( mapping ).length > 0 ) {
+						$hidden.val( JSON.stringify( mapping ) );
+					}
+				} );
+			} );
+		},
 
 		bindMappingsUI: function() {
 			// Add a new mapping row.

@@ -89,6 +89,6 @@ trait Membership_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'memberships', 'membership', 'sync_memberships', $membership_id );
+		$this->push_entity( 'membership', 'sync_memberships', $membership_id );
 	}
 }

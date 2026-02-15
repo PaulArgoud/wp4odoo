@@ -25,7 +25,7 @@ Modular WordPress plugin that creates a seamless, bidirectional bridge between W
 - **WP-CLI** — Full command suite: `wp wp4odoo status|test|sync|queue|module` for headless management
 - **WPML / Polylang Translation Sync** — Multilingual product sync via WPML or Polylang: pushes translated names/descriptions to Odoo with language context, pulls translations back to create/update translated posts. Category and attribute value translations included
 - **Extensible** — Register custom modules via `wp4odoo_register_modules`; filter data with `wp4odoo_map_to_odoo_*` / `wp4odoo_map_from_odoo_*`; map ACF custom fields to Odoo via the ACF meta-module
-- **Multilingual** — 602 translatable strings, ships with English, French, and Spanish. Translation-ready via `.po`/`.mo`
+- **Multilingual** — 617 translatable strings, ships with English, French, and Spanish. Translation-ready via `.po`/`.mo`
 
 ## Requirements
 
@@ -107,7 +107,7 @@ Each Odoo domain is encapsulated in an independent module extending `Module_Base
 
 | Module                              | Sync | Odoo Apps                             | Free⁴ | Key Features                                                                      |
 |-------------------------------------|:----:|---------------------------------------|:-----:|-----------------------------------------------------------------------------------|
-| **WooCommerce**                     |  ↔️  | Contacts, Sales, Inventory, Invoicing |  ❌  | Product/order/stock/category sync, variants, image + gallery pull, exchange rates, bulk ops  |
+| **WooCommerce**                     |  ↔️  | Contacts, Sales, Inventory, Invoicing |  ❌  | Product/order/stock/category sync, variants, image + gallery, tax + shipping mapping, exchange rates, bulk ops  |
 | **WooCommerce Subscriptions**       |  ↔️  | Contacts, Subscriptions, Invoicing    |  ❌  | Subscription/renewal sync, dual-model (sale.subscription / account.move)           |
 | **WC Product Bundles & Composites** |  ➡️  | Contacts, Manufacturing               |  ❌  | Product bundle/composite sync as manufacturing BOMs (mrp.bom), phantom/normal type |
 | **WC Points & Rewards**             |  ↔️  | Contacts, Loyalty                     |  ❌  | Point balance sync via loyalty.card, find-or-create by partner+program             |

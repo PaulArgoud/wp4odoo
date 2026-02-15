@@ -69,8 +69,8 @@ class ModuleBaseHelpersTestModule extends Module_Base {
 	/**
 	 * Expose push_entity() for testing.
 	 */
-	public function test_push_entity( string $module, string $entity_type, string $setting_key, int $wp_id ): void {
-		$this->push_entity( $module, $entity_type, $setting_key, $wp_id );
+	public function test_push_entity( string $entity_type, string $setting_key, int $wp_id ): void {
+		$this->push_entity( $entity_type, $setting_key, $wp_id );
 	}
 }
 
@@ -233,7 +233,7 @@ class ModuleBaseHelpersTest extends TestCase {
 		$this->module->test_importing = false;
 
 		// No existing mapping → create.
-		$this->module->test_push_entity( 'helpers_test', 'product', 'sync_products', 42 );
+		$this->module->test_push_entity( 'product', 'sync_products', 42 );
 
 		$inserts = $this->get_queue_inserts();
 		$this->assertCount( 1, $inserts );
@@ -250,7 +250,7 @@ class ModuleBaseHelpersTest extends TestCase {
 		// without hitting $wpdb->get_var() (which would also affect enqueue dedup).
 		$this->seed_entity_map_cache( 'helpers_test', 'product', 42, 99 );
 
-		$this->module->test_push_entity( 'helpers_test', 'product', 'sync_products', 42 );
+		$this->module->test_push_entity( 'product', 'sync_products', 42 );
 
 		$inserts = $this->get_queue_inserts();
 		$this->assertCount( 1, $inserts );
@@ -263,7 +263,7 @@ class ModuleBaseHelpersTest extends TestCase {
 		$this->module->test_settings  = [ 'sync_products' => true ];
 		$this->module->test_importing = true;
 
-		$this->module->test_push_entity( 'helpers_test', 'product', 'sync_products', 42 );
+		$this->module->test_push_entity( 'product', 'sync_products', 42 );
 
 		$inserts = $this->get_queue_inserts();
 		$this->assertEmpty( $inserts );
@@ -273,7 +273,7 @@ class ModuleBaseHelpersTest extends TestCase {
 		$this->module->test_settings  = [ 'sync_products' => false ];
 		$this->module->test_importing = false;
 
-		$this->module->test_push_entity( 'helpers_test', 'product', 'sync_products', 42 );
+		$this->module->test_push_entity( 'product', 'sync_products', 42 );
 
 		$inserts = $this->get_queue_inserts();
 		$this->assertEmpty( $inserts );

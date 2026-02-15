@@ -43,6 +43,6 @@ trait WC_Bundle_BOM_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'wc_bundle_bom', 'bom', 'sync_bundles', $post_id );
+		$this->push_entity( 'bom', 'sync_bundles', $post_id );
 	}
 }

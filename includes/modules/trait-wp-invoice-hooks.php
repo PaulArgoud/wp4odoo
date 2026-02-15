@@ -37,7 +37,7 @@ trait WP_Invoice_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'wp_invoice', 'invoice', 'sync_invoices', $invoice_id );
+		$this->push_entity( 'invoice', 'sync_invoices', $invoice_id );
 	}
 
 	/**
@@ -54,6 +54,6 @@ trait WP_Invoice_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'wp_invoice', 'invoice', 'sync_invoices', $invoice_id );
+		$this->push_entity( 'invoice', 'sync_invoices', $invoice_id );
 	}
 }

@@ -86,4 +86,39 @@ class OrderHandlerTest extends TestCase {
 	public function test_map_odoo_status_unknown_to_on_hold(): void {
 		$this->assertSame( 'on-hold', $this->handler->map_odoo_status_to_wc( 'nonexistent_state' ) );
 	}
+
+	// ─── Enriched Load ──────────────────────────────────────
+
+	public function test_load_returns_line_items(): void {
+		$order = new \WC_Order( 10 );
+		$order->set_data( [
+			'total'   => '100.00',
+			'status'  => 'processing',
+			'items'   => [
+				new \WC_Order_Item( [ 'name' => 'Widget', 'quantity' => 2, 'total' => '50.00', 'tax_class' => 'standard', 'product_id' => 5 ] ),
+			],
+			'tax_items' => [
+				new \WC_Order_Item_Tax( [ 'rate_id' => 1, 'label' => 'VAT', 'tax_total' => '10.00' ] ),
+			],
+			'shipping_methods' => [
+				new \WC_Order_Item_Shipping( [ 'method_id' => 'flat_rate', 'method_title' => 'Flat Rate', 'total' => '5.00' ] ),
+			],
+		] );
+		$GLOBALS['_wc_orders'][10] = $order;
+
+		$result = $this->handler->load( 10 );
+
+		$this->assertArrayHasKey( 'line_items', $result );
+		$this->assertCount( 1, $result['line_items'] );
+		$this->assertSame( 'Widget', $result['line_items'][0]['name'] );
+		$this->assertSame( 'standard', $result['line_items'][0]['tax_class'] );
+
+		$this->assertArrayHasKey( 'tax_lines', $result );
+		$this->assertCount( 1, $result['tax_lines'] );
+		$this->assertSame( 1, $result['tax_lines'][0]['rate_id'] );
+
+		$this->assertArrayHasKey( 'shipping_methods', $result );
+		$this->assertCount( 1, $result['shipping_methods'] );
+		$this->assertSame( 'flat_rate', $result['shipping_methods'][0]['method_id'] );
+	}
 }

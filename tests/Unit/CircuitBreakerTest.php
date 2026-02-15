@@ -4,6 +4,7 @@ declare( strict_types=1 );
 namespace WP4Odoo\Tests\Unit;
 
 use WP4Odoo\Circuit_Breaker;
+use WP4Odoo\Failure_Notifier;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,6 +25,7 @@ class CircuitBreakerTest extends TestCase {
 		$wpdb->get_var_return = '1';
 
 		$GLOBALS['_wp_transients'] = [];
+		$GLOBALS['_wp_options']    = [];
 
 		$logger        = new \WP4Odoo\Logger( 'test' );
 		$this->breaker = new Circuit_Breaker( $logger );
@@ -214,5 +216,28 @@ class CircuitBreakerTest extends TestCase {
 		$this->breaker->record_failure();
 		$this->breaker->record_failure();
 		$this->assertTrue( $this->breaker->is_available() );
+	}
+
+	// ─── Failure notifier integration ───────────────────
+
+	public function test_failure_notifier_called_when_circuit_opens(): void {
+		$GLOBALS['_wp_options']    = [];
+		$GLOBALS['_wp_mail_calls'] = [];
+		$GLOBALS['_wp_options']['admin_email'] = 'admin@example.com';
+
+		$notifier = new Failure_Notifier( new \WP4Odoo\Logger( 'test' ), wp4odoo_test_settings() );
+		$this->breaker->set_failure_notifier( $notifier );
+
+		$this->breaker->record_failure();
+		$this->breaker->record_failure();
+
+		// No email yet — circuit not open.
+		$this->assertEmpty( $GLOBALS['_wp_mail_calls'] );
+
+		// Third failure opens the circuit → notifier called.
+		$this->breaker->record_failure();
+
+		$this->assertCount( 1, $GLOBALS['_wp_mail_calls'] );
+		$this->assertStringContainsString( 'Circuit breaker', $GLOBALS['_wp_mail_calls'][0]['subject'] );
 	}
 }

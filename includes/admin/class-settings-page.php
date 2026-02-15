@@ -440,7 +440,7 @@ class Settings_Page {
 	public function render_tab_health(): void {
 		$queue_stats    = \WP4Odoo\Queue_Manager::get_stats();
 		$health_metrics = \WP4Odoo\Queue_Manager::get_health_metrics();
-		$cb_state       = get_option( 'wp4odoo_cb_state', [] );
+		$cb_state       = get_option( \WP4Odoo\Circuit_Breaker::OPT_CB_STATE, [] );
 
 		$registry         = \WP4Odoo_Plugin::instance()->module_registry();
 		$booted_count     = $registry->get_booted_count();

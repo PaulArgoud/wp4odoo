@@ -33,8 +33,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Gallery images sync** — `Image_Handler` now supports product gallery images (`product_image_ids` ↔ `_product_image_gallery`). `import_gallery()` pulls Odoo `product.image` records with per-slot SHA-256 hash tracking and orphan cleanup. `export_gallery()` builds One2many `[0, 0, {...}]` tuples for push. Integrated into WC_Pull_Coordinator and WooCommerce_Module
 - **Health dashboard tab** — New "Health" tab in admin settings showing system status at a glance: active modules, pending queue depth, average latency, success rate, circuit breaker state, next cron run, cron warnings, compatibility warnings, and queue depth by module
 - **Translatable fields for 4 modules** — EDD, Events Calendar, LearnDash, and Job Manager modules now override `get_translatable_fields()`, enabling automatic WPML/Polylang translation pull for their primary content fields
+- **Circuit breaker email notification** — `Failure_Notifier` sends an email to the site admin when the circuit breaker opens, with failure count and a link to the health dashboard. Respects the existing cooldown interval
+- **WooCommerce tax mapping** — Configurable WC tax class → Odoo `account.tax` mapping via key-value settings. Applied per order line during push as `tax_id` Many2many tuples. AJAX endpoint fetches available Odoo taxes
+- **WooCommerce shipping mapping** — Configurable WC shipping method → Odoo `delivery.carrier` mapping via key-value settings. Sets `carrier_id` on `sale.order` during push. AJAX endpoint fetches available Odoo carriers
+- **Separate gallery images setting** — New `sync_gallery_images` checkbox (default on) controls gallery image push/pull independently of the featured image setting `sync_product_images`
 
 ### Changed
+- **`push_entity()` simplified** — Removed redundant `$module` parameter from `Module_Helpers::push_entity()`. All 29 callsites across 19 trait files now use `$this->id` automatically
+- **Circuit breaker constant public** — `Circuit_Breaker::OPT_CB_STATE` made public; `Settings_Page` health tab references the constant instead of a hardcoded string
 - **PHPStan level 6** — Raised static analysis from level 5 to level 6 (adds missing typehint enforcement). Global `missingType.iterableValue` suppression for WordPress API conformance
 - **Log module filter** — Expanded the log viewer module dropdown from ~20 hardcoded entries to all 33 sync modules plus 5 system modules, organized in `<optgroup>` sections
 - **Log level i18n** — Log level labels (Debug, Info, Warning, Error, Critical) in the sync settings tab are now translatable

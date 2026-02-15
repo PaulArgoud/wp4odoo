@@ -369,7 +369,7 @@ class WC_Pull_Coordinator {
 	private function maybe_pull_gallery_images( int $wp_product_id ): void {
 		$settings = ( $this->settings_fn )();
 
-		if ( empty( $settings['sync_product_images'] ) ) {
+		if ( empty( $settings['sync_gallery_images'] ) ) {
 			return;
 		}
 

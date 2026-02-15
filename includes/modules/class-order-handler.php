@@ -72,11 +72,48 @@ class Order_Handler {
 			);
 		}
 
+		// Line items for order_line mapping (tax_class used for tax mapping).
+		$line_items = [];
+		foreach ( $order->get_items() as $item ) {
+			$line_items[] = [
+				'name'       => $item->get_name(),
+				'quantity'   => $item->get_quantity(),
+				'total'      => $item->get_total(),
+				'tax_class'  => $item->get_tax_class(),
+				'product_id' => $item->get_product_id(),
+			];
+		}
+
+		// Tax lines for tax mapping.
+		$tax_lines = [];
+		/** @var \WC_Order_Item_Tax $tax_item */
+		foreach ( $order->get_items( 'tax' ) as $tax_item ) {
+			$tax_lines[] = [
+				'rate_id'   => $tax_item->get_rate_id(),
+				'label'     => $tax_item->get_label(),
+				'tax_total' => $tax_item->get_tax_total(),
+			];
+		}
+
+		// Shipping methods for carrier mapping.
+		$shipping_methods = [];
+		/** @var \WC_Order_Item_Shipping $shipping */
+		foreach ( $order->get_shipping_methods() as $shipping ) {
+			$shipping_methods[] = [
+				'method_id'    => $shipping->get_method_id(),
+				'method_title' => $shipping->get_method_title(),
+				'total'        => $shipping->get_total(),
+			];
+		}
+
 		return [
-			'total'        => $order->get_total(),
-			'date_created' => $order->get_date_created() ? $order->get_date_created()->format( 'Y-m-d H:i:s' ) : '',
-			'status'       => $order->get_status(),
-			'partner_id'   => $partner_id,
+			'total'            => $order->get_total(),
+			'date_created'     => $order->get_date_created() ? $order->get_date_created()->format( 'Y-m-d H:i:s' ) : '',
+			'status'           => $order->get_status(),
+			'partner_id'       => $partner_id,
+			'line_items'       => $line_items,
+			'tax_lines'        => $tax_lines,
+			'shipping_methods' => $shipping_methods,
 		];
 	}
 

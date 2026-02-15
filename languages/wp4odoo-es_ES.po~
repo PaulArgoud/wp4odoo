@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WordPress For Odoo 2.0.0\n"
-"Report-Msgid-Bugs-To: paul@argoud.net\n"
-"POT-Creation-Date: 2026-02-15 01:52+0100\n"
-"PO-Revision-Date: 2026-02-10 22:00+0100\n"
+"Report-Msgid-Bugs-To: support@avalia.io\n"
+"POT-Creation-Date: 2026-02-15 18:32+0100\n"
+"PO-Revision-Date: 2026-02-15 12:00+0100\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -16,16 +16,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: wp4odoo.php:297
-msgid "Every 5 Minutes"
-msgstr "Cada 5 minutos"
-
-#: wp4odoo.php:301
-msgid "Every 15 Minutes"
-msgstr "Cada 15 minutos"
-
-#: admin/views/page-settings.php:16 includes/admin/class-admin.php:183
-#: includes/admin/class-admin.php:227
+#: admin/views/page-settings.php:16 includes/admin/class-admin.php:189
+#: includes/admin/class-admin.php:233
 msgid "WordPress For Odoo"
 msgstr "WordPress For Odoo"
 
@@ -83,20 +75,20 @@ msgid "Contacts (base) + CRM (crm) for leads"
 msgstr "Contactos (base) + CRM (crm) para oportunidades"
 
 #: admin/views/tab-connection.php:30
-msgid "Sales:"
-msgstr "Ventas:"
-
-#: admin/views/tab-connection.php:30
 msgid "Sales (sale_management) + Invoicing (account)"
 msgstr "Ventas (sale_management) + Facturación (account)"
 
-#: admin/views/tab-connection.php:31
-msgid "WooCommerce:"
-msgstr "WooCommerce:"
+#: admin/views/tab-connection.php:30
+msgid "Sales:"
+msgstr "Ventas:"
 
 #: admin/views/tab-connection.php:31
 msgid "Inventory (stock) + Sales (sale_management) + Invoicing (account)"
 msgstr "Inventario (stock) + Ventas (sale_management) + Facturación (account)"
+
+#: admin/views/tab-connection.php:31
+msgid "WooCommerce:"
+msgstr "WooCommerce:"
 
 #: admin/views/tab-connection.php:41
 msgid "Odoo Connection"
@@ -303,6 +295,91 @@ msgstr ""
 msgid "Use the following Python code template:"
 msgstr "Utilice la siguiente plantilla de código Python:"
 
+#: admin/views/tab-health.php:27
+msgid "Degraded"
+msgstr "Degradado"
+
+#: admin/views/tab-health.php:28
+msgid "Healthy"
+msgstr "Operativo"
+
+#: admin/views/tab-health.php:31 includes/admin/class-settings-page.php:48
+msgid "Health"
+msgstr "Salud"
+
+#: admin/views/tab-health.php:36
+msgid "System Status"
+msgstr "Estado del sistema"
+
+#: admin/views/tab-health.php:44
+msgid "Active modules"
+msgstr "Módulos activos"
+
+#: admin/views/tab-health.php:48 admin/views/tab-health.php:167
+#: admin/views/tab-queue.php:23 admin/views/tab-queue.php:35
+#: includes/admin/class-admin.php:116
+msgid "Pending"
+msgstr "Pendiente"
+
+#: admin/views/tab-health.php:57
+msgid "Average latency"
+msgstr "Latencia media"
+
+#: admin/views/tab-health.php:61
+msgid "Success rate"
+msgstr "Tasa de éxito"
+
+#: admin/views/tab-health.php:70
+msgid "Circuit Breaker"
+msgstr "Disyuntor"
+
+#: admin/views/tab-health.php:74
+msgid "Open"
+msgstr "Abierto"
+
+#: admin/views/tab-health.php:80
+#, php-format
+msgid "%1$d failures — opened %2$s"
+msgstr "%1$d fallos — abierto el %2$s"
+
+#: admin/views/tab-health.php:88
+msgid "Closed"
+msgstr "Cerrado"
+
+#: admin/views/tab-health.php:96
+msgid "Next cron run"
+msgstr "Próxima ejecución cron"
+
+#: admin/views/tab-health.php:104
+#, php-format
+msgid "in %s"
+msgstr "en %s"
+
+#: admin/views/tab-health.php:108
+msgid "overdue"
+msgstr "atrasado"
+
+#: admin/views/tab-health.php:113
+msgid "Not scheduled"
+msgstr "No programado"
+
+#: admin/views/tab-health.php:122
+msgid "Cron status"
+msgstr "Estado del cron"
+
+#: admin/views/tab-health.php:133
+msgid "Compatibility warnings"
+msgstr "Avisos de compatibilidad"
+
+#: admin/views/tab-health.php:162
+msgid "Queue Depth by Module"
+msgstr "Profundidad de la cola por módulo"
+
+#: admin/views/tab-health.php:166 admin/views/tab-logs.php:96
+#: admin/views/tab-queue.php:82
+msgid "Module"
+msgstr "Módulo"
+
 #: admin/views/tab-logs.php:16 includes/admin/class-settings-page.php:47
 msgid "Logs"
 msgstr "Registros"
@@ -311,54 +388,224 @@ msgstr "Registros"
 msgid "All levels"
 msgstr "Todos los niveles"
 
+#: admin/views/tab-logs.php:23 admin/views/tab-sync.php:123
+msgid "Debug"
+msgstr "Depuración"
+
+#: admin/views/tab-logs.php:24 admin/views/tab-sync.php:124
+msgid "Info"
+msgstr "Info"
+
+#: admin/views/tab-logs.php:25 admin/views/tab-sync.php:125
+msgid "Warning"
+msgstr "Advertencia"
+
+#: admin/views/tab-logs.php:26 admin/views/tab-sync.php:126
+msgid "Error"
+msgstr "Error"
+
+#: admin/views/tab-logs.php:27 admin/views/tab-sync.php:127
+msgid "Critical"
+msgstr "Crítico"
+
 #: admin/views/tab-logs.php:31
 msgid "All modules"
 msgstr "Todos los módulos"
 
+#: admin/views/tab-logs.php:32 admin/views/tab-logs.php:37
+msgid "System"
+msgstr "Sistema"
+
+#: admin/views/tab-logs.php:33
+msgid "API"
+msgstr "API"
+
+#: admin/views/tab-logs.php:34
+msgid "i18n"
+msgstr "i18n"
+
+#: admin/views/tab-logs.php:35 admin/views/tab-queue.php:29
+#: includes/admin/class-settings-page.php:46
+msgid "Queue"
+msgstr "Cola"
+
+#: admin/views/tab-logs.php:36
+msgid "Reconcile"
+msgstr "Reconciliación"
+
+#: admin/views/tab-logs.php:39 admin/views/tab-modules.php:14
+#: includes/admin/class-settings-page.php:45
+msgid "Modules"
+msgstr "Módulos"
+
+#: admin/views/tab-logs.php:40
+msgid "ACF"
+msgstr "ACF"
+
+#: admin/views/tab-logs.php:41
+msgid "AffiliateWP"
+msgstr "AffiliateWP"
+
+#: admin/views/tab-logs.php:42
+msgid "Amelia"
+msgstr "Amelia"
+
+#: admin/views/tab-logs.php:43
+msgid "Awesome Support"
+msgstr "Awesome Support"
+
+#: admin/views/tab-logs.php:44
+msgid "Bookly"
+msgstr "Bookly"
+
+#: admin/views/tab-logs.php:45
+msgid "Charitable"
+msgstr "Charitable"
+
+#: admin/views/tab-logs.php:46
+msgid "CRM"
+msgstr "CRM"
+
+#: admin/views/tab-logs.php:47
+msgid "Ecwid"
+msgstr "Ecwid"
+
+#: admin/views/tab-logs.php:48
+msgid "EDD"
+msgstr "EDD"
+
+#: admin/views/tab-logs.php:49
+msgid "Events Calendar"
+msgstr "Events Calendar"
+
+#: admin/views/tab-logs.php:50
+msgid "Forms"
+msgstr "Formularios"
+
+#: admin/views/tab-logs.php:51
+msgid "GiveWP"
+msgstr "GiveWP"
+
+#: admin/views/tab-logs.php:52
+msgid "LearnDash"
+msgstr "LearnDash"
+
+#: admin/views/tab-logs.php:53
+msgid "LifterLMS"
+msgstr "LifterLMS"
+
+#: admin/views/tab-logs.php:54
+msgid "MemberPress"
+msgstr "MemberPress"
+
 #: admin/views/tab-logs.php:55
+msgid "Memberships"
+msgstr "Membresías"
+
+#: admin/views/tab-logs.php:56
+msgid "PMPro"
+msgstr "PMPro"
+
+#: admin/views/tab-logs.php:57
+msgid "RCP"
+msgstr "RCP"
+
+#: admin/views/tab-logs.php:58
+msgid "Sales"
+msgstr "Ventas"
+
+#: admin/views/tab-logs.php:59
+msgid "ShopWP"
+msgstr "ShopWP"
+
+#: admin/views/tab-logs.php:60
+msgid "SimplePay"
+msgstr "SimplePay"
+
+#: admin/views/tab-logs.php:61
+msgid "Sprout Invoices"
+msgstr "Sprout Invoices"
+
+#: admin/views/tab-logs.php:62
+msgid "SupportCandy"
+msgstr "SupportCandy"
+
+#: admin/views/tab-logs.php:63
+msgid "WC Bookings"
+msgstr "WC Bookings"
+
+#: admin/views/tab-logs.php:64
+msgid "WC Bundle BOM"
+msgstr "WC Bundle BOM"
+
+#: admin/views/tab-logs.php:65
+msgid "WC Points & Rewards"
+msgstr "WC Points & Rewards"
+
+#: admin/views/tab-logs.php:66
+msgid "WC Subscriptions"
+msgstr "WC Subscriptions"
+
+#: admin/views/tab-logs.php:67
+msgid "WooCommerce"
+msgstr "WooCommerce"
+
+#: admin/views/tab-logs.php:68
+msgid "WP Crowdfunding"
+msgstr "WP Crowdfunding"
+
+#: admin/views/tab-logs.php:69
+msgid "WP-Invoice"
+msgstr "WP-Invoice"
+
+#: admin/views/tab-logs.php:70
+msgid "WP Job Manager"
+msgstr "WP Job Manager"
+
+#: admin/views/tab-logs.php:71
+msgid "WP All Import"
+msgstr "WP All Import"
+
+#: admin/views/tab-logs.php:72
+msgid "WPRM"
+msgstr "WPRM"
+
+#: admin/views/tab-logs.php:76
 msgid "From"
 msgstr "Desde"
 
-#: admin/views/tab-logs.php:56
+#: admin/views/tab-logs.php:77
 msgid "To"
 msgstr "Hasta"
 
-#: admin/views/tab-logs.php:59
+#: admin/views/tab-logs.php:80
 msgid "Filter"
 msgstr "Filtrar"
 
-#: admin/views/tab-logs.php:64
+#: admin/views/tab-logs.php:85
 msgid "Purge logs"
 msgstr "Purgar registros"
 
-#: admin/views/tab-logs.php:74
+#: admin/views/tab-logs.php:95
 msgid "Level"
 msgstr "Nivel"
 
-#: admin/views/tab-logs.php:75 admin/views/tab-queue.php:82
-msgid "Module"
-msgstr "Módulo"
-
-#: admin/views/tab-logs.php:76 includes/modules/class-lead-manager.php:129
+#: admin/views/tab-logs.php:97 includes/modules/class-lead-manager.php:129
 msgid "Message"
 msgstr "Mensaje"
 
-#: admin/views/tab-logs.php:77
+#: admin/views/tab-logs.php:98
 msgid "Context"
 msgstr "Contexto"
 
-#: admin/views/tab-logs.php:78 templates/customer-portal.php:39
+#: admin/views/tab-logs.php:99 templates/customer-portal.php:39
 #: templates/customer-portal.php:84
 msgid "Date"
 msgstr "Fecha"
 
-#: admin/views/tab-logs.php:84
+#: admin/views/tab-logs.php:105
 msgid "No log entries."
 msgstr "Sin entradas de registro."
-
-#: admin/views/tab-modules.php:14 includes/admin/class-settings-page.php:45
-msgid "Modules"
-msgstr "Módulos"
 
 #: admin/views/tab-modules.php:16
 msgid "Enable or disable synchronization modules."
@@ -368,67 +615,73 @@ msgstr "Active o desactive los módulos de sincronización."
 msgid "Bidirectional"
 msgstr "Bidireccional"
 
-#: admin/views/tab-modules.php:33
+#: admin/views/tab-modules.php:33 admin/views/tab-queue.php:18
+#: includes/admin/class-admin.php:123
 msgid "WP → Odoo"
 msgstr "WP → Odoo"
 
-#: admin/views/tab-modules.php:34
+#: admin/views/tab-modules.php:34 admin/views/tab-queue.php:19
+#: includes/admin/class-admin.php:128
 msgid "Odoo → WP"
 msgstr "Odoo → WP"
 
-#: admin/views/tab-modules.php:80
+#: admin/views/tab-modules.php:64
+#, php-format
+msgid "Enable %s module"
+msgstr "Activar el módulo %s"
+
+#: admin/views/tab-modules.php:76 includes/admin/class-admin.php:314
+msgid "Report compatibility"
+msgstr "Informar compatibilidad"
+
+#: admin/views/tab-modules.php:87
 #, php-format
 msgid "Cannot be active simultaneously with \"%s\"."
 msgstr "No puede estar activo simultáneamente con «%s»."
 
-#: admin/views/tab-modules.php:181
+#: admin/views/tab-modules.php:188
 msgid "Target module"
 msgstr "Módulo destino"
 
-#: admin/views/tab-modules.php:182
+#: admin/views/tab-modules.php:189
 msgid "Entity type"
 msgstr "Tipo de entidad"
 
-#: admin/views/tab-modules.php:183
+#: admin/views/tab-modules.php:190
 msgid "ACF field"
 msgstr "Campo ACF"
 
-#: admin/views/tab-modules.php:184
+#: admin/views/tab-modules.php:191
 msgid "Odoo field"
 msgstr "Campo Odoo"
 
-#: admin/views/tab-modules.php:185 admin/views/tab-queue.php:83
+#: admin/views/tab-modules.php:192 admin/views/tab-queue.php:83
 msgid "Type"
 msgstr "Tipo"
 
-#: admin/views/tab-modules.php:195
+#: admin/views/tab-modules.php:202
 msgid "— Select —"
 msgstr "— Seleccionar —"
 
-#: admin/views/tab-modules.php:236
+#: admin/views/tab-modules.php:243 includes/admin/class-admin.php:127
 msgid "Remove"
 msgstr "Eliminar"
 
-#: admin/views/tab-modules.php:244
+#: admin/views/tab-modules.php:251
 msgid "Add mapping"
 msgstr "Añadir asignación"
 
-#: admin/views/tab-modules.php:267
+#: admin/views/tab-modules.php:274
 msgid "Detect languages"
 msgstr "Detectar idiomas"
 
-#: admin/views/tab-modules.php:305
+#: admin/views/tab-modules.php:312
 msgid "Save settings"
 msgstr "Guardar ajustes"
 
-#: admin/views/tab-modules.php:315
+#: admin/views/tab-modules.php:322
 msgid "No modules registered."
 msgstr "No hay módulos registrados."
-
-#: admin/views/tab-queue.php:23 admin/views/tab-queue.php:35
-#: includes/admin/class-admin.php:116
-msgid "Pending"
-msgstr "Pendiente"
 
 #: admin/views/tab-queue.php:24 admin/views/tab-queue.php:39
 #: includes/admin/class-admin.php:117
@@ -444,10 +697,6 @@ msgstr "Completado"
 #: includes/admin/class-admin.php:119
 msgid "Failed"
 msgstr "Fallido"
-
-#: admin/views/tab-queue.php:29 includes/admin/class-settings-page.php:46
-msgid "Queue"
-msgstr "Cola"
 
 #: admin/views/tab-queue.php:54
 msgid "Retry failed"
@@ -707,21 +956,33 @@ msgstr ""
 "¿Ha realizado una copia de seguridad de sus bases de datos de WordPress y "
 "Odoo?"
 
-#: includes/admin/class-admin.php:184
+#: includes/admin/class-admin.php:124
+msgid "Server communication error."
+msgstr "Error de comunicación con el servidor."
+
+#: includes/admin/class-admin.php:125
+msgid "Unknown error."
+msgstr "Error desconocido."
+
+#: includes/admin/class-admin.php:126
+msgid "completed"
+msgstr "completado"
+
+#: includes/admin/class-admin.php:190
 msgid "is almost ready! Configure your Odoo connection to get started."
 msgstr "¡está casi listo! Configure su conexión con Odoo para comenzar."
 
-#: includes/admin/class-admin.php:186
+#: includes/admin/class-admin.php:192
 msgid "Go to settings"
 msgstr "Ir a los ajustes"
 
-#: includes/admin/class-admin.php:247
+#: includes/admin/class-admin.php:253
 msgid "Back up your databases before any synchronization."
 msgstr ""
 "Haga una copia de seguridad de sus bases de datos antes de cualquier "
 "sincronización."
 
-#: includes/admin/class-admin.php:248
+#: includes/admin/class-admin.php:254
 msgid ""
 "WP4Odoo is designed and tested with care, but WordPress and Odoo (along with "
 "their respective modules) evolve at their own pace — a third-party update "
@@ -734,11 +995,11 @@ msgstr ""
 "Una copia de seguridad completa (WordPress + Odoo) le permite revertir en "
 "caso de problema."
 
-#: includes/admin/class-admin.php:285
+#: includes/admin/class-admin.php:306
 msgid "WordPress For Odoo — Untested plugin versions detected:"
 msgstr "WordPress For Odoo — Versiones de plugins no probadas detectadas:"
 
-#: includes/admin/class-admin.php:303
+#: includes/admin/class-admin.php:378
 msgid "Settings"
 msgstr "Ajustes"
 
@@ -782,19 +1043,19 @@ msgstr "%d producto(s) puesto(s) en cola para exportación."
 msgid "Connection"
 msgstr "Conexión"
 
-#: includes/admin/class-settings-page.php:128
+#: includes/admin/class-settings-page.php:129
 msgid "Connect to Odoo"
 msgstr "Conectar con Odoo"
 
-#: includes/admin/class-settings-page.php:134
+#: includes/admin/class-settings-page.php:135
 msgid "Enable a module"
 msgstr "Activar un módulo"
 
-#: includes/admin/class-settings-page.php:140
+#: includes/admin/class-settings-page.php:141
 msgid "Configure webhooks in Odoo"
 msgstr "Configurar webhooks en Odoo"
 
-#: includes/admin/class-settings-page.php:245
+#: includes/admin/class-settings-page.php:246
 msgid ""
 "The Odoo URL must point to a public address. Private IPs and localhost are "
 "not allowed."
@@ -863,7 +1124,7 @@ msgstr "No se puede cancelar este trabajo."
 msgid "%d log entry(ies) deleted."
 msgstr "%d entrada(s) de registro eliminada(s)."
 
-#: includes/admin/trait-ajax-setup-handlers.php:114
+#: includes/admin/trait-ajax-setup-handlers.php:119
 msgid "Webhooks marked as configured."
 msgstr "Webhooks marcados como configurados."
 
@@ -871,7 +1132,7 @@ msgstr "Webhooks marcados como configurados."
 msgid "Missing connection credentials."
 msgstr "Faltan las credenciales de conexión."
 
-#: includes/api/class-odoo-auth.php:240
+#: includes/api/class-odoo-auth.php:241
 msgid "Connection successful."
 msgstr "Conexión exitosa."
 
@@ -887,33 +1148,33 @@ msgstr "Credenciales de Odoo no configuradas."
 msgid "Authentication failed: invalid credentials."
 msgstr "Error de autenticación: credenciales no válidas."
 
-#: includes/api/class-odoo-jsonrpc.php:128
+#: includes/api/class-odoo-jsonrpc.php:133
 #, php-format
 msgid "Invalid JSON response from Odoo (HTTP %d)."
 msgstr "Respuesta JSON no válida de Odoo (HTTP %d)."
 
-#: includes/api/class-odoo-jsonrpc.php:137
+#: includes/api/class-odoo-jsonrpc.php:142
 msgid "Unknown RPC error"
 msgstr "Error RPC desconocido"
 
-#: includes/api/class-odoo-jsonrpc.php:157
+#: includes/api/class-odoo-jsonrpc.php:162
 #, php-format
 msgid "Odoo RPC error: %s"
 msgstr "Error RPC de Odoo: %s"
 
-#: includes/api/class-odoo-transport-base.php:101
+#: includes/api/class-odoo-transport-base.php:117
 msgid "Not authenticated. Call authenticate() first."
 msgstr "No autenticado. Llame primero a authenticate()."
 
-#: includes/api/class-odoo-xmlrpc.php:129
+#: includes/api/class-odoo-xmlrpc.php:144
 msgid "Failed to parse XML-RPC response from Odoo."
 msgstr "Error al analizar la respuesta XML-RPC de Odoo."
 
-#: includes/api/class-odoo-xmlrpc.php:136
+#: includes/api/class-odoo-xmlrpc.php:151
 msgid "Unknown XML-RPC fault"
 msgstr "Error XML-RPC desconocido"
 
-#: includes/api/class-odoo-xmlrpc.php:155
+#: includes/api/class-odoo-xmlrpc.php:170
 #, php-format
 msgid "Odoo XML-RPC error: %s"
 msgstr "Error XML-RPC de Odoo: %s"
@@ -928,16 +1189,25 @@ msgstr "Error HTTP: %s"
 msgid "Server error HTTP %1$d on %2$s."
 msgstr "Error del servidor HTTP %1$d en %2$s."
 
-#: includes/class-cli.php:162
+#: includes/class-cli.php:166
 msgid ""
 "Back up your WordPress and Odoo databases before running sync operations."
 msgstr ""
 "Haga una copia de seguridad de sus bases de datos de WordPress y Odoo antes "
 "de ejecutar operaciones de sincronización."
 
-#: includes/class-cli.php:288
+#: includes/class-cli.php:171
+msgid "Process the sync queue now?"
+msgstr "¿Procesar la cola de sincronización ahora?"
+
+#: includes/class-cli.php:287
 msgid "This will permanently remove orphaned entity mappings. Continue?"
-msgstr "Esto eliminará permanentemente las correspondencias huérfanas. ¿Continuar?"
+msgstr ""
+"Esto eliminará permanentemente las correspondencias huérfanas. ¿Continuar?"
+
+#: includes/class-cli.php:449
+msgid "Retry all failed jobs?"
+msgstr "¿Reintentar todos los trabajos fallidos?"
 
 #: includes/class-failure-notifier.php:117
 #, php-format
@@ -980,17 +1250,17 @@ msgstr ""
 "sincronización programada puede retrasarse. Considere configurar una tarea "
 "cron del sistema."
 
-#: includes/class-sync-engine.php:344
+#: includes/class-sync-engine.php:347
 #, php-format
 msgid "Module \"%s\" not found or not registered."
 msgstr "Módulo «%s» no encontrado o no registrado."
 
-#: includes/class-sync-engine.php:357
+#: includes/class-sync-engine.php:360
 #, php-format
 msgid "Invalid JSON payload in job #%d."
 msgstr "Payload JSON no válido en el trabajo #%d."
 
-#: includes/class-sync-engine.php:395
+#: includes/class-sync-engine.php:398
 #, php-format
 msgid "Invalid sync direction \"%1$s\" in job #%2$d."
 msgstr "Dirección de sincronización no válida «%1$s» en el trabajo #%2$d."
@@ -1195,8 +1465,8 @@ msgstr "Obtener productos de servicio de Odoo en los servicios de Bookly."
 msgid "Booking"
 msgstr "Reserva"
 
-#: includes/modules/class-charitable-handler.php:126
-#: includes/modules/class-givewp-handler.php:116
+#: includes/modules/class-charitable-handler.php:94
+#: includes/modules/class-givewp-handler.php:84
 msgid "Donation"
 msgstr "Donación"
 
@@ -1352,7 +1622,7 @@ msgstr "Enviar los productos Ecwid a Odoo."
 
 #: includes/modules/class-ecwid-module.php:153
 #: includes/modules/class-edd-module.php:159
-#: includes/modules/class-lifterlms-module.php:187
+#: includes/modules/class-lifterlms-module.php:184
 #: includes/modules/class-pmpro-module.php:171
 #: includes/modules/class-woocommerce-module.php:353
 msgid "Sync orders"
@@ -1709,56 +1979,56 @@ msgstr "Dirección de correo electrónico no válida."
 msgid "Failed to save lead."
 msgstr "Error al guardar la oportunidad."
 
-#: includes/modules/class-learndash-handler.php:186
+#: includes/modules/class-learndash-handler.php:160
 msgid "LearnDash course"
 msgstr "Curso LearnDash"
 
-#: includes/modules/class-learndash-handler.php:219
+#: includes/modules/class-learndash-handler.php:177
 msgid "LearnDash enrollment"
 msgstr "Inscripción LearnDash"
 
-#: includes/modules/class-learndash-module.php:116
+#: includes/modules/class-learndash-module.php:113
 msgid "LearnDash module enabled but LearnDash is not active."
 msgstr "Módulo LearnDash activado pero LearnDash no está activo."
 
-#: includes/modules/class-learndash-module.php:164
-#: includes/modules/class-lifterlms-module.php:177
+#: includes/modules/class-learndash-module.php:161
+#: includes/modules/class-lifterlms-module.php:174
 msgid "Sync courses"
 msgstr "Sincronizar cursos"
 
-#: includes/modules/class-learndash-module.php:166
+#: includes/modules/class-learndash-module.php:163
 msgid "Push LearnDash courses to Odoo as service products."
 msgstr "Enviar los cursos LearnDash a Odoo como productos de servicio."
 
-#: includes/modules/class-learndash-module.php:169
+#: includes/modules/class-learndash-module.php:166
 msgid "Sync groups"
 msgstr "Sincronizar grupos"
 
-#: includes/modules/class-learndash-module.php:171
+#: includes/modules/class-learndash-module.php:168
 msgid "Push LearnDash groups to Odoo as service products."
 msgstr "Enviar los grupos LearnDash a Odoo como productos de servicio."
 
-#: includes/modules/class-learndash-module.php:174
+#: includes/modules/class-learndash-module.php:171
 #: includes/modules/class-memberpress-module.php:150
 msgid "Sync transactions"
 msgstr "Sincronizar transacciones"
 
-#: includes/modules/class-learndash-module.php:176
+#: includes/modules/class-learndash-module.php:173
 msgid "Push LearnDash payment transactions to Odoo as invoices."
 msgstr "Enviar las transacciones de pago LearnDash a Odoo como facturas."
 
-#: includes/modules/class-learndash-module.php:179
-#: includes/modules/class-lifterlms-module.php:192
+#: includes/modules/class-learndash-module.php:176
+#: includes/modules/class-lifterlms-module.php:189
 msgid "Sync enrollments"
 msgstr "Sincronizar inscripciones"
 
-#: includes/modules/class-learndash-module.php:181
-#: includes/modules/class-lifterlms-module.php:194
+#: includes/modules/class-learndash-module.php:178
+#: includes/modules/class-lifterlms-module.php:191
 msgid "Push course enrollments to Odoo as sale orders."
 msgstr "Enviar las inscripciones a cursos a Odoo como pedidos de venta."
 
-#: includes/modules/class-learndash-module.php:184
-#: includes/modules/class-lifterlms-module.php:197
+#: includes/modules/class-learndash-module.php:181
+#: includes/modules/class-lifterlms-module.php:194
 #: includes/modules/class-memberpress-module.php:160
 #: includes/modules/class-pmpro-module.php:181
 #: includes/modules/class-rcp-module.php:169
@@ -1768,76 +2038,76 @@ msgstr "Enviar las inscripciones a cursos a Odoo como pedidos de venta."
 msgid "Auto-post invoices"
 msgstr "Validar facturas automáticamente"
 
-#: includes/modules/class-learndash-module.php:186
+#: includes/modules/class-learndash-module.php:183
 #: includes/modules/class-memberpress-module.php:162
 msgid "Automatically confirm invoices in Odoo for completed transactions."
 msgstr ""
 "Validar automáticamente las facturas en Odoo para las transacciones "
 "finalizadas."
 
-#: includes/modules/class-learndash-module.php:189
-#: includes/modules/class-lifterlms-module.php:202
+#: includes/modules/class-learndash-module.php:186
+#: includes/modules/class-lifterlms-module.php:199
 msgid "Pull courses from Odoo"
 msgstr "Obtener cursos desde Odoo"
 
-#: includes/modules/class-learndash-module.php:191
-#: includes/modules/class-lifterlms-module.php:204
+#: includes/modules/class-learndash-module.php:188
+#: includes/modules/class-lifterlms-module.php:201
 msgid "Pull course changes from Odoo back to WordPress."
 msgstr "Obtener cambios de cursos desde Odoo hacia WordPress."
 
-#: includes/modules/class-learndash-module.php:194
+#: includes/modules/class-learndash-module.php:191
 msgid "Pull groups from Odoo"
 msgstr "Obtener grupos desde Odoo"
 
-#: includes/modules/class-learndash-module.php:196
+#: includes/modules/class-learndash-module.php:193
 msgid "Pull group changes from Odoo back to WordPress."
 msgstr "Obtener cambios de grupos desde Odoo hacia WordPress."
 
-#: includes/modules/class-lifterlms-handler.php:215
+#: includes/modules/class-lifterlms-handler.php:189
 msgid "LifterLMS course"
 msgstr "Curso LifterLMS"
 
-#: includes/modules/class-lifterlms-handler.php:248
+#: includes/modules/class-lifterlms-handler.php:206
 msgid "LifterLMS enrollment"
 msgstr "Inscripción LifterLMS"
 
-#: includes/modules/class-lifterlms-module.php:127
+#: includes/modules/class-lifterlms-module.php:124
 msgid "LifterLMS module enabled but LifterLMS is not active."
 msgstr "Módulo LifterLMS activado pero LifterLMS no está activo."
 
-#: includes/modules/class-lifterlms-module.php:179
+#: includes/modules/class-lifterlms-module.php:176
 msgid "Push LifterLMS courses to Odoo as service products."
 msgstr "Enviar los cursos LifterLMS a Odoo como productos de servicio."
 
-#: includes/modules/class-lifterlms-module.php:182
+#: includes/modules/class-lifterlms-module.php:179
 #: includes/modules/class-pmpro-module.php:176
 #: includes/modules/class-rcp-module.php:164
 msgid "Sync memberships"
 msgstr "Sincronizar membresías"
 
-#: includes/modules/class-lifterlms-module.php:184
+#: includes/modules/class-lifterlms-module.php:181
 msgid "Push LifterLMS memberships to Odoo as service products."
 msgstr "Enviar las membresías LifterLMS a Odoo como productos de servicio."
 
-#: includes/modules/class-lifterlms-module.php:189
+#: includes/modules/class-lifterlms-module.php:186
 msgid "Push completed orders to Odoo as invoices."
 msgstr "Enviar las órdenes completadas a Odoo como facturas."
 
-#: includes/modules/class-lifterlms-module.php:199
+#: includes/modules/class-lifterlms-module.php:196
 #: includes/modules/class-pmpro-module.php:183
 msgid "Automatically confirm invoices in Odoo for completed orders."
 msgstr ""
 "Confirmar automáticamente las facturas en Odoo para las órdenes completadas."
 
-#: includes/modules/class-lifterlms-module.php:207
+#: includes/modules/class-lifterlms-module.php:204
 msgid "Pull memberships from Odoo"
 msgstr "Obtener membresías desde Odoo"
 
-#: includes/modules/class-lifterlms-module.php:209
+#: includes/modules/class-lifterlms-module.php:206
 msgid "Pull membership changes from Odoo back to WordPress."
 msgstr "Obtener cambios de membresías desde Odoo hacia WordPress."
 
-#: includes/modules/class-memberpress-handler.php:127
+#: includes/modules/class-memberpress-handler.php:109
 msgid "MemberPress subscription"
 msgstr "Suscripción MemberPress"
 
@@ -1903,7 +2173,7 @@ msgstr ""
 "Obtener actualizaciones de estado/fechas de líneas de membresía de Odoo en "
 "WooCommerce."
 
-#: includes/modules/class-pmpro-handler.php:138
+#: includes/modules/class-pmpro-handler.php:120
 msgid "PMPro membership"
 msgstr "Membresía PMPro"
 
@@ -1950,7 +2220,7 @@ msgstr ""
 msgid "Not authenticated."
 msgstr "No autenticado."
 
-#: includes/modules/class-rcp-handler.php:134
+#: includes/modules/class-rcp-handler.php:116
 msgid "RCP membership"
 msgstr "Membresía RCP"
 
@@ -2044,7 +2314,7 @@ msgstr "Módulo ShopWP activado pero ShopWP no está activo."
 msgid "Push ShopWP products to Odoo."
 msgstr "Enviar los productos ShopWP a Odoo."
 
-#: includes/modules/class-simplepay-handler.php:318
+#: includes/modules/class-simplepay-handler.php:286
 #: includes/modules/class-sprout-invoices-handler.php:116
 #: includes/modules/class-sprout-invoices-handler.php:291
 #: templates/customer-portal.php:87
@@ -2127,7 +2397,7 @@ msgstr ""
 msgid "Pull ticket status changes from Odoo back to SupportCandy."
 msgstr "Obtener cambios de estado de tickets desde Odoo hacia SupportCandy."
 
-#: includes/modules/class-wc-bookings-handler.php:119
+#: includes/modules/class-wc-bookings-handler.php:102
 #, php-format
 msgid "Persons: %d"
 msgstr "Personas: %d"
@@ -2480,17 +2750,17 @@ msgstr ""
 "WP All Import #%1$d: %2$d registros puestos en cola para la sincronización "
 "Odoo."
 
-#: includes/trait-module-helpers.php:371
+#: includes/trait-module-helpers.php:399
 #, php-format
 msgid "%s must be installed and activated to use this module."
 msgstr "%s debe estar instalado y activado para usar este módulo."
 
-#: includes/trait-module-helpers.php:392
+#: includes/trait-module-helpers.php:420
 #, php-format
 msgid "%1$s %2$s is not supported (minimum required: %3$s)."
 msgstr "%1$s %2$s no es compatible (mínimo requerido: %3$s)."
 
-#: includes/trait-module-helpers.php:415
+#: includes/trait-module-helpers.php:443
 #, php-format
 msgid ""
 "%1$s %2$s has not been tested (tested up to %3$s). Incompatibilities may "
@@ -2499,7 +2769,7 @@ msgstr ""
 "%1$s %2$s no ha sido probado (probado hasta %3$s). Pueden ocurrir "
 "incompatibilidades."
 
-#: includes/trait-module-helpers.php:430
+#: includes/trait-module-helpers.php:460
 #, php-format
 msgid ""
 "%1$s database tables missing: %2$s. The plugin may not be fully installed."
@@ -2507,14 +2777,14 @@ msgstr ""
 "Tablas de base de datos %1$s faltantes: %2$s. Es posible que el plugin no "
 "esté completamente instalado."
 
-#: includes/trait-module-helpers.php:441
+#: includes/trait-module-helpers.php:471
 msgid ""
 "This module relies on WP-Cron polling. For reliable 5-minute intervals, set "
 "up a system cron job and define DISABLE_WP_CRON in wp-config.php."
 msgstr ""
 "Este módulo utiliza el polling de WP-Cron. Para intervalos fiables de 5 "
-"minutos, configure un cron del sistema y defina DISABLE_WP_CRON en "
-"wp-config.php."
+"minutos, configure un cron del sistema y defina DISABLE_WP_CRON en wp-"
+"config.php."
 
 #: templates/customer-portal.php:38 templates/customer-portal.php:83
 msgid "Reference"
@@ -2523,3 +2793,11 @@ msgstr "Referencia"
 #: templates/customer-portal.php:40 templates/customer-portal.php:85
 msgid "Total"
 msgstr "Total"
+
+#: wp4odoo.php:298
+msgid "Every 5 Minutes"
+msgstr "Cada 5 minutos"
+
+#: wp4odoo.php:302
+msgid "Every 15 Minutes"
+msgstr "Cada 15 minutos"

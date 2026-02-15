@@ -67,6 +67,14 @@ enum Odoo_Model: string {
 	/** Payments. */
 	case AccountPayment = 'account.payment';
 
+	/** Tax definitions (customer/vendor). */
+	case AccountTax = 'account.tax';
+
+	// ─── Delivery ──────────────────────────────────────────
+
+	/** Delivery carriers (shipping methods). */
+	case DeliveryCarrier = 'delivery.carrier';
+
 	// ─── Donations (OCA) ───────────────────────────────────
 
 	/** OCA donation model. */

@@ -35,7 +35,7 @@ trait PMPro_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'pmpro', 'level', 'sync_levels', $level_id );
+		$this->push_entity( 'level', 'sync_levels', $level_id );
 	}
 
 	/**
@@ -74,7 +74,7 @@ trait PMPro_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'pmpro', 'order', 'sync_orders', (int) $morder->id );
+		$this->push_entity( 'order', 'sync_orders', (int) $morder->id );
 	}
 
 	/**
@@ -121,6 +121,6 @@ trait PMPro_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'pmpro', 'membership', 'sync_memberships', $row_id );
+		$this->push_entity( 'membership', 'sync_memberships', $row_id );
 	}
 }

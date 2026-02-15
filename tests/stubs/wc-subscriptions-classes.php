@@ -56,9 +56,13 @@ if ( ! class_exists( 'WC_Subscription' ) ) {
 		}
 
 		/**
-		 * @return array<int, array<string, mixed>>
+		 * @param string $type Item type.
+		 * @return array
 		 */
-		public function get_items(): array {
+		public function get_items( string $type = '' ): array {
+			if ( 'tax' === $type ) {
+				return $this->data['tax_items'] ?? [];
+			}
 			return $this->data['items'] ?? [];
 		}
 
