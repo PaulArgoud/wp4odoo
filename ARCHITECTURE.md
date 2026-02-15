@@ -252,7 +252,8 @@ WordPress For Odoo/
 │   ├── css/frontend.css              #   Lead form styling
 │   ├── css/portal.css                #   Customer portal styling
 │   ├── images/
-│   │   ├── architecture.svg          #   Architecture diagram (referenced in README)
+│   │   ├── architecture-full.svg    #   Full architecture diagram (referenced in ARCHITECTURE.md)
+│   │   ├── architecture-synth.svg   #   Synthesized architecture diagram (referenced in README)
 │   │   └── logo-v2.avif              #   Plugin logo (referenced in README)
 │   ├── js/lead-form.js              #   Lead form AJAX submission
 │   └── js/portal.js                 #   Portal tab switching + AJAX pagination
@@ -260,7 +261,7 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # 2580 unit tests (3970 assertions) + 26 integration tests (wp-env)
+├── tests/                             # 2649 unit tests (4039 assertions) + 26 integration tests (wp-env)
 │   ├── bootstrap.php                 #   Unit test bootstrap: constants, stub loading, plugin class requires
 │   ├── bootstrap-integration.php     #   Integration test bootstrap: loads WP test framework (wp-env)
 │   ├── stubs/
@@ -461,7 +462,7 @@ Module_Base (abstract)
 ├── Sales_Module                → product.template, sale.order, account.move         [Odoo → WP]
 ├── WooCommerce_Module          → + stock.quant, product.product, product.pricelist, stock.picking [bidirectional]
 ├── EDD_Module                  → product.template, sale.order, account.move         [bidirectional]
-├── Memberships_Module          → product.product, membership.membership_line        [WP → Odoo]
+├── Memberships_Module          → product.product, membership.membership_line        [bidirectional]
 ├── Membership_Module_Base (abstract)
 │   ├── MemberPress_Module      → product.product, account.move, membership.m_line   [WP → Odoo]
 │   ├── PMPro_Module            → product.product, account.move, membership.m_line   [WP → Odoo]
@@ -473,21 +474,28 @@ Module_Base (abstract)
 ├── WPRM_Module                 → product.product                                    [WP → Odoo]
 ├── Forms_Module                → crm.lead                                           [WP → Odoo]
 ├── Booking_Module_Base (abstract)
-│   ├── Amelia_Module           → product.product, calendar.event                    [WP → Odoo]
-│   ├── Bookly_Module           → product.product, calendar.event                    [WP → Odoo]
-│   └── WC_Bookings_Module     → product.product, calendar.event                    [WP → Odoo]
-├── LearnDash_Module            → product.product, account.move, sale.order          [WP → Odoo]
-├── LifterLMS_Module            → product.product, account.move, sale.order          [WP → Odoo]
-├── WC_Subscriptions_Module     → product.product, sale.subscription, account.move   [WP → Odoo]
-├── Events_Calendar_Module      → event.event / calendar.event, product.product,     [WP → Odoo]
+│   ├── Amelia_Module           → product.product, calendar.event                    [bidirectional]
+│   ├── Bookly_Module           → product.product, calendar.event                    [bidirectional]
+│   └── WC_Bookings_Module     → product.product, calendar.event                    [bidirectional]
+├── Helpdesk_Module_Base (abstract)
+│   ├── Awesome_Support_Module  → helpdesk.ticket / project.task                     [bidirectional]
+│   └── SupportCandy_Module     → helpdesk.ticket / project.task                     [bidirectional]
+├── LearnDash_Module            → product.product, account.move, sale.order          [bidirectional]
+├── LifterLMS_Module            → product.product, account.move, sale.order          [bidirectional]
+├── WC_Subscriptions_Module     → product.product, sale.subscription, account.move   [bidirectional]
+├── Events_Calendar_Module      → event.event / calendar.event, product.product,     [bidirectional]
 │                                 event.registration
-├── Sprout_Invoices_Module      → account.move, account.payment                      [WP → Odoo]
+├── Sprout_Invoices_Module      → account.move, account.payment                      [bidirectional]
 ├── WP_Invoice_Module           → account.move                                       [WP → Odoo]
 ├── Crowdfunding_Module         → product.product                                    [WP → Odoo]
 ├── Ecwid_Module                → product.product, sale.order                        [WP → Odoo]
 ├── ShopWP_Module               → product.product                                    [WP → Odoo]
-├── Job_Manager_Module          → hr.job                                             [WP ↔ Odoo]
-├── WC_Points_Rewards_Module    → loyalty.card                                       [WP ↔ Odoo]
+├── WC_Bundle_Bom_Module        → mrp.bom, mrp.bom.line                              [WP → Odoo]
+├── WC_Points_Rewards_Module    → loyalty.card                                       [bidirectional]
+├── Job_Manager_Module          → hr.job                                             [bidirectional]
+├── AffiliateWP_Module          → res.partner (vendor), account.move (in_invoice)    [WP → Odoo]
+├── ACF_Module                  → (meta-module: enriches other modules' pipelines)   [bidirectional]
+├── WP_All_Import_Module        → (meta-module: routes imports to sync queue)        [WP → Odoo]
 └── [Custom_Module]             → extensible via action hook
 ```
 
@@ -495,7 +503,8 @@ Module_Base (abstract)
 - **Commerce**: WooCommerce, EDD, Sales, Ecwid, and ShopWP are mutually exclusive (all share `sale.order` / `product.product` for commerce). Priority: WC > EDD > Sales = Ecwid = ShopWP.
 - **Memberships**: WC Memberships, MemberPress, PMPro, and RCP are mutually exclusive (all target `membership.membership_line`). Priority: MemberPress (10) > RCP (12) > PMPro (15) > WC Memberships (20).
 - **Invoicing**: Sprout Invoices and WP-Invoice are mutually exclusive (both target `account.move` for invoicing). Priority: WP-Invoice (5) > Sprout Invoices (10).
-- All other modules are independent and can coexist freely (LMS, Subscriptions, Points & Rewards, Events, Booking, Donations, Forms, WPRM, Crowdfunding).
+- **Helpdesk**: Awesome Support and SupportCandy are mutually exclusive (both target `helpdesk.ticket` / `project.task`). Priority: Awesome Support (10) > SupportCandy (15).
+- All other modules are independent and can coexist freely (LMS, Subscriptions, Points & Rewards, Events, Booking, Donations, Forms, WPRM, Crowdfunding, BOM, AffiliateWP, ACF, WP All Import, Job Manager).
 
 **Module_Base provides:**
 - Version bounds: `PLUGIN_MIN_VERSION` (blocks boot if too old) and `PLUGIN_TESTED_UP_TO` (warns if newer than tested). Subclasses override `get_plugin_version()` to return the detected plugin version. Patch-level normalization ensures `10.5.0` is within `10.5` range. `Module_Registry` enforces MIN before boot and collects TESTED warnings for the admin notice.
@@ -1541,8 +1550,9 @@ Shared service for managing WP user ↔ Odoo `res.partner` relationships. Access
 | `wp wp4odoo queue cleanup` | Delete old jobs (`--days`) |
 | `wp wp4odoo queue cancel <id>` | Cancel a pending job |
 | `wp wp4odoo module list` | List modules with status |
-| `wp wp4odoo module enable <id>` | Enable a module |
+| `wp wp4odoo module enable <id>` | Enable a module (enforces mutual exclusivity) |
 | `wp wp4odoo module disable <id>` | Disable a module |
+| `wp wp4odoo reconcile <module> <entity>` | Detect orphaned entity_map entries (`--fix` to remove, `--yes` to skip confirmation) |
 
 Pure delegation to existing services — no business logic in CLI class.
 
@@ -1573,6 +1583,9 @@ Auto-dismissed when all steps completed. Dismiss via × button persisted in `wp4
 | `wp4odoo_lead_created` | Lead form submitted and saved | `$wp_id`, `$lead_data` |
 | `wp4odoo_form_lead_created` | Form module lead created and enqueued | `$wp_id`, `$lead_data` |
 | `wp4odoo_api_call` | Every Odoo API call | `$model`, `$method`, `$args`, `$kwargs`, `$result` |
+| `wp4odoo_after_save_{module}_{entity}` | After `save_wp_data()` in pull | `$wp_id`, `$odoo_data`, `$wp_data` |
+| `wp4odoo_batch_processed` | After each batch completes | `$module_id`, `$entity_type`, `$count` |
+| `wp4odoo_webhook_enqueue_failed` | Webhook payload enqueue failure | `$payload`, `$exception` |
 
 ### Filters
 
@@ -1598,8 +1611,20 @@ Auto-dismissed when all steps completed. Dismiss via × button persisted in `wp4
 | `wp4odoo_wcs_status_map` | Customize WC Subscriptions → Odoo subscription status mapping |
 | `wp4odoo_wcs_renewal_status_map` | Customize WC Subscriptions renewal → Odoo invoice status mapping |
 | `wp4odoo_wcs_billing_period_map` | Customize WC Subscriptions billing period → Odoo recurring rule type |
+| `wp4odoo_membership_reverse_status_map` | Customize Odoo → WC Memberships reverse status mapping |
+| `wp4odoo_si_reverse_invoice_status_map` | Customize Odoo → Sprout Invoices reverse status mapping |
+| `wp4odoo_lifterlms_reverse_order_status_map` | Customize Odoo → LifterLMS reverse order status mapping |
+| `wp4odoo_wcs_reverse_status_map` | Customize Odoo → WC Subscriptions reverse status mapping |
+| `wp4odoo_wcs_reverse_billing_period_map` | Customize Odoo → WC Subscriptions reverse billing period mapping |
+| `wp4odoo_helpdesk_reverse_stage_map` | Customize Odoo → WP helpdesk reverse stage mapping |
+| `wp4odoo_job_manager_status_map` | Customize Job Manager → Odoo status mapping |
+| `wp4odoo_job_manager_reverse_status_map` | Customize Odoo → Job Manager reverse status mapping |
 | `wp4odoo_form_lead_data` | Modify/skip form lead data before enqueue |
 | `wp4odoo_invoice_line_data` | Modify invoice line data (inject tax_ids, analytic accounts) |
+| `wp4odoo_vendor_bill_line_data` | Modify vendor bill line data (AffiliateWP) |
+| `wp4odoo_wpai_routing_table` | Customize WP All Import post type → module routing |
+| `wp4odoo_odoo_locale` | Customize WP locale → Odoo locale mapping |
+| `wp4odoo_translatable_fields_{module}` | Customize translatable field list per module |
 
 ## Cron
 
