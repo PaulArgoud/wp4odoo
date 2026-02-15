@@ -383,7 +383,10 @@ class Odoo_Client {
 			return $result;
 		} catch ( \Throwable $e ) {
 			// Auto-retry on session/authentication errors (403, expired session).
-			if ( $this->is_session_error( $e ) ) {
+			// Skip retry for non-idempotent methods (create) to prevent
+			// duplicate records if the create succeeded but the response
+			// was lost due to a session error.
+			if ( 'create' !== $method && $this->is_session_error( $e ) ) {
 				$this->logger->info(
 					'Session expired, re-authenticating and retrying.',
 					[
@@ -414,8 +417,11 @@ class Odoo_Client {
 	/**
 	 * Check if an exception indicates a session/authentication error.
 	 *
-	 * Detects HTTP 403, Odoo session expiry, and access denied errors
-	 * that can be resolved by re-authenticating.
+	 * Detects HTTP 403, Odoo session expiry errors that can be resolved
+	 * by re-authenticating. Does NOT match "access denied" because Odoo
+	 * raises AccessError with that phrase for business-level permission
+	 * errors (e.g. user lacks model access rights), which are not
+	 * resolvable by re-authentication.
 	 *
 	 * @param \Throwable $e The exception to inspect.
 	 * @return bool True if re-authentication might resolve the error.
@@ -431,10 +437,12 @@ class Odoo_Client {
 		// Keyword-based detection for session/auth errors.
 		// Uses word-boundary regex for '403' to avoid false positives
 		// (e.g. "Product #1403" should NOT trigger re-auth).
+		// Note: 'access denied' is deliberately excluded — Odoo uses it
+		// for AccessError business exceptions (insufficient model ACL),
+		// not session expiry. Retrying would be pointless.
 		return str_contains( $message, 'session expired' )
 			|| str_contains( $message, 'session_expired' )
 			|| str_contains( $message, 'odoo session' )
-			|| str_contains( $message, 'access denied' )
 			|| (bool) preg_match( '/\bhttp\s*403\b|\b403\s*forbidden\b/', $message );
 	}
 }

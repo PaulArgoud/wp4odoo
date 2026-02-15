@@ -120,6 +120,36 @@ abstract class Dual_Accounting_Module_Base extends Module_Base {
 		);
 	}
 
+	// ─── Deduplication ─────────────────────────────────────
+
+	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * Parent entities (form/campaign) dedup by product name.
+	 * Child entities (donation/payment) dedup by payment_ref for OCA
+	 * donation model or by ref for account.move.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( $this->get_parent_entity_type() === $entity_type && ! empty( $odoo_values['name'] ) ) {
+			return [ [ 'name', '=', $odoo_values['name'] ] ];
+		}
+
+		if ( $this->get_child_entity_type() === $entity_type ) {
+			if ( ! empty( $odoo_values['payment_ref'] ) ) {
+				return [ [ 'payment_ref', '=', $odoo_values['payment_ref'] ] ];
+			}
+			if ( ! empty( $odoo_values['ref'] ) ) {
+				return [ [ 'ref', '=', $odoo_values['ref'] ] ];
+			}
+		}
+
+		return [];
+	}
+
 	// ─── Subclass configuration ─────────────────────────────
 
 	/**

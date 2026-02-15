@@ -210,6 +210,33 @@ class Events_Calendar_Module extends Module_Base {
 		return class_exists( 'Tribe__Events__Main' ) ? \Tribe__Events__Main::VERSION : '';
 	}
 
+	// ─── Deduplication ─────────────────────────────────────
+
+	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * Events dedup by name. Tickets dedup by product name. Attendees
+	 * dedup by email on event.registration.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( in_array( $entity_type, [ 'event', 'ticket' ], true ) && ! empty( $odoo_values['name'] ) ) {
+			return [ [ 'name', '=', $odoo_values['name'] ] ];
+		}
+
+		if ( 'attendee' === $entity_type && ! empty( $odoo_values['email'] ) && ! empty( $odoo_values['event_id'] ) ) {
+			return [
+				[ 'email', '=', $odoo_values['email'] ],
+				[ 'event_id', '=', $odoo_values['event_id'] ],
+			];
+		}
+
+		return [];
+	}
+
 	// ─── Dual-model detection ──────────────────────────────
 
 	/**

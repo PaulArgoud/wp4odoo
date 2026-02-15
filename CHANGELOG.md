@@ -12,11 +12,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`poll_entity_changes()` helper** — New `Module_Base::poll_entity_changes(string $entity_type, array $items, string $id_field)` extracts the SHA-256 hash-based change detection loop from Bookly and Ecwid cron traits into a reusable method. Detects creates, updates (hash mismatch), and deletes (missing items) against the entity map. 5 new tests in `ModuleBaseHelpersTest`
 - **`Odoo_Accounting_Formatter::build_invoice_lines()`** — Shared static method for converting line item arrays into Odoo One2many `(0, 0, {...})` tuples with fallback to a single total line. Used by WP-Invoice and Sprout Invoices handlers (key normalization + delegation). 6 new tests in `OdooAccountingFormatterTest`
 
+- **`get_dedup_domain()` in all modules** — Every module now implements `get_dedup_domain()` for idempotent Odoo creates. Products/services dedup by `name`, invoices/payments by `ref`, donations by `payment_ref`, attendees by `email+event_id`, leads by `email_from`, contacts by `email`. 76 new tests in `DedupDomainTest`
 - **Table existence checks** — `check_dependency()` now verifies that required third-party database tables exist before declaring a module available. New `get_required_tables()` override in Amelia, Bookly, PMPro, ShopWP, and SupportCandy modules. Missing tables produce a warning notice and prevent module boot
 - **System cron recommendation** — Polling modules (Bookly, Ecwid) now show an informational notice when `DISABLE_WP_CRON` is not set, recommending a system cron job for reliable 5-minute intervals. New `uses_cron_polling()` override in Module_Helpers trait
 - **Queue_Manager::reset()** — New static method for test isolation, clears the internal singleton repository. Added to `Module_Test_Case::reset_static_caches()`
 
+### Security
+- **OpenSSL encryption upgraded to AES-256-GCM** — OpenSSL fallback encryption (when libsodium is unavailable) now uses AES-256-GCM (authenticated encryption with associated data) instead of AES-256-CBC. Backward-compatible decryption of existing CBC-encrypted values. Re-encrypted on next save
+- **Webhook token encrypted at rest** — `wp4odoo_webhook_token` option is now encrypted using `Odoo_Auth::encrypt()` (libsodium / AES-256-GCM). Backward-compatible with previously stored plaintext tokens
+- **SSRF protection** — Odoo connection URL validation now blocks private/reserved IP ranges (RFC 1918, loopback, link-local) and localhost/`.local`/`.internal` TLDs. Uses `gethostbyname()` DNS resolution to catch DNS rebinding
+- **CLI reconcile --fix confirmation** — `wp wp4odoo queue reconcile --fix` now requires interactive confirmation before modifying records (skippable with `--yes`)
+- **CLI module enable mutual exclusivity** — `wp wp4odoo module enable` now enforces exclusive group rules, automatically disabling conflicting modules with a warning
+
 ### Fixed
+- **Odoo_Client create() retry safety** — Session re-authentication retry is now skipped for `create` method calls, preventing duplicate record creation when a session expires mid-request
+- **is_session_error() false positive** — Removed `access denied` from session error detection. Odoo uses "access denied" for business-level `AccessError` (insufficient model ACL), not session expiry
+- **Queue processing race condition** — `process_queue()` (global lock) and `process_module_queue()` (per-module lock) could both claim the same job. New atomic `claim_job()` method uses `UPDATE…WHERE status='pending'` to prevent double-processing
+- **Error_Type classification in push_to_odoo()** — Client exceptions in `push_to_odoo()` are now classified via `classify_exception()`: HTTP 5xx/429, timeouts, and network errors → `Error_Type::Transient` (retry with backoff); access denied, validation errors, constraints → `Error_Type::Permanent` (fail immediately)
+- **Failure_Notifier ratio-based logic** — Aligned with `Circuit_Breaker`: a batch counts as failed only when 80%+ of jobs failed (was counting individual failures). Prevents false alarms from occasional failures in healthy batches
+- **recover_stale_processing infinite retry** — Stale job recovery now increments `attempts` and marks jobs as `failed` when `max_attempts` is exceeded, preventing infinite retry loops after process crashes
+- **Database_Migration migration 5 idempotency** — `idx_wp_lookup` index replacement now checks column composition before ALTER TABLE, preventing redundant DROP+ADD on partial migration re-runs
+- **get_stats() cache invalidation** — Queue stats transient is now deleted on `update_status()`, ensuring dashboards reflect status changes immediately
+- **HTTP status code in exceptions** — `Retryable_Http` now propagates HTTP status codes (429, 500, etc.) via `RuntimeException::getCode()` for proper `Error_Type` classification
 - **Amelia hooks inconsistency** — `on_booking_canceled()` and `on_booking_rescheduled()` now use `should_sync('sync_appointments')` instead of bare `is_importing()`, aligning with all other hook callbacks
 - **Circuit_Breaker** — `PROBE_TTL` increased from 120 s to 360 s to exceed `RECOVERY_DELAY + BATCH_TIME_LIMIT` (355 s), preventing overlapping probes when a half-open probe batch takes its full allotted time
 - **Sync_Engine** — Batch creates with an unresolvable module (disabled or removed) now mark all grouped jobs as permanently failed instead of silently skipping them (jobs were left stuck in `processing` for 10 min until stale recovery)
@@ -24,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Webhook_Handler** — Rate limiting switched from `wp_cache_*` (non-persistent by default) to `set_transient()` / `get_transient()`, ensuring rate limits persist across PHP processes
 
 ### Changed
+- **Entity_Map_Repository bulk cache** — `get_module_entity_mappings()` no longer populates the per-entity LRU cache to prevent counter-productive eviction of frequently-used entries during bulk polling operations (Bookly, Ecwid). Cache size increased from 2000 to 5000
 - **SimplePay_Hooks** — Deduplicated `on_payment_succeeded()` and `on_invoice_payment_succeeded()` (95% identical) into a shared `process_stripe_payment()` method
 - **Bookly_Cron_Hooks / Ecwid_Cron_Hooks** — `poll()` methods now delegate to `poll_entity_changes()` from `Module_Base` instead of duplicating the hash-diff loop
 - **WP_Invoice_Handler / Sprout_Invoices_Handler** — `build_invoice_lines()` now normalizes plugin-specific keys and delegates to `Odoo_Accounting_Formatter::build_invoice_lines()`

@@ -191,6 +191,25 @@ class Sprout_Invoices_Module extends Module_Base {
 		return defined( 'SI_VERSION' ) ? SI_VERSION : '';
 	}
 
+	// ─── Deduplication ─────────────────────────────────────
+
+	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * Invoices and payments both dedup by ref.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( in_array( $entity_type, [ 'invoice', 'payment' ], true ) && ! empty( $odoo_values['ref'] ) ) {
+			return [ [ 'ref', '=', $odoo_values['ref'] ] ];
+		}
+
+		return [];
+	}
+
 	// ─── Push override ─────────────────────────────────────
 
 	/**

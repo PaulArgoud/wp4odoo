@@ -49,9 +49,10 @@ class SessionErrorTest extends TestCase {
 		$this->assertTrue( $this->method->invoke( $this->client, $e ) );
 	}
 
-	public function test_access_denied_is_detected(): void {
+	public function test_access_denied_is_not_session_error(): void {
+		// "Access denied" is an Odoo AccessError (business logic), not a session error.
 		$e = new \RuntimeException( 'Access Denied for user admin' );
-		$this->assertTrue( $this->method->invoke( $this->client, $e ) );
+		$this->assertFalse( $this->method->invoke( $this->client, $e ) );
 	}
 
 	public function test_http_403_forbidden_is_detected(): void {

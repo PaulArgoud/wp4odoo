@@ -279,8 +279,16 @@ final class Database_Migration {
 		$names   = array_column( $indexes, 'Key_name' );
 
 		if ( in_array( 'idx_wp_lookup', $names, true ) ) {
-			// Atomic drop+add in a single ALTER TABLE: no window without index.
-			$wpdb->query( "ALTER TABLE {$entity_table} DROP KEY idx_wp_lookup, ADD KEY idx_wp_lookup (module, entity_type, wp_id)" );
+			// Check if the index already has the correct columns (idempotent re-run).
+			$idx_cols = array_column(
+				// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- MySQL SHOW INDEX column names.
+				array_filter( $indexes, fn( $idx ) => 'idx_wp_lookup' === $idx->Key_name ),
+				'Column_name'
+			);
+			if ( ! in_array( 'module', $idx_cols, true ) ) {
+				// Atomic drop+add in a single ALTER TABLE: no window without index.
+				$wpdb->query( "ALTER TABLE {$entity_table} DROP KEY idx_wp_lookup, ADD KEY idx_wp_lookup (module, entity_type, wp_id)" );
+			}
 		} else {
 			$wpdb->query( "ALTER TABLE {$entity_table} ADD KEY idx_wp_lookup (module, entity_type, wp_id)" );
 		}

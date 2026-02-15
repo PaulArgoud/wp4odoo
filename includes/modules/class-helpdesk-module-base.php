@@ -98,6 +98,25 @@ abstract class Helpdesk_Module_Base extends Module_Base {
 		return 'helpdesk';
 	}
 
+	// ─── Deduplication ─────────────────────────────────────
+
+	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * Tickets dedup by name (subject line).
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( 'ticket' === $entity_type && ! empty( $odoo_values['name'] ) ) {
+			return [ [ 'name', '=', $odoo_values['name'] ] ];
+		}
+
+		return [];
+	}
+
 	// ─── Dual-model detection ───────────────────────────────
 
 	/**

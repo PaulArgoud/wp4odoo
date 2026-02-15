@@ -420,8 +420,8 @@ class Sync_Queue_Repository {
 	/**
 	 * Recover jobs stuck in 'processing' state from a previous crash.
 	 *
-	 * Resets jobs that have been in 'processing' longer than the given
-	 * timeout back to 'pending' so they can be retried.
+	 * Increments attempts for each recovered job. Jobs that have
+	 * exceeded max_attempts are marked 'failed' instead of 'pending'.
 	 *
 	 * @param int $timeout_seconds Seconds before a processing job is considered stale (default 600).
 	 * @return int Number of recovered jobs.
@@ -432,12 +432,49 @@ class Sync_Queue_Repository {
 		$table  = $this->table();
 		$cutoff = gmdate( 'Y-m-d H:i:s', time() - max( 60, $timeout_seconds ) );
 
-		return (int) $wpdb->query(
+		// Increment attempts. Jobs under max_attempts → pending (retry).
+		$retried = (int) $wpdb->query(
 			$wpdb->prepare(
-				"UPDATE {$table} SET status = 'pending', error_message = 'Recovered from stale processing state.' WHERE status = 'processing' AND processed_at IS NOT NULL AND processed_at < %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				"UPDATE {$table} SET status = 'pending', attempts = attempts + 1, error_message = 'Recovered from stale processing state.' WHERE status = 'processing' AND processed_at IS NOT NULL AND processed_at < %s AND attempts + 1 < max_attempts", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
 				$cutoff
 			)
 		);
+
+		// Jobs at or beyond max_attempts → failed (no more retries).
+		$failed = (int) $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$table} SET status = 'failed', attempts = attempts + 1, error_message = 'Max attempts reached after stale processing recovery.' WHERE status = 'processing' AND processed_at IS NOT NULL AND processed_at < %s AND attempts + 1 >= max_attempts", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				$cutoff
+			)
+		);
+
+		return $retried + $failed;
+	}
+
+	/**
+	 * Atomically claim a pending job for processing.
+	 *
+	 * Uses UPDATE … WHERE status = 'pending' to prevent race conditions
+	 * between process_queue() (global lock) and process_module_queue()
+	 * (per-module lock) from both processing the same job.
+	 *
+	 * @param int $job_id The queue job ID.
+	 * @return bool True if this process successfully claimed the job.
+	 */
+	public function claim_job( int $job_id ): bool {
+		global $wpdb;
+
+		$table = $this->table();
+
+		$affected = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->prepare(
+				"UPDATE {$table} SET status = 'processing', processed_at = %s WHERE id = %d AND status = 'pending'", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				current_time( 'mysql', true ),
+				$job_id
+			)
+		);
+
+		return $affected > 0;
 	}
 
 	/**
@@ -455,5 +492,8 @@ class Sync_Queue_Repository {
 		$data['status'] = $status;
 
 		$wpdb->update( $this->table(), $data, [ 'id' => $job_id ] );
+
+		// Invalidate cached stats so dashboards reflect the change immediately.
+		delete_transient( 'wp4odoo_queue_stats' );
 	}
 }

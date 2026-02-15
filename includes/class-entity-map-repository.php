@@ -32,9 +32,11 @@ class Entity_Map_Repository {
 	 * Maximum cache entries before LRU eviction kicks in.
 	 *
 	 * Prevents unbounded memory growth during large batch imports.
-	 * Each entry is ~100 bytes, so 2000 entries ≈ 200 KB.
+	 * Each entry is ~100 bytes, so 5000 entries ≈ 500 KB.
+	 * Higher than original 2000 to avoid counter-productive eviction
+	 * during bulk operations where batch queries fill the cache.
 	 */
-	private const MAX_CACHE_SIZE = 2000;
+	private const MAX_CACHE_SIZE = 5000;
 
 	/**
 	 * Per-request lookup cache.
@@ -390,13 +392,13 @@ class Entity_Map_Repository {
 					'odoo_id'   => $o_id,
 					'sync_hash' => $row->sync_hash ?? '',
 				];
-
-				$this->cache[ "{$module}:{$entity_type}:wp:{$w_id}" ]   = $o_id;
-				$this->cache[ "{$module}:{$entity_type}:odoo:{$o_id}" ] = $w_id;
 			}
 		}
 
-		$this->evict_cache();
+		// Intentionally does NOT populate the per-request cache.
+		// This method loads potentially thousands of rows for polling
+		// diff comparison. Populating the cache would immediately trigger
+		// eviction, wasting CPU and evicting useful individual lookups.
 
 		return $map;
 	}

@@ -23,8 +23,24 @@ class Odoo_Auth {
 
 	/**
 	 * OpenSSL cipher method for fallback encryption.
+	 *
+	 * Uses AES-256-GCM (authenticated encryption with associated data)
+	 * to provide both confidentiality and integrity without a separate HMAC.
 	 */
-	private const OPENSSL_METHOD = 'aes-256-cbc';
+	private const OPENSSL_METHOD = 'aes-256-gcm';
+
+	/**
+	 * GCM authentication tag length in bytes.
+	 */
+	private const GCM_TAG_LENGTH = 16;
+
+	/**
+	 * Legacy OpenSSL method for backward-compatible decryption.
+	 *
+	 * Existing ciphertexts encrypted with CBC are decrypted via this
+	 * fallback before being re-encrypted with GCM on next save.
+	 */
+	private const OPENSSL_LEGACY_METHOD = 'aes-256-cbc';
 
 	/**
 	 * Encrypt a plaintext value for safe storage in wp_options.
@@ -378,41 +394,63 @@ class Odoo_Auth {
 	}
 
 	/**
-	 * Encrypt using OpenSSL as fallback.
+	 * Encrypt using OpenSSL AES-256-GCM (AEAD).
+	 *
+	 * Format: IV (12 bytes) + GCM tag (16 bytes) + ciphertext.
 	 *
 	 * @param string $plaintext The value to encrypt.
 	 * @param string $key       The encryption key (32 bytes).
-	 * @return string Base64-encoded IV + ciphertext.
+	 * @return string Base64-encoded IV + tag + ciphertext.
 	 */
 	private static function openssl_encrypt_value( string $plaintext, string $key ): string {
 		$iv_length = openssl_cipher_iv_length( self::OPENSSL_METHOD );
 		$iv        = openssl_random_pseudo_bytes( $iv_length );
-		$cipher    = openssl_encrypt( $plaintext, self::OPENSSL_METHOD, $key, OPENSSL_RAW_DATA, $iv );
+		$tag       = '';
+		$cipher    = openssl_encrypt( $plaintext, self::OPENSSL_METHOD, $key, OPENSSL_RAW_DATA, $iv, $tag, '', self::GCM_TAG_LENGTH );
 
 		if ( false === $cipher ) {
 			return '';
 		}
 
-		return base64_encode( $iv . $cipher );
+		return base64_encode( $iv . $tag . $cipher );
 	}
 
 	/**
-	 * Decrypt using OpenSSL as fallback.
+	 * Decrypt using OpenSSL AES-256-GCM (AEAD).
 	 *
-	 * @param string $decoded The raw decoded bytes (IV + ciphertext).
+	 * Falls back to legacy AES-256-CBC for existing ciphertexts
+	 * encrypted before the GCM migration.
+	 *
+	 * @param string $decoded The raw decoded bytes (IV + tag + ciphertext).
 	 * @param string $key     The encryption key (32 bytes).
 	 * @return string|false
 	 */
 	private static function openssl_decrypt_value( string $decoded, string $key ): string|false {
 		$iv_length = openssl_cipher_iv_length( self::OPENSSL_METHOD );
 
-		if ( strlen( $decoded ) <= $iv_length ) {
-			return false;
+		// GCM format: IV (12) + tag (16) + ciphertext.
+		$min_gcm_length = $iv_length + self::GCM_TAG_LENGTH + 1;
+
+		if ( strlen( $decoded ) >= $min_gcm_length ) {
+			$iv     = substr( $decoded, 0, $iv_length );
+			$tag    = substr( $decoded, $iv_length, self::GCM_TAG_LENGTH );
+			$cipher = substr( $decoded, $iv_length + self::GCM_TAG_LENGTH );
+
+			$result = openssl_decrypt( $cipher, self::OPENSSL_METHOD, $key, OPENSSL_RAW_DATA, $iv, $tag );
+			if ( false !== $result ) {
+				return $result;
+			}
 		}
 
-		$iv     = substr( $decoded, 0, $iv_length );
-		$cipher = substr( $decoded, $iv_length );
+		// Fallback: try legacy CBC for pre-GCM ciphertexts.
+		$cbc_iv_length = openssl_cipher_iv_length( self::OPENSSL_LEGACY_METHOD );
+		if ( strlen( $decoded ) > $cbc_iv_length ) {
+			$iv     = substr( $decoded, 0, $cbc_iv_length );
+			$cipher = substr( $decoded, $cbc_iv_length );
 
-		return openssl_decrypt( $cipher, self::OPENSSL_METHOD, $key, OPENSSL_RAW_DATA, $iv );
+			return openssl_decrypt( $cipher, self::OPENSSL_LEGACY_METHOD, $key, OPENSSL_RAW_DATA, $iv );
+		}
+
+		return false;
 	}
 }

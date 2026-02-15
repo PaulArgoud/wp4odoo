@@ -179,6 +179,26 @@ class Memberships_Module extends Module_Base {
 		return defined( 'WC_MEMBERSHIPS_VERSION' ) ? WC_MEMBERSHIPS_VERSION : '';
 	}
 
+	// ─── Deduplication ─────────────────────────────────────
+
+	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * Plans dedup by product name. Memberships have no reliable
+	 * natural key — skipped.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( 'plan' === $entity_type && ! empty( $odoo_values['name'] ) ) {
+			return [ [ 'name', '=', $odoo_values['name'] ] ];
+		}
+
+		return [];
+	}
+
 	// ─── Pull override ──────────────────────────────────────
 
 	/**

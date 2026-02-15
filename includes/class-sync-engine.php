@@ -254,7 +254,12 @@ class Sync_Engine {
 					break;
 				}
 
-				$this->queue_repo->update_status( (int) $job->id, 'processing', [ 'processed_at' => current_time( 'mysql', true ) ] );
+				// Atomically claim the job. If another process (e.g. a concurrent
+				// process_module_queue) already claimed it, skip silently.
+				if ( ! $this->queue_repo->claim_job( (int) $job->id ) ) {
+					continue;
+				}
+
 				$this->logger->set_correlation_id( $job->correlation_id ?? null );
 
 				try {
@@ -462,10 +467,15 @@ class Sync_Engine {
 				continue;
 			}
 
-			// Mark all jobs as processing.
-			$items = [];
+			// Atomically claim all jobs for processing.
+			$items        = [];
+			$claimed_jobs = [];
 			foreach ( $group_jobs as $job ) {
-				$this->queue_repo->update_status( (int) $job->id, 'processing', [ 'processed_at' => current_time( 'mysql', true ) ] );
+				if ( ! $this->queue_repo->claim_job( (int) $job->id ) ) {
+					$batched_job_ids[ (int) $job->id ] = true;
+					continue;
+				}
+				$claimed_jobs[] = $job;
 
 				$payload = [];
 				if ( ! empty( $job->payload ) ) {
@@ -479,10 +489,14 @@ class Sync_Engine {
 				];
 			}
 
+			if ( empty( $claimed_jobs ) ) {
+				continue;
+			}
+
 			$results = $module->push_batch_creates( $first_job->entity_type, $items );
 
 			// Map results back to individual jobs.
-			foreach ( $group_jobs as $job ) {
+			foreach ( $claimed_jobs as $job ) {
 				$wp_id  = (int) $job->wp_id;
 				$result = $results[ $wp_id ] ?? Sync_Result::failure( 'No result from batch.', Error_Type::Transient );
 

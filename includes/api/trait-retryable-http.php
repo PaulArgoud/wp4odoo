@@ -73,7 +73,7 @@ trait Retryable_Http {
 				]
 			);
 
-			throw new \RuntimeException( $error_msg );
+			throw new \RuntimeException( $error_msg, $status_code );
 		}
 
 		return $response;

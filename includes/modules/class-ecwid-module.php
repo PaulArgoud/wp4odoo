@@ -182,6 +182,30 @@ class Ecwid_Module extends Module_Base {
 		return $this->handler;
 	}
 
+	// ─── Deduplication ─────────────────────────────────────
+
+	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * Products dedup by SKU (default_code). Orders dedup by
+	 * client_order_ref.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( 'product' === $entity_type && ! empty( $odoo_values['default_code'] ) ) {
+			return [ [ 'default_code', '=', $odoo_values['default_code'] ] ];
+		}
+
+		if ( 'order' === $entity_type && ! empty( $odoo_values['client_order_ref'] ) ) {
+			return [ [ 'client_order_ref', '=', $odoo_values['client_order_ref'] ] ];
+		}
+
+		return [];
+	}
+
 	// ─── Data access ────────────────────────────────────────
 
 	/**

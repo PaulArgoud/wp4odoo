@@ -126,6 +126,30 @@ abstract class Membership_Module_Base extends Module_Base {
 	 */
 	abstract protected function resolve_member_price( int $level_id ): float;
 
+	// ─── Deduplication ─────────────────────────────────────
+
+	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * Levels/plans dedup by product name. Payments dedup by invoice ref.
+	 * Memberships have no reliable natural key — skipped.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( $this->get_level_entity_type() === $entity_type && ! empty( $odoo_values['name'] ) ) {
+			return [ [ 'name', '=', $odoo_values['name'] ] ];
+		}
+
+		if ( $this->get_payment_entity_type() === $entity_type && ! empty( $odoo_values['ref'] ) ) {
+			return [ [ 'ref', '=', $odoo_values['ref'] ] ];
+		}
+
+		return [];
+	}
+
 	// ─── Push override ─────────────────────────────────────
 
 	/**

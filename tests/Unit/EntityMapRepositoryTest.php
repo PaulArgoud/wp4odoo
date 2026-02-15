@@ -310,15 +310,16 @@ class EntityMapRepositoryTest extends TestCase {
 		$this->assertSame( [], $result );
 	}
 
-	public function test_get_module_entity_mappings_populates_cache(): void {
+	public function test_get_module_entity_mappings_does_not_pollute_cache(): void {
 		$this->wpdb->get_results_return = [
 			(object) [ 'wp_id' => '5', 'odoo_id' => '50', 'sync_hash' => 'xyz' ],
 		];
 
 		$this->repo->get_module_entity_mappings( 'bookly', 'service' );
 
-		// Cache should be populated — get_odoo_id should return without DB query.
-		$this->wpdb->get_var_return = null;
+		// Bulk mapping results should NOT populate the per-entity cache
+		// (prevents LRU eviction of frequently-used entries during bulk ops).
+		$this->wpdb->get_var_return = '50';
 		$result = $this->repo->get_odoo_id( 'bookly', 'service', 5 );
 
 		$this->assertSame( 50, $result );

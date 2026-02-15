@@ -162,6 +162,25 @@ class WP_Invoice_Module extends Module_Base {
 		return defined( 'WP_INVOICE_VERSION_NUM' ) ? WP_INVOICE_VERSION_NUM : '';
 	}
 
+	// ─── Deduplication ─────────────────────────────────────
+
+	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * Invoices dedup by ref.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( 'invoice' === $entity_type && ! empty( $odoo_values['ref'] ) ) {
+			return [ [ 'ref', '=', $odoo_values['ref'] ] ];
+		}
+
+		return [];
+	}
+
 	// ─── Push override ─────────────────────────────────────
 
 	/**

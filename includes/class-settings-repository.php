@@ -273,22 +273,34 @@ class Settings_Repository {
 	// ── Webhook token ──────────────────────────────────────
 
 	/**
-	 * Get the webhook token.
+	 * Get the webhook token (decrypted).
 	 *
 	 * @return string
 	 */
 	public function get_webhook_token(): string {
-		return (string) get_option( self::OPT_WEBHOOK_TOKEN, '' );
+		$stored = (string) get_option( self::OPT_WEBHOOK_TOKEN, '' );
+		if ( '' === $stored ) {
+			return '';
+		}
+
+		$decrypted = API\Odoo_Auth::decrypt( $stored );
+
+		// Backward compat: if decryption fails, the token is stored in plaintext (pre-encryption).
+		return ( false !== $decrypted && '' !== $decrypted ) ? $decrypted : $stored;
 	}
 
 	/**
-	 * Save the webhook token.
+	 * Save the webhook token (encrypted at rest).
 	 *
-	 * @param string $token Token value.
+	 * @param string $token Token value (plaintext).
 	 * @return bool
 	 */
 	public function save_webhook_token( string $token ): bool {
-		return update_option( self::OPT_WEBHOOK_TOKEN, $token );
+		if ( '' === $token ) {
+			return update_option( self::OPT_WEBHOOK_TOKEN, '' );
+		}
+
+		return update_option( self::OPT_WEBHOOK_TOKEN, API\Odoo_Auth::encrypt( $token ) );
 	}
 
 	// ── Failure tracking ───────────────────────────────────

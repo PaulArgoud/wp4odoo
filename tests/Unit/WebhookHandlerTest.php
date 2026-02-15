@@ -233,7 +233,8 @@ class WebhookHandlerTest extends TestCase {
 
 		$token = $GLOBALS['_wp_options']['wp4odoo_webhook_token'] ?? '';
 		$this->assertNotEmpty( $token );
-		$this->assertSame( 48, strlen( $token ) );
+		// Token is encrypted at rest — stored length varies by backend (sodium vs OpenSSL).
+		$this->assertGreaterThan( 48, strlen( $token ) );
 	}
 
 	public function test_register_routes_preserves_existing_token(): void {

@@ -611,6 +611,8 @@ if ( ! class_exists( 'WP_CLI' ) ) {
 		public static function success( string $message ): void {}
 		public static function warning( string $message ): void {}
 		public static function error( string $message ): void {}
+		/** @param array<string, mixed> $assoc_args */
+		public static function confirm( string $message, array $assoc_args = [] ): void {}
 	}
 }
 

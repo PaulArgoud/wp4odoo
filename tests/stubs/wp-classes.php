@@ -126,6 +126,10 @@ if ( ! class_exists( 'WP_CLI' ) ) {
 			self::$calls[] = [ 'method' => 'error', 'args' => [ $message ] ];
 		}
 
+		public static function confirm( string $message, array $assoc_args = [] ): void {
+			self::$calls[] = [ 'method' => 'confirm', 'args' => [ $message ] ];
+		}
+
 		public static function reset(): void {
 			self::$calls = [];
 		}

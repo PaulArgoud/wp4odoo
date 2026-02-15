@@ -227,6 +227,30 @@ class LifterLMS_Module extends Module_Base {
 		return defined( 'LLMS_VERSION' ) ? LLMS_VERSION : '';
 	}
 
+	// ─── Deduplication ─────────────────────────────────────
+
+	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * Courses and memberships dedup by product name. Orders dedup by
+	 * invoice ref. Enrollments have no reliable natural key — skipped.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( in_array( $entity_type, [ 'course', 'membership' ], true ) && ! empty( $odoo_values['name'] ) ) {
+			return [ [ 'name', '=', $odoo_values['name'] ] ];
+		}
+
+		if ( 'order' === $entity_type && ! empty( $odoo_values['ref'] ) ) {
+			return [ [ 'ref', '=', $odoo_values['ref'] ] ];
+		}
+
+		return [];
+	}
+
 	// ─── Push override ──────────────────────────────────────
 
 	/**

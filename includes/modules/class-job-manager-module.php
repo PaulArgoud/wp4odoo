@@ -153,6 +153,25 @@ class Job_Manager_Module extends Module_Base {
 		return defined( 'JOB_MANAGER_VERSION' ) ? JOB_MANAGER_VERSION : '';
 	}
 
+	// ─── Deduplication ─────────────────────────────────────
+
+	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * Jobs dedup by name.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( 'job' === $entity_type && ! empty( $odoo_values['name'] ) ) {
+			return [ [ 'name', '=', $odoo_values['name'] ] ];
+		}
+
+		return [];
+	}
+
 	// ─── Pull override ───────────────────────────────────────
 
 	/**

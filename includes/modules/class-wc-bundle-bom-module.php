@@ -175,6 +175,31 @@ class WC_Bundle_BOM_Module extends Module_Base {
 		return $this->handler;
 	}
 
+	// ─── Deduplication ─────────────────────────────────────
+
+	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * BOMs dedup by code (reference), or by product_tmpl_id when no
+	 * code is set (typically one BOM per product template).
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( 'bom' === $entity_type ) {
+			if ( ! empty( $odoo_values['code'] ) ) {
+				return [ [ 'code', '=', $odoo_values['code'] ] ];
+			}
+			if ( ! empty( $odoo_values['product_tmpl_id'] ) ) {
+				return [ [ 'product_tmpl_id', '=', $odoo_values['product_tmpl_id'] ] ];
+			}
+		}
+
+		return [];
+	}
+
 	// ─── MRP model detection ──────────────────────────────
 
 	/**

@@ -308,6 +308,27 @@ abstract class Booking_Module_Base extends Module_Base {
 	}
 
 	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * Services dedup by name. Bookings dedup by event name.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( 'service' === $entity_type && ! empty( $odoo_values['name'] ) ) {
+			return [ [ 'name', '=', $odoo_values['name'] ] ];
+		}
+
+		if ( $this->get_booking_entity_type() === $entity_type && ! empty( $odoo_values['name'] ) ) {
+			return [ [ 'name', '=', $odoo_values['name'] ] ];
+		}
+
+		return [];
+	}
+
+	/**
 	 * Ensure the service is synced to Odoo before pushing a booking.
 	 *
 	 * @param int $booking_id Plugin booking/appointment ID.

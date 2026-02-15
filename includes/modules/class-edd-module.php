@@ -193,6 +193,30 @@ class EDD_Module extends Module_Base {
 		return 'bidirectional';
 	}
 
+	// ─── Deduplication ─────────────────────────────────────
+
+	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * Downloads dedup by product name. Invoices dedup by ref.
+	 * Orders have no reliable natural key — skipped.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( 'download' === $entity_type && ! empty( $odoo_values['name'] ) ) {
+			return [ [ 'name', '=', $odoo_values['name'] ] ];
+		}
+
+		if ( 'invoice' === $entity_type && ! empty( $odoo_values['ref'] ) ) {
+			return [ [ 'ref', '=', $odoo_values['ref'] ] ];
+		}
+
+		return [];
+	}
+
 	// ─── Data Loading (delegates to handlers) ───────────────
 
 	/**

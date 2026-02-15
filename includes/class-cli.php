@@ -240,12 +240,16 @@ class CLI {
 	 * : Entity type (e.g. contact, product).
 	 *
 	 * [--fix]
-	 * : Remove orphaned mappings.
+	 * : Remove orphaned mappings (requires confirmation or --yes).
+	 *
+	 * [--yes]
+	 * : Skip confirmation prompt for --fix.
 	 *
 	 * ## EXAMPLES
 	 *
 	 *     wp wp4odoo reconcile crm contact
 	 *     wp wp4odoo reconcile woocommerce product --fix
+	 *     wp wp4odoo reconcile woocommerce product --fix --yes
 	 *
 	 * @subcommand reconcile
 	 * @when after_wp_load
@@ -278,6 +282,12 @@ class CLI {
 		}
 
 		$fix = isset( $assoc_args['fix'] );
+
+		if ( $fix && ! isset( $assoc_args['yes'] ) ) {
+			\WP_CLI::confirm(
+				__( 'This will permanently remove orphaned entity mappings. Continue?', 'wp4odoo' )
+			);
+		}
 
 		\WP_CLI::line(
 			sprintf(
@@ -503,12 +513,32 @@ class CLI {
 			\WP_CLI::error( 'Please provide a module ID. Usage: wp wp4odoo module enable <id>' );
 		}
 
-		$modules = \WP4Odoo_Plugin::instance()->get_modules();
+		$plugin  = \WP4Odoo_Plugin::instance();
+		$modules = $plugin->get_modules();
 		if ( ! isset( $modules[ $id ] ) ) {
 			\WP_CLI::error( sprintf( 'Unknown module: %s. Use "wp wp4odoo module list" to see available modules.', $id ) );
 		}
 
-		\WP4Odoo_Plugin::instance()->settings()->set_module_enabled( $id, $enabled );
+		// When enabling, check for mutual exclusivity conflicts.
+		if ( $enabled ) {
+			$registry  = $plugin->module_registry();
+			$conflicts = $registry->get_conflicts( $id );
+			if ( ! empty( $conflicts ) ) {
+				\WP_CLI::warning(
+					sprintf(
+						'Module "%s" conflicts with currently enabled module(s): %s. They will be disabled.',
+						$id,
+						implode( ', ', $conflicts )
+					)
+				);
+				foreach ( $conflicts as $conflict_id ) {
+					$plugin->settings()->set_module_enabled( $conflict_id, false );
+					\WP_CLI::line( sprintf( '  Disabled conflicting module: %s', $conflict_id ) );
+				}
+			}
+		}
+
+		$plugin->settings()->set_module_enabled( $id, $enabled );
 
 		if ( $enabled ) {
 			\WP_CLI::success( sprintf( 'Module "%s" enabled.', $id ) );

@@ -158,6 +158,25 @@ class ShopWP_Module extends Module_Base {
 		return defined( 'SHOPWP_PLUGIN_VERSION' ) ? SHOPWP_PLUGIN_VERSION : '';
 	}
 
+	// ─── Deduplication ─────────────────────────────────────
+
+	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * Products dedup by SKU (default_code).
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( 'product' === $entity_type && ! empty( $odoo_values['default_code'] ) ) {
+			return [ [ 'default_code', '=', $odoo_values['default_code'] ] ];
+		}
+
+		return [];
+	}
+
 	// ─── Data access ────────────────────────────────────────
 
 	/**

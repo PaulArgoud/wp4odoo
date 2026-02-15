@@ -224,68 +224,113 @@ abstract class Module_Base {
 	public function push_to_odoo( string $entity_type, string $action, int $wp_id, int $odoo_id = 0, array $payload = [] ): Sync_Result {
 		$model = $this->get_odoo_model( $entity_type );
 
-		if ( 'delete' === $action ) {
-			if ( $odoo_id > 0 ) {
-				$this->client()->unlink( $model, [ $odoo_id ] );
-				$this->remove_mapping( $entity_type, $wp_id );
-				$this->logger->info( 'Deleted Odoo record.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
+		try {
+			if ( 'delete' === $action ) {
+				if ( $odoo_id > 0 ) {
+					$this->client()->unlink( $model, [ $odoo_id ] );
+					$this->remove_mapping( $entity_type, $wp_id );
+					$this->logger->info( 'Deleted Odoo record.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
+				}
+				return Sync_Result::success( $odoo_id );
 			}
-			return Sync_Result::success( $odoo_id );
-		}
 
-		$wp_data                  = ! empty( $payload ) ? $payload : $this->load_wp_data( $entity_type, $wp_id );
-		$wp_data['_wp_entity_id'] = $wp_id;
-		$odoo_values              = $this->map_to_odoo( $entity_type, $wp_data );
+			$wp_data                  = ! empty( $payload ) ? $payload : $this->load_wp_data( $entity_type, $wp_id );
+			$wp_data['_wp_entity_id'] = $wp_id;
+			$odoo_values              = $this->map_to_odoo( $entity_type, $wp_data );
 
-		if ( empty( $odoo_values ) ) {
-			$this->logger->warning( 'No data to push.', compact( 'entity_type', 'wp_id' ) );
-			return Sync_Result::failure( 'No data to push.', Error_Type::Permanent );
-		}
-
-		$new_hash = $this->generate_sync_hash( $odoo_values );
-
-		// Check for existing mapping (might have been created since enqueue).
-		if ( 'create' === $action || 0 === $odoo_id ) {
-			$existing_odoo_id = $this->get_mapping( $entity_type, $wp_id );
-			if ( $existing_odoo_id ) {
-				$odoo_id = $existing_odoo_id;
-				$action  = 'update';
+			if ( empty( $odoo_values ) ) {
+				$this->logger->warning( 'No data to push.', compact( 'entity_type', 'wp_id' ) );
+				return Sync_Result::failure( 'No data to push.', Error_Type::Permanent );
 			}
-		}
 
-		if ( 'update' === $action && $odoo_id > 0 ) {
-			$this->client()->write( $model, [ $odoo_id ], $odoo_values );
-			if ( ! $this->save_mapping( $entity_type, $wp_id, $odoo_id, $new_hash ) ) {
-				$this->logger->error( 'Mapping save failed after Odoo update.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
-				return Sync_Result::failure( 'Mapping save failed after Odoo update.', Error_Type::Transient, $odoo_id );
-			}
-			$this->logger->info( 'Updated Odoo record.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
-		} else {
-			// Dedup: search Odoo for an existing record before creating.
-			// Catches orphaned records from a previous attempt whose
-			// save_mapping() failed after a successful create().
-			$dedup_domain = $this->get_dedup_domain( $entity_type, $odoo_values );
-			if ( ! empty( $dedup_domain ) ) {
-				$existing = $this->client()->search( $model, $dedup_domain, 0, 1 );
-				if ( ! empty( $existing ) ) {
-					$odoo_id = $existing[0];
-					$this->logger->info( 'Dedup: found existing Odoo record, switching to update.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
-					$this->client()->write( $model, [ $odoo_id ], $odoo_values );
-					$this->save_mapping( $entity_type, $wp_id, $odoo_id, $new_hash );
-					return Sync_Result::success( $odoo_id );
+			$new_hash = $this->generate_sync_hash( $odoo_values );
+
+			// Check for existing mapping (might have been created since enqueue).
+			if ( 'create' === $action || 0 === $odoo_id ) {
+				$existing_odoo_id = $this->get_mapping( $entity_type, $wp_id );
+				if ( $existing_odoo_id ) {
+					$odoo_id = $existing_odoo_id;
+					$action  = 'update';
 				}
 			}
 
-			$odoo_id = $this->client()->create( $model, $odoo_values );
-			$saved   = $this->save_mapping( $entity_type, $wp_id, $odoo_id, $new_hash );
-			if ( ! $saved ) {
-				$this->logger->error( 'Mapping save failed after Odoo create.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
-				return Sync_Result::failure( 'Mapping save failed after Odoo create.', Error_Type::Transient, $odoo_id );
+			if ( 'update' === $action && $odoo_id > 0 ) {
+				$this->client()->write( $model, [ $odoo_id ], $odoo_values );
+				if ( ! $this->save_mapping( $entity_type, $wp_id, $odoo_id, $new_hash ) ) {
+					$this->logger->error( 'Mapping save failed after Odoo update.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
+					return Sync_Result::failure( 'Mapping save failed after Odoo update.', Error_Type::Transient, $odoo_id );
+				}
+				$this->logger->info( 'Updated Odoo record.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
+			} else {
+				// Dedup: search Odoo for an existing record before creating.
+				$dedup_domain = $this->get_dedup_domain( $entity_type, $odoo_values );
+				if ( ! empty( $dedup_domain ) ) {
+					$existing = $this->client()->search( $model, $dedup_domain, 0, 1 );
+					if ( ! empty( $existing ) ) {
+						$odoo_id = $existing[0];
+						$this->logger->info( 'Dedup: found existing Odoo record, switching to update.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
+						$this->client()->write( $model, [ $odoo_id ], $odoo_values );
+						$this->save_mapping( $entity_type, $wp_id, $odoo_id, $new_hash );
+						return Sync_Result::success( $odoo_id );
+					}
+				}
+
+				$odoo_id = $this->client()->create( $model, $odoo_values );
+				$saved   = $this->save_mapping( $entity_type, $wp_id, $odoo_id, $new_hash );
+				if ( ! $saved ) {
+					$this->logger->error( 'Mapping save failed after Odoo create.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
+					return Sync_Result::failure( 'Mapping save failed after Odoo create.', Error_Type::Transient, $odoo_id );
+				}
+				$this->logger->info( 'Created Odoo record.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
 			}
-			$this->logger->info( 'Created Odoo record.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
+
+			return Sync_Result::success( $odoo_id );
+		} catch ( \InvalidArgumentException $e ) {
+			return Sync_Result::failure( $e->getMessage(), Error_Type::Permanent, $odoo_id > 0 ? $odoo_id : null );
+		} catch ( \RuntimeException $e ) {
+			// Classify: connection/server errors are transient; validation/access errors are permanent.
+			$error_type = self::classify_exception( $e );
+			return Sync_Result::failure( $e->getMessage(), $error_type, $odoo_id > 0 ? $odoo_id : null );
+		}
+	}
+
+	/**
+	 * Classify a runtime exception into an Error_Type.
+	 *
+	 * Connection errors (HTTP 5xx, timeout, network) are Transient.
+	 * Business errors (AccessError, ValidationError, missing fields) are Permanent.
+	 *
+	 * @param \RuntimeException $e The exception to classify.
+	 * @return Error_Type
+	 */
+	private static function classify_exception( \RuntimeException $e ): Error_Type {
+		$code    = $e->getCode();
+		$message = strtolower( $e->getMessage() );
+
+		// HTTP 5xx and 429 are transient (server overload / temporary unavailability).
+		if ( 429 === $code || ( $code >= 500 && $code < 600 ) ) {
+			return Error_Type::Transient;
 		}
 
-		return Sync_Result::success( $odoo_id );
+		// Network / timeout errors from wp_remote_post.
+		if ( str_contains( $message, 'http error' )
+			|| str_contains( $message, 'timed out' )
+			|| str_contains( $message, 'connection refused' )
+			|| str_contains( $message, 'could not resolve' ) ) {
+			return Error_Type::Transient;
+		}
+
+		// Odoo business errors are permanent (won't be fixed by retrying).
+		if ( str_contains( $message, 'access denied' )
+			|| str_contains( $message, 'accesserror' )
+			|| str_contains( $message, 'validationerror' )
+			|| str_contains( $message, 'missing required' )
+			|| str_contains( $message, 'constraint' ) ) {
+			return Error_Type::Permanent;
+		}
+
+		// Default: treat unknown errors as transient for safety (allows retry).
+		return Error_Type::Transient;
 	}
 
 	/**

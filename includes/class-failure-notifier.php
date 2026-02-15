@@ -22,6 +22,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Failure_Notifier {
 
 	/**
+	 * Failure ratio threshold for considering a batch as "failed".
+	 *
+	 * Aligned with Circuit_Breaker::FAILURE_RATIO (80%): a batch
+	 * with fewer than 80% failures is considered healthy.
+	 */
+	private const FAILURE_RATIO = 0.8;
+
+	/**
 	 * Logger instance.
 	 *
 	 * @var Logger
@@ -49,28 +57,34 @@ class Failure_Notifier {
 	/**
 	 * Check batch results and send notification if needed.
 	 *
-	 * Call this after processing a batch. If there were any successes,
-	 * the consecutive failure counter is reset. If only failures occurred,
-	 * the counter is incremented and a notification may be sent.
+	 * Uses the same ratio-based logic as Circuit_Breaker: a batch
+	 * counts as a failure only when 80%+ of jobs failed. This prevents
+	 * a single lucky success from resetting the counter during an
+	 * outage, while avoiding false alarms from occasional individual
+	 * failures in an otherwise healthy batch.
 	 *
 	 * @param int $successes Number of successful jobs in the batch.
 	 * @param int $failures  Number of failed jobs in the batch.
 	 * @return void
 	 */
 	public function check( int $successes, int $failures ): void {
-		$consecutive = $this->settings->get_consecutive_failures();
+		$total = $successes + $failures;
+		if ( 0 === $total ) {
+			return;
+		}
 
-		if ( $successes > 0 ) {
+		$consecutive   = $this->settings->get_consecutive_failures();
+		$failure_ratio = $failures / $total;
+
+		if ( $failure_ratio < self::FAILURE_RATIO ) {
+			// Batch is healthy: reset the consecutive failure counter.
 			if ( $consecutive > 0 ) {
 				$this->settings->save_consecutive_failures( 0 );
 			}
 			return;
 		}
 
-		if ( 0 === $failures ) {
-			return;
-		}
-
+		// Batch is considered failed (80%+ failures).
 		$consecutive += $failures;
 		$this->settings->save_consecutive_failures( $consecutive );
 

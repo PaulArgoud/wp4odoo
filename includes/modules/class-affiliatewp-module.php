@@ -176,6 +176,30 @@ class AffiliateWP_Module extends \WP4Odoo\Module_Base {
 		return $this->handler;
 	}
 
+	// ─── Deduplication ─────────────────────────────────────
+
+	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * Affiliates dedup by email (res.partner). Referrals dedup by
+	 * invoice ref (account.move).
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( 'affiliate' === $entity_type && ! empty( $odoo_values['email'] ) ) {
+			return [ [ 'email', '=', $odoo_values['email'] ] ];
+		}
+
+		if ( 'referral' === $entity_type && ! empty( $odoo_values['ref'] ) ) {
+			return [ [ 'ref', '=', $odoo_values['ref'] ] ];
+		}
+
+		return [];
+	}
+
 	// ─── Push override ──────────────────────────────────────
 
 	/**

@@ -202,6 +202,30 @@ class WC_Subscriptions_Module extends Module_Base {
 		return defined( 'WCS_PLUGIN_VERSION' ) ? WCS_PLUGIN_VERSION : '';
 	}
 
+	// ─── Deduplication ─────────────────────────────────────
+
+	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * Products dedup by name. Renewals dedup by invoice ref.
+	 * Subscriptions have no reliable natural key — skipped.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( 'product' === $entity_type && ! empty( $odoo_values['name'] ) ) {
+			return [ [ 'name', '=', $odoo_values['name'] ] ];
+		}
+
+		if ( 'renewal' === $entity_type && ! empty( $odoo_values['ref'] ) ) {
+			return [ [ 'ref', '=', $odoo_values['ref'] ] ];
+		}
+
+		return [];
+	}
+
 	// ─── Dual-model detection ──────────────────────────────
 
 	/**

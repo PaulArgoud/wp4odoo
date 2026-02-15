@@ -461,6 +461,25 @@ class Forms_Module extends Module_Base {
 		];
 	}
 
+	// ─── Deduplication ─────────────────────────────────────
+
+	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * Leads dedup by email_from.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( 'lead' === $entity_type && ! empty( $odoo_values['email_from'] ) ) {
+			return [ [ 'email_from', '=', $odoo_values['email_from'] ] ];
+		}
+
+		return [];
+	}
+
 	// ─── Data Access (Module_Base abstract) ───────────────────
 
 	/**
