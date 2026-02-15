@@ -144,6 +144,12 @@ class Module_Registry {
 			// Community.
 			[ 'buddyboss', Modules\BuddyBoss_Module::class, fn() => defined( 'BP_VERSION' ) ],
 
+			// HR.
+			[ 'wperp', Modules\WPERP_Module::class, fn() => defined( 'WPERP_VERSION' ) ],
+
+			// Knowledge — always registered; detection is Odoo-side.
+			[ 'knowledge', Modules\Knowledge_Module::class, null ],
+
 			// Meta-modules (enrich other modules, no own entity types).
 			[ 'acf', Modules\ACF_Module::class, fn() => class_exists( 'ACF' ) || defined( 'ACF_MAJOR_VERSION' ) ],
 			[ 'wpai', Modules\WP_All_Import_Module::class, fn() => defined( 'PMXI_VERSION' ) || class_exists( 'PMXI_Plugin' ) ],

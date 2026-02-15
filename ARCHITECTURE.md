@@ -2,7 +2,7 @@
 
 ## Overview
 
-Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 38 modules across 24 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Points & Rewards, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (7 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS + TutorLMS), Booking (Amelia + Bookly), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP), Helpdesk (Awesome Support + SupportCandy), HR (WP Job Manager), Affiliates (AffiliateWP), Marketing CRM (FluentCRM), Funnels (FunnelKit), Gamification (GamiPress), Community (BuddyBoss), and Meta-modules (ACF + WP All Import).
+Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 40 modules across 26 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Points & Rewards, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (7 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS + TutorLMS), Booking (Amelia + Bookly), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP), Helpdesk (Awesome Support + SupportCandy), HR (WP Job Manager + WP ERP), Affiliates (AffiliateWP), Marketing CRM (FluentCRM), Funnels (FunnelKit), Gamification (GamiPress), Community (BuddyBoss), Knowledge (Knowledge), and Meta-modules (ACF + WP All Import).
 
 ![WP4ODOO Full Architecture](assets/images/architecture-full.svg)
 
@@ -176,10 +176,13 @@ WordPress For Odoo/
 │   │   ├── trait-shopwp-hooks.php            # ShopWP: on_product_save via save_post_wps_products
 │   │   ├── class-shopwp-handler.php          # ShopWP: CPT + shopwp_variants table via $wpdb
 │   │   ├── class-shopwp-module.php           # ShopWP: ecommerce exclusive group, products only
-│   │   ├── # ─── HR (WP Job Manager) ──────────
+│   │   ├── # ─── HR (WP Job Manager + WP ERP) ──────────
 │   │   ├── trait-job-manager-hooks.php       # Job Manager: on_job_save, on_job_expired
 │   │   ├── class-job-manager-handler.php     # Job Manager: job_listing CPT, status mapping, department resolution
 │   │   ├── class-job-manager-module.php      # Job Manager: independent, bidirectional job ↔ hr.job
+│   │   ├── class-wperp-module.php            # WP ERP: extends Module_Base (uses WPERP_Hooks trait)
+│   │   ├── trait-wperp-hooks.php             # WP ERP: employee/department/leave hooks
+│   │   ├── class-wperp-handler.php           # WP ERP: custom DB table data load/save/format
 │   │   ├── # ─── Helpdesk (Awesome Support + SupportCandy) ──
 │   │   ├── class-helpdesk-module-base.php    # Shared: abstract base for helpdesk modules (dual-model, stage resolution)
 │   │   ├── trait-awesome-support-hooks.php   # AS: hook callbacks (ticket created, status updated)
@@ -213,6 +216,11 @@ WordPress For Odoo/
 │   │   ├── trait-buddyboss-hooks.php       # BuddyBoss: hook callbacks (profile updated, group saved, member changed)
 │   │   ├── class-buddyboss-handler.php     # BuddyBoss: profile/group data load, xprofile fields, M2M category tags
 │   │   ├── class-buddyboss-module.php      # BuddyBoss: community sync coordinator (uses BuddyBoss_Hooks trait)
+│   │   │
+│   │   ├── # ─── Knowledge (Odoo Enterprise) ────────────────
+│   │   ├── class-knowledge-module.php       # Knowledge: extends Module_Base (uses Knowledge_Hooks trait)
+│   │   ├── trait-knowledge-hooks.php         # Knowledge: article save/delete hooks, category filter
+│   │   ├── class-knowledge-handler.php       # Knowledge: WP post load/save, HTML body, parent hierarchy
 │   │   │
 │   │   ├── # ─── Meta-modules (enrichment / interception) ──
 │   │   ├── class-acf-handler.php             # ACF: type conversions, enrich push/pull, write ACF fields
@@ -286,7 +294,7 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # 3350 unit tests (5136 assertions) + 26 integration tests (wp-env)
+├── tests/                             # 3513 unit tests (5337 assertions) + 26 integration tests (wp-env)
 │   ├── bootstrap.php                 #   Unit test bootstrap: constants, stub loading, plugin class requires
 │   ├── bootstrap-integration.php     #   Integration test bootstrap: loads WP test framework (wp-env)
 │   ├── stubs/
@@ -329,6 +337,8 @@ WordPress For Odoo/
 │   │   ├── funnelkit-classes.php          # FunnelKit: WFFN_VERSION constant
 │   │   ├── gamipress-classes.php          # GamiPress: GAMIPRESS_VERSION, gamipress(), points/achievement functions
 │   │   ├── buddyboss-classes.php          # BuddyBoss: BP_VERSION, buddypress(), xprofile/groups functions
+│   │   ├── knowledge-classes.php      # Knowledge module stubs (no WP plugin dependency, minimal)
+│   │   ├── wperp-classes.php          # WP ERP stubs (WPERP_VERSION constant)
 │   │   ├── wpai-classes.php            # PMXI_VERSION, wp_all_import_get_import_id
 │   │   └── i18n-classes.php            # WPML + Polylang stubs (constants, classes, functions)
 │   ├── helpers/
@@ -472,7 +482,9 @@ WordPress For Odoo/
 │       ├── FluentCRMModuleTest.php     #   69 tests for FluentCRM_Module + Handler + Hooks
 │       ├── FunnelKitModuleTest.php    #   73 tests — FunnelKit contact/step sync, stage resolution, dedup
 │       ├── GamiPressModuleTest.php    #   86 tests — GamiPress points/achievement/rank sync, loyalty card resolution
-│       └── BuddyBossModuleTest.php    #   76 tests — BuddyBoss profile/group sync, xprofile fields, M2M tags
+│       ├── BuddyBossModuleTest.php    #   76 tests — BuddyBoss profile/group sync, xprofile fields, M2M tags
+│       ├── KnowledgeModuleTest.php     #  62 tests for Knowledge module
+│       └── WPERPModuleTest.php         # 101 tests for WP ERP module
 │
 ├── uninstall.php                      # Cleanup on plugin uninstall
 │
@@ -553,6 +565,8 @@ Module_Base (abstract)
 ├── FunnelKit_Module            → crm.lead, crm.stage                               [bidirectional]
 ├── GamiPress_Module            → loyalty.card, product.template                     [bidirectional]
 ├── BuddyBoss_Module            → res.partner, res.partner.category                  [bidirectional]
+├── Knowledge_Module            → knowledge.article                                  [bidirectional]
+├── WPERP_Module                → hr.employee, hr.department, hr.leave               [bidirectional]
 ├── ACF_Module                  → (meta-module: enriches other modules' pipelines)   [bidirectional]
 ├── WP_All_Import_Module        → (meta-module: routes imports to sync queue)        [WP → Odoo]
 └── [Custom_Module]             → extensible via action hook
@@ -563,7 +577,7 @@ Module_Base (abstract)
 - **Memberships**: WC Memberships, MemberPress, PMPro, and RCP are mutually exclusive (all target `membership.membership_line`). Priority (highest number wins): WC Memberships (20) > PMPro (15) > RCP (12) > MemberPress (10).
 - **Invoicing**: Sprout Invoices and WP-Invoice are mutually exclusive (both target `account.move` for invoicing). Priority: Sprout Invoices (10) > WP-Invoice (5).
 - **Helpdesk**: Awesome Support and SupportCandy are mutually exclusive (both target `helpdesk.ticket` / `project.task`). Priority: SupportCandy (15) > Awesome Support (10).
-- All other modules are independent and can coexist freely (LMS, Subscriptions, Points & Rewards, Events, Booking, Donations, Forms, WPRM, Crowdfunding, BOM, AffiliateWP, FluentCRM, FunnelKit, GamiPress, BuddyBoss, ACF, WP All Import, Job Manager).
+- All other modules are independent and can coexist freely (LMS, Subscriptions, Points & Rewards, Events, Booking, Donations, Forms, WPRM, Crowdfunding, BOM, AffiliateWP, FluentCRM, FunnelKit, GamiPress, BuddyBoss, Knowledge, WP ERP, ACF, WP All Import, Job Manager).
 
 **Module_Base provides:**
 - Version bounds: `PLUGIN_MIN_VERSION` (blocks boot if too old) and `PLUGIN_TESTED_UP_TO` (warns if newer than tested). Subclasses override `get_plugin_version()` to return the detected plugin version. Patch-level normalization ensures `10.5.0` is within `10.5` range. `Module_Registry` enforces MIN before boot and collects TESTED warnings for the admin notice.
@@ -1635,6 +1649,36 @@ All user inputs are sanitized with:
 - Dedup: profiles by `email`, groups by `name`
 
 **Settings:** `sync_profiles` (bool), `pull_profiles` (bool), `sync_groups` (bool), `sync_group_members` (bool)
+
+### WP ERP (HR) — COMPLETE
+
+**Files:** `class-wperp-module.php` (bidirectional module, extends `Module_Base` directly, uses `WPERP_Hooks` trait), `trait-wperp-hooks.php` (hook callbacks), `class-wperp-handler.php` (custom DB table data load/save/format, leave status mapping)
+
+**Entity types → Odoo models:** `employee` → `hr.employee`, `department` → `hr.department`, `leave` → `hr.leave`
+
+- Detection: `defined('WPERP_VERSION')` — requires WP ERP 1.6+
+- Bidirectional sync for all 3 entity types
+- Custom DB table access via `$wpdb->prepare()` on `erp_hr_employees`, `erp_hr_departments`, `erp_hr_leaves`, `erp_hr_designations`
+- **Dependency chain**: leaves require employee synced first (via `ensure_entity_synced()`), employees require department synced first
+- Employee enrichment: `resolve_partner_from_user()` for `address_home_id`, department entity_map lookup for `department_id`
+- Leave status mapping via `Status_Mapper::resolve()`: pending→draft, approved→validate, rejected→refuse (filterable: `wp4odoo_wperp_leave_status_map` / `wp4odoo_wperp_leave_reverse_status_map`)
+- Gender mapping: identity (male/female/other)
+- Dedup: employees by `work_email`, departments by `name`
+
+### Knowledge (Odoo Enterprise) — COMPLETE
+
+**Files:** `class-knowledge-module.php` (bidirectional module, extends `Module_Base` directly, uses `Knowledge_Hooks` trait), `trait-knowledge-hooks.php` (article save/delete hooks, category filter), `class-knowledge-handler.php` (WP post load/save, HTML body, parent hierarchy, category mapping)
+
+**Entity types → Odoo models:** `article` → `knowledge.article`
+
+- No WP plugin dependency — always registered (null detection), Odoo-side availability guarded via `has_odoo_model(KnowledgeArticle)` probe
+- Syncs native WordPress posts (configurable post type, default `'post'`) to Odoo Knowledge articles (Enterprise v16+)
+- HTML body preserved: `knowledge.article.body` is HTML, same as WP `post_content`
+- **Parent hierarchy**: `post_parent` ↔ Odoo `parent_id` (Many2one), resolved via entity_map
+- **Category filter**: optional comma-separated category slugs to limit which posts sync
+- **Translation support**: overrides `get_translatable_fields()` for `name` (post_title) + `body` (post_content) — WPML/Polylang compatible
+- Category mapping via `Status_Mapper::resolve()`: publish→workspace, private→private, draft→private (filterable: `wp4odoo_knowledge_category_map` / `wp4odoo_knowledge_reverse_category_map`)
+- Dedup: articles by `name`
 
 ### ACF (Advanced Custom Fields) — COMPLETE
 

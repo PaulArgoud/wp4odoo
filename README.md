@@ -5,11 +5,11 @@
 ![MySQL 8.0+](https://img.shields.io/badge/MySQL-8.0%2B-4479A1?logo=mysql&logoColor=white)
 ![MariaDB 10.5+](https://img.shields.io/badge/MariaDB-10.5%2B-003545?logo=mariadb&logoColor=white)
 ![WordPress 6.0+](https://img.shields.io/badge/WordPress-6.0%2B-21759B?logo=wordpress&logoColor=white)
-![38 Modules](https://img.shields.io/badge/Modules-38-success)
+![40 Modules](https://img.shields.io/badge/Modules-40-success)
 ![Odoo 14+](https://img.shields.io/badge/Odoo-14%2B-714B67?logo=odoo&logoColor=white)
 ![License: GPL v2+](https://img.shields.io/badge/License-GPL%20v2%2B-blue)
 
-Modular WordPress plugin that creates a seamless, bidirectional bridge between WordPress/WooCommerce and Odoo ERP (v14+). Built on a clean, extensible architecture with 38 integration modules, an async sync queue, and full WP-CLI support. Ships in **3 languages** (English, French, Spanish).
+Modular WordPress plugin that creates a seamless, bidirectional bridge between WordPress/WooCommerce and Odoo ERP (v14+). Built on a clean, extensible architecture with 40 integration modules, an async sync queue, and full WP-CLI support. Ships in **3 languages** (English, French, Spanish).
 
 **Target users:** WordPress agencies and businesses running Odoo as their ERP who need reliable, real-time data flow between their website and back-office.
 
@@ -25,7 +25,7 @@ Modular WordPress plugin that creates a seamless, bidirectional bridge between W
 - **WP-CLI** — Full command suite: `wp wp4odoo status|test|sync|queue|module` for headless management
 - **WPML / Polylang Translation Sync** — Multilingual product sync via WPML or Polylang: pushes translated names/descriptions to Odoo with language context, pulls translations back to create/update translated posts. Category and attribute value translations included
 - **Extensible** — Register custom modules via `wp4odoo_register_modules`; filter data with `wp4odoo_map_to_odoo_*` / `wp4odoo_map_from_odoo_*`; map ACF custom fields to Odoo via the ACF meta-module
-- **Multilingual** — 640 translatable strings, ships with English, French, and Spanish. Translation-ready via `.po`/`.mo`
+- **Multilingual** — 686 translatable strings, ships with English, French, and Spanish. Translation-ready via `.po`/`.mo`
 
 ## Requirements
 
@@ -83,6 +83,7 @@ Each Odoo domain is encapsulated in an independent module extending `Module_Base
 | **FunnelKit (ex-WooFunnels)**       |  ↔️  | Contacts, CRM                         |  ⚠️  | Contacts → crm.lead (bidi), funnel steps → crm.stage (push), pipeline stage mapping                            |
 | **GamiPress**                       |  ↔️  | Contacts, Loyalty                     |  ❌  | Points → loyalty.card (find-or-create), achievements/ranks → product.template                                   |
 | **GiveWP**                          |  ➡️  | Contacts, Invoicing (+ OCA Donation)  |  ⚠️  | Form/donation sync, dual-model detection, auto-validate, recurring donations                                    |
+| **Knowledge (Odoo Enterprise)**     |  ↔️  | Knowledge                             |  ❌  | WordPress posts ↔ knowledge.article, HTML body, parent hierarchy, category filter, translation support          |
 | **LearnDash**                       |  ↔️  | Contacts, Sales, Invoicing            |  ❌  | Course/group/transaction/enrollment sync, auto-post invoices, course/group pull                                 |
 | **LifterLMS**                       |  ↔️  | Contacts, Sales, Invoicing            |  ❌  | Course/membership/order/enrollment sync, auto-post invoices, course/membership pull                             |
 | **MemberPress**                     |  ➡️  | Contacts, Members, Invoicing          |  ❌  | Plan/txn/sub sync, auto-post invoices, status mapping                                                           |
@@ -102,12 +103,13 @@ Each Odoo domain is encapsulated in an independent module extending `Module_Base
 | **WP All Import**                   |  ➡️  | —                                     |  —   | Intercepts CSV/XML imports, routes to sync queue (18 post types), filterable                                    |
 | **WP Charitable**                   |  ➡️  | Contacts, Invoicing (+ OCA Donation)  |  ⚠️  | Campaign/donation sync, dual-model detection, auto-validate, recurring                                          |
 | **WP Crowdfunding**                 |  ➡️  | Products                              |  ❌  | Campaign sync as service products, funding description, coexists with WC                                        |
+| **WP ERP**                          |  ↔️  | Contacts, HR                          |  ❌  | Employee/department/leave sync, dependency chain, leave status mapping, custom DB tables                        |
 | **WP Job Manager**                  |  ↔️  | HR Recruitment                        |  ✅  | Job listings ↔ hr.job, status mapping (publish ↔ recruit), department pull                                      |
 | **WP Recipe Maker**                 |  ➡️  | Products                              |  ❌  | Recipe sync as service products, structured descriptions                                                        |
 | **WP Simple Pay**                   |  ➡️  | Contacts, Invoicing (+ OCA Donation)  |  ⚠️  | Stripe payment sync, webhook capture, dual-model, auto-validate, recurring                                      |
 | **WP-Invoice**                      |  ➡️  | Contacts, Invoicing                   |  ⚠️  | Invoice sync, auto-posting for paid invoices, One2many line items                                               |
 
-> ⁴ **[One App Free](https://www.odoo.com/pricing)**: with CRM as your free app, CRM and Forms modules work. With Invoicing as your free app, GiveWP, WP Charitable, WP Simple Pay, Sprout Invoices, and WP-Invoice work. With Calendar as your free app, Amelia, Bookly, WC Bookings, and Events Calendar (fallback mode) work (partial — no Contacts). With Helpdesk as your free app, Awesome Support and SupportCandy work (partial — no Contacts). Sales, WooCommerce, WooCommerce Subscriptions (Enterprise), WC Product Bundles & Composites, WC Points & Rewards, Memberships (MemberPress/PMPro/RCP/WC Memberships), LMS (LearnDash/LifterLMS/TutorLMS), GamiPress, BuddyBoss, Ecwid, and WP Recipe Maker require 2–4 apps.
+> ⁴ **[One App Free](https://www.odoo.com/pricing)**: with CRM as your free app, CRM and Forms modules work. With Invoicing as your free app, GiveWP, WP Charitable, WP Simple Pay, Sprout Invoices, and WP-Invoice work. With Calendar as your free app, Amelia, Bookly, WC Bookings, and Events Calendar (fallback mode) work (partial — no Contacts). With Helpdesk as your free app, Awesome Support and SupportCandy work (partial — no Contacts). Sales, WooCommerce, WooCommerce Subscriptions (Enterprise), WC Product Bundles & Composites, WC Points & Rewards, Memberships (MemberPress/PMPro/RCP/WC Memberships), LMS (LearnDash/LifterLMS/TutorLMS), GamiPress, BuddyBoss, Ecwid, WP ERP, Knowledge (Enterprise), and WP Recipe Maker require 2–4 apps.
 
 ## Usage
 

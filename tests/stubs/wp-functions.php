@@ -463,6 +463,19 @@ if ( ! function_exists( 'wp_delete_post' ) ) {
 	}
 }
 
+if ( ! function_exists( 'wp_get_post_parent_id' ) ) {
+	function wp_get_post_parent_id( $post_id ) {
+		$post = $GLOBALS['_wp_posts'][ $post_id ] ?? null;
+		return $post ? ( $post->post_parent ?? 0 ) : 0;
+	}
+}
+
+if ( ! function_exists( 'get_the_category' ) ) {
+	function get_the_category( $post_id = 0 ) {
+		return $GLOBALS['_wp_categories'][ $post_id ] ?? [];
+	}
+}
+
 if ( ! function_exists( 'get_attached_file' ) ) {
 	function get_attached_file( $attachment_id, $unfiltered = false ) {
 		return $GLOBALS['_wp_attached_files'][ $attachment_id ] ?? false;

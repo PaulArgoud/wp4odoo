@@ -107,6 +107,12 @@ enum Odoo_Model: string {
 	/** HR departments. */
 	case HrDepartment = 'hr.department';
 
+	/** HR employees. */
+	case HrEmployee = 'hr.employee';
+
+	/** HR leave requests (time off). */
+	case HrLeave = 'hr.leave';
+
 	// ─── Loyalty ───────────────────────────────────────────
 
 	/** Loyalty programs. */
@@ -143,4 +149,9 @@ enum Odoo_Model: string {
 
 	/** Stock pickings (delivery orders). */
 	case StockPicking = 'stock.picking';
+
+	// ─── Knowledge (Enterprise) ────────────────────────────
+
+	/** Knowledge articles (Odoo Enterprise 16+). */
+	case KnowledgeArticle = 'knowledge.article';
 }

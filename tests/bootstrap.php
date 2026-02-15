@@ -138,6 +138,8 @@ require_once __DIR__ . '/stubs/fluentcrm-classes.php';
 require_once __DIR__ . '/stubs/buddyboss-classes.php';
 require_once __DIR__ . '/stubs/gamipress-classes.php';
 require_once __DIR__ . '/stubs/funnelkit-classes.php';
+require_once __DIR__ . '/stubs/wperp-classes.php';
+require_once __DIR__ . '/stubs/knowledge-classes.php';
 
 // ─── Composer autoloader ────────────────────────────────
 
