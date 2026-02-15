@@ -161,14 +161,7 @@ class SupportCandy_Module extends Helpdesk_Module_Base {
 		return defined( 'WPSC_VERSION' ) ? WPSC_VERSION : '';
 	}
 
-	/**
-	 * Exclusive priority: 15 (Awesome Support wins at 10).
-	 *
-	 * @return int
-	 */
-	public function get_exclusive_priority(): int {
-		return 15;
-	}
+	protected int $exclusive_priority = 15;
 
 	// ─── Helpdesk_Module_Base abstracts ─────────────────────
 

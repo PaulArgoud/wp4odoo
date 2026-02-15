@@ -141,10 +141,14 @@ class CLI {
 	 * [--dry-run]
 	 * : Preview what would be synced without making any changes.
 	 *
+	 * [--yes]
+	 * : Skip confirmation prompt.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     wp wp4odoo sync run
 	 *     wp wp4odoo sync run --dry-run
+	 *     wp wp4odoo sync run --yes
 	 *
 	 * @subcommand sync
 	 * @when after_wp_load
@@ -161,6 +165,13 @@ class CLI {
 		\WP_CLI::warning(
 			__( 'Back up your WordPress and Odoo databases before running sync operations.', 'wp4odoo' )
 		);
+
+		if ( ! $dry_run ) {
+			\WP_CLI::confirm(
+				__( 'Process the sync queue now?', 'wp4odoo' ),
+				$assoc_args
+			);
+		}
 
 		if ( $dry_run ) {
 			\WP_CLI::line( 'Processing sync queue (dry-run mode)...' );
@@ -207,7 +218,7 @@ class CLI {
 		match ( $sub ) {
 			'stats'   => $this->queue_stats( $assoc_args ),
 			'list'    => $this->queue_list( $assoc_args ),
-			'retry'   => $this->queue_retry(),
+			'retry'   => $this->queue_retry( $assoc_args ),
 			'cleanup' => $this->queue_cleanup( $assoc_args ),
 			'cancel'  => $this->queue_cancel( isset( $args[1] ) ? (int) $args[1] : 0 ),
 			default   => \WP_CLI::error( sprintf( 'Unknown subcommand: %s. Available: stats, list, retry, cleanup, cancel', $sub ) ),
@@ -354,6 +365,11 @@ class CLI {
 		$stats  = Queue_Manager::get_stats();
 		$format = $assoc_args['format'] ?? 'table';
 
+		$allowed_formats = [ 'table', 'csv', 'json', 'yaml', 'count' ];
+		if ( ! in_array( $format, $allowed_formats, true ) ) {
+			\WP_CLI::error( sprintf( 'Invalid format "%s". Allowed: %s', $format, implode( ', ', $allowed_formats ) ) );
+		}
+
 		\WP_CLI\Utils\format_items(
 			$format,
 			[
@@ -378,6 +394,11 @@ class CLI {
 		$page     = max( 1, (int) ( $assoc_args['page'] ?? 1 ) );
 		$per_page = max( 1, min( 100, (int) ( $assoc_args['per-page'] ?? 30 ) ) );
 		$format   = $assoc_args['format'] ?? 'table';
+
+		$allowed_formats = [ 'table', 'csv', 'json', 'yaml', 'count' ];
+		if ( ! in_array( $format, $allowed_formats, true ) ) {
+			\WP_CLI::error( sprintf( 'Invalid format "%s". Allowed: %s', $format, implode( ', ', $allowed_formats ) ) );
+		}
 
 		$data = $this->query_service->get_queue_jobs( $page, $per_page );
 
@@ -420,8 +441,15 @@ class CLI {
 
 	/**
 	 * Retry all failed jobs.
+	 *
+	 * @param array $assoc_args Associative arguments (supports --yes).
 	 */
-	private function queue_retry(): void {
+	private function queue_retry( array $assoc_args = [] ): void {
+		\WP_CLI::confirm(
+			__( 'Retry all failed jobs?', 'wp4odoo' ),
+			$assoc_args
+		);
+
 		$count = Queue_Manager::retry_failed();
 		\WP_CLI::success( sprintf( '%d failed job(s) retried.', $count ) );
 	}

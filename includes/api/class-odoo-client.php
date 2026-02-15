@@ -398,7 +398,12 @@ class Odoo_Client {
 				$this->reset();
 				$this->ensure_connected();
 
-				return $this->transport->execute_kw( $model, $method, $args, $kwargs );
+				$result = $this->transport->execute_kw( $model, $method, $args, $kwargs );
+
+				/** This action is documented above. */
+				do_action( 'wp4odoo_api_call', $model, $method, $args, $kwargs, $result );
+
+				return $result;
 			}
 
 			$this->logger->error(

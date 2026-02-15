@@ -29,27 +29,48 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 		<select id="wp4odoo-log-module">
 			<option value=""><?php esc_html_e( 'All modules', 'wp4odoo' ); ?></option>
-			<option value="api">API</option>
-			<option value="auth">Auth</option>
-			<option value="sync">Sync</option>
-			<option value="webhook">Webhook</option>
-			<option value="jsonrpc">JSON-RPC</option>
-			<option value="xmlrpc">XML-RPC</option>
-			<option value="system">System</option>
-			<option value="crm">CRM</option>
-			<option value="sales">Sales</option>
-			<option value="woocommerce">WooCommerce</option>
-			<option value="edd">EDD</option>
-			<option value="memberships">Memberships</option>
-			<option value="memberpress">MemberPress</option>
-			<option value="givewp">GiveWP</option>
-			<option value="charitable">Charitable</option>
-			<option value="simplepay">SimplePay</option>
-			<option value="wprm">WPRM</option>
-			<option value="forms">Forms</option>
-			<option value="amelia">Amelia</option>
-			<option value="bookly">Bookly</option>
-			<option value="learndash">LearnDash</option>
+			<optgroup label="<?php esc_attr_e( 'System', 'wp4odoo' ); ?>">
+				<option value="api"><?php esc_html_e( 'API', 'wp4odoo' ); ?></option>
+				<option value="i18n"><?php esc_html_e( 'i18n', 'wp4odoo' ); ?></option>
+				<option value="queue"><?php esc_html_e( 'Queue', 'wp4odoo' ); ?></option>
+				<option value="reconcile"><?php esc_html_e( 'Reconcile', 'wp4odoo' ); ?></option>
+				<option value="system"><?php esc_html_e( 'System', 'wp4odoo' ); ?></option>
+			</optgroup>
+			<optgroup label="<?php esc_attr_e( 'Modules', 'wp4odoo' ); ?>">
+				<option value="acf"><?php esc_html_e( 'ACF', 'wp4odoo' ); ?></option>
+				<option value="affiliatewp"><?php esc_html_e( 'AffiliateWP', 'wp4odoo' ); ?></option>
+				<option value="amelia"><?php esc_html_e( 'Amelia', 'wp4odoo' ); ?></option>
+				<option value="awesome_support"><?php esc_html_e( 'Awesome Support', 'wp4odoo' ); ?></option>
+				<option value="bookly"><?php esc_html_e( 'Bookly', 'wp4odoo' ); ?></option>
+				<option value="charitable"><?php esc_html_e( 'Charitable', 'wp4odoo' ); ?></option>
+				<option value="crm"><?php esc_html_e( 'CRM', 'wp4odoo' ); ?></option>
+				<option value="ecwid"><?php esc_html_e( 'Ecwid', 'wp4odoo' ); ?></option>
+				<option value="edd"><?php esc_html_e( 'EDD', 'wp4odoo' ); ?></option>
+				<option value="events_calendar"><?php esc_html_e( 'Events Calendar', 'wp4odoo' ); ?></option>
+				<option value="forms"><?php esc_html_e( 'Forms', 'wp4odoo' ); ?></option>
+				<option value="givewp"><?php esc_html_e( 'GiveWP', 'wp4odoo' ); ?></option>
+				<option value="learndash"><?php esc_html_e( 'LearnDash', 'wp4odoo' ); ?></option>
+				<option value="lifterlms"><?php esc_html_e( 'LifterLMS', 'wp4odoo' ); ?></option>
+				<option value="memberpress"><?php esc_html_e( 'MemberPress', 'wp4odoo' ); ?></option>
+				<option value="memberships"><?php esc_html_e( 'Memberships', 'wp4odoo' ); ?></option>
+				<option value="pmpro"><?php esc_html_e( 'PMPro', 'wp4odoo' ); ?></option>
+				<option value="rcp"><?php esc_html_e( 'RCP', 'wp4odoo' ); ?></option>
+				<option value="sales"><?php esc_html_e( 'Sales', 'wp4odoo' ); ?></option>
+				<option value="shopwp"><?php esc_html_e( 'ShopWP', 'wp4odoo' ); ?></option>
+				<option value="simplepay"><?php esc_html_e( 'SimplePay', 'wp4odoo' ); ?></option>
+				<option value="sprout_invoices"><?php esc_html_e( 'Sprout Invoices', 'wp4odoo' ); ?></option>
+				<option value="supportcandy"><?php esc_html_e( 'SupportCandy', 'wp4odoo' ); ?></option>
+				<option value="wc_bookings"><?php esc_html_e( 'WC Bookings', 'wp4odoo' ); ?></option>
+				<option value="wc_bundle_bom"><?php esc_html_e( 'WC Bundle BOM', 'wp4odoo' ); ?></option>
+				<option value="wc_points_rewards"><?php esc_html_e( 'WC Points & Rewards', 'wp4odoo' ); ?></option>
+				<option value="wc_subscriptions"><?php esc_html_e( 'WC Subscriptions', 'wp4odoo' ); ?></option>
+				<option value="woocommerce"><?php esc_html_e( 'WooCommerce', 'wp4odoo' ); ?></option>
+				<option value="wp_crowdfunding"><?php esc_html_e( 'WP Crowdfunding', 'wp4odoo' ); ?></option>
+				<option value="wp_invoice"><?php esc_html_e( 'WP-Invoice', 'wp4odoo' ); ?></option>
+				<option value="wp_job_manager"><?php esc_html_e( 'WP Job Manager', 'wp4odoo' ); ?></option>
+				<option value="wpai"><?php esc_html_e( 'WP All Import', 'wp4odoo' ); ?></option>
+				<option value="wprm"><?php esc_html_e( 'WPRM', 'wp4odoo' ); ?></option>
+			</optgroup>
 		</select>
 
 		<input type="date" id="wp4odoo-log-date-from" placeholder="<?php esc_attr_e( 'From', 'wp4odoo' ); ?>" />

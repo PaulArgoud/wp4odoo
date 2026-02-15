@@ -83,6 +83,12 @@ class Partner_Service {
 	 * @return array<string, int|null> Odoo partner ID per email, or null on failure.
 	 */
 	public function get_or_create_batch( array $entries ): array {
+		$normalized = [];
+		foreach ( $entries as $email => $entry ) {
+			$normalized[ strtolower( $email ) ] = $entry;
+		}
+		$entries = $normalized;
+
 		$results  = [];
 		$to_fetch = [];
 

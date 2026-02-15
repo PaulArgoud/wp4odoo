@@ -83,7 +83,10 @@ class Sync_Queue_Repository {
 		//
 		// If already in a transaction (e.g. WordPress test framework, or another
 		// plugin's transaction), use a SAVEPOINT to avoid implicit commit.
-		$use_savepoint = $in_transaction || (bool) $wpdb->get_var( 'SELECT @@in_transaction' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->suppress_errors( true );
+		$in_tx = $wpdb->get_var( 'SELECT @@in_transaction' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->suppress_errors( false );
+		$use_savepoint = $in_transaction || '1' === (string) $in_tx;
 		if ( $use_savepoint ) {
 			$wpdb->query( 'SAVEPOINT wp4odoo_dedup' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		} else {
@@ -500,5 +503,6 @@ class Sync_Queue_Repository {
 	 */
 	public function invalidate_stats_cache(): void {
 		delete_transient( 'wp4odoo_queue_stats' );
+		delete_transient( 'wp4odoo_queue_health' );
 	}
 }

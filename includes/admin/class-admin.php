@@ -121,6 +121,10 @@ class Admin {
 					'defaultLang'        => __( 'default', 'wp4odoo' ),
 					'confirmBackup'      => __( 'Have you backed up your WordPress and Odoo databases?', 'wp4odoo' ),
 					'dirWpToOdoo'        => __( 'WP → Odoo', 'wp4odoo' ),
+					'serverError'        => __( 'Server communication error.', 'wp4odoo' ),
+					'unknownError'       => __( 'Unknown error.', 'wp4odoo' ),
+					'completed'          => __( 'completed', 'wp4odoo' ),
+					'remove'             => __( 'Remove', 'wp4odoo' ),
 					'dirOdooToWp'        => __( 'Odoo → WP', 'wp4odoo' ),
 				],
 			]

@@ -297,8 +297,8 @@ class Settings_Page {
 		// Resolve the hostname and check the IP.
 		$ip = gethostbyname( $host );
 		if ( $ip === $host ) {
-			// gethostbyname returns the input on failure — allow (DNS may be unavailable).
-			return true;
+			// gethostbyname returns the input on failure — reject to prevent SSRF bypass.
+			return false;
 		}
 
 		return ! self::is_private_ip( $ip );

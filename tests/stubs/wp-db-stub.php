@@ -102,6 +102,12 @@ class WP_DB_Stub {
 		return $this->query_return;
 	}
 
+	/** @return bool Previous suppress state (always false for stub). */
+	public function suppress_errors( bool $suppress = true ): bool {
+		$this->calls[] = [ 'method' => 'suppress_errors', 'args' => [ $suppress ] ];
+		return false;
+	}
+
 	public function reset(): void {
 		$this->calls              = [];
 		$this->lock_return        = '1';

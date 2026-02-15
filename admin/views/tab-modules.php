@@ -60,6 +60,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 					<input type="checkbox"
 						class="wp4odoo-module-toggle"
 						data-module="<?php echo esc_attr( $module_id ); ?>"
+						<?php /* translators: %s: module name */ ?>
+						aria-label="<?php echo esc_attr( sprintf( __( 'Enable %s module', 'wp4odoo' ), $module->get_name() ) ); ?>"
 						<?php checked( $enabled ); ?>
 						<?php disabled( ! $dep_available ); ?> />
 					<span class="wp4odoo-toggle-slider"></span>

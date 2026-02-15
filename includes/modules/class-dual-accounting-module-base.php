@@ -262,9 +262,11 @@ abstract class Dual_Accounting_Module_Base extends Module_Base {
 	 * @return \WP4Odoo\Sync_Result
 	 */
 	public function push_to_odoo( string $entity_type, string $action, int $wp_id, int $odoo_id = 0, array $payload = [] ): \WP4Odoo\Sync_Result {
-		if ( $this->get_child_entity_type() === $entity_type && 'delete' !== $action ) {
+		if ( $this->get_child_entity_type() === $entity_type ) {
 			$this->resolve_accounting_model( $entity_type );
-			$this->ensure_parent_synced( $wp_id, $this->get_parent_meta_key(), $this->get_parent_entity_type() );
+			if ( 'delete' !== $action ) {
+				$this->ensure_parent_synced( $wp_id, $this->get_parent_meta_key(), $this->get_parent_entity_type() );
+			}
 		}
 
 		$result = parent::push_to_odoo( $entity_type, $action, $wp_id, $odoo_id, $payload );

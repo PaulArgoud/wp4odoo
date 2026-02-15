@@ -95,7 +95,7 @@ class ModuleRegistryTest extends TestCase {
 		$this->registry->register( 'sales', $this->make_sales() );
 
 		// WC is active in the group, Sales should not be.
-		$this->assertSame( 'woocommerce', $this->registry->get_active_in_group( 'commerce' ) );
+		$this->assertSame( 'woocommerce', $this->registry->get_active_in_group( 'ecommerce' ) );
 	}
 
 	public function test_exclusive_group_allows_higher_priority_only(): void {
@@ -105,7 +105,7 @@ class ModuleRegistryTest extends TestCase {
 		$this->registry->register( 'edd', $this->make_edd() );
 		$this->registry->register( 'sales', $this->make_sales() );
 
-		$this->assertSame( 'edd', $this->registry->get_active_in_group( 'commerce' ) );
+		$this->assertSame( 'edd', $this->registry->get_active_in_group( 'ecommerce' ) );
 	}
 
 	public function test_exclusive_group_allows_different_groups(): void {
@@ -116,7 +116,7 @@ class ModuleRegistryTest extends TestCase {
 		$this->registry->register( 'memberpress', $this->make_memberpress() );
 
 		// Both should be active — different groups.
-		$this->assertSame( 'woocommerce', $this->registry->get_active_in_group( 'commerce' ) );
+		$this->assertSame( 'woocommerce', $this->registry->get_active_in_group( 'ecommerce' ) );
 		$this->assertSame( 'memberpress', $this->registry->get_active_in_group( 'memberships' ) );
 	}
 
@@ -128,7 +128,7 @@ class ModuleRegistryTest extends TestCase {
 		$this->registry->register( 'woocommerce', $this->make_wc() );
 
 		// CRM has no exclusive group, so it coexists with WC (commerce group).
-		$this->assertSame( 'woocommerce', $this->registry->get_active_in_group( 'commerce' ) );
+		$this->assertSame( 'woocommerce', $this->registry->get_active_in_group( 'ecommerce' ) );
 		$this->assertNotNull( $this->registry->get( 'crm' ) );
 	}
 
@@ -136,7 +136,7 @@ class ModuleRegistryTest extends TestCase {
 
 	public function test_get_active_in_group_returns_null_when_none_booted(): void {
 		$this->registry->register( 'sales', $this->make_sales() );
-		$this->assertNull( $this->registry->get_active_in_group( 'commerce' ) );
+		$this->assertNull( $this->registry->get_active_in_group( 'ecommerce' ) );
 	}
 
 	public function test_get_active_in_group_with_memberships(): void {

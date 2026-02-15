@@ -38,7 +38,7 @@ class EDDModuleTest extends TestCase {
 	}
 
 	public function test_exclusive_group(): void {
-		$this->assertSame( 'commerce', $this->module->get_exclusive_group() );
+		$this->assertSame( 'ecommerce', $this->module->get_exclusive_group() );
 	}
 
 	public function test_exclusive_priority(): void {

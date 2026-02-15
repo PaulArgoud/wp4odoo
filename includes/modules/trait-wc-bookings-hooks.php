@@ -79,7 +79,7 @@ trait WC_Bookings_Hooks {
 			return;
 		}
 
-		$this->push_entity( 'wc_bookings', 'product', 'sync_products', $post_id );
+		$this->push_entity( 'wc_bookings', 'service', 'sync_products', $post_id );
 	}
 
 	/**

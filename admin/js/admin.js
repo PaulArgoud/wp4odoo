@@ -6,6 +6,18 @@
 (function( $ ) {
 	'use strict';
 
+	/**
+	 * Escape a string for safe HTML insertion.
+	 *
+	 * @param {string} str Raw string.
+	 * @return {string} HTML-escaped string.
+	 */
+	function escapeHtml( str ) {
+		var div = document.createElement( 'div' );
+		div.appendChild( document.createTextNode( str ) );
+		return div.innerHTML;
+	}
+
 	var WP4Odoo = {
 
 		/**
@@ -57,14 +69,14 @@
 				if ( response.success ) {
 					onSuccess( response.data );
 				} else {
-					var msg = ( response.data && response.data.message ) ? response.data.message : 'Unknown error.';
+					var msg = ( response.data && response.data.message ) ? response.data.message : ( wp4odooAdmin.i18n.unknownError || 'Unknown error.' );
 					WP4Odoo.showNotice( 'error', msg );
 				}
 			} ).fail( function() {
 				if ( $button ) {
 					$button.prop( 'disabled', false ).removeClass( 'updating-message' );
 				}
-				WP4Odoo.showNotice( 'error', 'Server communication error.' );
+				WP4Odoo.showNotice( 'error', ( wp4odooAdmin.i18n.serverError || 'Server communication error.' ) );
 			} );
 		},
 
@@ -196,7 +208,7 @@
 						} else {
 							$panel.slideDown( 200 );
 						}
-						var msg = ( response.data && response.data.message ) ? response.data.message : 'Unknown error.';
+						var msg = ( response.data && response.data.message ) ? response.data.message : ( wp4odooAdmin.i18n.unknownError || 'Unknown error.' );
 						WP4Odoo.showNotice( 'error', msg );
 					}
 				} ).fail( function() {
@@ -208,7 +220,7 @@
 					} else {
 						$panel.slideDown( 200 );
 					}
-					WP4Odoo.showNotice( 'error', 'Server communication error.' );
+					WP4Odoo.showNotice( 'error', ( wp4odooAdmin.i18n.serverError || 'Server communication error.' ) );
 				} );
 			} );
 		},
@@ -404,8 +416,8 @@
 
 					$tbody.append(
 						'<tr>' +
-						'<td><span class="wp4odoo-badge wp4odoo-badge-' + log.level + '">' + log.level + '</span></td>' +
-						'<td>' + ( log.module || '—' ) + '</td>' +
+						'<td><span class="wp4odoo-badge wp4odoo-badge-' + escapeHtml( log.level ) + '">' + escapeHtml( log.level ) + '</span></td>' +
+						'<td>' + escapeHtml( log.module || '—' ) + '</td>' +
 						'<td>' + escaped + '</td>' +
 						'<td><span class="wp4odoo-log-context" title="' + ctxEsc + '">' + ctxSEsc + '</span></td>' +
 						'<td>' + log.created_at + '</td>' +
@@ -581,7 +593,7 @@
 							// Update progress bar and text.
 							var pct = Math.round( ( doneCount / $steps.length ) * 100 );
 							$checklist.find( '.wp4odoo-checklist-bar-fill' ).css( 'width', pct + '%' );
-							$checklist.find( '.wp4odoo-checklist-progress-text' ).text( doneCount + ' / ' + $steps.length + ' completed' );
+							$checklist.find( '.wp4odoo-checklist-progress-text' ).text( doneCount + ' / ' + $steps.length + ' ' + ( wp4odooAdmin.i18n.completed || 'completed' ) );
 						}
 					}
 				} );
@@ -698,7 +710,7 @@
 					'<td><input type="text" class="wp4odoo-mapping-acf regular-text" placeholder="company_size" /></td>' +
 					'<td><input type="text" class="wp4odoo-mapping-odoo regular-text" placeholder="x_company_size" /></td>' +
 					'<td><select class="wp4odoo-mapping-type">' + typeOptions + '</select></td>' +
-					'<td><button type="button" class="button wp4odoo-remove-mapping-row" title="Remove">&times;</button></td>' +
+					'<td><button type="button" class="button wp4odoo-remove-mapping-row" title="' + ( wp4odooAdmin.i18n.remove || 'Remove' ) + '">&times;</button></td>' +
 					'</tr>'
 				);
 

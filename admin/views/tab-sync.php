@@ -120,11 +120,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</th>
 			<td>
 				<select id="wp4odoo_log_level" name="wp4odoo_log_settings[level]">
-					<option value="debug" <?php selected( $log_settings['level'] ?? '', 'debug' ); ?>>Debug</option>
-					<option value="info" <?php selected( $log_settings['level'] ?? '', 'info' ); ?>>Info</option>
-					<option value="warning" <?php selected( $log_settings['level'] ?? '', 'warning' ); ?>>Warning</option>
-					<option value="error" <?php selected( $log_settings['level'] ?? '', 'error' ); ?>>Error</option>
-					<option value="critical" <?php selected( $log_settings['level'] ?? '', 'critical' ); ?>>Critical</option>
+					<option value="debug" <?php selected( $log_settings['level'] ?? '', 'debug' ); ?>><?php esc_html_e( 'Debug', 'wp4odoo' ); ?></option>
+					<option value="info" <?php selected( $log_settings['level'] ?? '', 'info' ); ?>><?php esc_html_e( 'Info', 'wp4odoo' ); ?></option>
+					<option value="warning" <?php selected( $log_settings['level'] ?? '', 'warning' ); ?>><?php esc_html_e( 'Warning', 'wp4odoo' ); ?></option>
+					<option value="error" <?php selected( $log_settings['level'] ?? '', 'error' ); ?>><?php esc_html_e( 'Error', 'wp4odoo' ); ?></option>
+					<option value="critical" <?php selected( $log_settings['level'] ?? '', 'critical' ); ?>><?php esc_html_e( 'Critical', 'wp4odoo' ); ?></option>
 				</select>
 			</td>
 		</tr>

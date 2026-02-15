@@ -160,6 +160,11 @@ trait Module_Helpers {
 	 * Common pattern used by hook traits: checks the settings toggle,
 	 * resolves the existing Odoo mapping, and queues a create or update.
 	 *
+	 * TODO: Replace hardcoded module ID with $this->id — the $module parameter
+	 *       should be removed and all 30+ callsites updated to rely on the module
+	 *       instance property instead. Deferred to a dedicated refactor pass with
+	 *       thorough testing across all modules.
+	 *
 	 * @param string $module      Module slug (e.g., 'pmpro', 'rcp').
 	 * @param string $entity_type Entity type (e.g., 'level', 'payment').
 	 * @param string $setting_key Settings toggle key (e.g., 'sync_levels').

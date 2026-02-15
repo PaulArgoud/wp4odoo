@@ -93,8 +93,9 @@ class Reconciler {
 		// Batch-check existence in Odoo.
 		$existing_ids = [];
 		try {
+			$client = ( $this->client_fn )();
 			foreach ( array_chunk( array_keys( $odoo_ids ), self::BATCH_SIZE ) as $chunk ) {
-				$found = ( $this->client_fn )()->search(
+				$found = $client->search(
 					$odoo_model,
 					[ [ 'id', 'in', $chunk ] ]
 				);

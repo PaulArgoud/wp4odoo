@@ -381,6 +381,11 @@ class Odoo_Auth {
 		$salt = ( defined( 'AUTH_KEY' ) ? AUTH_KEY : '' )
 			. ( defined( 'SECURE_AUTH_KEY' ) ? SECURE_AUTH_KEY : '' );
 
+		if ( '' === $salt ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Logger may not be available in static context.
+			error_log( 'WP4Odoo: Encryption key material is empty. Define WP4ODOO_ENCRYPTION_KEY or ensure AUTH_KEY/SECURE_AUTH_KEY are set in wp-config.php.' );
+		}
+
 		return hash( 'sha256', $salt, true );
 	}
 

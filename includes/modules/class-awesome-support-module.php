@@ -149,14 +149,7 @@ class Awesome_Support_Module extends Helpdesk_Module_Base {
 		return defined( 'WPAS_VERSION' ) ? WPAS_VERSION : '';
 	}
 
-	/**
-	 * Exclusive priority: 10 (wins over SupportCandy at 15).
-	 *
-	 * @return int
-	 */
-	public function get_exclusive_priority(): int {
-		return 10;
-	}
+	protected int $exclusive_priority = 10;
 
 	// ─── Helpdesk_Module_Base abstracts ─────────────────────
 

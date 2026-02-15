@@ -181,12 +181,24 @@ class Logger {
 	}
 
 	/**
-	 * Encode context to JSON and truncate to MAX_CONTEXT_BYTES.
+	 * Encode context to JSON, truncating at the array level to ensure valid JSON.
+	 *
+	 * If the context has more than 50 keys or the encoded JSON exceeds
+	 * MAX_CONTEXT_BYTES, replaces it with a small summary object.
 	 *
 	 * @param array $context Context data.
-	 * @return string|null JSON string, or null if empty.
+	 * @return string|null JSON string, or null if encoding fails.
 	 */
 	private static function truncate_context( array $context ): ?string {
+		if ( count( $context ) > 50 ) {
+			return wp_json_encode(
+				[
+					'_truncated'    => true,
+					'original_keys' => count( $context ),
+				]
+			) ?: null;
+		}
+
 		$json = wp_json_encode( $context );
 
 		if ( false === $json ) {
@@ -194,7 +206,12 @@ class Logger {
 		}
 
 		if ( strlen( $json ) > self::MAX_CONTEXT_BYTES ) {
-			$json = mb_strcut( $json, 0, self::MAX_CONTEXT_BYTES - 14 ) . '…[truncated]';
+			return wp_json_encode(
+				[
+					'_truncated'    => true,
+					'original_keys' => count( $context ),
+				]
+			) ?: null;
 		}
 
 		return $json;

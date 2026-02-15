@@ -87,16 +87,7 @@ abstract class Helpdesk_Module_Base extends Module_Base {
 		return 'bidirectional';
 	}
 
-	// ─── Exclusive group ────────────────────────────────────
-
-	/**
-	 * Exclusive group: helpdesk.
-	 *
-	 * @return string
-	 */
-	public function get_exclusive_group(): string {
-		return 'helpdesk';
-	}
+	protected string $exclusive_group = 'helpdesk';
 
 	// ─── Deduplication ─────────────────────────────────────
 

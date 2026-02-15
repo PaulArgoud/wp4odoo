@@ -116,8 +116,7 @@ class Query_Service {
 			$total = (int) $wpdb->get_var( $count_query );
 		}
 
-		// Exclude LONGTEXT `context` column from list queries for performance.
-		$data_query        = "SELECT id, correlation_id, level, module, message, created_at FROM {$table} {$where_sql} ORDER BY id DESC LIMIT %d OFFSET %d"; // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$data_query        = "SELECT id, correlation_id, level, module, message, context, created_at FROM {$table} {$where_sql} ORDER BY id DESC LIMIT %d OFFSET %d"; // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		$params_with_limit = array_merge( $params, [ $per_page, $offset ] );
 
 		if ( ! empty( $params ) ) {

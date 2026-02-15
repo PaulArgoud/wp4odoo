@@ -5,7 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.1.5] - Unreleased
+## [3.2.0] - Unreleased
+
+### Fixed
+- **WC Bookings silent push failure** — Entity type `'product'` was not declared in WC_Bookings_Module's `$odoo_models` (only `'service'` and `'booking'`), causing every booking product push to silently fail. Changed to `'service'`
+- **Exclusive group mismatch** — WooCommerce, Sales, and EDD modules used `'commerce'` as their exclusive group while CLAUDE.md and ARCHITECTURE.md documented `'ecommerce'`. Unified to `'ecommerce'`
+- **Batch creates double failure** — `Sync_Engine::process_batch_creates()` added jobs to `$claimed_jobs` before JSON validation, causing `handle_failure()` to be called twice (once for invalid JSON, once for batch error). Moved append after validation
+- **SSRF bypass via DNS failure** — `is_safe_url()` returned `true` when `gethostbyname()` failed (returns the input on DNS failure), allowing URLs with unresolvable hostnames to bypass SSRF protection. Now returns `false`
+- **Queue health metrics cache leak** — `invalidate_stats_cache()` cleared `wp4odoo_queue_stats` but not `wp4odoo_queue_health`, leaving stale health metrics
+- **Stale recovery ordering** — `recover_stale_processing()` ran after `fetch_pending()`, so freshly recovered jobs were excluded from the current batch. Reordered to recover first
+- **Odoo_Client retry missing action** — Retry path after session re-auth did not fire `wp4odoo_api_call` action, making retry calls invisible to monitors
+- **MySQL 5.7 compat** — `@@in_transaction` session variable query could produce a visible error on MySQL 5.7 (which lacks this variable). Wrapped with `suppress_errors()`
+- **Dual accounting delete** — `resolve_accounting_model()` was skipped for `delete` actions, causing delete calls to target the wrong Odoo model when OCA `donation.donation` was active
+- **Helpdesk exclusive group/priority** — `Helpdesk_Module_Base` used method overrides instead of properties for `$exclusive_group` and `$exclusive_priority`, inconsistent with all other intermediate bases. Converted to properties
+- **Undefined `$jobs` variable** — `Sync_Engine::process_queue()` could reference undefined `$jobs` if the try block threw before assignment
+- **Partner email normalization** — `Partner_Service::get_or_create_batch()` now trims and lowercases emails before Odoo lookup, preventing duplicate partners from case mismatches
+- **Reconciler client hoisting** — `Reconciler` resolved the Odoo client inside the per-entity loop instead of once before it
+- **Logger context truncation** — `truncate_context()` JSON-encoded the full array then truncated the string, producing invalid JSON. Now truncates the array first, then encodes
+- **Empty encryption key warning** — `Odoo_Auth` now logs a warning via `error_log()` when the encryption key is empty, aiding diagnosis of misconfigured installations
+- **CLI `--format` validation** — `queue stats` and `queue list` subcommands now reject unsupported `--format` values with a clear error
+
+### Changed
+- **Log module filter** — Expanded the log viewer module dropdown from ~20 hardcoded entries to all 33 sync modules plus 5 system modules, organized in `<optgroup>` sections
+- **Log level i18n** — Log level labels (Debug, Info, Warning, Error, Critical) in the sync settings tab are now translatable
+- **Admin JS i18n** — Hardcoded English strings in `admin.js` (server error, unknown error, completed, remove) replaced with localized strings via `wp_localize_script`
+- **XSS defense-in-depth** — Added `escapeHtml()` helper in `admin.js` for log `module` and `level` fields in the AJAX log table
+- **Module toggle accessibility** — Added `aria-label` on module enable/disable toggle switches
+- **Log context column** — `QueryService::get_log_entries()` now includes the `context` column in its SELECT
+- **CLI confirmation prompts** — `sync run` and `queue retry` now require interactive confirmation (skippable with `--yes`)
+
+## [3.1.5] - 2026-02-15
 
 ### Changed
 - **Handler base classes** — Extracted 5 abstract handler base classes to eliminate duplicated constructor, logger, and shared helper logic across 13 handler files:

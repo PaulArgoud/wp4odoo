@@ -190,6 +190,7 @@ class Sync_Engine {
 		}
 
 		$processed = 0;
+		$jobs      = [];
 
 		try {
 			// Early memory check: avoid loading the full batch into memory when
@@ -207,6 +208,10 @@ class Sync_Engine {
 			$batch         = (int) $sync_settings['batch_size'];
 			$now           = current_time( 'mysql', true );
 
+			// Recover any jobs left in 'processing' from a previous crash
+			// BEFORE fetching, so recovered jobs are eligible for this batch.
+			$this->queue_repo->recover_stale_processing( $this->settings->get_stale_timeout() );
+
 			$jobs       = null !== $module
 				? $this->queue_repo->fetch_pending_for_module( $module, $batch, $now )
 				: $this->queue_repo->fetch_pending( $batch, $now );
@@ -214,9 +219,6 @@ class Sync_Engine {
 
 			$this->batch_failures  = 0;
 			$this->batch_successes = 0;
-
-			// Recover any jobs left in 'processing' from a previous crash.
-			$this->queue_repo->recover_stale_processing( $this->settings->get_stale_timeout() );
 
 			// Batch-create optimization: group eligible creates by module+entity.
 			$batched_job_ids = [];
@@ -476,7 +478,6 @@ class Sync_Engine {
 					$batched_job_ids[ (int) $job->id ] = true;
 					continue;
 				}
-				$claimed_jobs[] = $job;
 
 				$payload = [];
 				if ( ! empty( $job->payload ) ) {
@@ -489,6 +490,8 @@ class Sync_Engine {
 					}
 					$payload = is_array( $decoded ) ? $decoded : [];
 				}
+
+				$claimed_jobs[] = $job;
 
 				$items[] = [
 					'wp_id'   => (int) $job->wp_id,
