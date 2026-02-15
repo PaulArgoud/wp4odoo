@@ -51,10 +51,15 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     needs: test
+    defaults:
+      run:
+        working-directory: wp4odoo
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          path: wp4odoo
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
