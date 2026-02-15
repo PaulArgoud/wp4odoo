@@ -5,11 +5,11 @@
 ![MySQL 8.0+](https://img.shields.io/badge/MySQL-8.0%2B-4479A1?logo=mysql&logoColor=white)
 ![MariaDB 10.5+](https://img.shields.io/badge/MariaDB-10.5%2B-003545?logo=mariadb&logoColor=white)
 ![WordPress 6.0+](https://img.shields.io/badge/WordPress-6.0%2B-21759B?logo=wordpress&logoColor=white)
-![33 Modules](https://img.shields.io/badge/Modules-33-success)
+![35 Modules](https://img.shields.io/badge/Modules-35-success)
 ![Odoo 14+](https://img.shields.io/badge/Odoo-14%2B-714B67?logo=odoo&logoColor=white)
 ![License: GPL v2+](https://img.shields.io/badge/License-GPL%20v2%2B-blue)
 
-Modular WordPress plugin that creates a seamless, bidirectional bridge between WordPress/WooCommerce and Odoo ERP (v14+). Built on a clean, extensible architecture with 33 integration modules, an async sync queue, and full WP-CLI support. Ships in **3 languages** (English, French, Spanish).
+Modular WordPress plugin that creates a seamless, bidirectional bridge between WordPress/WooCommerce and Odoo ERP (v14+). Built on a clean, extensible architecture with 35 integration modules, an async sync queue, and full WP-CLI support. Ships in **3 languages** (English, French, Spanish).
 
 **Target users:** WordPress agencies and businesses running Odoo as their ERP who need reliable, real-time data flow between their website and back-office.
 
@@ -25,7 +25,7 @@ Modular WordPress plugin that creates a seamless, bidirectional bridge between W
 - **WP-CLI** — Full command suite: `wp wp4odoo status|test|sync|queue|module` for headless management
 - **WPML / Polylang Translation Sync** — Multilingual product sync via WPML or Polylang: pushes translated names/descriptions to Odoo with language context, pulls translations back to create/update translated posts. Category and attribute value translations included
 - **Extensible** — Register custom modules via `wp4odoo_register_modules`; filter data with `wp4odoo_map_to_odoo_*` / `wp4odoo_map_from_odoo_*`; map ACF custom fields to Odoo via the ACF meta-module
-- **Multilingual** — 617 translatable strings, ships with English, French, and Spanish. Translation-ready via `.po`/`.mo`
+- **Multilingual** — 638 translatable strings, ships with English, French, and Spanish. Translation-ready via `.po`/`.mo`
 
 ## Requirements
 
@@ -66,100 +66,45 @@ Each Odoo domain is encapsulated in an independent module extending `Module_Base
 
 **Sync direction:** ↔️ Bidirectional — ➡️ WP to Odoo — ⬅️ Odoo to WP
 
-### Affiliates
-
-| Module           | Sync | Odoo Apps             | Free⁴ | Key Features                                                                              |
-|------------------|:----:|-----------------------|:-----:|-------------------------------------------------------------------------------------------|
-| **AffiliateWP**  |  ➡️  | Contacts, Invoicing   |  ⚠️  | Affiliates → partners (vendors), referrals → vendor bills (`in_invoice`), auto-post on pay |
-
-### Booking & Events
-
-| Module              | Sync | Odoo Apps                     | Free⁴ | Key Features                                                                 |
-|---------------------|:----:|-------------------------------|:-----:|------------------------------------------------------------------------------|
-| **Amelia Booking**  |  ↔️  | Contacts, Calendar            |  ⚠️  | Service sync (bidirectional), appointment sync (push), customer-to-partner    |
-| **Bookly Booking**  |  ↔️  | Contacts, Calendar            |  ⚠️  | Service sync (bidirectional), booking sync (push) via WP-Cron, hash detection |
-| **WC Bookings**     |  ↔️  | Contacts, Calendar            |  ⚠️  | Booking product/booking sync, all-day support, persons count, status filter   |
-| **Events Calendar** |  ↔️  | Contacts, Events (+ Calendar) |  ⚠️  | Event/ticket/attendee sync, dual-model (event.event or calendar.event)        |
-
-### CRM & Forms
-
-| Module                | Sync | Odoo Apps     | Free⁴ | Key Features                                                                 |
-|-----------------------|:----:|---------------|:-----:|------------------------------------------------------------------------------|
-| **CRM**               |  ↔️  | Contacts, CRM |  ⚠️  | Contact sync, lead form shortcode, email dedup, archive-on-delete             |
-| **Forms (7 plugins)** |  ➡️  | Contacts, CRM |  ⚠️  | GF, WPForms, CF7, Fluent, Formidable, Ninja, Forminator — lead auto-detection |
-
-### Cross-Module
-
-| Module                           | Sync | Odoo Apps | Free⁴ | Key Features                                                                 |
-|----------------------------------|:----:|-----------|:-----:|------------------------------------------------------------------------------|
-| **ACF (Advanced Custom Fields)** |  ↔️  | —         |  —    | Maps ACF custom fields ↔ Odoo `x_*` fields via filters, 9 type conversions   |
-| **WP All Import**                |  ➡️  | —         |  —    | Intercepts CSV/XML imports, routes to sync queue (18 post types), filterable |
-
-### Donations & Payments
-
-| Module            | Sync | Odoo Apps                            | Free⁴ | Key Features                                                                |
-|-------------------|:----:|--------------------------------------|:-----:|-----------------------------------------------------------------------------|
-| **GiveWP**        |  ➡️  | Contacts, Invoicing (+ OCA Donation) |  ⚠️  | Form/donation sync, dual-model detection, auto-validate, recurring donations |
-| **WP Charitable** |  ➡️  | Contacts, Invoicing (+ OCA Donation) |  ⚠️  | Campaign/donation sync, dual-model detection, auto-validate, recurring       |
-| **WP Simple Pay** |  ➡️  | Contacts, Invoicing (+ OCA Donation) |  ⚠️  | Stripe payment sync, webhook capture, dual-model, auto-validate, recurring   |
-
-### E-Commerce
-
-| Module                              | Sync | Odoo Apps                             | Free⁴ | Key Features                                                                      |
-|-------------------------------------|:----:|---------------------------------------|:-----:|-----------------------------------------------------------------------------------|
+| WordPress Module                    | Sync | Odoo Apps                             | Free⁴ | Key Features                                                                                                   |
+|-------------------------------------|:----:|---------------------------------------|:-----:|----------------------------------------------------------------------------------------------------------------|
+| **ACF (Advanced Custom Fields)**    |  ↔️  | —                                     |  —   | Maps ACF custom fields ↔ Odoo `x_*` fields via filters, 9 type conversions                                      |
+| **AffiliateWP**                     |  ➡️  | Contacts, Invoicing                   |  ⚠️  | Affiliates → partners (vendors), referrals → vendor bills (`in_invoice`), auto-post on pay                      |
+| **Amelia Booking**                  |  ↔️  | Contacts, Calendar                    |  ⚠️  | Service sync (bidirectional), appointment sync (push), customer-to-partner                                      |
+| **Awesome Support**                 |  ↔️  | Contacts, Helpdesk (+ Project)        |  ⚠️  | Ticket/status sync, dual-model (helpdesk.ticket or project.task), stage heuristic                               |
+| **Bookly Booking**                  |  ↔️  | Contacts, Calendar                    |  ⚠️  | Service sync (bidirectional), booking sync (push) via WP-Cron, hash detection                                   |
+| **CRM**                             |  ↔️  | Contacts, CRM                         |  ⚠️  | Contact sync, lead form shortcode, email dedup, archive-on-delete                                               |
+| **Easy Digital Downloads**          |  ↔️  | Contacts, Sales, Invoicing            |  ❌  | Download/order sync, status mapping, invoice pull                                                               |
+| **Ecwid**                           |  ➡️  | Contacts, Sales                       |  ❌  | Product/order sync via WP-Cron polling, REST API, hash-based detection                                          |
+| **Events Calendar**                 |  ↔️  | Contacts, Events (+ Calendar)         |  ⚠️  | Event/ticket/attendee sync, dual-model (event.event or calendar.event)                                          |
+| **FluentCRM**                       |  ↔️  | Contacts, Email Marketing             |  ⚠️  | Subscriber/list/tag sync, bidirectional subscribers+lists, push-only tags, custom DB tables                     |
+| **Forms (7 plugins)**               |  ➡️  | Contacts, CRM                         |  ⚠️  | GF, WPForms, CF7, Fluent, Formidable, Ninja, Forminator — lead auto-detection                                   |
+| **GiveWP**                          |  ➡️  | Contacts, Invoicing (+ OCA Donation)  |  ⚠️  | Form/donation sync, dual-model detection, auto-validate, recurring donations                                    |
+| **LearnDash**                       |  ↔️  | Contacts, Sales, Invoicing            |  ❌  | Course/group/transaction/enrollment sync, auto-post invoices, course/group pull                                 |
+| **LifterLMS**                       |  ↔️  | Contacts, Sales, Invoicing            |  ❌  | Course/membership/order/enrollment sync, auto-post invoices, course/membership pull                             |
+| **MemberPress**                     |  ➡️  | Contacts, Members, Invoicing          |  ❌  | Plan/txn/sub sync, auto-post invoices, status mapping                                                           |
+| **Paid Memberships Pro**            |  ➡️  | Contacts, Members, Invoicing          |  ❌  | Level/order/membership sync, auto-post invoices, status mapping                                                 |
+| **Restrict Content Pro**            |  ➡️  | Contacts, Members, Invoicing          |  ❌  | Level/payment/membership sync, auto-post invoices, status mapping                                               |
+| **Sales**                           |  ⬅️  | Contacts, Sales, Invoicing            |  ❌  | Order/invoice CPTs, customer portal shortcode, currency display                                                 |
+| **ShopWP**                          |  ➡️  | Products                              |  ❌  | Shopify product sync via CPT + custom table, variant price/SKU                                                  |
+| **Sprout Invoices**                 |  ↔️  | Contacts, Invoicing                   |  ⚠️  | Invoice/payment sync, status mapping, auto-posting, One2many line items, pull                                   |
+| **SupportCandy**                    |  ↔️  | Contacts, Helpdesk (+ Project)        |  ⚠️  | Ticket/status sync, dual-model, custom table data access, stage heuristic                                       |
+| **TutorLMS**                        |  ↔️  | Contacts, Sales, Invoicing            |  ❌  | Course/order/enrollment sync, auto-post invoices, bidirectional course pull                                     |
+| **WC Bookings**                     |  ↔️  | Contacts, Calendar                    |  ⚠️  | Booking product/booking sync, all-day support, persons count, status filter                                     |
+| **WC Points & Rewards**             |  ↔️  | Contacts, Loyalty                     |  ❌  | Point balance sync via loyalty.card, find-or-create by partner+program                                          |
+| **WC Product Bundles & Composites** |  ➡️  | Contacts, Manufacturing               |  ❌  | Product bundle/composite sync as manufacturing BOMs (mrp.bom), phantom/normal type                              |
 | **WooCommerce**                     |  ↔️  | Contacts, Sales, Inventory, Invoicing |  ❌  | Product/order/stock/category sync, variants, image + gallery, tax + shipping mapping, exchange rates, bulk ops  |
-| **WooCommerce Subscriptions**       |  ↔️  | Contacts, Subscriptions, Invoicing    |  ❌  | Subscription/renewal sync, dual-model (sale.subscription / account.move)           |
-| **WC Product Bundles & Composites** |  ➡️  | Contacts, Manufacturing               |  ❌  | Product bundle/composite sync as manufacturing BOMs (mrp.bom), phantom/normal type |
-| **WC Points & Rewards**             |  ↔️  | Contacts, Loyalty                     |  ❌  | Point balance sync via loyalty.card, find-or-create by partner+program             |
-| **Easy Digital Downloads**          |  ↔️  | Contacts, Sales, Invoicing            |  ❌  | Download/order sync, status mapping, invoice pull                                  |
-| **Ecwid**                           |  ➡️  | Contacts, Sales                       |  ❌  | Product/order sync via WP-Cron polling, REST API, hash-based detection             |
-| **ShopWP**                          |  ➡️  | Products                              |  ❌  | Shopify product sync via CPT + custom table, variant price/SKU                     |
-| **WP Crowdfunding**                 |  ➡️  | Products                              |  ❌  | Campaign sync as service products, funding description, coexists with WC           |
+| **WooCommerce Memberships**         |  ↔️  | Contacts, Members                     |  ❌  | Plan sync (bidirectional), membership status/date pull, reverse status mapping                                  |
+| **WooCommerce Subscriptions**       |  ↔️  | Contacts, Subscriptions, Invoicing    |  ❌  | Subscription/renewal sync, dual-model (sale.subscription / account.move)                                        |
+| **WP All Import**                   |  ➡️  | —                                     |  —   | Intercepts CSV/XML imports, routes to sync queue (18 post types), filterable                                    |
+| **WP Charitable**                   |  ➡️  | Contacts, Invoicing (+ OCA Donation)  |  ⚠️  | Campaign/donation sync, dual-model detection, auto-validate, recurring                                          |
+| **WP Crowdfunding**                 |  ➡️  | Products                              |  ❌  | Campaign sync as service products, funding description, coexists with WC                                        |
+| **WP Job Manager**                  |  ↔️  | HR Recruitment                        |  ✅  | Job listings ↔ hr.job, status mapping (publish ↔ recruit), department pull                                      |
+| **WP Recipe Maker**                 |  ➡️  | Products                              |  ❌  | Recipe sync as service products, structured descriptions                                                        |
+| **WP Simple Pay**                   |  ➡️  | Contacts, Invoicing (+ OCA Donation)  |  ⚠️  | Stripe payment sync, webhook capture, dual-model, auto-validate, recurring                                      |
+| **WP-Invoice**                      |  ➡️  | Contacts, Invoicing                   |  ⚠️  | Invoice sync, auto-posting for paid invoices, One2many line items                                               |
 
-### Helpdesk & Support
-
-| Module              | Sync | Odoo Apps                      | Free⁴ | Key Features                                                                     |
-|---------------------|:----:|--------------------------------|:-----:|----------------------------------------------------------------------------------|
-| **Awesome Support** |  ↔️  | Contacts, Helpdesk (+ Project) |  ⚠️  | Ticket/status sync, dual-model (helpdesk.ticket or project.task), stage heuristic |
-| **SupportCandy**    |  ↔️  | Contacts, Helpdesk (+ Project) |  ⚠️  | Ticket/status sync, dual-model, custom table data access, stage heuristic         |
-
-### HR
-
-| Module                | Sync | Odoo Apps      | Free⁴ | Key Features                                                               |
-|-----------------------|:----:|----------------|:-----:|----------------------------------------------------------------------------|
-| **WP Job Manager**    |  ↔️  | HR Recruitment |  ✅   | Job listings ↔ hr.job, status mapping (publish ↔ recruit), department pull |
-
-### Invoicing & Sales
-
-| Module              | Sync | Odoo Apps                  | Free⁴ | Key Features                                                                 |
-|---------------------|:----:|----------------------------|:-----:|------------------------------------------------------------------------------|
-| **Sales**           |  ⬅️  | Contacts, Sales, Invoicing |  ❌  | Order/invoice CPTs, customer portal shortcode, currency display               |
-| **Sprout Invoices** |  ↔️  | Contacts, Invoicing        |  ⚠️  | Invoice/payment sync, status mapping, auto-posting, One2many line items, pull |
-| **WP-Invoice**      |  ➡️  | Contacts, Invoicing        |  ⚠️  | Invoice sync, auto-posting for paid invoices, One2many line items             |
-
-### LMS (Learning)
-
-| Module        | Sync | Odoo Apps                  | Free⁴ | Key Features                                                                       |
-|---------------|:----:|----------------------------|:-----:|------------------------------------------------------------------------------------|
-| **LearnDash** |  ↔️  | Contacts, Sales, Invoicing |  ❌  | Course/group/transaction/enrollment sync, auto-post invoices, course/group pull     |
-| **LifterLMS** |  ↔️  | Contacts, Sales, Invoicing |  ❌  | Course/membership/order/enrollment sync, auto-post invoices, course/membership pull |
-
-### Memberships
-
-| Module                      | Sync | Odoo Apps                    | Free⁴ | Key Features                                                                  |
-|-----------------------------|:----:|------------------------------|:-----:|-------------------------------------------------------------------------------|
-| **WooCommerce Memberships** |  ↔️  | Contacts, Members            |  ❌  | Plan sync (bidirectional), membership status/date pull, reverse status mapping |
-| **MemberPress**             |  ➡️  | Contacts, Members, Invoicing |  ❌  | Plan/txn/sub sync, auto-post invoices, status mapping                          |
-| **Paid Memberships Pro**    |  ➡️  | Contacts, Members, Invoicing |  ❌  | Level/order/membership sync, auto-post invoices, status mapping                |
-| **Restrict Content Pro**    |  ➡️  | Contacts, Members, Invoicing |  ❌  | Level/payment/membership sync, auto-post invoices, status mapping              |
-
-### Other
-
-| Module              | Sync | Odoo Apps | Free⁴ | Key Features                                            |
-|---------------------|:----:|-----------|:-----:|---------------------------------------------------------|
-| **WP Recipe Maker** |  ➡️  | Products  |  ❌  | Recipe sync as service products, structured descriptions |
-
-> ⁴ **[One App Free](https://www.odoo.com/pricing)**: with CRM as your free app, CRM and Forms modules work. With Invoicing as your free app, GiveWP, WP Charitable, WP Simple Pay, Sprout Invoices, and WP-Invoice work. With Calendar as your free app, Amelia, Bookly, WC Bookings, and Events Calendar (fallback mode) work (partial — no Contacts). With Helpdesk as your free app, Awesome Support and SupportCandy work (partial — no Contacts). Sales, WooCommerce, WooCommerce Subscriptions (Enterprise), WC Product Bundles & Composites, WC Points & Rewards, Memberships (MemberPress/PMPro/RCP/WC Memberships), LMS (LearnDash/LifterLMS), Ecwid, and WP Recipe Maker require 2–4 apps.
+> ⁴ **[One App Free](https://www.odoo.com/pricing)**: with CRM as your free app, CRM and Forms modules work. With Invoicing as your free app, GiveWP, WP Charitable, WP Simple Pay, Sprout Invoices, and WP-Invoice work. With Calendar as your free app, Amelia, Bookly, WC Bookings, and Events Calendar (fallback mode) work (partial — no Contacts). With Helpdesk as your free app, Awesome Support and SupportCandy work (partial — no Contacts). Sales, WooCommerce, WooCommerce Subscriptions (Enterprise), WC Product Bundles & Composites, WC Points & Rewards, Memberships (MemberPress/PMPro/RCP/WC Memberships), LMS (LearnDash/LifterLMS/TutorLMS), Ecwid, and WP Recipe Maker require 2–4 apps.
 
 ## Usage
 

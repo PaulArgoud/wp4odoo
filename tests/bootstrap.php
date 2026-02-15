@@ -132,6 +132,8 @@ require_once __DIR__ . '/stubs/supportcandy-classes.php';
 require_once __DIR__ . '/stubs/wc-bundles-classes.php';
 require_once __DIR__ . '/stubs/affiliatewp-classes.php';
 require_once __DIR__ . '/stubs/wpai-classes.php';
+require_once __DIR__ . '/stubs/tutorlms-classes.php';
+require_once __DIR__ . '/stubs/fluentcrm-classes.php';
 
 // ─── Composer autoloader ────────────────────────────────
 

@@ -33,6 +33,7 @@ class WP_DB_Stub {
 	/** @var array|object|null */
 	public $get_row_return = null;
 	public array $get_results_return = [];
+	public array $get_col_return = [];
 	public int $delete_return = 1;
 	public int $query_return = 1;
 
@@ -60,6 +61,11 @@ class WP_DB_Stub {
 	public function get_row( $query, $output = OBJECT, $y = 0 ) {
 		$this->calls[] = [ 'method' => 'get_row', 'args' => [ $query, $output ] ];
 		return $this->get_row_return;
+	}
+
+	public function get_col( $query ): array {
+		$this->calls[] = [ 'method' => 'get_col', 'args' => [ $query ] ];
+		return $this->get_col_return;
 	}
 
 	public function get_results( $query ): array {
@@ -113,6 +119,7 @@ class WP_DB_Stub {
 		$this->lock_return        = '1';
 		$this->get_var_return     = null;
 		$this->get_row_return     = null;
+		$this->get_col_return     = [];
 		$this->get_results_return = [];
 		$this->delete_return      = 1;
 		$this->query_return       = 1;

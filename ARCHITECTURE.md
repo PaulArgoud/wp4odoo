@@ -2,7 +2,7 @@
 
 ## Overview
 
-Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 33 modules across 20 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Points & Rewards, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (7 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS), Booking (Amelia + Bookly), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP), Helpdesk (Awesome Support + SupportCandy), HR (WP Job Manager), Affiliates (AffiliateWP), and Meta-modules (ACF + WP All Import).
+Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 35 modules across 21 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Points & Rewards, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (7 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS + TutorLMS), Booking (Amelia + Bookly), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP), Helpdesk (Awesome Support + SupportCandy), HR (WP Job Manager), Affiliates (AffiliateWP), Marketing CRM (FluentCRM), and Meta-modules (ACF + WP All Import).
 
 ![WP4ODOO Full Architecture](assets/images/architecture-full.svg)
 
@@ -51,6 +51,7 @@ WordPress For Odoo/
 │   │   ├── class-exchange-rate-service.php   # WooCommerce: Odoo exchange rate fetching + caching + conversion
 │   │   ├── class-pricelist-handler.php      # WooCommerce: pricelist price import (product.pricelist → WC sale_price)
 │   │   ├── class-shipment-handler.php       # WooCommerce: shipment tracking import (stock.picking → WC order meta, AST format)
+│   │   ├── class-stock-handler.php        # WooCommerce: bidirectional stock push (WC → Odoo), version-adaptive (quant v16+ / wizard v14-15)
 │   │   ├── class-wc-pull-coordinator.php   # WooCommerce: pull orchestration (variant/shipment dispatch, post-pull hooks)
 │   │   │
 │   │   ├── # ─── EDD ───────────────────────────────────────────
@@ -133,6 +134,9 @@ WordPress For Odoo/
 │   │   ├── trait-lifterlms-hooks.php         # LifterLMS: hook callbacks (course/membership save, order, enrollment)
 │   │   ├── class-lifterlms-handler.php       # LifterLMS: course/membership/order/enrollment data load
 │   │   ├── class-lifterlms-module.php        # LifterLMS: push sync coordinator (extends LMS_Module_Base, uses LifterLMS_Hooks trait)
+│   │   ├── trait-tutorlms-hooks.php        # TutorLMS: hook callbacks (course save, order placed, enrollment, unenrollment)
+│   │   ├── class-tutorlms-handler.php      # TutorLMS: course/order/enrollment data load, invoice/sale order formatting
+│   │   ├── class-tutorlms-module.php       # TutorLMS: push sync coordinator (extends LMS_Module_Base, uses TutorLMS_Hooks trait)
 │   │   │
 │   │   ├── # ─── WC Subscriptions ─────────────────────────────
 │   │   ├── trait-wc-subscriptions-hooks.php  # WCS: hook callbacks (product save, subscription status, renewal)
@@ -189,6 +193,11 @@ WordPress For Odoo/
 │   │   ├── class-affiliatewp-module.php      # AffiliateWP: push-only, affiliates → res.partner, referrals → vendor bills
 │   │   ├── class-affiliatewp-handler.php     # AffiliateWP: referral data load, vendor bill formatting, status mapping
 │   │   ├── trait-affiliatewp-hooks.php       # AffiliateWP: status change hooks (affiliate + referral)
+│   │   │
+│   │   ├── # ─── FluentCRM (Marketing CRM) ────────────────
+│   │   ├── class-fluentcrm-module.php      # FluentCRM: bidirectional, subscribers → mailing.contact, lists → mailing.list, tags → res.partner.category
+│   │   ├── class-fluentcrm-handler.php     # FluentCRM: custom DB tables (fc_subscribers, fc_lists, fc_tags), $wpdb queries
+│   │   ├── trait-fluentcrm-hooks.php       # FluentCRM: subscriber/list/tag creation/update hooks
 │   │   │
 │   │   ├── # ─── Meta-modules (enrichment / interception) ──
 │   │   ├── class-acf-handler.php             # ACF: type conversions, enrich push/pull, write ACF fields
@@ -300,6 +309,8 @@ WordPress For Odoo/
 │   │   ├── awesome-support-classes.php # Awesome_Support, wpas_get_ticket_status
 │   │   ├── supportcandy-classes.php    # WPSC_VERSION, SupportCandy stubs
 │   │   ├── affiliatewp-classes.php     # AffiliateWP, affwp_get_affiliate
+│   │   ├── tutorlms-classes.php        # TUTOR_VERSION constant
+│   │   ├── fluentcrm-classes.php       # FLUENTCRM, FLUENTCRM_PLUGIN_VERSION, FluentCrm\App\Models stubs
 │   │   ├── wpai-classes.php            # PMXI_VERSION, wp_all_import_get_import_id
 │   │   └── i18n-classes.php            # WPML + Polylang stubs (constants, classes, functions)
 │   ├── helpers/
@@ -437,7 +448,10 @@ WordPress For Odoo/
 │       ├── LearnDashHandlerTest.php    #   33 tests for LearnDash_Handler
 │       ├── ShopWPHandlerTest.php       #   8 tests for ShopWP_Handler
 │       ├── SproutInvoicesHandlerTest.php # 37 tests for Sprout_Invoices_Handler
-│       └── WPInvoiceHandlerTest.php    #   18 tests for WP_Invoice_Handler
+│       ├── WPInvoiceHandlerTest.php    #   18 tests for WP_Invoice_Handler
+│       ├── StockHandlerTest.php        #   10 tests for Stock_Handler
+│       ├── TutorLMSModuleTest.php      #   66 tests for TutorLMS_Module + Handler + Hooks
+│       └── FluentCRMModuleTest.php     #   69 tests for FluentCRM_Module + Handler + Hooks
 │
 ├── uninstall.php                      # Cleanup on plugin uninstall
 │
@@ -500,7 +514,8 @@ Module_Base (abstract)
 │   └── SupportCandy_Module     → helpdesk.ticket / project.task                     [bidirectional]
 ├── LMS_Module_Base (abstract)
 │   ├── LearnDash_Module        → product.product, account.move, sale.order          [bidirectional]
-│   └── LifterLMS_Module        → product.product, account.move, sale.order          [bidirectional]
+│   ├── LifterLMS_Module        → product.product, account.move, sale.order          [bidirectional]
+│   └── TutorLMS_Module         → product.product, account.move, sale.order          [bidirectional]
 ├── WC_Subscriptions_Module     → product.product, sale.subscription, account.move   [bidirectional]
 ├── Events_Calendar_Module      → event.event / calendar.event, product.product,     [bidirectional]
 │                                 event.registration
@@ -513,6 +528,7 @@ Module_Base (abstract)
 ├── WC_Points_Rewards_Module    → loyalty.card                                       [bidirectional]
 ├── Job_Manager_Module          → hr.job                                             [bidirectional]
 ├── AffiliateWP_Module          → res.partner (vendor), account.move (in_invoice)    [WP → Odoo]
+├── FluentCRM_Module            → mailing.contact, mailing.list, res.partner.category  [bidirectional]
 ├── ACF_Module                  → (meta-module: enriches other modules' pipelines)   [bidirectional]
 ├── WP_All_Import_Module        → (meta-module: routes imports to sync queue)        [WP → Odoo]
 └── [Custom_Module]             → extensible via action hook
@@ -523,7 +539,7 @@ Module_Base (abstract)
 - **Memberships**: WC Memberships, MemberPress, PMPro, and RCP are mutually exclusive (all target `membership.membership_line`). Priority (highest number wins): WC Memberships (20) > PMPro (15) > RCP (12) > MemberPress (10).
 - **Invoicing**: Sprout Invoices and WP-Invoice are mutually exclusive (both target `account.move` for invoicing). Priority: Sprout Invoices (10) > WP-Invoice (5).
 - **Helpdesk**: Awesome Support and SupportCandy are mutually exclusive (both target `helpdesk.ticket` / `project.task`). Priority: SupportCandy (15) > Awesome Support (10).
-- All other modules are independent and can coexist freely (LMS, Subscriptions, Points & Rewards, Events, Booking, Donations, Forms, WPRM, Crowdfunding, BOM, AffiliateWP, ACF, WP All Import, Job Manager).
+- All other modules are independent and can coexist freely (LMS, Subscriptions, Points & Rewards, Events, Booking, Donations, Forms, WPRM, Crowdfunding, BOM, AffiliateWP, FluentCRM, ACF, WP All Import, Job Manager).
 
 **Module_Base provides:**
 - Version bounds: `PLUGIN_MIN_VERSION` (blocks boot if too old) and `PLUGIN_TESTED_UP_TO` (warns if newer than tested). Subclasses override `get_plugin_version()` to return the detected plugin version. Patch-level normalization ensures `10.5.0` is within `10.5` range. `Module_Registry` enforces MIN before boot and collects TESTED warnings for the admin notice.
@@ -561,7 +577,7 @@ Handler classes receive their dependencies via closures from their parent module
 
 Both patterns are intentional and follow a clear convention:
 
-- **Data Handlers** (pure transformers): `load_data()`, `parse_from_odoo()`, `save_data()`, `status_map()`. No Odoo API dependency. Examples: `Product_Handler`, `Order_Handler`, `WPRM_Handler`, `LearnDash_Handler`, `LifterLMS_Handler`, `Job_Manager_Handler`.
+- **Data Handlers** (pure transformers): `load_data()`, `parse_from_odoo()`, `save_data()`, `status_map()`. No Odoo API dependency. Examples: `Product_Handler`, `Order_Handler`, `WPRM_Handler`, `LearnDash_Handler`, `LifterLMS_Handler`, `TutorLMS_Handler`, `FluentCRM_Handler`, `Job_Manager_Handler`.
 
 - **Integration Handlers** (with side effects): access plugin DB tables via `$wpdb`, call third-party APIs, or manage external state. Examples: `Amelia_Handler`, `Bookly_Handler`, `Ecwid_Handler`, `ShopWP_Handler`, `SimplePay_Handler`.
 
@@ -1026,7 +1042,7 @@ All user inputs are sanitized with:
 
 ### WooCommerce — COMPLETE
 
-**Files:** `class-woocommerce-module.php` (sync coordinator, uses `WooCommerce_Hooks` trait), `trait-woocommerce-hooks.php` (WC hook callbacks), `class-product-handler.php` (product CRUD), `class-order-handler.php` (order CRUD + status mapping), `class-variant-handler.php` (variant import), `class-image-handler.php` (featured image + gallery image pull/push), `class-pricelist-handler.php` (pricelist price pull), `class-shipment-handler.php` (shipment tracking pull), `class-currency-guard.php` (currency mismatch detection), `class-exchange-rate-service.php` (Odoo exchange rates), `class-invoice-helper.php` (shared with Sales + EDD)
+**Files:** `class-woocommerce-module.php` (sync coordinator, uses `WooCommerce_Hooks` trait), `trait-woocommerce-hooks.php` (WC hook callbacks), `class-product-handler.php` (product CRUD), `class-order-handler.php` (order CRUD + status mapping), `class-variant-handler.php` (variant import), `class-image-handler.php` (featured image + gallery image pull/push), `class-pricelist-handler.php` (pricelist price pull), `class-shipment-handler.php` (shipment tracking pull), `class-stock-handler.php` (bidirectional stock push, version-adaptive quant/wizard API), `class-currency-guard.php` (currency mismatch detection), `class-exchange-rate-service.php` (Odoo exchange rates), `class-invoice-helper.php` (shared with Sales + EDD)
 
 **Odoo models:** `product.template`, `product.product`, `product.category`, `sale.order`, `stock.quant`, `account.move`, `product.pricelist`, `product.pricelist.item`, `stock.picking`, `account.tax`, `delivery.carrier`
 
@@ -1047,6 +1063,7 @@ All user inputs are sanitized with:
 - **Attribute value translation**: `Variant_Handler` tracks attribute value Odoo IDs in `entity_map`; accumulated per-taxonomy for translated term name pull
 - **Tax mapping**: configurable WC tax class → Odoo `account.tax` ID mapping; applied per order line during push as `tax_id` Many2many `[6, 0, [id]]` tuples
 - **Shipping mapping**: configurable WC shipping method → Odoo `delivery.carrier` ID mapping; sets `carrier_id` on `sale.order` during push
+- **Bidirectional stock sync**: `Stock_Handler` pushes WC stock changes to Odoo. Version-adaptive: `stock.quant` + `action_apply_inventory()` for Odoo 16+, `stock.change.product.qty` wizard for v14-15. Anti-loop guard via `mark_importing()` prevents re-enqueue during pull
 
 **Settings:** `sync_products`, `sync_orders`, `sync_stock`, `sync_product_images`, `sync_gallery_images`, `sync_pricelist`, `sync_shipments`, `convert_currency`, `auto_confirm_orders`, `sync_taxes`, `tax_mapping`, `sync_shipping`, `shipping_mapping` — `sync_products` and `sync_orders` are checked at callback level (each hook checks the relevant setting before enqueuing)
 
@@ -1312,6 +1329,25 @@ All user inputs are sanitized with:
 
 **Settings:** `sync_courses`, `sync_memberships`, `sync_orders`, `sync_enrollments`, `auto_post_invoices`
 
+### TutorLMS — COMPLETE
+
+**Files:** `class-tutorlms-module.php` (extends `LMS_Module_Base`, uses `TutorLMS_Hooks` trait), `trait-tutorlms-hooks.php` (hook callbacks), `class-tutorlms-handler.php` (data load via TutorLMS functions, invoice/sale order formatting)
+
+**Odoo models:** `product.product` (courses), `account.move` (orders as invoices), `sale.order` (enrollments)
+
+**Key features:**
+- Bidirectional sync — courses (push + pull), orders and enrollments (push-only)
+- Requires TutorLMS 2.6+; `boot()` guards with `defined('TUTOR_VERSION')`
+- Independent module (no exclusive group) — LMS coexists with e-commerce modules
+- Courses (`courses` CPT) synced as service products
+- Orders → invoices with `invoice_line_ids` One2many tuples, optional auto-posting
+- Enrollments → sale orders via synthetic ID encoding (`Module_Base::encode_synthetic_id()` / `decode_synthetic_id()`)
+- Product auto-sync: `ensure_entity_synced()` pushes course before dependent order/enrollment
+- Uses `Partner_Service` for user → Odoo partner resolution
+- Translation pull support: `get_translatable_fields()` maps `name → post_title`, `description_sale → post_content` for courses
+
+**Settings:** `sync_courses`, `sync_orders`, `sync_enrollments`, `auto_post_invoices`, `pull_courses`
+
 ### WooCommerce Subscriptions — COMPLETE
 
 **Files:** `class-wc-subscriptions-module.php` (push sync coordinator, uses `WC_Subscriptions_Hooks` trait), `trait-wc-subscriptions-hooks.php` (hook callbacks), `class-wc-subscriptions-handler.php` (data load via WC Subscription objects, subscription/invoice formatting)
@@ -1507,6 +1543,25 @@ All user inputs are sanitized with:
 - No exclusive group — coexists with all modules
 
 **Settings:** `sync_affiliates` (bool), `sync_referrals` (bool), `auto_post_bills` (bool)
+
+### FluentCRM — COMPLETE
+
+**Files:** `class-fluentcrm-module.php` (bidirectional module, extends `Module_Base` directly, uses `FluentCRM_Hooks` trait), `trait-fluentcrm-hooks.php` (hook callbacks), `class-fluentcrm-handler.php` (custom DB table data load/save/format)
+
+**Odoo models:** `mailing.contact` (subscribers), `mailing.list` (lists), `res.partner.category` (tags)
+
+**Key features:**
+- Bidirectional sync for subscribers and lists; push-only for tags
+- Requires FluentCRM 2.8+; `boot()` guards with `defined('FLUENTCRM')`
+- No exclusive group — coexists with all modules
+- Uses FluentCRM custom DB tables (`fc_subscribers`, `fc_lists`, `fc_tags`, `fc_subscriber_pivot`) via `$wpdb`
+- Subscriber name splitting/joining: Odoo single `name` field ↔ FluentCRM `first_name` + `last_name`
+- List M2M resolution: subscriber `list_ids` resolved to Odoo IDs via entity map, formatted as `[(6, 0, [ids])]`
+- Email-based dedup domain for subscribers, name-based for lists and tags
+- Save handler: upsert by email (subscribers) or by title (lists)
+- Detection: `defined('FLUENTCRM')`, version from `FLUENTCRM_PLUGIN_VERSION`
+
+**Settings:** `sync_subscribers` (bool), `sync_lists` (bool), `sync_tags` (bool), `pull_subscribers` (bool), `pull_lists` (bool)
 
 ### ACF (Advanced Custom Fields) — COMPLETE
 

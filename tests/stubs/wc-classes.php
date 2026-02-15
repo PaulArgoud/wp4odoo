@@ -87,7 +87,8 @@ if ( ! class_exists( 'WC_Product' ) ) {
 		public function set_sale_price( $price ): void { $this->data['sale_price'] = (string) $price; }
 		public function get_stock_quantity(): ?int { return $this->data['stock_quantity'] ?? null; }
 		public function set_stock_quantity( ?int $quantity ): void { $this->data['stock_quantity'] = $quantity; }
-		public function set_manage_stock( bool $manage ): void {}
+		public function managing_stock(): bool { return $this->data['manage_stock'] ?? true; }
+		public function set_manage_stock( bool $manage ): void { $this->data['manage_stock'] = $manage; }
 		public function get_weight(): string { return $this->data['weight'] ?? ''; }
 		public function set_weight( string $weight ): void { $this->data['weight'] = $weight; }
 		public function get_description(): string { return $this->data['description'] ?? ''; }

@@ -168,4 +168,39 @@ trait WooCommerce_Hooks {
 		$odoo_id = $this->get_mapping( 'order', $order_id ) ?? 0;
 		Queue_Manager::push( 'woocommerce', 'order', 'update', $order_id, $odoo_id );
 	}
+
+	/**
+	 * Handle WooCommerce product stock change (simple products).
+	 *
+	 * Triggered by woocommerce_product_set_stock. Enqueues a stock
+	 * push job so the new quantity is sent to Odoo.
+	 *
+	 * @param \WC_Product $product WC product instance.
+	 * @return void
+	 */
+	public function on_stock_change( \WC_Product $product ): void {
+		if ( ! $this->should_sync( 'sync_stock' ) ) {
+			return;
+		}
+
+		$product_id = $product->get_id();
+		$odoo_id    = $this->get_mapping( 'product', $product_id )
+					?? $this->get_mapping( 'variant', $product_id )
+					?? 0;
+
+		Queue_Manager::push( 'woocommerce', 'stock', 'update', $product_id, $odoo_id );
+	}
+
+	/**
+	 * Handle WooCommerce variation stock change.
+	 *
+	 * Triggered by woocommerce_variation_set_stock. Delegates to
+	 * on_stock_change() since the logic is identical.
+	 *
+	 * @param \WC_Product $product WC variation instance.
+	 * @return void
+	 */
+	public function on_variation_stock_change( \WC_Product $product ): void {
+		$this->on_stock_change( $product );
+	}
 }

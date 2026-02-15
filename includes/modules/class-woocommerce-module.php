@@ -145,6 +145,13 @@ class WooCommerce_Module extends Module_Base {
 	private Shipment_Handler $shipment_handler;
 
 	/**
+	 * Stock handler for bidirectional stock sync.
+	 *
+	 * @var Stock_Handler
+	 */
+	private Stock_Handler $stock_handler;
+
+	/**
 	 * Pull orchestration coordinator.
 	 *
 	 * @var WC_Pull_Coordinator
@@ -176,6 +183,7 @@ class WooCommerce_Module extends Module_Base {
 		$this->image_handler     = new Image_Handler( $this->logger );
 		$this->pricelist_handler = new Pricelist_Handler( $this->logger, fn() => $this->client(), (int) ( $module_settings['pricelist_id'] ?? 0 ), $rate_service, $convert_currency );
 		$this->shipment_handler  = new Shipment_Handler( $this->logger, fn() => $this->client() );
+		$this->stock_handler     = new Stock_Handler( $this->logger );
 
 		$this->pull_coordinator = new WC_Pull_Coordinator(
 			$this->logger,
@@ -218,7 +226,11 @@ class WooCommerce_Module extends Module_Base {
 			add_action( 'woocommerce_order_status_changed', $this->safe_callback( [ $this, 'on_order_status_changed' ] ), 10, 3 );
 		}
 
-		// Stock: pull-only (Odoo → WC), no WC hooks needed.
+		// Stock: bidirectional sync.
+		if ( ! empty( $settings['sync_stock'] ) ) {
+			add_action( 'woocommerce_product_set_stock', $this->safe_callback( [ $this, 'on_stock_change' ] ) );
+			add_action( 'woocommerce_variation_set_stock', $this->safe_callback( [ $this, 'on_variation_stock_change' ] ) );
+		}
 
 		// Invoices: CPT (WC has no native invoice type).
 		add_action( 'init', [ Invoice_Helper::class, 'register_cpt' ] );
@@ -247,6 +259,10 @@ class WooCommerce_Module extends Module_Base {
 	public function push_to_odoo( string $entity_type, string $action, int $wp_id, int $odoo_id = 0, array $payload = [] ): Sync_Result {
 		if ( 'product' === $entity_type && ! empty( $payload['_translate'] ) ) {
 			return $this->push_product_translation( $odoo_id, $payload );
+		}
+
+		if ( 'stock' === $entity_type ) {
+			return $this->push_stock_to_odoo( $wp_id, $odoo_id );
 		}
 
 		return parent::push_to_odoo( $entity_type, $action, $wp_id, $odoo_id, $payload );
@@ -298,6 +314,44 @@ class WooCommerce_Module extends Module_Base {
 		);
 
 		return Sync_Result::success( $odoo_id );
+	}
+
+	/**
+	 * Push stock quantity to Odoo for a WC product.
+	 *
+	 * Resolves the Odoo product ID from entity map (product or variant),
+	 * reads the current WC stock quantity, and delegates to Stock_Handler.
+	 *
+	 * @param int $wp_id   WC product/variation ID.
+	 * @param int $odoo_id Odoo product ID (from queue, may be 0).
+	 * @return Sync_Result
+	 */
+	private function push_stock_to_odoo( int $wp_id, int $odoo_id ): Sync_Result {
+		// Resolve Odoo product ID if not provided by the queue.
+		if ( $odoo_id <= 0 ) {
+			$odoo_id = $this->get_mapping( 'product', $wp_id )
+					?? $this->get_mapping( 'variant', $wp_id )
+					?? 0;
+		}
+
+		if ( $odoo_id <= 0 ) {
+			return Sync_Result::failure(
+				__( 'Stock push: no Odoo mapping for WC product.', 'wp4odoo' ),
+				Error_Type::Permanent
+			);
+		}
+
+		$product = wc_get_product( $wp_id );
+		if ( ! $product || ! $product->managing_stock() ) {
+			return Sync_Result::failure(
+				__( 'Stock push: WC product not found or not managing stock.', 'wp4odoo' ),
+				Error_Type::Permanent
+			);
+		}
+
+		$quantity = (float) $product->get_stock_quantity();
+
+		return $this->stock_handler->push_stock( $this->client(), $odoo_id, $quantity );
 	}
 
 	/**
@@ -362,7 +416,7 @@ class WooCommerce_Module extends Module_Base {
 			'sync_stock'          => [
 				'label'       => __( 'Sync stock', 'wp4odoo' ),
 				'type'        => 'checkbox',
-				'description' => __( 'Pull stock levels from Odoo into WooCommerce products.', 'wp4odoo' ),
+				'description' => __( 'Bidirectional stock sync between WooCommerce and Odoo.', 'wp4odoo' ),
 			],
 			'sync_product_images' => [
 				'label'       => __( 'Sync product images', 'wp4odoo' ),
@@ -693,7 +747,14 @@ class WooCommerce_Module extends Module_Base {
 		}
 
 		$quantity = (int) ( $data['stock_quantity'] ?? 0 );
-		wc_update_product_stock( $wp_product_id, $quantity );
+
+		// Anti-loop: prevent on_stock_change from re-enqueuing during pull.
+		$this->mark_importing();
+		try {
+			wc_update_product_stock( $wp_product_id, $quantity );
+		} finally {
+			$this->clear_importing();
+		}
 
 		$this->logger->info(
 			'Updated WC product stock.',

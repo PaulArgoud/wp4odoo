@@ -72,6 +72,7 @@ if ( ! class_exists( 'WC_Product' ) ) {
 		public function set_sale_price( $price ): void {}
 		public function get_stock_quantity(): ?int { return null; }
 		public function set_stock_quantity( ?int $quantity ): void {}
+		public function managing_stock(): bool { return false; }
 		public function set_manage_stock( bool $manage ): void {}
 		public function get_weight(): string { return ''; }
 		public function set_weight( string $weight ): void {}
