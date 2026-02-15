@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BuddyBoss module** — New community module for BuddyBoss/BuddyPress 2.4+. Syncs profiles → `res.partner` (bidirectional, enriched with xprofile fields), groups → `res.partner.category` (push-only). Group membership reflected as partner category tags via Many2many `[(6, 0, [ids])]` tuples
 - **WP ERP module** — New HR module for WP ERP 1.6+. Syncs employees → `hr.employee` (bidirectional), departments → `hr.department` (bidirectional), leave requests → `hr.leave` (bidirectional). Dependency chain: leaves require employee synced first, employees require department synced first. Leave status mapping: pending/approved/rejected ↔ draft/validate/refuse (filterable via `wp4odoo_wperp_leave_status_map`)
 - **Knowledge module** — New content sync module for WordPress posts ↔ Odoo Knowledge articles (`knowledge.article`, Enterprise v16+). Bidirectional sync with HTML body preserved, parent hierarchy via entity map, configurable post type, optional category slug filter. Odoo-side availability guarded via model probe. WPML/Polylang translation support for name + body fields
+- **Multi-batch queue processing** — `Sync_Engine` now processes multiple batches per cron invocation (up to 20 iterations) until the time limit (55 s) or memory threshold (80%) is reached. Drains large queues 10–20× faster than single-batch
+- **Push dedup advisory lock** — `push_to_odoo()` now acquires a MySQL advisory lock before the search-before-create path, preventing TOCTOU race conditions where concurrent workers could create duplicate Odoo records for the same entity
+- **Optimized cron polling** — `poll_entity_changes()` now uses targeted entity_map loading (`IN (wp_ids)`) instead of loading all rows, and detects deletions via `last_polled_at` timestamps instead of in-memory set comparison. New DB migration adds `last_polled_at` column to `entity_map`
 
 ## [3.2.0] - 2026-02-15
 

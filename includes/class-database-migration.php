@@ -76,11 +76,13 @@ final class Database_Migration {
 			odoo_model VARCHAR(100) NOT NULL,
 			sync_hash VARCHAR(64) DEFAULT NULL,
 			last_synced_at DATETIME DEFAULT NULL,
+			last_polled_at DATETIME DEFAULT NULL,
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
 			UNIQUE KEY idx_unique_mapping (module, entity_type, wp_id, odoo_id),
 			KEY idx_wp_lookup (module, entity_type, wp_id),
-			KEY idx_odoo_lookup (module, entity_type, odoo_id)
+			KEY idx_odoo_lookup (module, entity_type, odoo_id),
+			KEY idx_poll_detection (module, entity_type, last_polled_at)
 		) $charset_collate;
 
 		CREATE TABLE IF NOT EXISTS {$wpdb->prefix}wp4odoo_logs (
@@ -152,6 +154,7 @@ final class Database_Migration {
 			3 => [ self::class, 'migration_3' ],
 			4 => [ self::class, 'migration_4' ],
 			5 => [ self::class, 'migration_5' ],
+			6 => [ self::class, 'migration_6' ],
 		];
 	}
 
@@ -300,6 +303,29 @@ final class Database_Migration {
 
 		if ( ! in_array( 'idx_status_created', $names, true ) ) {
 			$wpdb->query( "ALTER TABLE {$queue_table} ADD KEY idx_status_created (status, created_at)" );
+		}
+		// phpcs:enable
+	}
+
+	/**
+	 * Migration 6: Add last_polled_at column to entity_map for efficient poll deletion detection.
+	 *
+	 * Enables cron polling modules (Bookly, Ecwid) to detect deletions
+	 * via `WHERE last_polled_at < poll_start` instead of loading all
+	 * entity_map rows into memory.
+	 *
+	 * @return void
+	 */
+	private static function migration_6(): void {
+		global $wpdb;
+
+		$entity_table = $wpdb->prefix . 'wp4odoo_entity_map';
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.SchemaChange
+		$cols = $wpdb->get_col( "SHOW COLUMNS FROM {$entity_table}" );
+		if ( ! in_array( 'last_polled_at', $cols, true ) ) {
+			$wpdb->query( "ALTER TABLE {$entity_table} ADD COLUMN last_polled_at DATETIME DEFAULT NULL AFTER last_synced_at" );
+			$wpdb->query( "ALTER TABLE {$entity_table} ADD KEY idx_poll_detection (module, entity_type, last_polled_at)" );
 		}
 		// phpcs:enable
 	}

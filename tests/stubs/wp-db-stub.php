@@ -33,6 +33,16 @@ class WP_DB_Stub {
 	/** @var array|object|null */
 	public $get_row_return = null;
 	public array $get_results_return = [];
+
+	/**
+	 * Queue of successive get_results() return values.
+	 *
+	 * When non-empty, get_results() shifts one value per call.
+	 * When exhausted, falls back to get_results_return.
+	 *
+	 * @var array<int, array>
+	 */
+	public array $get_results_sequence = [];
 	public array $get_col_return = [];
 	public int $delete_return = 1;
 	public int $query_return = 1;
@@ -70,7 +80,18 @@ class WP_DB_Stub {
 
 	public function get_results( $query ): array {
 		$this->calls[] = [ 'method' => 'get_results', 'args' => [ $query ] ];
-		return $this->get_results_return;
+
+		if ( ! empty( $this->get_results_sequence ) ) {
+			return array_shift( $this->get_results_sequence );
+		}
+
+		// Auto-drain: return the configured results once, then empty.
+		// Simulates real DB behavior where claimed/processed rows
+		// are no longer returned by subsequent fetch_pending() calls.
+		$result                   = $this->get_results_return;
+		$this->get_results_return = [];
+
+		return $result;
 	}
 
 	/** @return int|false */
@@ -120,8 +141,9 @@ class WP_DB_Stub {
 		$this->get_var_return     = null;
 		$this->get_row_return     = null;
 		$this->get_col_return     = [];
-		$this->get_results_return = [];
-		$this->delete_return      = 1;
+		$this->get_results_return   = [];
+		$this->get_results_sequence = [];
+		$this->delete_return        = 1;
 		$this->query_return       = 1;
 		$this->insert_id          = 0;
 	}

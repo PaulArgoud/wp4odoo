@@ -262,26 +262,54 @@ abstract class Module_Base {
 				}
 				$this->logger->info( 'Updated Odoo record.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
 			} else {
-				// Dedup: search Odoo for an existing record before creating.
-				$dedup_domain = $this->get_dedup_domain( $entity_type, $odoo_values );
-				if ( ! empty( $dedup_domain ) ) {
-					$existing = $this->client()->search( $model, $dedup_domain, 0, 1 );
-					if ( ! empty( $existing ) ) {
-						$odoo_id = $existing[0];
-						$this->logger->info( 'Dedup: found existing Odoo record, switching to update.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
-						$this->client()->write( $model, [ $odoo_id ], $odoo_values );
-						$this->save_mapping( $entity_type, $wp_id, $odoo_id, $new_hash );
-						return Sync_Result::success( $odoo_id );
-					}
+				// Advisory lock prevents TOCTOU race: two concurrent workers
+				// both searching Odoo and finding nothing, then both creating.
+				// Same proven pattern as Partner_Service.
+				$lock_name = 'wp4odoo_push_' . md5( $this->id . ':' . $entity_type . ':' . $wp_id );
+				$locked    = $this->acquire_push_lock( $lock_name );
+
+				if ( ! $locked ) {
+					return Sync_Result::failure(
+						__( 'Push lock timeout — will retry.', 'wp4odoo' ),
+						Error_Type::Transient
+					);
 				}
 
-				$odoo_id = $this->client()->create( $model, $odoo_values );
-				$saved   = $this->save_mapping( $entity_type, $wp_id, $odoo_id, $new_hash );
-				if ( ! $saved ) {
-					$this->logger->error( 'Mapping save failed after Odoo create.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
-					return Sync_Result::failure( 'Mapping save failed after Odoo create.', Error_Type::Transient, $odoo_id );
+				try {
+					// Re-check mapping under lock (another process may have
+					// completed the create between our initial check and lock acquisition).
+					$this->entity_map()->invalidate_key( $this->id, $entity_type, $wp_id );
+					$existing_odoo_id = $this->get_mapping( $entity_type, $wp_id );
+					if ( $existing_odoo_id ) {
+						$this->client()->write( $model, [ $existing_odoo_id ], $odoo_values );
+						$this->save_mapping( $entity_type, $wp_id, $existing_odoo_id, $new_hash );
+						$this->logger->info( 'Dedup lock: found mapping after lock, switched to update.', compact( 'entity_type', 'wp_id' ) );
+						return Sync_Result::success( $existing_odoo_id );
+					}
+
+					// Dedup: search Odoo for an existing record before creating.
+					$dedup_domain = $this->get_dedup_domain( $entity_type, $odoo_values );
+					if ( ! empty( $dedup_domain ) ) {
+						$existing = $this->client()->search( $model, $dedup_domain, 0, 1 );
+						if ( ! empty( $existing ) ) {
+							$odoo_id = $existing[0];
+							$this->logger->info( 'Dedup: found existing Odoo record, switching to update.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
+							$this->client()->write( $model, [ $odoo_id ], $odoo_values );
+							$this->save_mapping( $entity_type, $wp_id, $odoo_id, $new_hash );
+							return Sync_Result::success( $odoo_id );
+						}
+					}
+
+					$odoo_id = $this->client()->create( $model, $odoo_values );
+					$saved   = $this->save_mapping( $entity_type, $wp_id, $odoo_id, $new_hash );
+					if ( ! $saved ) {
+						$this->logger->error( 'Mapping save failed after Odoo create.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
+						return Sync_Result::failure( 'Mapping save failed after Odoo create.', Error_Type::Transient, $odoo_id );
+					}
+					$this->logger->info( 'Created Odoo record.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
+				} finally {
+					$this->release_push_lock( $lock_name );
 				}
-				$this->logger->info( 'Created Odoo record.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
 			}
 
 			return Sync_Result::success( $odoo_id );
@@ -338,6 +366,41 @@ abstract class Module_Base {
 
 		// Default: treat unknown errors as transient for safety (allows retry).
 		return Error_Type::Transient;
+	}
+
+	/**
+	 * Acquire an advisory lock for push dedup protection.
+	 *
+	 * Prevents TOCTOU race in the search-before-create path of push_to_odoo().
+	 * Same proven pattern as Partner_Service::get_or_create().
+	 *
+	 * @param string $lock_name MySQL advisory lock name.
+	 * @return bool True if lock acquired within 5 seconds.
+	 */
+	private function acquire_push_lock( string $lock_name ): bool {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$result = $wpdb->get_var(
+			$wpdb->prepare( 'SELECT GET_LOCK( %s, %d )', $lock_name, 5 )
+		);
+
+		return '1' === (string) $result;
+	}
+
+	/**
+	 * Release an advisory lock for push dedup protection.
+	 *
+	 * @param string $lock_name MySQL advisory lock name.
+	 * @return void
+	 */
+	private function release_push_lock( string $lock_name ): void {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->get_var(
+			$wpdb->prepare( 'SELECT RELEASE_LOCK( %s )', $lock_name )
+		);
 	}
 
 	/**
@@ -915,13 +978,17 @@ abstract class Module_Base {
 	 * @return void
 	 */
 	protected function poll_entity_changes( string $entity_type, array $items, string $id_field = 'id' ): void {
-		$existing = $this->entity_map()->get_module_entity_mappings( $this->id, $entity_type );
+		$poll_start = current_time( 'mysql', true );
 
-		if ( count( $existing ) >= Entity_Map_Repository::POLL_LIMIT ) {
-			$this->logger->warning(
-				sprintf( 'Polling hit the %d-row safety limit for %s/%s. Some entities may be excluded from sync.', Entity_Map_Repository::POLL_LIMIT, $this->id, $entity_type )
-			);
+		// Extract WP IDs from items for targeted loading.
+		$wp_ids = [];
+		foreach ( $items as $item ) {
+			$wp_ids[] = (int) ( $item[ $id_field ] ?? 0 );
 		}
+
+		// Targeted loading: only fetch mappings for the current items' IDs
+		// instead of loading all module/entity_type rows (up to 50 000).
+		$existing = $this->entity_map()->get_mappings_for_wp_ids( $this->id, $entity_type, $wp_ids );
 
 		$seen_ids = [];
 
@@ -940,11 +1007,15 @@ abstract class Module_Base {
 			}
 		}
 
-		$seen_lookup = array_flip( $seen_ids );
-		foreach ( $existing as $wp_id => $map ) {
-			if ( ! isset( $seen_lookup[ $wp_id ] ) ) {
-				Queue_Manager::push( $this->id, $entity_type, 'delete', $wp_id, $map['odoo_id'] );
-			}
+		// Mark all seen items as polled for deletion detection.
+		$this->entity_map()->mark_polled( $this->id, $entity_type, $seen_ids, $poll_start );
+
+		// Detect deletions: mappings that were previously polled but NOT
+		// seen this cycle. Pre-migration rows (last_polled_at IS NULL) are
+		// excluded to avoid false positives during bootstrapping.
+		$stale = $this->entity_map()->get_stale_poll_mappings( $this->id, $entity_type, $poll_start );
+		foreach ( $stale as $wp_id => $map ) {
+			Queue_Manager::push( $this->id, $entity_type, 'delete', $wp_id, $map['odoo_id'] );
 		}
 	}
 

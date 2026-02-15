@@ -413,6 +413,132 @@ class Entity_Map_Repository {
 	}
 
 	/**
+	 * Batch-fetch entity mappings for a set of WordPress IDs.
+	 *
+	 * Returns wp_id-keyed array with odoo_id and sync_hash, similar to
+	 * get_module_entity_mappings() but filtered to specific WP IDs.
+	 * Processes IDs in chunks of BATCH_CHUNK_SIZE.
+	 *
+	 * Used by the optimized poll_entity_changes() to avoid loading all
+	 * entity_map rows into memory.
+	 *
+	 * @param string    $module      Module identifier.
+	 * @param string    $entity_type Entity type.
+	 * @param array<int> $wp_ids     WordPress IDs to look up.
+	 * @return array<int, array{odoo_id: int, sync_hash: string}>
+	 */
+	public function get_mappings_for_wp_ids( string $module, string $entity_type, array $wp_ids ): array {
+		if ( empty( $wp_ids ) ) {
+			return [];
+		}
+
+		global $wpdb;
+
+		$table  = $wpdb->prefix . 'wp4odoo_entity_map';
+		$map    = [];
+		$wp_ids = array_values( array_unique( array_map( 'intval', $wp_ids ) ) );
+
+		foreach ( array_chunk( $wp_ids, self::BATCH_CHUNK_SIZE ) as $chunk ) {
+			$placeholders = implode( ',', array_fill( 0, count( $chunk ), '%d' ) );
+			$prepare_args = array_merge( [ $module, $entity_type ], $chunk );
+
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table and $placeholders safe (prefix + array_fill).
+			$sql = "SELECT wp_id, odoo_id, sync_hash FROM {$table} WHERE module = %s AND entity_type = %s AND wp_id IN ({$placeholders})";
+
+			$rows = $wpdb->get_results(
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic placeholders for batch query.
+				$wpdb->prepare( $sql, $prepare_args )
+			);
+
+			if ( $rows ) {
+				foreach ( $rows as $row ) {
+					$map[ (int) $row->wp_id ] = [
+						'odoo_id'   => (int) $row->odoo_id,
+						'sync_hash' => $row->sync_hash ?? '',
+					];
+				}
+			}
+		}
+
+		return $map;
+	}
+
+	/**
+	 * Update last_polled_at timestamp for a batch of entity mappings.
+	 *
+	 * Called by poll_entity_changes() to mark items seen during the
+	 * current poll cycle. Processes IDs in chunks of BATCH_CHUNK_SIZE.
+	 *
+	 * @param string    $module      Module identifier.
+	 * @param string    $entity_type Entity type.
+	 * @param array<int> $wp_ids     WordPress IDs to mark as polled.
+	 * @param string    $timestamp   Current poll timestamp (GMT).
+	 * @return void
+	 */
+	public function mark_polled( string $module, string $entity_type, array $wp_ids, string $timestamp ): void {
+		if ( empty( $wp_ids ) ) {
+			return;
+		}
+
+		global $wpdb;
+
+		$table = $wpdb->prefix . 'wp4odoo_entity_map';
+
+		foreach ( array_chunk( $wp_ids, self::BATCH_CHUNK_SIZE ) as $chunk ) {
+			$placeholders = implode( ',', array_fill( 0, count( $chunk ), '%d' ) );
+			$prepare_args = array_merge( [ $timestamp, $module, $entity_type ], array_map( 'intval', $chunk ) );
+
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table and $placeholders safe (prefix + array_fill).
+			$sql = "UPDATE {$table} SET last_polled_at = %s WHERE module = %s AND entity_type = %s AND wp_id IN ({$placeholders})";
+
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Dynamic placeholders for batch update.
+			$wpdb->query( $wpdb->prepare( $sql, $prepare_args ) );
+		}
+	}
+
+	/**
+	 * Get entity mappings that were NOT seen in the current poll cycle.
+	 *
+	 * Returns wp_id-keyed array of mappings where last_polled_at is
+	 * older than the given timestamp. Used for deletion detection.
+	 *
+	 * Rows with last_polled_at IS NULL (pre-migration or never-polled)
+	 * are excluded to avoid false positives during bootstrapping.
+	 *
+	 * @param string $module      Module identifier.
+	 * @param string $entity_type Entity type.
+	 * @param string $before      Timestamp (GMT). Rows with last_polled_at < this are returned.
+	 * @return array<int, array{odoo_id: int}>
+	 */
+	public function get_stale_poll_mappings( string $module, string $entity_type, string $before ): array {
+		global $wpdb;
+
+		$table = $wpdb->prefix . 'wp4odoo_entity_map';
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT wp_id, odoo_id FROM {$table} WHERE module = %s AND entity_type = %s AND last_polled_at IS NOT NULL AND last_polled_at < %s LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$module,
+				$entity_type,
+				$before,
+				self::POLL_LIMIT
+			)
+		);
+
+		$map = [];
+		if ( $rows ) {
+			foreach ( $rows as $row ) {
+				$map[ (int) $row->wp_id ] = [
+					'odoo_id' => (int) $row->odoo_id,
+				];
+			}
+		}
+
+		return $map;
+	}
+
+	/**
 	 * Flush the per-request lookup cache.
 	 *
 	 * Useful for testing or after bulk operations.
@@ -421,6 +547,22 @@ class Entity_Map_Repository {
 	 */
 	public function flush_cache(): void {
 		$this->cache = [];
+	}
+
+	/**
+	 * Invalidate a single forward-lookup cache entry.
+	 *
+	 * Forces the next get_odoo_id() call for this key to hit the DB.
+	 * Used by push dedup lock to re-check mapping after acquiring the
+	 * advisory lock (another process may have created it in the interim).
+	 *
+	 * @param string $module      Module identifier.
+	 * @param string $entity_type Entity type.
+	 * @param int    $wp_id       WordPress ID.
+	 * @return void
+	 */
+	public function invalidate_key( string $module, string $entity_type, int $wp_id ): void {
+		unset( $this->cache[ "{$module}:{$entity_type}:wp:{$wp_id}" ] );
 	}
 
 	/**

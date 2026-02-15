@@ -115,6 +115,14 @@ class Sync_Engine {
 	private const MEMORY_THRESHOLD = 0.8;
 
 	/**
+	 * Maximum batch iterations per cron invocation.
+	 *
+	 * Safety cap to prevent runaway loops even if time/memory checks
+	 * malfunction. 20 iterations × default 50 batch = 1 000 jobs max.
+	 */
+	private const MAX_BATCH_ITERATIONS = 20;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param \Closure              $module_resolver Returns a Module_Base (or null) for a given module ID.
@@ -191,7 +199,7 @@ class Sync_Engine {
 		}
 
 		$processed = 0;
-		$jobs      = [];
+		$iteration = 0;
 
 		try {
 			// Early memory check: avoid loading the full batch into memory when
@@ -207,7 +215,6 @@ class Sync_Engine {
 
 			$sync_settings = $this->settings->get_sync_settings();
 			$batch         = (int) $sync_settings['batch_size'];
-			$now           = current_time( 'mysql', true );
 
 			// Recover any jobs left in 'processing' from a previous crash
 			// BEFORE fetching, so recovered jobs are eligible for this batch.
@@ -218,33 +225,27 @@ class Sync_Engine {
 				set_transient( 'wp4odoo_last_stale_recovery', time(), 120 );
 			}
 
-			$jobs       = null !== $module
-				? $this->queue_repo->fetch_pending_for_module( $module, $batch, $now )
-				: $this->queue_repo->fetch_pending( $batch, $now );
 			$start_time = microtime( true );
 
 			$this->batch_failures  = 0;
 			$this->batch_successes = 0;
 
-			// Batch-create optimization: group eligible creates by module+entity.
-			$batched_job_ids = [];
-			if ( ! $this->dry_run ) {
-				$processed += $this->process_batch_creates( $jobs, $batched_job_ids );
-			}
+			$iteration       = 0;
+			$touched_modules = [];
 
-			foreach ( $jobs as $job ) {
-				// Skip jobs already processed by batch creates.
-				if ( isset( $batched_job_ids[ (int) $job->id ] ) ) {
-					continue;
-				}
+			// Multi-batch loop: keep fetching batches until the queue is
+			// drained or a termination condition (time, memory, circuit
+			// breaker, iteration cap) is reached.
+			while ( $iteration < self::MAX_BATCH_ITERATIONS ) {
+				++$iteration;
 
 				if ( ( microtime( true ) - $start_time ) >= self::BATCH_TIME_LIMIT ) {
 					$this->logger->info(
-						'Batch time limit reached, deferring remaining jobs.',
+						'Multi-batch: time limit reached between batches.',
 						[
-							'elapsed'   => round( microtime( true ) - $start_time, 2 ),
-							'processed' => $processed,
-							'remaining' => count( $jobs ) - $processed - count( $batched_job_ids ),
+							'elapsed'    => round( microtime( true ) - $start_time, 2 ),
+							'processed'  => $processed,
+							'iterations' => $iteration - 1,
 						]
 					);
 					break;
@@ -252,56 +253,106 @@ class Sync_Engine {
 
 				if ( $this->is_memory_exhausted() ) {
 					$this->logger->warning(
-						'Memory threshold reached, deferring remaining jobs.',
-						[
-							'memory_usage_mb' => round( memory_get_usage( true ) / 1048576, 1 ),
-							'processed'       => $processed,
-							'remaining'       => count( $jobs ) - $processed,
-						]
+						'Multi-batch: memory threshold reached between batches.',
+						[ 'memory_usage_mb' => round( memory_get_usage( true ) / 1048576, 1 ) ]
 					);
 					break;
 				}
 
-				// Atomically claim the job. If another process (e.g. a concurrent
-				// process_module_queue) already claimed it, skip silently.
-				if ( ! $this->queue_repo->claim_job( (int) $job->id ) ) {
-					continue;
+				if ( ! $this->circuit_breaker->is_available() ) {
+					$this->logger->info( 'Multi-batch: circuit breaker opened mid-run.' );
+					break;
 				}
 
-				$this->logger->set_correlation_id( $job->correlation_id ?? null );
+				$now  = current_time( 'mysql', true );
+				$jobs = null !== $module
+					? $this->queue_repo->fetch_pending_for_module( $module, $batch, $now )
+					: $this->queue_repo->fetch_pending( $batch, $now );
 
-				try {
-					$result = $this->process_job( $job );
+				if ( empty( $jobs ) ) {
+					break; // Queue drained.
+				}
 
-					if ( $result->succeeded() ) {
-						$this->queue_repo->update_status(
-							(int) $job->id,
-							'completed',
+				// Track modules for translation flush.
+				foreach ( $jobs as $job ) {
+					$touched_modules[ $job->module ] = true;
+				}
+
+				// Batch-create optimization: group eligible creates by module+entity.
+				$batched_job_ids = [];
+				if ( ! $this->dry_run ) {
+					$processed += $this->process_batch_creates( $jobs, $batched_job_ids );
+				}
+
+				foreach ( $jobs as $job ) {
+					// Skip jobs already processed by batch creates.
+					if ( isset( $batched_job_ids[ (int) $job->id ] ) ) {
+						continue;
+					}
+
+					if ( ( microtime( true ) - $start_time ) >= self::BATCH_TIME_LIMIT ) {
+						$this->logger->info(
+							'Batch time limit reached, deferring remaining jobs.',
 							[
-								'processed_at' => current_time( 'mysql', true ),
+								'elapsed'   => round( microtime( true ) - $start_time, 2 ),
+								'processed' => $processed,
 							]
 						);
-						++$processed;
-						++$this->batch_successes;
-					} else {
-						$this->handle_failure( $job, $result->get_message(), $result->get_error_type(), $result->get_entity_id() );
-						++$this->batch_failures;
+						break 2; // Exit both foreach and while.
 					}
-				} catch ( \Throwable $e ) {
-					$this->handle_failure( $job, $e->getMessage() );
-					++$this->batch_failures;
 
-					// If memory is exhausted after the error, stop the batch
-					// to prevent cascading OOM failures on subsequent jobs.
 					if ( $this->is_memory_exhausted() ) {
 						$this->logger->warning(
-							'Memory threshold reached after job failure, stopping batch.',
-							[ 'job_id' => $job->id ]
+							'Memory threshold reached, deferring remaining jobs.',
+							[
+								'memory_usage_mb' => round( memory_get_usage( true ) / 1048576, 1 ),
+								'processed'       => $processed,
+							]
 						);
-						break;
+						break 2;
 					}
-				} finally {
-					$this->logger->set_correlation_id( null );
+
+					// Atomically claim the job. If another process (e.g. a concurrent
+					// process_module_queue) already claimed it, skip silently.
+					if ( ! $this->queue_repo->claim_job( (int) $job->id ) ) {
+						continue;
+					}
+
+					$this->logger->set_correlation_id( $job->correlation_id ?? null );
+
+					try {
+						$result = $this->process_job( $job );
+
+						if ( $result->succeeded() ) {
+							$this->queue_repo->update_status(
+								(int) $job->id,
+								'completed',
+								[
+									'processed_at' => current_time( 'mysql', true ),
+								]
+							);
+							++$processed;
+							++$this->batch_successes;
+						} else {
+							$this->handle_failure( $job, $result->get_message(), $result->get_error_type(), $result->get_entity_id() );
+							++$this->batch_failures;
+						}
+					} catch ( \Throwable $e ) {
+						$this->handle_failure( $job, $e->getMessage() );
+						++$this->batch_failures;
+
+						// If memory is exhausted after the error, stop the batch
+						// to prevent cascading OOM failures on subsequent jobs.
+						if ( $this->is_memory_exhausted() ) {
+							$this->logger->warning(
+								'Memory threshold reached after job failure, stopping batch.',
+								[ 'job_id' => $job->id ]
+							);
+							break 2;
+						}
+					} finally {
+						$this->logger->set_correlation_id( null );
+					}
 				}
 			}
 
@@ -318,8 +369,8 @@ class Sync_Engine {
 			 */
 			do_action( 'wp4odoo_batch_processed', $processed, $module );
 
-			// Flush accumulated pull translations for all modules touched in this batch.
-			$this->flush_module_translations( $jobs );
+			// Flush accumulated pull translations for all modules touched.
+			$this->flush_module_translations_by_ids( array_keys( $touched_modules ) );
 
 			$this->failure_notifier->check( $this->batch_successes, $this->batch_failures );
 
@@ -336,9 +387,9 @@ class Sync_Engine {
 			$this->logger->info(
 				'Queue processing completed.',
 				[
-					'processed' => $processed,
-					'total'     => count( $jobs ),
-					'module'    => $module,
+					'processed'  => $processed,
+					'iterations' => $iteration,
+					'module'     => $module,
 				]
 			);
 		}
@@ -421,15 +472,13 @@ class Sync_Engine {
 	/**
 	 * Flush pull translations for all modules touched during a batch.
 	 *
-	 * Collects unique module IDs from the jobs list, resolves each module,
-	 * and calls flush_pull_translations() if the module has buffered data.
+	 * Accepts an array of module IDs (accumulated across iterations of the
+	 * multi-batch loop) and calls flush_pull_translations() on each.
 	 *
-	 * @param array<int, object> $jobs Processed jobs.
+	 * @param array<int, string> $module_ids Module identifiers.
 	 * @return void
 	 */
-	private function flush_module_translations( array $jobs ): void {
-		$module_ids = array_unique( array_column( $jobs, 'module' ) );
-
+	private function flush_module_translations_by_ids( array $module_ids ): void {
 		foreach ( $module_ids as $module_id ) {
 			$module = ( $this->module_resolver )( $module_id );
 			if ( null !== $module ) {
