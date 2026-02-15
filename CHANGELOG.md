@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **`push_entity()` simplified** — Removed redundant `$module` parameter from `Module_Helpers::push_entity()`. All 29 callsites across 19 trait files now use `$this->id` automatically
 - **Circuit breaker constant public** — `Circuit_Breaker::OPT_CB_STATE` made public; `Settings_Page` health tab references the constant instead of a hardcoded string
+- **Form_Handler `extract_normalised()`** — Extracted shared field iteration pipeline into a generic `extract_normalised()` method. Formidable, Forminator, and WPForms extractors now delegate to it; Gravity Forms uses `empty_lead()` instead of inline init
 - **PHPStan level 6** — Raised static analysis from level 5 to level 6 (adds missing typehint enforcement). Global `missingType.iterableValue` suppression for WordPress API conformance
 - **Log module filter** — Expanded the log viewer module dropdown from ~20 hardcoded entries to all 33 sync modules plus 5 system modules, organized in `<optgroup>` sections
 - **Log level i18n** — Log level labels (Debug, Info, Warning, Error, Critical) in the sync settings tab are now translatable

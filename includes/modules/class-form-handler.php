@@ -77,18 +77,13 @@ class Form_Handler {
 	 * @return array Normalised lead data, or empty array if invalid.
 	 */
 	public function extract_from_gravity_forms( array $entry, array $form ): array {
-		$data = [
-			'name'        => '',
-			'email'       => '',
-			'phone'       => '',
-			'company'     => '',
-			'description' => '',
-			'source'      => sprintf(
+		$data = $this->empty_lead(
+			sprintf(
 				/* translators: %s: form title */
 				__( 'Gravity Forms: %s', 'wp4odoo' ),
 				$form['title'] ?? __( 'Unknown Form', 'wp4odoo' )
-			),
-		];
+			)
+		);
 
 		$fields = $form['fields'] ?? [];
 
@@ -133,32 +128,25 @@ class Form_Handler {
 	public function extract_from_wpforms( array $fields, array $form_data ): array {
 		$form_title = $form_data['settings']['form_title'] ?? __( 'Unknown Form', 'wp4odoo' );
 
-		$data = [
-			'name'        => '',
-			'email'       => '',
-			'phone'       => '',
-			'company'     => '',
-			'description' => '',
-			'source'      => sprintf(
+		// Normalise WPForms fields: 'name' key → 'label'.
+		$normalised = [];
+		foreach ( $fields as $field ) {
+			$normalised[] = [
+				'type'  => $field['type'] ?? '',
+				'label' => $field['name'] ?? '',
+				'value' => $field['value'] ?? '',
+			];
+		}
+
+		return $this->extract_normalised(
+			$normalised,
+			sprintf(
 				/* translators: %s: form title */
 				__( 'WPForms: %s', 'wp4odoo' ),
 				$form_title
 			),
-		];
-
-		foreach ( $fields as $field ) {
-			$type  = $field['type'] ?? '';
-			$value = trim( (string) ( $field['value'] ?? '' ) );
-			$label = $field['name'] ?? '';
-
-			if ( '' === $value ) {
-				continue;
-			}
-
-			$this->assign_field( $data, $type, $label, $value );
-		}
-
-		return $this->finalise( $data, $form_title );
+			$form_title
+		);
 	}
 
 	/**
@@ -249,27 +237,15 @@ class Form_Handler {
 	 * @return array Normalised lead data, or empty array if invalid.
 	 */
 	public function extract_from_formidable( array $fields, string $form_title ): array {
-		$data = $this->empty_lead(
+		return $this->extract_normalised(
+			$fields,
 			sprintf(
 				/* translators: %s: form title */
 				__( 'Formidable: %s', 'wp4odoo' ),
 				$form_title ?: __( 'Unknown Form', 'wp4odoo' )
-			)
+			),
+			$form_title
 		);
-
-		foreach ( $fields as $field ) {
-			$type  = $field['type'] ?? 'text';
-			$label = $field['label'] ?? '';
-			$value = trim( (string) ( $field['value'] ?? '' ) );
-
-			if ( '' === $value ) {
-				continue;
-			}
-
-			$this->assign_field( $data, $type, $label, $value );
-		}
-
-		return $this->finalise( $data, $form_title );
 	}
 
 	/**
@@ -341,13 +317,32 @@ class Form_Handler {
 	 * @return array Normalised lead data, or empty array if invalid.
 	 */
 	public function extract_from_forminator( array $fields, string $form_title ): array {
-		$data = $this->empty_lead(
+		return $this->extract_normalised(
+			$fields,
 			sprintf(
 				/* translators: %s: form title */
 				__( 'Forminator: %s', 'wp4odoo' ),
 				$form_title ?: __( 'Unknown Form', 'wp4odoo' )
-			)
+			),
+			$form_title
 		);
+	}
+
+	// ─── Generic extraction pipeline ────────────────────────
+
+	/**
+	 * Extract lead data from pre-normalised fields.
+	 *
+	 * Handles the standard iteration pattern for plugins that provide
+	 * fields as [type, label, value] arrays (Formidable, Forminator, WPForms).
+	 *
+	 * @param array  $fields     Normalised fields: [['type', 'label', 'value'], …].
+	 * @param string $source     Source label for the lead.
+	 * @param string $form_title Form title for finalise().
+	 * @return array Normalised lead data, or empty array if invalid.
+	 */
+	private function extract_normalised( array $fields, string $source, string $form_title ): array {
+		$data = $this->empty_lead( $source );
 
 		foreach ( $fields as $field ) {
 			$type  = $field['type'] ?? 'text';

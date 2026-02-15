@@ -343,7 +343,7 @@ WordPress For Odoo/
 │       ├── FailureNotifierTest.php      #   14 tests for Failure_Notifier
 │       ├── CPTHelperTest.php            #   11 tests for CPT_Helper
 │       ├── SalesModuleTest.php          #   23 tests for Sales_Module
-│       ├── FormHandlerTest.php         #   27 tests for Form_Handler
+│       ├── FormHandlerTest.php         #   66 tests for Form_Handler
 │       ├── FormsModuleTest.php         #   16 tests for Forms_Module
 │       ├── ExchangeRateServiceTest.php  #   14 tests for Exchange_Rate_Service
 │       ├── EDDModuleTest.php            #   22 tests for EDD_Module
@@ -1169,7 +1169,7 @@ All user inputs are sanitized with:
 
 ### Forms — COMPLETE
 
-**Files:** `class-forms-module.php` (push sync coordinator, hook callbacks inline), `class-form-handler.php` (field extraction from GF/WPForms with auto-detection)
+**Files:** `class-forms-module.php` (push sync coordinator, hook callbacks inline), `class-form-handler.php` (field extraction from 7 form plugins via `extract_normalised()` pipeline with auto-detection)
 
 **Odoo models:** `crm.lead`
 
