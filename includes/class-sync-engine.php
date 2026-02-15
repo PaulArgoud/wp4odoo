@@ -236,7 +236,7 @@ class Sync_Engine {
 						[
 							'elapsed'   => round( microtime( true ) - $start_time, 2 ),
 							'processed' => $processed,
-							'remaining' => count( $jobs ) - $processed,
+							'remaining' => count( $jobs ) - $processed - count( $batched_job_ids ),
 						]
 					);
 					break;
@@ -311,6 +311,7 @@ class Sync_Engine {
 			}
 		} finally {
 			$this->release_lock( $lock_name );
+			$this->queue_repo->invalidate_stats_cache();
 		}
 
 		if ( $processed > 0 ) {
@@ -480,6 +481,12 @@ class Sync_Engine {
 				$payload = [];
 				if ( ! empty( $job->payload ) ) {
 					$decoded = json_decode( $job->payload, true );
+					if ( null === $decoded && JSON_ERROR_NONE !== json_last_error() ) {
+						$this->handle_failure( $job, sprintf( 'Invalid JSON payload in batch job #%d.', (int) $job->id ), Error_Type::Permanent );
+						++$this->batch_failures;
+						$batched_job_ids[ (int) $job->id ] = true;
+						continue;
+					}
 					$payload = is_array( $decoded ) ? $decoded : [];
 				}
 

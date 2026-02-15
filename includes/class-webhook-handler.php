@@ -39,7 +39,7 @@ class Webhook_Handler {
 	 * Identical webhook payloads received within this window
 	 * are treated as duplicates and not re-enqueued.
 	 */
-	private const DEDUP_WINDOW = 300;
+	private const DEDUP_WINDOW = 1800;
 
 	/**
 	 * Logger instance.

@@ -309,24 +309,21 @@ class SyncQueueRepositoryTest extends TestCase {
 	// ─── get_stats() ─────────────────────────────────────
 
 	public function test_get_stats_includes_last_completed_at_with_timestamp(): void {
-		// get_results returns pending/processing/failed rows (new query filters by active statuses).
+		// Single consolidated query returns all statuses with last_completed.
 		$this->wpdb->get_results_return = [
-			(object) [ 'status' => 'pending', 'count' => '2' ],
+			(object) [ 'status' => 'pending', 'count' => '2', 'last_completed' => null ],
+			(object) [ 'status' => 'completed', 'count' => '3', 'last_completed' => '2024-01-15 10:30:00' ],
 		];
-		// get_var called twice: completed COUNT then MAX(processed_at).
-		// Stub returns the same value for both — use a numeric string.
-		$this->wpdb->get_var_return = '3';
 
 		$stats = $this->repo->get_stats();
 
 		$this->assertSame( 3, $stats['completed'] );
 		$this->assertSame( 5, $stats['total'] ); // 2 pending + 3 completed.
-		$this->assertArrayHasKey( 'last_completed_at', $stats );
+		$this->assertSame( '2024-01-15 10:30:00', $stats['last_completed_at'] );
 	}
 
 	public function test_get_stats_returns_empty_last_completed_at_when_no_completed(): void {
 		$this->wpdb->get_results_return = [];
-		$this->wpdb->get_var_return     = null;
 
 		$stats = $this->repo->get_stats();
 

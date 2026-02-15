@@ -20,11 +20,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<div class="alignleft actions">
 		<select id="wp4odoo-log-level">
 			<option value=""><?php esc_html_e( 'All levels', 'wp4odoo' ); ?></option>
-			<option value="debug">Debug</option>
-			<option value="info">Info</option>
-			<option value="warning">Warning</option>
-			<option value="error">Error</option>
-			<option value="critical">Critical</option>
+			<option value="debug"><?php esc_html_e( 'Debug', 'wp4odoo' ); ?></option>
+			<option value="info"><?php esc_html_e( 'Info', 'wp4odoo' ); ?></option>
+			<option value="warning"><?php esc_html_e( 'Warning', 'wp4odoo' ); ?></option>
+			<option value="error"><?php esc_html_e( 'Error', 'wp4odoo' ); ?></option>
+			<option value="critical"><?php esc_html_e( 'Critical', 'wp4odoo' ); ?></option>
 		</select>
 
 		<select id="wp4odoo-log-module">

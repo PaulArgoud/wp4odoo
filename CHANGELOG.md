@@ -18,6 +18,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`LMS_Module_Base` abstract class** — Converted `LMS_Helpers` trait to `LMS_Module_Base` abstract class extending `Module_Base`, aligning with `Membership_Module_Base`, `Booking_Module_Base`, etc. LearnDash and LifterLMS modules now extend this intermediate base class instead of using a trait
 - **CLI `match` expressions** — Converted `queue()` and `module()` subcommand dispatch from `switch` to PHP 8.0 `match` expressions in `CLI`
 - **Handler tests** — 9 handler test classes refactored to extend `Module_Test_Case`, removing ~100 lines of duplicated `$wpdb` stub initialization and global store resets. 8 new tests: 4 for `push_entity()`, 2 for `Booking_Handler_Base`, 2 for `LMS_Module_Base`
+- **Queue stats consolidation** — `Sync_Queue_Repository::get_stats()` merged 3 separate SQL queries (pending count, failed count, last completed timestamp) into a single `GROUP BY status` query. Cache invalidation moved from per-job `update_status()` to a single `invalidate_stats_cache()` call at end of batch processing in `Sync_Engine`, eliminating transient thrashing during large batches
+- **Webhook dedup window** — `Webhook_Handler::DEDUP_WINDOW` increased from 300 s (5 min) to 1800 s (30 min) to prevent duplicate processing of retried Odoo webhooks
+- **i18n hardcoded labels** — Wrapped remaining hardcoded UI strings with translation functions: log level labels in `tab-logs.php`, direction labels (`WP → Odoo` / `Odoo → WP`) in `tab-queue.php`, `class-admin.php`, and `admin.js`
+
+### Fixed
+- **Batch creates JSON decode** — Added `json_last_error()` validation in `Sync_Engine::process_batch_creates()` for individual job payloads (matching the existing check in single-job processing). Invalid JSON now correctly marks the job as `Error_Type::Permanent` instead of silently skipping
+- **Remaining counter** — `Sync_Engine` remaining jobs counter now subtracts both individually processed and batch-grouped job counts, preventing inflated "remaining" log entries
+
+### Tests
+- **292 new unit tests** — 15 new test files covering previously untested base classes, handlers, and modules:
+  - `CRMModuleTest` (55 tests) — CRM_Module push/pull contacts and leads
+  - `MembershipModuleBaseTest` (15), `DualAccountingModuleBaseTest` (17), `BookingModuleBaseTest` (26), `HelpdeskModuleBaseTest` (28) — intermediate module base classes
+  - `MembershipHandlerBaseTest` (2), `DonationHandlerBaseTest` (10), `HelpdeskHandlerBaseTest` (14), `LMSHandlerBaseTest` (12) — handler base classes
+  - `CrowdfundingHandlerTest` (13), `EcwidHandlerTest` (14), `LearnDashHandlerTest` (33), `ShopWPHandlerTest` (8), `SproutInvoicesHandlerTest` (37), `WPInvoiceHandlerTest` (18) — individual handlers
 
 ## [3.1.0] - 2026-02-15
 

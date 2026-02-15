@@ -15,8 +15,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $direction_labels = [
-	'wp_to_odoo' => 'WP → Odoo',
-	'odoo_to_wp' => 'Odoo → WP',
+	'wp_to_odoo' => __( 'WP → Odoo', 'wp4odoo' ),
+	'odoo_to_wp' => __( 'Odoo → WP', 'wp4odoo' ),
 ];
 
 $status_labels = [

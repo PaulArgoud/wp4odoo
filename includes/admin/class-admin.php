@@ -120,6 +120,8 @@ class Admin {
 					'detectingLanguages' => __( 'Detecting languages...', 'wp4odoo' ),
 					'defaultLang'        => __( 'default', 'wp4odoo' ),
 					'confirmBackup'      => __( 'Have you backed up your WordPress and Odoo databases?', 'wp4odoo' ),
+					'dirWpToOdoo'        => __( 'WP → Odoo', 'wp4odoo' ),
+					'dirOdooToWp'        => __( 'Odoo → WP', 'wp4odoo' ),
 				],
 			]
 		);

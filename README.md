@@ -93,7 +93,7 @@ Each Odoo domain is encapsulated in an independent module extending `Module_Base
 | Module                           | Sync | Odoo Apps | Free⁴ | Key Features                                                                 |
 |----------------------------------|:----:|-----------|:-----:|------------------------------------------------------------------------------|
 | **ACF (Advanced Custom Fields)** |  ↔️  | —         |  —    | Maps ACF custom fields ↔ Odoo `x_*` fields via filters, 9 type conversions   |
-| **WP All Import**                |  ➡️  | —         |  —    | Intercepts CSV/XML imports, routes to sync queue (18 post types), filterable  |
+| **WP All Import**                |  ➡️  | —         |  —    | Intercepts CSV/XML imports, routes to sync queue (18 post types), filterable |
 
 ### Donations & Payments
 
@@ -207,7 +207,7 @@ All synchronization goes through a persistent database queue — no Odoo API cal
 
 - API keys encrypted at rest (libsodium with OpenSSL fallback)
 - Admin AJAX handlers protected by nonce + `manage_options` capability
-- Webhooks authenticated via `X-Odoo-Token` header + per-IP rate limiting (100 req/min)
+- Webhooks authenticated via `X-Odoo-Token` header + per-IP rate limiting (20 req/min)
 - All inputs sanitized (`sanitize_text_field`, `esc_url_raw`, `absint`)
 - `index.php` in every subdirectory to prevent directory listing
 

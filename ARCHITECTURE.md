@@ -261,7 +261,7 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # 2649 unit tests (4039 assertions) + 26 integration tests (wp-env)
+├── tests/                             # 2941 unit tests (4540 assertions) + 26 integration tests (wp-env)
 │   ├── bootstrap.php                 #   Unit test bootstrap: constants, stub loading, plugin class requires
 │   ├── bootstrap-integration.php     #   Integration test bootstrap: loads WP test framework (wp-env)
 │   ├── stubs/
@@ -408,7 +408,7 @@ WordPress For Odoo/
 │       ├── OdooModelTest.php            # Tests for Odoo_Model enum
 │       ├── CircuitBreakerTest.php       # Tests for Circuit_Breaker
 │       ├── ModuleRegistryTest.php       # Tests for Module_Registry
-│       ├── ModuleBaseHelpersTest.php    # Tests for should_sync(), poll_entity_changes()
+│       ├── ModuleBaseHelpersTest.php    #   18 tests for should_sync(), poll_entity_changes(), push_entity()
 │       ├── SafeCallbackTest.php         # Tests for safe_callback() graceful degradation
 │       ├── VersionBoundsTest.php        # Tests for PLUGIN_MIN_VERSION / PLUGIN_TESTED_UP_TO
 │       ├── DedupDomainTest.php          # Tests for get_dedup_domain() idempotent creates
@@ -419,7 +419,24 @@ WordPress For Odoo/
 │       ├── PricelistHandlerTest.php     # Tests for Pricelist_Handler
 │       ├── SchemaCacheTest.php          # Tests for Schema_Cache
 │       ├── ReconcilerTest.php           # Tests for Reconciler
-│       └── ShipmentHandlerTest.php      # Tests for Shipment_Handler
+│       ├── ShipmentHandlerTest.php      # Tests for Shipment_Handler
+│       ├── CRMModuleTest.php           #   55 tests for CRM_Module
+│       ├── BookingHandlerBaseTest.php  #   2 tests for Booking_Handler_Base
+│       ├── LMSModuleBaseTest.php       #   3 tests for LMS_Module_Base
+│       ├── MembershipHandlerBaseTest.php #  2 tests for Membership_Handler_Base
+│       ├── DonationHandlerBaseTest.php #   10 tests for Donation_Handler_Base
+│       ├── HelpdeskHandlerBaseTest.php #   14 tests for Helpdesk_Handler_Base
+│       ├── LMSHandlerBaseTest.php      #   12 tests for LMS_Handler_Base
+│       ├── MembershipModuleBaseTest.php #  15 tests for Membership_Module_Base
+│       ├── DualAccountingModuleBaseTest.php # 17 tests for Dual_Accounting_Module_Base
+│       ├── BookingModuleBaseTest.php   #   26 tests for Booking_Module_Base
+│       ├── HelpdeskModuleBaseTest.php  #   28 tests for Helpdesk_Module_Base
+│       ├── CrowdfundingHandlerTest.php #   13 tests for Crowdfunding_Handler
+│       ├── EcwidHandlerTest.php        #   14 tests for Ecwid_Handler
+│       ├── LearnDashHandlerTest.php    #   33 tests for LearnDash_Handler
+│       ├── ShopWPHandlerTest.php       #   8 tests for ShopWP_Handler
+│       ├── SproutInvoicesHandlerTest.php # 37 tests for Sprout_Invoices_Handler
+│       └── WPInvoiceHandlerTest.php    #   18 tests for WP_Invoice_Handler
 │
 ├── uninstall.php                      # Cleanup on plugin uninstall
 │

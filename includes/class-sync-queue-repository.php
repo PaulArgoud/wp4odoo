@@ -187,8 +187,9 @@ class Sync_Queue_Repository {
 
 		$table = $this->table();
 
-		// Count only active statuses (pending + processing) individually, plus recent failed.
-		$rows = $wpdb->get_results( "SELECT status, COUNT(*) as count FROM {$table} WHERE status IN ('pending', 'processing', 'failed') GROUP BY status" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+		// Single query: count per status + last completed timestamp.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+		$rows = $wpdb->get_results( "SELECT status, COUNT(*) as count, MAX( CASE WHEN status = 'completed' THEN processed_at END ) as last_completed FROM {$table} GROUP BY status" );
 
 		$stats = [
 			'pending'    => 0,
@@ -198,23 +199,18 @@ class Sync_Queue_Repository {
 			'total'      => 0,
 		];
 
+		$last_completed = '';
 		foreach ( $rows as $row ) {
 			if ( isset( $stats[ $row->status ] ) ) {
 				$stats[ $row->status ] = (int) $row->count;
 			}
 			$stats['total'] += (int) $row->count;
+			if ( ! empty( $row->last_completed ) ) {
+				$last_completed = $row->last_completed;
+			}
 		}
 
-		// Completed count (separate, uses idx_status_attempts index).
-		$stats['completed'] = (int) $wpdb->get_var(
-			"SELECT COUNT(*) FROM {$table} WHERE status = 'completed'" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
-		);
-		$stats['total']    += $stats['completed'];
-
-		// Last completed sync timestamp.
-		$stats['last_completed_at'] = $wpdb->get_var(
-			"SELECT MAX(processed_at) FROM {$table} WHERE status = 'completed'" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
-		) ?? '';
+		$stats['last_completed_at'] = $last_completed;
 
 		set_transient( 'wp4odoo_queue_stats', $stats, 300 );
 
@@ -492,8 +488,17 @@ class Sync_Queue_Repository {
 		$data['status'] = $status;
 
 		$wpdb->update( $this->table(), $data, [ 'id' => $job_id ] );
+	}
 
-		// Invalidate cached stats so dashboards reflect the change immediately.
+	/**
+	 * Invalidate cached queue stats.
+	 *
+	 * Called once after a full batch completes rather than per-job,
+	 * avoiding transient thrashing during high-throughput processing.
+	 *
+	 * @return void
+	 */
+	public function invalidate_stats_cache(): void {
 		delete_transient( 'wp4odoo_queue_stats' );
 	}
 }

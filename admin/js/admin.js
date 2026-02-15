@@ -473,7 +473,7 @@
 					return;
 				}
 
-				var dirLabels = { wp_to_odoo: 'WP \u2192 Odoo', odoo_to_wp: 'Odoo \u2192 WP' };
+				var dirLabels = { wp_to_odoo: wp4odooAdmin.i18n.dirWpToOdoo || 'WP \u2192 Odoo', odoo_to_wp: wp4odooAdmin.i18n.dirOdooToWp || 'Odoo \u2192 WP' };
 				var statusLabels = {
 					pending:    wp4odooAdmin.i18n.statusPending    || 'Pending',
 					processing: wp4odooAdmin.i18n.statusProcessing || 'Processing',
