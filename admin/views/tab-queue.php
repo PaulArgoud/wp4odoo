@@ -85,6 +85,7 @@ $status_labels = [
 			<th><?php esc_html_e( 'Action', 'wp4odoo' ); ?></th>
 			<th><?php esc_html_e( 'Status', 'wp4odoo' ); ?></th>
 			<th><?php esc_html_e( 'Attempts', 'wp4odoo' ); ?></th>
+			<th><?php esc_html_e( 'Scheduled', 'wp4odoo' ); ?></th>
 			<th><?php esc_html_e( 'Created at', 'wp4odoo' ); ?></th>
 			<th><?php esc_html_e( 'Actions', 'wp4odoo' ); ?></th>
 		</tr>
@@ -92,7 +93,7 @@ $status_labels = [
 	<tbody id="wp4odoo-queue-tbody">
 		<?php if ( empty( $jobs['items'] ) ) : ?>
 			<tr>
-				<td colspan="9"><?php esc_html_e( 'No jobs in the queue.', 'wp4odoo' ); ?></td>
+				<td colspan="10"><?php esc_html_e( 'No jobs in the queue.', 'wp4odoo' ); ?></td>
 			</tr>
 		<?php else : ?>
 			<?php foreach ( $jobs['items'] as $job ) : ?>
@@ -120,6 +121,24 @@ $status_labels = [
 					</td>
 					<td>
 						<?php echo esc_html( $job->attempts . '/' . $job->max_attempts ); ?>
+					</td>
+					<td>
+						<?php
+						$scheduled = $job->scheduled_at ?? '';
+						if ( $scheduled && in_array( $job->status, [ 'pending', 'processing' ], true ) ) {
+							$sched_ts = strtotime( $scheduled );
+							$now_ts   = time();
+							if ( $sched_ts && $sched_ts > $now_ts ) {
+								echo esc_html( human_time_diff( $now_ts, $sched_ts ) );
+							} else {
+								echo esc_html__( 'Now', 'wp4odoo' );
+							}
+						} elseif ( 'completed' === $job->status ) {
+							echo '—';
+						} else {
+							echo '—';
+						}
+						?>
 					</td>
 					<td><?php echo esc_html( $job->created_at ); ?></td>
 					<td>

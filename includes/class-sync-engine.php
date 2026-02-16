@@ -481,7 +481,9 @@ class Sync_Engine {
 			$this->logger->set_correlation_id( $job->correlation_id ?? null );
 
 			try {
-				$result = $this->process_job( $job );
+				$job_start = microtime( true );
+				$result    = $this->process_job( $job );
+				$elapsed   = (int) round( ( microtime( true ) - $job_start ) * 1000 );
 
 				if ( $result->succeeded() ) {
 					$this->queue_repo->update_status(
@@ -497,6 +499,20 @@ class Sync_Engine {
 					$this->handle_failure( $job, $result->get_message(), $result->get_error_type(), $result->get_entity_id() );
 					++$this->batch_failures;
 				}
+
+				/**
+				 * Fires after a single sync job is processed.
+				 *
+				 * Useful for external monitoring (New Relic, Query Monitor, custom dashboards).
+				 *
+				 * @since 3.3.0
+				 *
+				 * @param string      $module     Module identifier (e.g. 'woocommerce').
+				 * @param int         $elapsed_ms Processing time in milliseconds.
+				 * @param Sync_Result $result     Job result (success/failure).
+				 * @param object      $job        Raw queue job row.
+				 */
+				do_action( 'wp4odoo_job_processed', $job->module, $elapsed, $result, $job );
 			} catch ( \Throwable $e ) {
 				$this->handle_failure( $job, $e->getMessage() );
 				++$this->batch_failures;

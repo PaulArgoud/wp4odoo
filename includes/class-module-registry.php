@@ -202,6 +202,24 @@ class Module_Registry {
 			$this->version_warnings[ $id ] = $dep['notices'];
 		}
 
+		// Required modules check: skip boot if a required module is not booted.
+		$required = $module->get_required_modules();
+		if ( ! empty( $required ) ) {
+			$missing = array_diff( $required, $this->booted );
+			if ( ! empty( $missing ) ) {
+				$this->version_warnings[ $id ][] = [
+					'type'    => 'warning',
+					'message' => sprintf(
+						/* translators: 1: module name, 2: comma-separated list of required module IDs */
+						__( '%1$s requires the following modules to be active: %2$s.', 'wp4odoo' ),
+						$module->get_name(),
+						implode( ', ', $missing )
+					),
+				];
+				return;
+			}
+		}
+
 		// Exclusive group check: skip boot if a higher-priority module is already booted.
 		$group = $module->get_exclusive_group();
 		if ( '' !== $group && $this->has_booted_in_group( $group, $module->get_exclusive_priority() ) ) {

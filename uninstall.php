@@ -46,5 +46,6 @@ $wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LI
 
 // Clear scheduled cron events.
 wp_clear_scheduled_hook( 'wp4odoo_scheduled_sync' );
+wp_clear_scheduled_hook( 'wp4odoo_log_cleanup' );
 wp_clear_scheduled_hook( 'wp4odoo_bookly_poll' );
 wp_clear_scheduled_hook( 'wp4odoo_ecwid_poll' );

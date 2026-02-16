@@ -10,6 +10,7 @@ use WP4Odoo\Modules\Sales_Module;
 use WP4Odoo\Modules\Memberships_Module;
 use WP4Odoo\Modules\MemberPress_Module;
 use WP4Odoo\Modules\CRM_Module;
+use WP4Odoo\Modules\WC_Subscriptions_Module;
 use PHPUnit\Framework\TestCase;
 
 class ModuleRegistryTest extends TestCase {
@@ -49,6 +50,9 @@ class ModuleRegistryTest extends TestCase {
 	}
 	private function make_memberpress(): MemberPress_Module {
 		return new MemberPress_Module( wp4odoo_test_client_provider(), wp4odoo_test_entity_map(), wp4odoo_test_settings() );
+	}
+	private function make_wc_subscriptions(): WC_Subscriptions_Module {
+		return new WC_Subscriptions_Module( wp4odoo_test_client_provider(), wp4odoo_test_entity_map(), wp4odoo_test_settings() );
 	}
 
 	// ─── Registration ──────────────────────────────────────
@@ -140,8 +144,10 @@ class ModuleRegistryTest extends TestCase {
 	}
 
 	public function test_get_active_in_group_with_memberships(): void {
+		$GLOBALS['_wp_options']['wp4odoo_module_woocommerce_enabled'] = true;
 		$GLOBALS['_wp_options']['wp4odoo_module_memberships_enabled'] = true;
 
+		$this->registry->register( 'woocommerce', $this->make_wc() );
 		$this->registry->register( 'memberships', $this->make_memberships() );
 		$this->assertSame( 'memberships', $this->registry->get_active_in_group( 'memberships' ) );
 	}
@@ -243,5 +249,50 @@ class ModuleRegistryTest extends TestCase {
 		$this->assertNotEmpty( $all );
 		$this->assertArrayHasKey( 'crm', $all );
 		$this->assertArrayHasKey( 'sales', $all );
+	}
+
+	// ─── Required Modules ─────────────────────────────────
+
+	public function test_required_module_blocks_boot_when_missing(): void {
+		// Enable WC Subscriptions but NOT WooCommerce.
+		$GLOBALS['_wp_options']['wp4odoo_module_wc_subscriptions_enabled'] = true;
+
+		$this->registry->register( 'wc_subscriptions', $this->make_wc_subscriptions() );
+
+		// Module is registered but not booted (0 booted).
+		$this->assertNotNull( $this->registry->get( 'wc_subscriptions' ) );
+		$this->assertSame( 0, $this->registry->get_booted_count() );
+	}
+
+	public function test_required_module_generates_warning_when_missing(): void {
+		$GLOBALS['_wp_options']['wp4odoo_module_wc_subscriptions_enabled'] = true;
+
+		$this->registry->register( 'wc_subscriptions', $this->make_wc_subscriptions() );
+
+		$warnings = $this->registry->get_version_warnings();
+		$this->assertArrayHasKey( 'wc_subscriptions', $warnings );
+		$this->assertStringContainsString( 'woocommerce', $warnings['wc_subscriptions'][0]['message'] );
+	}
+
+	public function test_required_module_allows_boot_when_present(): void {
+		$GLOBALS['_wp_options']['wp4odoo_module_woocommerce_enabled']      = true;
+		$GLOBALS['_wp_options']['wp4odoo_module_wc_subscriptions_enabled'] = true;
+
+		// Register WC first so it boots.
+		$this->registry->register( 'woocommerce', $this->make_wc() );
+		$this->registry->register( 'wc_subscriptions', $this->make_wc_subscriptions() );
+
+		// Both should be booted.
+		$this->assertSame( 2, $this->registry->get_booted_count() );
+	}
+
+	public function test_base_module_returns_empty_required_modules(): void {
+		$crm = $this->make_crm();
+		$this->assertSame( [], $crm->get_required_modules() );
+	}
+
+	public function test_wc_subscriptions_requires_woocommerce(): void {
+		$module = $this->make_wc_subscriptions();
+		$this->assertSame( [ 'woocommerce' ], $module->get_required_modules() );
 	}
 }

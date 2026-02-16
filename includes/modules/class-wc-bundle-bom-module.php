@@ -94,6 +94,13 @@ class WC_Bundle_BOM_Module extends Module_Base {
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	public function get_required_modules(): array {
+		return [ 'woocommerce' ];
+	}
+
+	/**
 	 * Boot the module: register WC Bundles/Composite hooks.
 	 *
 	 * @return void

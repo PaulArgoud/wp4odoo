@@ -5,7 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.2.5] - Unreleased
+## [3.3.0] - Unreleased
+
+### Added
+- **Queue observability hook** — New `wp4odoo_job_processed` action fires after each sync job with module ID, elapsed time (ms), `Sync_Result`, and raw job object. Enables external monitoring and performance dashboards
+- **Retry visibility** — Queue admin tab now shows a "Scheduled" column with human-readable countdown (e.g. "2 hours") for pending jobs with future `scheduled_at`, or "Now" for immediately-ready jobs
+- **Module dependency graph** — New `Module_Base::get_required_modules()` method declares inter-module dependencies. WC Subscriptions, WC Bookings, WC Bundle BOM, WC Points & Rewards, and WC Memberships now require the WooCommerce module to be active. `Module_Registry` enforces this at boot time and generates an admin warning if a dependency is missing
+
+### Fixed
+- **uninstall.php** — Added missing `wp4odoo_log_cleanup` cron event cleanup (previously only `wp4odoo_scheduled_sync` was cleared)
+
+## [3.2.5] - 2026-02-16
 
 ### Added
 - **FunnelKit module** — New funnel/sales pipeline module for FunnelKit (ex-WooFunnels) 3.0+. Syncs contacts → `crm.lead` (bidirectional) with stage progression, funnel steps → `crm.stage` (push-only). Configurable Odoo pipeline ID, filterable stage mapping via `wp4odoo_funnelkit_stage_map`

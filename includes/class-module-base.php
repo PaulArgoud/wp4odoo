@@ -1130,6 +1130,20 @@ abstract class Module_Base {
 	}
 
 	/**
+	 * Get modules that must be booted before this one can boot.
+	 *
+	 * Override in subclasses to declare inter-module dependencies.
+	 * For example, WC Subscriptions requires the WooCommerce module.
+	 *
+	 * @since 3.3.0
+	 *
+	 * @return string[] Array of module IDs (e.g. ['woocommerce']).
+	 */
+	public function get_required_modules(): array {
+		return [];
+	}
+
+	/**
 	 * Get the exclusive group name.
 	 *
 	 * @return string Group name, or empty string if no exclusivity.
