@@ -91,8 +91,8 @@ class SyncQueueRepositoryTest extends WP4Odoo_TestCase {
 		$jobs = $this->repo->fetch_pending( 10, $now );
 
 		$this->assertCount( 2, $jobs );
-		$this->assertSame( '2', $jobs[0]->priority );
-		$this->assertSame( '8', $jobs[1]->priority );
+		$this->assertSame( 2, $jobs[0]->priority );
+		$this->assertSame( 8, $jobs[1]->priority );
 	}
 
 	public function test_fetch_pending_excludes_future_scheduled_jobs(): void {
