@@ -89,12 +89,12 @@ class ModuleRegistryTest extends TestCase {
 
 	// ─── Exclusive Group ──────────────────────────────────
 
-	public function test_exclusive_group_blocks_lower_priority(): void {
+	public function test_exclusive_group_blocks_second_module(): void {
 		// Enable both WC and Sales.
 		$GLOBALS['_wp_options']['wp4odoo_module_woocommerce_enabled'] = true;
 		$GLOBALS['_wp_options']['wp4odoo_module_sales_enabled'] = true;
 
-		// Register WC first (priority 30), then Sales (priority 10).
+		// Register WC first, then Sales. First-registered wins.
 		$this->registry->register( 'woocommerce', $this->make_wc() );
 		$this->registry->register( 'sales', $this->make_sales() );
 
@@ -102,14 +102,28 @@ class ModuleRegistryTest extends TestCase {
 		$this->assertSame( 'woocommerce', $this->registry->get_active_in_group( 'ecommerce' ) );
 	}
 
-	public function test_exclusive_group_allows_higher_priority_only(): void {
+	public function test_exclusive_group_first_registered_wins(): void {
 		$GLOBALS['_wp_options']['wp4odoo_module_edd_enabled'] = true;
 		$GLOBALS['_wp_options']['wp4odoo_module_sales_enabled'] = true;
 
+		// EDD registered first — it wins regardless of priority values.
 		$this->registry->register( 'edd', $this->make_edd() );
 		$this->registry->register( 'sales', $this->make_sales() );
 
 		$this->assertSame( 'edd', $this->registry->get_active_in_group( 'ecommerce' ) );
+	}
+
+	public function test_exclusive_group_blocks_regardless_of_priority(): void {
+		// Sales has lower priority (10) than WC (30), but if Sales registers first it wins.
+		$GLOBALS['_wp_options']['wp4odoo_module_sales_enabled'] = true;
+		$GLOBALS['_wp_options']['wp4odoo_module_woocommerce_enabled'] = true;
+
+		$this->registry->register( 'sales', $this->make_sales() );
+		$this->registry->register( 'woocommerce', $this->make_wc() );
+
+		// Sales booted first, WC should be blocked even though it has higher priority.
+		$this->assertSame( 'sales', $this->registry->get_active_in_group( 'ecommerce' ) );
+		$this->assertSame( 1, $this->registry->get_booted_count() );
 	}
 
 	public function test_exclusive_group_allows_different_groups(): void {

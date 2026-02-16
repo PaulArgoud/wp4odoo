@@ -26,6 +26,14 @@ class Logger {
 	private const MAX_CONTEXT_BYTES = 4096;
 
 	/**
+	 * Number of rows to delete per iteration during cleanup.
+	 *
+	 * Prevents long-running table locks on large sites by chunking
+	 * the DELETE into bounded batches.
+	 */
+	private const CLEANUP_CHUNK_SIZE = 10000;
+
+	/**
 	 * Log levels in ascending severity order.
 	 *
 	 * @var array<string, int>
@@ -235,9 +243,20 @@ class Logger {
 		$table  = $wpdb->prefix . 'wp4odoo_logs';
 		$cutoff = gmdate( 'Y-m-d H:i:s', time() - ( $retention * DAY_IN_SECONDS ) );
 
-		return (int) $wpdb->query(
-			$wpdb->prepare( "DELETE FROM {$table} WHERE created_at < %s", $cutoff ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
-		);
+		// Chunk the DELETE to avoid long-running table locks on large sites.
+		$total_deleted = 0;
+		do {
+			$deleted        = (int) $wpdb->query(
+				$wpdb->prepare(
+					"DELETE FROM {$table} WHERE created_at < %s LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+					$cutoff,
+					self::CLEANUP_CHUNK_SIZE
+				)
+			);
+			$total_deleted += $deleted;
+		} while ( $deleted > 0 );
+
+		return $total_deleted;
 	}
 
 	/**

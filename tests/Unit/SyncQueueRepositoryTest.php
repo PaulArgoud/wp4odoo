@@ -355,7 +355,7 @@ class SyncQueueRepositoryTest extends TestCase {
 		$jobs = $this->repo->fetch_pending( 50, '2025-06-15 12:00:00' );
 
 		$this->assertCount( 2, $jobs );
-		$this->assertSame( '1', $jobs[0]->id );
+		$this->assertSame( 1, $jobs[0]->id );
 	}
 
 	public function test_fetch_pending_returns_empty_when_no_jobs(): void {
@@ -405,7 +405,8 @@ class SyncQueueRepositoryTest extends TestCase {
 	// ─── cleanup() ────────────────────────────────────────
 
 	public function test_cleanup_deletes_old_jobs(): void {
-		$this->wpdb->query_return = 5;
+		// Simulate one chunk of 5 rows, then 0 to stop the loop.
+		$this->wpdb->query_return_sequence = [ 5, 0 ];
 
 		$result = $this->repo->cleanup( 7 );
 
@@ -415,7 +416,7 @@ class SyncQueueRepositoryTest extends TestCase {
 	}
 
 	public function test_cleanup_returns_zero_when_nothing_deleted(): void {
-		$this->wpdb->query_return = 0;
+		$this->wpdb->query_return_sequence = [ 0 ];
 
 		$result = $this->repo->cleanup( 30 );
 
@@ -423,13 +424,47 @@ class SyncQueueRepositoryTest extends TestCase {
 	}
 
 	public function test_cleanup_uses_prepare_with_status_filter(): void {
-		$this->wpdb->query_return = 0;
+		$this->wpdb->query_return_sequence = [ 0 ];
 
 		$this->repo->cleanup( 7 );
 
 		$prepare = $this->get_calls( 'prepare' );
 		$this->assertNotEmpty( $prepare );
 		$this->assertStringContainsString( "IN ('completed', 'failed')", $prepare[0]['args'][0] );
+	}
+
+	public function test_cleanup_uses_limit_in_query(): void {
+		$this->wpdb->query_return_sequence = [ 0 ];
+
+		$this->repo->cleanup( 7 );
+
+		$prepare = $this->get_calls( 'prepare' );
+		$this->assertNotEmpty( $prepare );
+		$this->assertStringContainsString( 'LIMIT', $prepare[0]['args'][0] );
+	}
+
+	public function test_cleanup_accumulates_rows_across_chunks(): void {
+		// Simulate two full chunks then a partial, then 0 to stop.
+		$this->wpdb->query_return_sequence = [ 10000, 10000, 3000, 0 ];
+
+		$result = $this->repo->cleanup( 7 );
+
+		$this->assertSame( 23000, $result );
+
+		// Verify query was called 4 times (3 chunks + final 0).
+		$queries = $this->get_calls( 'query' );
+		$this->assertCount( 4, $queries );
+	}
+
+	public function test_cleanup_loops_until_zero_rows_deleted(): void {
+		// First chunk deletes 100, second deletes 0 → loop stops.
+		$this->wpdb->query_return_sequence = [ 100, 0 ];
+
+		$result = $this->repo->cleanup( 7 );
+
+		$this->assertSame( 100, $result );
+		$queries = $this->get_calls( 'query' );
+		$this->assertCount( 2, $queries );
 	}
 
 	// ─── retry_failed() ───────────────────────────────────

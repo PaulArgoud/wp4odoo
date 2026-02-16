@@ -147,6 +147,17 @@ abstract class Module_Base {
 	private static array $importing = [];
 
 	/**
+	 * Injectable Queue_Manager instance.
+	 *
+	 * When null, queue() lazily creates a default instance backed by
+	 * the static Queue_Manager singleton. Can be replaced via
+	 * set_queue_manager() for testing.
+	 *
+	 * @var Queue_Manager|null
+	 */
+	protected ?Queue_Manager $queue_manager = null;
+
+	/**
 	 * Closure that returns the Odoo_Client instance (lazy, injected by Module_Registry).
 	 *
 	 * @var \Closure(): Odoo_Client
@@ -311,7 +322,7 @@ abstract class Module_Base {
 					}
 					$this->logger->info( 'Created Odoo record.', compact( 'entity_type', 'wp_id', 'odoo_id' ) );
 				} finally {
-					$this->release_push_lock( $lock_name );
+					$this->release_push_lock();
 				}
 			}
 
@@ -375,6 +386,30 @@ abstract class Module_Base {
 			return $results;
 		}
 
+		// Advisory lock prevents duplicate batch creation when concurrent
+		// workers process the same module+entity group simultaneously.
+		// Individual push_to_odoo() has Push_Lock, but batch creates bypass
+		// that path, so they need their own lock.
+		$lock = new Advisory_Lock( 'wp4odoo_batch_' . $this->id . '_' . $model );
+
+		if ( ! $lock->acquire() ) {
+			$this->logger->warning(
+				'Batch lock timeout — falling back to individual creates.',
+				[
+					'entity_type' => $entity_type,
+					'count'       => count( $values_list ),
+				]
+			);
+
+			foreach ( $item_map as $entry ) {
+				if ( ! isset( $results[ $entry['wp_id'] ] ) ) {
+					$results[ $entry['wp_id'] ] = $this->push_to_odoo( $entity_type, 'create', $entry['wp_id'] );
+				}
+			}
+
+			return $results;
+		}
+
 		try {
 			$ids = $this->client()->create_batch( $model, $values_list );
 
@@ -393,7 +428,7 @@ abstract class Module_Base {
 				]
 			);
 		} catch ( \Throwable $e ) {
-			// Fallback: process individually.
+			// Fallback: process individually (push_to_odoo has its own Push_Lock).
 			$this->logger->warning(
 				'Batch create failed, falling back to individual creates.',
 				[
@@ -407,6 +442,8 @@ abstract class Module_Base {
 					$results[ $entry['wp_id'] ] = $this->push_to_odoo( $entity_type, 'create', $entry['wp_id'] );
 				}
 			}
+		} finally {
+			$lock->release();
 		}
 
 		return $results;
@@ -831,7 +868,7 @@ abstract class Module_Base {
 	 * Shorthand for the 3-line pattern repeated in hooks traits:
 	 *   $odoo_id = $this->get_mapping( $entity_type, $wp_id ) ?? 0;
 	 *   $action  = $odoo_id ? 'update' : 'create';
-	 *   Queue_Manager::push( $this->id, $entity_type, $action, $wp_id, $odoo_id );
+	 *   $this->queue()->enqueue_push( $this->id, $entity_type, $action, $wp_id, $odoo_id );
 	 *
 	 * @param string $entity_type Entity type (e.g. 'product', 'order').
 	 * @param int    $wp_id       WordPress entity ID.
@@ -840,7 +877,7 @@ abstract class Module_Base {
 	protected function enqueue_push( string $entity_type, int $wp_id ): void {
 		$odoo_id = $this->get_mapping( $entity_type, $wp_id ) ?? 0;
 		$action  = $odoo_id ? 'update' : 'create';
-		Queue_Manager::push( $this->id, $entity_type, $action, $wp_id, $odoo_id );
+		$this->queue()->enqueue_push( $this->id, $entity_type, $action, $wp_id, $odoo_id );
 	}
 
 	/**
@@ -967,6 +1004,32 @@ abstract class Module_Base {
 	// -------------------------------------------------------------------------
 	// Infrastructure accessors
 	// -------------------------------------------------------------------------
+
+	/**
+	 * Get the Queue_Manager instance.
+	 *
+	 * Returns the injected instance if set via set_queue_manager(),
+	 * otherwise lazily creates a default instance backed by the
+	 * static Queue_Manager singleton repository.
+	 *
+	 * @return Queue_Manager
+	 */
+	protected function queue(): Queue_Manager {
+		if ( null === $this->queue_manager ) {
+			$this->queue_manager = new Queue_Manager();
+		}
+		return $this->queue_manager;
+	}
+
+	/**
+	 * Inject a Queue_Manager instance (for testing or custom wiring).
+	 *
+	 * @param Queue_Manager $queue_manager Queue_Manager instance to use.
+	 * @return void
+	 */
+	public function set_queue_manager( Queue_Manager $queue_manager ): void {
+		$this->queue_manager = $queue_manager;
+	}
 
 	/**
 	 * Get the Odoo client instance (lazy, via injected closure).

@@ -97,14 +97,49 @@ class Settings_Repository {
 	}
 
 	/**
-	 * Save connection settings.
+	 * Save connection settings with write-time validation.
+	 *
+	 * Sanitizes and validates the data before persisting: validates protocol
+	 * enum, clamps timeout to 5–120, and ensures URL and database are
+	 * non-empty strings.
 	 *
 	 * @param array $data Connection settings.
 	 * @return bool
 	 */
 	public function save_connection( array $data ): bool {
 		unset( $this->cache['connection'] );
+		$data = $this->validate_connection( $data );
 		return update_option( self::OPT_CONNECTION, $data );
+	}
+
+	/**
+	 * Validate and sanitize connection settings at write time.
+	 *
+	 * @param array $data Raw connection settings.
+	 * @return array Sanitized connection settings.
+	 */
+	private function validate_connection( array $data ): array {
+		$data = array_merge( self::DEFAULTS_CONNECTION, $data );
+
+		// Protocol enum.
+		if ( ! in_array( $data['protocol'], [ 'jsonrpc', 'xmlrpc' ], true ) ) {
+			$data['protocol'] = 'jsonrpc';
+		}
+
+		// Timeout clamped to 5–120.
+		$data['timeout'] = max( 5, min( 120, (int) $data['timeout'] ) );
+
+		// URL must be a non-empty string.
+		if ( ! is_string( $data['url'] ) || '' === trim( $data['url'] ) ) {
+			$data['url'] = '';
+		}
+
+		// Database must be a non-empty string.
+		if ( ! is_string( $data['database'] ) || '' === trim( $data['database'] ) ) {
+			$data['database'] = '';
+		}
+
+		return $data;
 	}
 
 	// ── Sync settings ──────────────────────────────────────
@@ -147,6 +182,52 @@ class Settings_Repository {
 
 		$this->cache['sync'] = $merged;
 		return $merged;
+	}
+
+	/**
+	 * Save sync settings with write-time validation.
+	 *
+	 * Sanitizes enums (direction, conflict_rule, sync_interval), clamps
+	 * batch_size and stale_timeout to valid ranges.
+	 *
+	 * @param array $data Sync settings.
+	 * @return bool
+	 */
+	public function save_sync_settings( array $data ): bool {
+		unset( $this->cache['sync'] );
+		$data = $this->validate_sync_settings( $data );
+		return update_option( self::OPT_SYNC_SETTINGS, $data );
+	}
+
+	/**
+	 * Validate and sanitize sync settings at write time.
+	 *
+	 * @param array $data Raw sync settings.
+	 * @return array Sanitized sync settings.
+	 */
+	private function validate_sync_settings( array $data ): array {
+		$data = array_merge( self::DEFAULTS_SYNC, $data );
+
+		$valid_directions = [ 'bidirectional', 'wp_to_odoo', 'odoo_to_wp' ];
+		if ( ! in_array( $data['direction'], $valid_directions, true ) ) {
+			$data['direction'] = 'bidirectional';
+		}
+
+		$valid_conflicts = [ 'newest_wins', 'odoo_wins', 'wp_wins' ];
+		if ( ! in_array( $data['conflict_rule'], $valid_conflicts, true ) ) {
+			$data['conflict_rule'] = 'newest_wins';
+		}
+
+		$data['batch_size'] = max( 1, min( 500, (int) $data['batch_size'] ) );
+
+		$valid_intervals = [ 'wp4odoo_five_minutes', 'wp4odoo_fifteen_minutes' ];
+		if ( ! in_array( $data['sync_interval'], $valid_intervals, true ) ) {
+			$data['sync_interval'] = 'wp4odoo_five_minutes';
+		}
+
+		$data['stale_timeout'] = max( 60, min( 3600, (int) $data['stale_timeout'] ) );
+
+		return $data;
 	}
 
 	/**
@@ -212,6 +293,39 @@ class Settings_Repository {
 
 		$this->cache['log'] = $merged;
 		return $merged;
+	}
+
+	/**
+	 * Save log settings with write-time validation.
+	 *
+	 * Sanitizes the log level enum and clamps retention_days to 1–365.
+	 *
+	 * @param array $data Log settings.
+	 * @return bool
+	 */
+	public function save_log_settings( array $data ): bool {
+		unset( $this->cache['log'] );
+		$data = $this->validate_log_settings( $data );
+		return update_option( self::OPT_LOG_SETTINGS, $data );
+	}
+
+	/**
+	 * Validate and sanitize log settings at write time.
+	 *
+	 * @param array $data Raw log settings.
+	 * @return array Sanitized log settings.
+	 */
+	private function validate_log_settings( array $data ): array {
+		$data = array_merge( self::DEFAULTS_LOG, $data );
+
+		$valid_levels = [ 'debug', 'info', 'warning', 'error', 'critical' ];
+		if ( ! in_array( $data['level'], $valid_levels, true ) ) {
+			$data['level'] = 'info';
+		}
+
+		$data['retention_days'] = max( 1, min( 365, (int) $data['retention_days'] ) );
+
+		return $data;
 	}
 
 	// ── Module helpers ─────────────────────────────────────

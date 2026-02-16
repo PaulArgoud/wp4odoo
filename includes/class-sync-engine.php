@@ -37,6 +37,13 @@ class Sync_Engine {
 	private const LOCK_TIMEOUT = 5;
 
 	/**
+	 * Current advisory lock instance for queue processing.
+	 *
+	 * @var Advisory_Lock|null
+	 */
+	private ?Advisory_Lock $lock = null;
+
+	/**
 	 * Maximum wall-clock seconds for a single batch run.
 	 *
 	 * Prevents WP-Cron timeouts (default 60 s). We stop fetching
@@ -309,10 +316,10 @@ class Sync_Engine {
 	/**
 	 * Process a single queue job.
 	 *
-	 * @param object $job The queue row object.
+	 * @param Queue_Job $job The queue job value object.
 	 * @return Sync_Result
 	 */
-	private function process_job( object $job ): Sync_Result {
+	private function process_job( Queue_Job $job ): Sync_Result {
 		$module = ( $this->module_resolver )( $job->module );
 
 		if ( null === $module ) {
@@ -425,8 +432,8 @@ class Sync_Engine {
 	 * jobs one-by-one. Returns the number of successfully processed jobs
 	 * and whether the outer loop should stop.
 	 *
-	 * @param array<int, object> $jobs       Fetched job rows.
-	 * @param float              $start_time Wall-clock start time (microtime).
+	 * @param Queue_Job[] $jobs       Fetched Queue_Job value objects.
+	 * @param float       $start_time Wall-clock start time (microtime).
 	 * @return array{processed: int, should_stop: bool}
 	 */
 	private function process_fetched_batch( array $jobs, float $start_time ): array {
@@ -510,7 +517,7 @@ class Sync_Engine {
 				 * @param string      $module     Module identifier (e.g. 'woocommerce').
 				 * @param int         $elapsed_ms Processing time in milliseconds.
 				 * @param Sync_Result $result     Job result (success/failure).
-				 * @param object      $job        Raw queue job row.
+				 * @param Queue_Job   $job        Queue job value object.
 				 */
 				do_action( 'wp4odoo_job_processed', $job->module, $elapsed, $result, $job );
 			} catch ( \Throwable $e ) {
@@ -565,8 +572,8 @@ class Sync_Engine {
 	 * push_batch_creates() on the module. Individual creates (groups of 1)
 	 * and non-create jobs are left for the main per-job loop.
 	 *
-	 * @param array<int, object>  $jobs             All fetched jobs.
-	 * @param array<int, bool>    &$batched_job_ids  Output: job IDs processed (key = job ID).
+	 * @param Queue_Job[]      $jobs             All fetched Queue_Job value objects.
+	 * @param array<int, bool> &$batched_job_ids  Output: job IDs processed (key = job ID).
 	 * @return int Number of successfully processed jobs.
 	 */
 	private function process_batch_creates( array $jobs, array &$batched_job_ids ): int {
@@ -673,13 +680,13 @@ class Sync_Engine {
 	 * - Transient (default): retry with exponential backoff.
 	 * - Permanent: fail immediately, no retry.
 	 *
-	 * @param object          $job               The job row.
+	 * @param Queue_Job       $job               The queue job value object.
 	 * @param string          $error_message     The error description.
 	 * @param Error_Type|null $error_type        Error classification (null = Transient for backward compat).
 	 * @param int|null        $created_entity_id Entity ID created before the failure (prevents duplicate creation on retry).
 	 * @return void
 	 */
-	private function handle_failure( object $job, string $error_message, ?Error_Type $error_type = null, ?int $created_entity_id = null ): void {
+	private function handle_failure( Queue_Job $job, string $error_message, ?Error_Type $error_type = null, ?int $created_entity_id = null ): void {
 		$attempts      = (int) $job->attempts + 1;
 		$error_trimmed = sanitize_text_field( mb_substr( $error_message, 0, 65535 ) );
 		$error_type    = $error_type ?? Error_Type::Transient;
@@ -744,20 +751,15 @@ class Sync_Engine {
 	/**
 	 * Acquire the processing lock via MySQL advisory lock.
 	 *
-	 * Uses GET_LOCK() which is atomic and server-level.
+	 * Uses Advisory_Lock which wraps GET_LOCK() — atomic and server-level.
 	 * Returns true if the lock was acquired, false if another process holds it.
 	 *
 	 * @param string $lock_name Lock name (global or per-module).
 	 * @return bool True if lock acquired.
 	 */
 	private function acquire_lock( string $lock_name ): bool {
-		global $wpdb;
-
-		$result = $wpdb->get_var(
-			$wpdb->prepare( 'SELECT GET_LOCK( %s, %d )', $lock_name, self::LOCK_TIMEOUT )
-		);
-
-		return '1' === (string) $result;
+		$this->lock = new Advisory_Lock( $lock_name, self::LOCK_TIMEOUT );
+		return $this->lock->acquire();
 	}
 
 	/**
@@ -781,24 +783,29 @@ class Sync_Engine {
 	/**
 	 * Release the processing lock.
 	 *
-	 * Logs a warning if the lock was not held or could not be released
-	 * (e.g. database connection dropped after processing).
+	 * Delegates to Advisory_Lock::release(). Logs a warning if the lock
+	 * was not held (e.g. database connection dropped after processing).
 	 *
-	 * @param string $lock_name Lock name (global or per-module).
+	 * @param string $lock_name Lock name (global or per-module, kept for call-site clarity).
 	 * @return void
 	 */
 	private function release_lock( string $lock_name ): void {
-		global $wpdb;
-
-		$result = $wpdb->get_var(
-			$wpdb->prepare( 'SELECT RELEASE_LOCK( %s )', $lock_name )
-		);
-
-		if ( '1' !== (string) $result ) {
+		if ( null === $this->lock ) {
 			$this->logger->warning(
-				'Advisory lock release returned unexpected value.',
-				[ 'result' => $result ]
+				'Advisory lock release called but no lock instance exists.',
+				[ 'lock_name' => $lock_name ]
+			);
+			return;
+		}
+
+		if ( ! $this->lock->is_held() ) {
+			$this->logger->warning(
+				'Advisory lock release called but lock was not held.',
+				[ 'lock_name' => $lock_name ]
 			);
 		}
+
+		$this->lock->release();
+		$this->lock = null;
 	}
 }

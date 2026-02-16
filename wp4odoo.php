@@ -249,7 +249,7 @@ final class WP4Odoo_Plugin {
 	public function client(): WP4Odoo\API\Odoo_Client {
 		static $client = null;
 		if ( null === $client ) {
-			$client = new WP4Odoo\API\Odoo_Client();
+			$client = new WP4Odoo\API\Odoo_Client( null, $this->settings );
 		}
 		return $client;
 	}
@@ -258,7 +258,7 @@ final class WP4Odoo_Plugin {
 	 * Register REST API routes.
 	 */
 	public function register_rest_routes(): void {
-		$webhook_handler = new WP4Odoo\Webhook_Handler( $this->settings );
+		$webhook_handler = new WP4Odoo\Webhook_Handler( $this->settings, $this->module_registry );
 		$webhook_handler->register_routes();
 	}
 

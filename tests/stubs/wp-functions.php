@@ -99,6 +99,35 @@ if ( ! function_exists( 'wp_cache_delete' ) ) {
 	}
 }
 
+if ( ! function_exists( 'wp_cache_add' ) ) {
+	function wp_cache_add( $key, $data, $group = '', $expire = 0 ) {
+		if ( isset( $GLOBALS['_wp_cache'][ $group ][ $key ] ) ) {
+			return false;
+		}
+		$GLOBALS['_wp_cache'][ $group ][ $key ] = $data;
+		return true;
+	}
+}
+
+if ( ! function_exists( 'wp_cache_incr' ) ) {
+	function wp_cache_incr( $key, $offset = 1, $group = '' ) {
+		if ( ! isset( $GLOBALS['_wp_cache'][ $group ][ $key ] ) ) {
+			return false;
+		}
+		$GLOBALS['_wp_cache'][ $group ][ $key ] += $offset;
+		return $GLOBALS['_wp_cache'][ $group ][ $key ];
+	}
+}
+
+if ( ! function_exists( 'wp_using_ext_object_cache' ) ) {
+	function wp_using_ext_object_cache( $using = null ) {
+		if ( null !== $using ) {
+			$GLOBALS['_wp_using_ext_object_cache'] = (bool) $using;
+		}
+		return $GLOBALS['_wp_using_ext_object_cache'] ?? false;
+	}
+}
+
 // ─── Hooks ──────────────────────────────────────────────
 
 if ( ! function_exists( 'do_action' ) ) {

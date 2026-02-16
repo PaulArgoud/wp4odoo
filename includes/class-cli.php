@@ -50,27 +50,29 @@ class CLI {
 		$connected   = ! empty( $credentials['url'] );
 
 		\WP_CLI::line( '' );
-		\WP_CLI::line( 'WordPress For Odoo v' . WP4ODOO_VERSION );
+		/* translators: %s: plugin version number */
+		\WP_CLI::line( sprintf( __( 'WordPress For Odoo v%s', 'wp4odoo' ), WP4ODOO_VERSION ) );
 		\WP_CLI::line( str_repeat( '─', 40 ) );
 
 		// Connection.
 		if ( $connected ) {
 			\WP_CLI::success(
 				sprintf(
-					'Connected to %s (db: %s, protocol: %s)',
+					/* translators: 1: Odoo URL, 2: database name, 3: protocol */
+					__( 'Connected to %1$s (db: %2$s, protocol: %3$s)', 'wp4odoo' ),
 					$credentials['url'],
 					$credentials['database'],
 					$credentials['protocol']
 				)
 			);
 		} else {
-			\WP_CLI::warning( 'Not configured — no Odoo URL set.' );
+			\WP_CLI::warning( __( 'Not configured — no Odoo URL set.', 'wp4odoo' ) );
 		}
 
 		// Queue stats.
 		$stats = Queue_Manager::get_stats();
 		\WP_CLI::line( '' );
-		\WP_CLI::line( 'Queue:' );
+		\WP_CLI::line( __( 'Queue:', 'wp4odoo' ) );
 		\WP_CLI\Utils\format_items(
 			'table',
 			[
@@ -85,13 +87,14 @@ class CLI {
 		);
 
 		if ( '' !== $stats['last_completed_at'] ) {
-			\WP_CLI::line( 'Last completed: ' . $stats['last_completed_at'] );
+			/* translators: %s: timestamp of last completed sync */
+			\WP_CLI::line( sprintf( __( 'Last completed: %s', 'wp4odoo' ), $stats['last_completed_at'] ) );
 		}
 
 		// Modules.
 		$modules = \WP4Odoo_Plugin::instance()->get_modules();
 		\WP_CLI::line( '' );
-		\WP_CLI::line( 'Modules:' );
+		\WP_CLI::line( __( 'Modules:', 'wp4odoo' ) );
 		$rows     = [];
 		$settings = \WP4Odoo_Plugin::instance()->settings();
 		foreach ( $modules as $id => $module ) {
@@ -116,10 +119,11 @@ class CLI {
 		$credentials = Odoo_Auth::get_credentials();
 
 		if ( empty( $credentials['url'] ) ) {
-			\WP_CLI::error( 'No Odoo connection configured. Go to Odoo Connector settings first.' );
+			\WP_CLI::error( __( 'No Odoo connection configured. Go to Odoo Connector settings first.', 'wp4odoo' ) );
 		}
 
-		\WP_CLI::line( sprintf( 'Testing connection to %s...', $credentials['url'] ) );
+		/* translators: %s: Odoo server URL */
+		\WP_CLI::line( sprintf( __( 'Testing connection to %s...', 'wp4odoo' ), $credentials['url'] ) );
 
 		$result = Odoo_Auth::test_connection(
 			$credentials['url'],
@@ -130,9 +134,11 @@ class CLI {
 		);
 
 		if ( $result['success'] ) {
-			\WP_CLI::success( sprintf( 'Connection successful! UID: %d', $result['uid'] ?? 0 ) );
+			/* translators: %d: Odoo user ID */
+			\WP_CLI::success( sprintf( __( 'Connection successful! UID: %d', 'wp4odoo' ), $result['uid'] ?? 0 ) );
 		} else {
-			\WP_CLI::error( sprintf( 'Connection failed: %s', $result['message'] ) );
+			/* translators: %s: error message */
+			\WP_CLI::error( sprintf( __( 'Connection failed: %s', 'wp4odoo' ), $result['message'] ) );
 		}
 	}
 
@@ -160,7 +166,8 @@ class CLI {
 		$sub = $args[0] ?? 'run';
 
 		if ( 'run' !== $sub ) {
-			\WP_CLI::error( sprintf( 'Unknown subcommand: %s. Usage: wp wp4odoo sync run', $sub ) );
+			/* translators: %s: subcommand name */
+			\WP_CLI::error( sprintf( __( 'Unknown subcommand: %s. Usage: wp wp4odoo sync run', 'wp4odoo' ), $sub ) );
 		}
 
 		$dry_run = isset( $assoc_args['dry-run'] );
@@ -177,9 +184,9 @@ class CLI {
 		}
 
 		if ( $dry_run ) {
-			\WP_CLI::line( 'Processing sync queue (dry-run mode)...' );
+			\WP_CLI::line( __( 'Processing sync queue (dry-run mode)...', 'wp4odoo' ) );
 		} else {
-			\WP_CLI::line( 'Processing sync queue...' );
+			\WP_CLI::line( __( 'Processing sync queue...', 'wp4odoo' ) );
 		}
 
 		$engine = new Sync_Engine(
@@ -195,9 +202,11 @@ class CLI {
 		$processed = $engine->process_queue();
 
 		if ( $dry_run ) {
-			\WP_CLI::success( sprintf( '%d job(s) would be processed (dry-run).', $processed ) );
+			/* translators: %d: number of jobs */
+			\WP_CLI::success( sprintf( __( '%d job(s) would be processed (dry-run).', 'wp4odoo' ), $processed ) );
 		} else {
-			\WP_CLI::success( sprintf( '%d job(s) processed.', $processed ) );
+			/* translators: %d: number of jobs */
+			\WP_CLI::success( sprintf( __( '%d job(s) processed.', 'wp4odoo' ), $processed ) );
 		}
 	}
 
@@ -224,7 +233,8 @@ class CLI {
 			'retry'   => $this->queue_retry( $assoc_args ),
 			'cleanup' => $this->queue_cleanup( $assoc_args ),
 			'cancel'  => $this->queue_cancel( isset( $args[1] ) ? (int) $args[1] : 0 ),
-			default   => \WP_CLI::error( sprintf( 'Unknown subcommand: %s. Available: stats, list, retry, cleanup, cancel', $sub ) ),
+			/* translators: %s: subcommand name */
+			default   => \WP_CLI::error( sprintf( __( 'Unknown subcommand: %s. Available: stats, list, retry, cleanup, cancel', 'wp4odoo' ), $sub ) ),
 		};
 	}
 
@@ -261,13 +271,14 @@ class CLI {
 		$entity_type = $args[1] ?? '';
 
 		if ( empty( $module_id ) || empty( $entity_type ) ) {
-			\WP_CLI::error( 'Usage: wp wp4odoo reconcile <module> <entity_type> [--fix]' );
+			\WP_CLI::error( __( 'Usage: wp wp4odoo reconcile <module> <entity_type> [--fix]', 'wp4odoo' ) );
 		}
 
 		$module = \WP4Odoo_Plugin::instance()->get_module( $module_id );
 
 		if ( null === $module ) {
-			\WP_CLI::error( sprintf( 'Module "%s" not found.', $module_id ) );
+			/* translators: %s: module identifier */
+			\WP_CLI::error( sprintf( __( 'Module "%s" not found.', 'wp4odoo' ), $module_id ) );
 		}
 
 		$odoo_models = $module->get_odoo_models();
@@ -275,7 +286,8 @@ class CLI {
 		if ( ! isset( $odoo_models[ $entity_type ] ) ) {
 			\WP_CLI::error(
 				sprintf(
-					'Entity type "%s" not found in module "%s". Available: %s',
+					/* translators: 1: entity type, 2: module identifier, 3: available entity types */
+					__( 'Entity type "%1$s" not found in module "%2$s". Available: %3$s', 'wp4odoo' ),
 					$entity_type,
 					$module_id,
 					implode( ', ', array_keys( $odoo_models ) )
@@ -293,7 +305,8 @@ class CLI {
 
 		\WP_CLI::line(
 			sprintf(
-				'Reconciling %s/%s against Odoo model %s%s...',
+				/* translators: 1: module identifier, 2: entity type, 3: Odoo model name, 4: fix mode indicator */
+				__( 'Reconciling %1$s/%2$s against Odoo model %3$s%4$s...', 'wp4odoo' ),
 				$module_id,
 				$entity_type,
 				$odoo_models[ $entity_type ],
@@ -311,8 +324,10 @@ class CLI {
 
 		$result = $reconciler->reconcile( $module_id, $entity_type, $odoo_models[ $entity_type ], $fix );
 
-		\WP_CLI::line( sprintf( 'Checked: %d mapping(s)', $result['checked'] ) );
-		\WP_CLI::line( sprintf( 'Orphaned: %d', count( $result['orphaned'] ) ) );
+		/* translators: %d: number of mappings checked */
+		\WP_CLI::line( sprintf( __( 'Checked: %d mapping(s)', 'wp4odoo' ), $result['checked'] ) );
+		/* translators: %d: number of orphaned mappings */
+		\WP_CLI::line( sprintf( __( 'Orphaned: %d', 'wp4odoo' ), count( $result['orphaned'] ) ) );
 
 		if ( ! empty( $result['orphaned'] ) ) {
 			$rows = [];
@@ -326,11 +341,12 @@ class CLI {
 		}
 
 		if ( $fix ) {
-			\WP_CLI::success( sprintf( '%d orphaned mapping(s) removed.', $result['fixed'] ) );
+			/* translators: %d: number of orphaned mappings removed */
+			\WP_CLI::success( sprintf( __( '%d orphaned mapping(s) removed.', 'wp4odoo' ), $result['fixed'] ) );
 		} elseif ( ! empty( $result['orphaned'] ) ) {
-			\WP_CLI::warning( 'Run with --fix to remove orphaned mappings.' );
+			\WP_CLI::warning( __( 'Run with --fix to remove orphaned mappings.', 'wp4odoo' ) );
 		} else {
-			\WP_CLI::success( 'No orphans found.' );
+			\WP_CLI::success( __( 'No orphans found.', 'wp4odoo' ) );
 		}
 	}
 
@@ -353,7 +369,8 @@ class CLI {
 			'list'    => $this->module_list(),
 			'enable'  => $this->module_toggle( $args[1] ?? '', true ),
 			'disable' => $this->module_toggle( $args[1] ?? '', false ),
-			default   => \WP_CLI::error( sprintf( 'Unknown subcommand: %s. Available: list, enable, disable', $sub ) ),
+			/* translators: %s: subcommand name */
+			default   => \WP_CLI::error( sprintf( __( 'Unknown subcommand: %s. Available: list, enable, disable', 'wp4odoo' ), $sub ) ),
 		};
 	}
 }

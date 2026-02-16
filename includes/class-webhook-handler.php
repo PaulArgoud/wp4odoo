@@ -60,12 +60,21 @@ class Webhook_Handler {
 	private Rate_Limiter $rate_limiter;
 
 	/**
+	 * Module registry for module lookups.
+	 *
+	 * @var Module_Registry
+	 */
+	private Module_Registry $registry;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param Settings_Repository $settings Settings repository.
+	 * @param Module_Registry     $registry Module registry for module lookups.
 	 */
-	public function __construct( Settings_Repository $settings ) {
+	public function __construct( Settings_Repository $settings, Module_Registry $registry ) {
 		$this->settings     = $settings;
+		$this->registry     = $registry;
 		$this->logger       = new Logger( 'webhook', $settings );
 		$this->rate_limiter = new Rate_Limiter( 'wp4odoo_rl_', 20, 60, $this->logger );
 	}
@@ -297,7 +306,7 @@ class Webhook_Handler {
 		$stats      = $queue_repo->get_stats();
 
 		$cb_state = get_option( 'wp4odoo_cb_state', [] );
-		$registry = \WP4Odoo_Plugin::instance()->module_registry();
+		$registry = $this->registry;
 
 		$cb_open = is_array( $cb_state ) && ! empty( $cb_state['opened_at'] );
 
@@ -336,8 +345,7 @@ class Webhook_Handler {
 		$body        = $request->get_json_params();
 		$direction   = sanitize_text_field( $body['direction'] ?? 'odoo_to_wp' );
 
-		$plugin = \WP4Odoo_Plugin::instance();
-		$module = $plugin->get_module( $module_id );
+		$module = $this->registry->get( $module_id );
 
 		if ( null === $module ) {
 			return new \WP_REST_Response(

@@ -252,7 +252,11 @@ WordPress For Odoo/
 │   ├── class-settings-repository.php  # Centralized option access: keys, defaults, typed accessors (DI)
 │   ├── class-module-registry.php      # Module registration, mutual exclusivity, lifecycle
 │   ├── class-module-base.php          # Abstract base class for modules (push/pull, mapping, anti-loop)
-│   ├── trait-module-helpers.php       # Shared helpers: auto_post_invoice (→bool), ensure_entity_synced, synthetic IDs, partner_service, translation_service, resolve_partner_from_user/email, check_dependency (version bounds + table existence + cron polling notice)
+│   ├── trait-module-helpers.php       # Composition trait: uses Partner_Helpers, Accounting_Helpers, Dependency_Helpers, Sync_Helpers
+│   ├── trait-partner-helpers.php     # Partner resolution: partner_service(), resolve_partner_from_user/email
+│   ├── trait-accounting-helpers.php  # Invoice helpers: auto_post_invoice()
+│   ├── trait-dependency-helpers.php  # Entity dependency: ensure_entity_synced, check_dependency, has_odoo_model
+│   ├── trait-sync-helpers.php        # Sync utilities: push_entity, translation_service, synthetic IDs, resolve_many2one_field
 │   ├── trait-error-classification.php # Error_Classification trait: classify RuntimeException → Error_Type (transient vs permanent)
 │   ├── trait-push-lock.php           # Push_Lock trait: MySQL advisory lock around push_to_odoo() create path (TOCTOU prevention)
 │   ├── trait-poll-support.php        # Poll_Support trait: targeted entity_map loading + last_polled_at deletion detection
@@ -262,12 +266,14 @@ WordPress For Odoo/
 │   ├── class-failure-notifier.php     # Admin email notification on consecutive sync failures
 │   ├── class-circuit-breaker.php     # Circuit breaker for Odoo connectivity (3-state, advisory lock probe mutex, DB-backed fallback)
 │   ├── class-sync-engine.php          # Queue processor, batch operations, advisory locking, smart retry (Error_Type), memory guard
-│   ├── class-queue-manager.php        # Helpers for enqueuing sync jobs
+│   ├── class-queue-manager.php        # Instantiable queue manager with DI, queue depth alerting, static + instance API
+│   ├── class-queue-job.php            # Readonly DTO for sync queue jobs (typed properties, from_row() factory)
+│   ├── class-advisory-lock.php        # Reusable MySQL advisory lock wrapper (acquire, release, is_held)
 │   ├── class-query-service.php        # Paginated queries with column projection (queue jobs, log entries) — injectable instance
 │   ├── class-field-mapper.php         # Type conversions (Many2one, dates, HTML)
 │   ├── class-cpt-helper.php           # Shared CPT register/load/save/parse helpers
 │   ├── class-webhook-handler.php      # REST API endpoints for Odoo webhooks, HMAC signature
-│   ├── class-rate-limiter.php        # Transient-based rate limiter (extracted from Webhook_Handler)
+│   ├── class-rate-limiter.php        # Dual-strategy rate limiter (atomic wp_cache_incr + transient fallback)
 │   ├── class-schema-cache.php        # fields_get() cache (memory + transient) for field validation
 │   ├── class-reconciler.php          # Entity map reconciliation against live Odoo records
 │   ├── class-cli.php                 # WP-CLI commands (loaded only in CLI context)
@@ -301,7 +307,7 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # 3558 unit tests (5434 assertions) + 26 integration tests (wp-env)
+├── tests/                             # 3614 unit tests (5612 assertions) + 26 integration tests (wp-env)
 │   ├── bootstrap.php                 #   Unit test bootstrap: constants, stub loading, plugin class requires
 │   ├── bootstrap-integration.php     #   Integration test bootstrap: loads WP test framework (wp-env)
 │   ├── stubs/
@@ -363,7 +369,9 @@ WordPress For Odoo/
 │       ├── ModuleBaseHashTest.php       #   6 tests for generate_sync_hash() + dependency status
 │       ├── SettingsRepositoryTest.php  #   30 tests for Settings_Repository
 │       ├── PartnerServiceTest.php       #   10 tests for Partner_Service
-│       ├── QueueManagerTest.php         #   7 tests for Queue_Manager
+│       ├── QueueManagerTest.php         #   15 tests for Queue_Manager (DI, depth alerting)
+│       ├── QueueJobTest.php            #   8 tests for Queue_Job readonly DTO
+│       ├── AdvisoryLockTest.php        #   22 tests for Advisory_Lock
 │       ├── SyncQueueRepositoryTest.php  #   31 tests for Sync_Queue_Repository
 │       ├── WebhookHandlerTest.php       #   16 tests for Webhook_Handler
 │       ├── WooCommerceModuleTest.php    #   24 tests for WooCommerce_Module
@@ -597,7 +605,7 @@ Module_Base (abstract)
 - Data transformation: `map_to_odoo()`, `map_from_odoo()`, `generate_sync_hash()`
 - Settings: `get_settings()`, `get_settings_fields()`, `get_default_settings()`, `get_dependency_status()` (external dependency check for admin UI) — delegates to injected `Settings_Repository`
 - Helpers: `is_importing()` (anti-loop guard, per-module static array keyed by module ID), `mark_importing()`, `clear_importing()` (try/finally in pull), `resolve_many2one_field()` (Many2one → scalar), `delete_wp_post()` (safe post deletion), `log_unsupported_entity()` (centralized warning), `partner_service()` (lazy `Partner_Service` factory), `resolve_partner_from_user()` (WP user → Odoo partner via Partner_Service), `resolve_partner_from_email()` (email → Odoo partner via Partner_Service), `check_dependency()` (version bounds + table existence via `get_required_tables()` + cron polling notice via `uses_cron_polling()`), `client()`, `auto_post_invoice(): bool` (setting check + mapping lookup + `action_post`, returns success/failure), `ensure_entity_synced()` (mapping check + auto-push if missing), `encode_synthetic_id()` / `decode_synthetic_id()` (static, with overflow guard — used by LMS modules for enrollment IDs)
-- Push helpers: `enqueue_push()` (mapping lookup + Queue_Manager), `handle_cpt_save()` (anti-loop + revision/autosave + post_type + settings guards → enqueue_push; used by 12 hooks traits)
+- Push helpers: `enqueue_push()` (mapping lookup + injectable Queue_Manager via `$this->queue()`), `handle_cpt_save()` (anti-loop + revision/autosave + post_type + settings guards → enqueue_push; used by 12 hooks traits)
 - Guard helpers: `should_sync(string $setting_key)` (consolidated `is_importing()` + settings check — used in ~40 hook callbacks), `poll_entity_changes(string $entity_type, array $items, string $id_field)` (SHA-256 hash-based diff against entity map — detects creates/updates/deletes, used by Bookly and Ecwid cron polling)
 - Graceful degradation: `safe_callback()` wraps hook callbacks in try/catch(`\Throwable`), logging crashes instead of crashing the WordPress request. All ~87 third-party hook registrations use this wrapper
 - Subclass hooks: `boot()`, `load_wp_data()`, `save_wp_data()`, `delete_wp_data()`
@@ -856,7 +864,7 @@ Shared abstract base `Helpdesk_Module_Base` extends `Module_Base`, providing dua
 
 ### 12. Translation Infrastructure (i18n)
 
-The `Translation_Service` (`includes/i18n/class-translation-service.php`) is a cross-cutting service (like `Partner_Service`) that enables any module to push translated content to Odoo. It is **not a module** — it is accessible via `$this->translation_service()` from `Module_Helpers`.
+The `Translation_Service` (`includes/i18n/class-translation-service.php`) is a cross-cutting service (like `Partner_Service`) that enables any module to push translated content to Odoo. It is **not a module** — it is accessible via `$this->translation_service()` from `Sync_Helpers` (composed into `Module_Helpers`).
 
 **Architecture:**
 
@@ -1734,7 +1742,7 @@ All user inputs are sanitized with:
 
 **File:** `class-partner-service.php`
 
-Shared service for managing WP user ↔ Odoo `res.partner` relationships. Accessible in all modules via `Module_Base::partner_service()` (lazy factory), with convenience wrappers `resolve_partner_from_user()` and `resolve_partner_from_email()` in `Module_Helpers` trait. Used by all modules requiring partner resolution.
+Shared service for managing WP user ↔ Odoo `res.partner` relationships. Accessible in all modules via `Module_Base::partner_service()` (lazy factory), with convenience wrappers `resolve_partner_from_user()` and `resolve_partner_from_email()` in `Partner_Helpers` trait (composed into `Module_Helpers`). Used by all modules requiring partner resolution.
 
 **Resolution flow (3-step):**
 1. Check `wp4odoo_entity_map` for existing mapping

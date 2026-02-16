@@ -369,7 +369,8 @@ class SyncEngineTest extends TestCase {
 	}
 
 	public function test_cleanup_delegates_to_sync_queue_repository(): void {
-		$this->wpdb->query_return = 10;
+		// Simulate one chunk of 10 rows, then 0 to stop the chunked loop.
+		$this->wpdb->query_return_sequence = [ 10, 0 ];
 
 		$result = Queue_Manager::cleanup( 14 );
 
@@ -643,17 +644,18 @@ class SyncEngineTest extends TestCase {
 	}
 
 	private function assert_lock_released(): void {
-		$get_var_calls = $this->get_calls( 'get_var' );
-		$found         = false;
+		$found = false;
 
-		foreach ( $get_var_calls as $call ) {
-			if ( str_contains( $call['args'][0], 'RELEASE_LOCK' ) ) {
+		// Advisory_Lock uses $wpdb->query() for release, preceded by prepare().
+		foreach ( $this->wpdb->calls as $call ) {
+			if ( in_array( $call['method'], [ 'get_var', 'query', 'prepare' ], true )
+				&& str_contains( $call['args'][0], 'RELEASE_LOCK' ) ) {
 				$found = true;
 				break;
 			}
 		}
 
-		$this->assertTrue( $found, 'Lock should be released via RELEASE_LOCK get_var' );
+		$this->assertTrue( $found, 'Lock should be released via RELEASE_LOCK' );
 	}
 
 	private function get_last_call( string $method ): ?array {

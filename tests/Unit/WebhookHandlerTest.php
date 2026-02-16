@@ -28,7 +28,7 @@ class WebhookHandlerTest extends TestCase {
 		// Set a webhook token so ensure_webhook_token() uses it.
 		$GLOBALS['_wp_options']['wp4odoo_webhook_token'] = 'test-token-abc123';
 
-		$this->handler = new Webhook_Handler( wp4odoo_test_settings() );
+		$this->handler = new Webhook_Handler( wp4odoo_test_settings(), \WP4Odoo_Plugin::instance()->module_registry() );
 	}
 
 	// ─── validate_webhook_token ─────────────────────────────
@@ -188,16 +188,22 @@ class WebhookHandlerTest extends TestCase {
 	public function test_sync_trigger_returns_400_without_ids(): void {
 		\WP4Odoo_Plugin::reset_instance();
 
-		// Register a dummy module to pass the module check.
-		$module = $this->createMock( \WP4Odoo\Module_Base::class );
-		\WP4Odoo_Plugin::instance()->register_module( 'crm', $module );
+		$GLOBALS['_wp_options']['wp4odoo_modules'] = [ 'crm' => [ 'enabled' => true ] ];
+
+		// Register a dummy module on a fresh registry to pass the module check.
+		$registry = \WP4Odoo_Plugin::instance()->module_registry();
+		$module   = $this->createMock( \WP4Odoo\Module_Base::class );
+		$module->method( 'get_dependency_status' )->willReturn( [ 'available' => true, 'notices' => [] ] );
+		$registry->register( 'crm', $module );
+
+		$handler = new Webhook_Handler( wp4odoo_test_settings(), $registry );
 
 		$request = new \WP_REST_Request( 'POST', '/wp4odoo/v1/sync/crm/contact' );
 		$request->set_param( 'module', 'crm' );
 		$request->set_param( 'entity', 'contact' );
 		$request->set_json_params( [] );
 
-		$response = $this->handler->handle_sync_trigger( $request );
+		$response = $handler->handle_sync_trigger( $request );
 
 		$this->assertSame( 400, $response->get_status() );
 	}
@@ -228,7 +234,7 @@ class WebhookHandlerTest extends TestCase {
 	public function test_register_routes_generates_token_when_none_exists(): void {
 		unset( $GLOBALS['_wp_options']['wp4odoo_webhook_token'] );
 
-		$handler = new Webhook_Handler( wp4odoo_test_settings() );
+		$handler = new Webhook_Handler( wp4odoo_test_settings(), \WP4Odoo_Plugin::instance()->module_registry() );
 		$handler->register_routes();
 
 		$token = $GLOBALS['_wp_options']['wp4odoo_webhook_token'] ?? '';
@@ -240,7 +246,7 @@ class WebhookHandlerTest extends TestCase {
 	public function test_register_routes_preserves_existing_token(): void {
 		$GLOBALS['_wp_options']['wp4odoo_webhook_token'] = 'existing-token';
 
-		$handler = new Webhook_Handler( wp4odoo_test_settings() );
+		$handler = new Webhook_Handler( wp4odoo_test_settings(), \WP4Odoo_Plugin::instance()->module_registry() );
 		$handler->register_routes();
 
 		$this->assertSame( 'existing-token', $GLOBALS['_wp_options']['wp4odoo_webhook_token'] );
@@ -314,5 +320,53 @@ class WebhookHandlerTest extends TestCase {
 		$data = $response2->get_data();
 		$this->assertTrue( $data['success'] );
 		$this->assertTrue( $data['deduplicated'] );
+	}
+
+	// ─── Injected Module_Registry ──────────────────────────
+
+	public function test_sync_trigger_uses_injected_registry_to_find_module(): void {
+		\WP4Odoo_Plugin::reset_instance();
+		$settings = wp4odoo_test_settings();
+		$registry = \WP4Odoo_Plugin::instance()->module_registry();
+
+		// Enable the module in settings so register() proceeds.
+		$GLOBALS['_wp_options']['wp4odoo_modules'] = [ 'crm' => [ 'enabled' => true ] ];
+
+		// Register a dummy module in the registry.
+		$module = $this->createMock( \WP4Odoo\Module_Base::class );
+		$module->method( 'get_dependency_status' )->willReturn( [ 'available' => true, 'notices' => [] ] );
+		$registry->register( 'crm', $module );
+
+		$handler = new Webhook_Handler( $settings, $registry );
+
+		$this->wpdb->insert_id = 55;
+
+		$request = new \WP_REST_Request( 'POST', '/wp4odoo/v1/sync/crm/contact' );
+		$request->set_param( 'module', 'crm' );
+		$request->set_param( 'entity', 'contact' );
+		$request->set_json_params( [ 'odoo_id' => 42 ] );
+
+		$response = $handler->handle_sync_trigger( $request );
+
+		// Module found via injected registry => should return 202.
+		$this->assertSame( 202, $response->get_status() );
+	}
+
+	public function test_health_uses_injected_registry(): void {
+		$settings = wp4odoo_test_settings();
+		$registry = \WP4Odoo_Plugin::instance()->module_registry();
+
+		$handler = new Webhook_Handler( $settings, $registry );
+
+		$this->wpdb->get_var_return = '0';
+
+		$request  = new \WP_REST_Request( 'GET', '/wp4odoo/v1/health' );
+		$response = $handler->handle_health( $request );
+
+		$this->assertSame( 200, $response->get_status() );
+		$data = $response->get_data();
+		$this->assertArrayHasKey( 'modules_booted', $data );
+		$this->assertArrayHasKey( 'modules_total', $data );
+		$this->assertSame( 0, $data['modules_booted'] );
 	}
 }

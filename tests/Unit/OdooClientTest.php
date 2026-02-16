@@ -413,4 +413,80 @@ class OdooClientTest extends TestCase {
 			$this->transport->calls[0]['kwargs']
 		);
 	}
+
+	// ─── Constructor transport injection ──────────────────
+
+	/**
+	 * Test that a pre-injected transport is used instead of auto-connection.
+	 *
+	 * When a Transport instance is passed to the constructor, the client
+	 * should use it directly without calling ensure_connected().
+	 *
+	 * @return void
+	 */
+	public function test_constructor_with_injected_transport_skips_auto_connection(): void {
+		$mock_transport = new MockTransport();
+		$mock_transport->return_value = [ 10, 20 ];
+
+		$client = new Odoo_Client( $mock_transport );
+
+		$this->assertTrue( $client->is_connected() );
+
+		$result = $client->search( 'res.partner', [ [ 'active', '=', true ] ] );
+
+		$this->assertSame( [ 10, 20 ], $result );
+		$this->assertCount( 1, $mock_transport->calls );
+		$this->assertSame( 'res.partner', $mock_transport->calls[0]['model'] );
+		$this->assertSame( 'search', $mock_transport->calls[0]['method'] );
+	}
+
+	/**
+	 * Test that the default constructor (no transport) still works.
+	 *
+	 * Backward compatibility: creating Odoo_Client() without arguments
+	 * should not be connected and should auto-connect on first call.
+	 *
+	 * @return void
+	 */
+	public function test_constructor_without_transport_is_not_connected(): void {
+		$client = new Odoo_Client();
+
+		$this->assertFalse( $client->is_connected() );
+	}
+
+	/**
+	 * Test that injected transport delegates all CRUD operations correctly.
+	 *
+	 * @return void
+	 */
+	public function test_injected_transport_handles_create(): void {
+		$mock_transport = new MockTransport();
+		$mock_transport->return_value = 55;
+
+		$client = new Odoo_Client( $mock_transport );
+		$result = $client->create( 'product.product', [ 'name' => 'Widget' ] );
+
+		$this->assertSame( 55, $result );
+		$this->assertCount( 1, $mock_transport->calls );
+		$this->assertSame( 'create', $mock_transport->calls[0]['method'] );
+	}
+
+	/**
+	 * Test reset() clears injected transport.
+	 *
+	 * After reset(), the client should no longer be connected, and
+	 * subsequent calls would trigger ensure_connected() auto-construction.
+	 *
+	 * @return void
+	 */
+	public function test_reset_clears_injected_transport(): void {
+		$mock_transport = new MockTransport();
+		$client         = new Odoo_Client( $mock_transport );
+
+		$this->assertTrue( $client->is_connected() );
+
+		$client->reset();
+
+		$this->assertFalse( $client->is_connected() );
+	}
 }

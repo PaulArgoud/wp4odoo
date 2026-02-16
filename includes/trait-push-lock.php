@@ -11,13 +11,20 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Advisory lock support for push dedup protection.
  *
  * Prevents TOCTOU race conditions in the search-before-create path
- * of push_to_odoo(). Uses MySQL GET_LOCK/RELEASE_LOCK — same proven
- * pattern as Partner_Service::get_or_create().
+ * of push_to_odoo(). Delegates to Advisory_Lock for the actual
+ * GET_LOCK/RELEASE_LOCK calls.
  *
  * @package WP4Odoo
  * @since   3.2.5
  */
 trait Push_Lock {
+
+	/**
+	 * Current push advisory lock instance.
+	 *
+	 * @var Advisory_Lock|null
+	 */
+	private ?Advisory_Lock $push_lock = null;
 
 	/**
 	 * Acquire an advisory lock for push dedup protection.
@@ -26,28 +33,19 @@ trait Push_Lock {
 	 * @return bool True if lock acquired within 5 seconds.
 	 */
 	private function acquire_push_lock( string $lock_name ): bool {
-		global $wpdb;
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-		$result = $wpdb->get_var(
-			$wpdb->prepare( 'SELECT GET_LOCK( %s, %d )', $lock_name, 5 )
-		);
-
-		return '1' === (string) $result;
+		$this->push_lock = new Advisory_Lock( $lock_name );
+		return $this->push_lock->acquire();
 	}
 
 	/**
-	 * Release an advisory lock for push dedup protection.
+	 * Release the current push advisory lock.
 	 *
-	 * @param string $lock_name MySQL advisory lock name.
 	 * @return void
 	 */
-	private function release_push_lock( string $lock_name ): void {
-		global $wpdb;
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-		$wpdb->get_var(
-			$wpdb->prepare( 'SELECT RELEASE_LOCK( %s )', $lock_name )
-		);
+	private function release_push_lock(): void {
+		if ( null !== $this->push_lock ) {
+			$this->push_lock->release();
+			$this->push_lock = null;
+		}
 	}
 }

@@ -5,6 +5,7 @@ namespace WP4Odoo\I18n;
 
 use WP4Odoo\API\Odoo_Client;
 use WP4Odoo\Logger;
+use WP4Odoo\Settings_Repository;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -117,11 +118,12 @@ class Translation_Service {
 	/**
 	 * Constructor.
 	 *
-	 * @param \Closure $client_getter Returns the shared Odoo_Client instance.
+	 * @param \Closure                 $client_getter Returns the shared Odoo_Client instance.
+	 * @param Settings_Repository|null $settings      Optional settings repository for the logger.
 	 */
-	public function __construct( \Closure $client_getter ) {
+	public function __construct( \Closure $client_getter, ?Settings_Repository $settings = null ) {
 		$this->client_getter = $client_getter;
-		$this->logger        = new Logger( 'i18n' );
+		$this->logger        = new Logger( 'i18n', $settings );
 	}
 
 	// ─── Adapter detection ──────────────────────────────────

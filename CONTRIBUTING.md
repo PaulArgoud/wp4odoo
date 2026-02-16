@@ -123,7 +123,7 @@ composer phpstan            # or: php -d memory_limit=1G vendor/bin/phpstan anal
 ```
 includes/
 ├── api/                         # Odoo transport & client
-│   ├── class-odoo-client.php
+│   ├── class-odoo-client.php    # High-level CRUD (injectable transport + settings)
 │   ├── class-odoo-jsonrpc.php
 │   └── ...
 ├── admin/                       # Admin PHP classes & AJAX traits
@@ -137,6 +137,14 @@ includes/
 │   └── ...
 ├── class-sync-engine.php        # Queue processor (batch, retry, circuit breaker)
 ├── class-sync-queue-repository.php  # Persistent queue DB layer
+├── class-queue-manager.php      # Instantiable queue manager (DI + depth alerting)
+├── class-queue-job.php          # Readonly DTO for sync queue jobs
+├── class-advisory-lock.php      # Reusable MySQL advisory lock wrapper
+├── trait-module-helpers.php     # Composition trait (Partner + Accounting + Dependency + Sync)
+├── trait-partner-helpers.php    # Partner resolution helpers
+├── trait-accounting-helpers.php # Invoice/accounting helpers
+├── trait-dependency-helpers.php # Entity dependency resolution
+├── trait-sync-helpers.php       # Sync utilities (push_entity, translation, etc.)
 └── ...
 admin/
 ├── views/                       # Admin page templates

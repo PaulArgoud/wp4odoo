@@ -44,7 +44,94 @@ class SettingsRepositoryTest extends TestCase {
 
 		$this->repo->save_connection( $data );
 
-		$this->assertSame( $data, $GLOBALS['_wp_options'][ Settings_Repository::OPT_CONNECTION ] );
+		$saved = $GLOBALS['_wp_options'][ Settings_Repository::OPT_CONNECTION ];
+		$this->assertSame( 'https://test.com', $saved['url'] );
+		$this->assertSame( 'db', $saved['database'] );
+		$this->assertSame( 'jsonrpc', $saved['protocol'] );
+		$this->assertSame( 30, $saved['timeout'] );
+	}
+
+	public function test_save_connection_validates_protocol(): void {
+		$this->repo->save_connection( [ 'protocol' => 'grpc' ] );
+
+		$saved = $GLOBALS['_wp_options'][ Settings_Repository::OPT_CONNECTION ];
+		$this->assertSame( 'jsonrpc', $saved['protocol'] );
+	}
+
+	public function test_save_connection_clamps_timeout(): void {
+		$this->repo->save_connection( [ 'timeout' => 999 ] );
+
+		$saved = $GLOBALS['_wp_options'][ Settings_Repository::OPT_CONNECTION ];
+		$this->assertSame( 120, $saved['timeout'] );
+	}
+
+	public function test_save_connection_clamps_timeout_to_min(): void {
+		$this->repo->save_connection( [ 'timeout' => 1 ] );
+
+		$saved = $GLOBALS['_wp_options'][ Settings_Repository::OPT_CONNECTION ];
+		$this->assertSame( 5, $saved['timeout'] );
+	}
+
+	public function test_save_connection_validates_url_non_string(): void {
+		$this->repo->save_connection( [ 'url' => 123 ] );
+
+		$saved = $GLOBALS['_wp_options'][ Settings_Repository::OPT_CONNECTION ];
+		$this->assertSame( '', $saved['url'] );
+	}
+
+	public function test_save_connection_validates_database_non_string(): void {
+		$this->repo->save_connection( [ 'database' => null ] );
+
+		$saved = $GLOBALS['_wp_options'][ Settings_Repository::OPT_CONNECTION ];
+		$this->assertSame( '', $saved['database'] );
+	}
+
+	// ── Save sync settings ───────────────────────────────
+
+	public function test_save_sync_settings(): void {
+		$this->repo->save_sync_settings( [ 'batch_size' => 100 ] );
+
+		$saved = $GLOBALS['_wp_options'][ Settings_Repository::OPT_SYNC_SETTINGS ];
+		$this->assertSame( 100, $saved['batch_size'] );
+		$this->assertSame( 'bidirectional', $saved['direction'] );
+	}
+
+	public function test_save_sync_settings_validates_direction(): void {
+		$this->repo->save_sync_settings( [ 'direction' => 'invalid' ] );
+
+		$saved = $GLOBALS['_wp_options'][ Settings_Repository::OPT_SYNC_SETTINGS ];
+		$this->assertSame( 'bidirectional', $saved['direction'] );
+	}
+
+	public function test_save_sync_settings_clamps_batch_size(): void {
+		$this->repo->save_sync_settings( [ 'batch_size' => 9999 ] );
+
+		$saved = $GLOBALS['_wp_options'][ Settings_Repository::OPT_SYNC_SETTINGS ];
+		$this->assertSame( 500, $saved['batch_size'] );
+	}
+
+	// ── Save log settings ────────────────────────────────
+
+	public function test_save_log_settings(): void {
+		$this->repo->save_log_settings( [ 'level' => 'debug' ] );
+
+		$saved = $GLOBALS['_wp_options'][ Settings_Repository::OPT_LOG_SETTINGS ];
+		$this->assertSame( 'debug', $saved['level'] );
+		$this->assertTrue( $saved['enabled'] );
+	}
+
+	public function test_save_log_settings_validates_level(): void {
+		$this->repo->save_log_settings( [ 'level' => 'trace' ] );
+
+		$saved = $GLOBALS['_wp_options'][ Settings_Repository::OPT_LOG_SETTINGS ];
+		$this->assertSame( 'info', $saved['level'] );
+	}
+
+	public function test_save_log_settings_clamps_retention_days(): void {
+		$this->repo->save_log_settings( [ 'retention_days' => 1000 ] );
+
+		$saved = $GLOBALS['_wp_options'][ Settings_Repository::OPT_LOG_SETTINGS ];
+		$this->assertSame( 365, $saved['retention_days'] );
 	}
 
 	// ── Sync settings ─────────────────────────────────────

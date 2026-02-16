@@ -28,7 +28,7 @@ class WebhookReliabilityTest extends TestCase {
 
 		\WP4Odoo_Plugin::reset_instance();
 
-		$this->handler = new Webhook_Handler( wp4odoo_test_settings() );
+		$this->handler = new Webhook_Handler( wp4odoo_test_settings(), \WP4Odoo_Plugin::instance()->module_registry() );
 	}
 
 	protected function tearDown(): void {

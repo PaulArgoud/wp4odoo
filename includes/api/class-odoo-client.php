@@ -4,6 +4,7 @@ declare( strict_types=1 );
 namespace WP4Odoo\API;
 
 use WP4Odoo\Logger;
+use WP4Odoo\Settings_Repository;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -44,9 +45,17 @@ class Odoo_Client {
 
 	/**
 	 * Constructor.
+	 *
+	 * @param Transport|null          $transport Optional pre-configured transport (skips auto-connection).
+	 * @param Settings_Repository|null $settings  Optional settings repository for the logger.
 	 */
-	public function __construct() {
-		$this->logger = new Logger( 'api' );
+	public function __construct( ?Transport $transport = null, ?Settings_Repository $settings = null ) {
+		$this->logger = new Logger( 'api', $settings );
+
+		if ( null !== $transport ) {
+			$this->transport = $transport;
+			$this->connected = true;
+		}
 	}
 
 	/**

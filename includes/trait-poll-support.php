@@ -32,6 +32,9 @@ trait Poll_Support {
 	 * (IN-clause) instead of full table scans, and last_polled_at timestamps
 	 * for deletion detection.
 	 *
+	 * Uses the injectable Queue_Manager instance via $this->queue() for
+	 * testability instead of the static Queue_Manager::push().
+	 *
 	 * @param string            $entity_type Entity type (e.g. 'service', 'product').
 	 * @param array<int, array> $items       Current items from the data source.
 	 * @param string            $id_field    Name of the ID field in each item.
@@ -51,6 +54,7 @@ trait Poll_Support {
 		$existing = $this->entity_map()->get_mappings_for_wp_ids( $this->id, $entity_type, $wp_ids );
 
 		$seen_ids = [];
+		$qm       = $this->queue();
 
 		foreach ( $items as $item ) {
 			$wp_id      = (int) ( $item[ $id_field ] ?? 0 );
@@ -61,9 +65,9 @@ trait Poll_Support {
 			$hash = $this->generate_sync_hash( $hash_data );
 
 			if ( ! isset( $existing[ $wp_id ] ) ) {
-				Queue_Manager::push( $this->id, $entity_type, 'create', $wp_id );
+				$qm->enqueue_push( $this->id, $entity_type, 'create', $wp_id );
 			} elseif ( $existing[ $wp_id ]['sync_hash'] !== $hash ) {
-				Queue_Manager::push( $this->id, $entity_type, 'update', $wp_id, $existing[ $wp_id ]['odoo_id'] );
+				$qm->enqueue_push( $this->id, $entity_type, 'update', $wp_id, $existing[ $wp_id ]['odoo_id'] );
 			}
 		}
 
@@ -75,7 +79,7 @@ trait Poll_Support {
 		// excluded to avoid false positives during bootstrapping.
 		$stale = $this->entity_map()->get_stale_poll_mappings( $this->id, $entity_type, $poll_start );
 		foreach ( $stale as $wp_id => $map ) {
-			Queue_Manager::push( $this->id, $entity_type, 'delete', $wp_id, $map['odoo_id'] );
+			$qm->enqueue_push( $this->id, $entity_type, 'delete', $wp_id, $map['odoo_id'] );
 		}
 	}
 }

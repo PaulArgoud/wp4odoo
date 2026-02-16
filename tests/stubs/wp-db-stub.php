@@ -47,6 +47,16 @@ class WP_DB_Stub {
 	public int $delete_return = 1;
 	public int $query_return = 1;
 
+	/**
+	 * Queue of successive query() return values.
+	 *
+	 * When non-empty, query() shifts one value per call.
+	 * When exhausted, falls back to query_return.
+	 *
+	 * @var array<int, int>
+	 */
+	public array $query_return_sequence = [];
+
 	/** @var array<int, array{method: string, args: array}> */
 	public array $calls = [];
 
@@ -126,6 +136,11 @@ class WP_DB_Stub {
 	/** @return int|false */
 	public function query( string $query ) {
 		$this->calls[] = [ 'method' => 'query', 'args' => [ $query ] ];
+
+		if ( ! empty( $this->query_return_sequence ) ) {
+			return array_shift( $this->query_return_sequence );
+		}
+
 		return $this->query_return;
 	}
 
@@ -143,8 +158,9 @@ class WP_DB_Stub {
 		$this->get_col_return     = [];
 		$this->get_results_return   = [];
 		$this->get_results_sequence = [];
-		$this->delete_return        = 1;
-		$this->query_return       = 1;
-		$this->insert_id          = 0;
+		$this->delete_return          = 1;
+		$this->query_return           = 1;
+		$this->query_return_sequence  = [];
+		$this->insert_id              = 0;
 	}
 }

@@ -10,9 +10,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Manages module registration, declarative mutual exclusivity, and lifecycle.
  *
- * Modules declare their own exclusive group and priority via properties.
- * The registry enforces that only one module per group is booted (highest
- * priority wins). All modules are registered for admin UI visibility.
+ * Modules declare their own exclusive group via properties. The registry
+ * enforces that only one module per group is booted — the first module
+ * registered in a group wins. Registration order (driven by the declarative
+ * list in register_all()) determines precedence. All modules are registered
+ * for admin UI visibility regardless of boot status.
  *
  * @package WP4Odoo
  * @since   1.5.0
@@ -71,8 +73,9 @@ class Module_Registry {
 	 * Register all built-in modules.
 	 *
 	 * Mutual exclusivity is driven by each module's $exclusive_group
-	 * and $exclusive_priority properties. The registry simply registers
-	 * every module whose external dependency is met.
+	 * property. The first module registered in a group wins — subsequent
+	 * modules in the same group are blocked. Registration order in this
+	 * list determines precedence.
 	 *
 	 * @return void
 	 */
@@ -179,8 +182,8 @@ class Module_Registry {
 	}
 
 	/**
-	 * Register a single module. Boots it if enabled and no higher-priority
-	 * module in the same exclusive group is already booted.
+	 * Register a single module. Boots it if enabled and no other module
+	 * in the same exclusive group is already booted.
 	 *
 	 * @param string      $id     Module identifier.
 	 * @param Module_Base $module Module instance.
@@ -220,9 +223,9 @@ class Module_Registry {
 			}
 		}
 
-		// Exclusive group check: skip boot if a higher-priority module is already booted.
+		// Exclusive group check: skip boot if any module in the group is already booted.
 		$group = $module->get_exclusive_group();
-		if ( '' !== $group && $this->has_booted_in_group( $group, $module->get_exclusive_priority() ) ) {
+		if ( '' !== $group && $this->has_booted_in_group( $group ) ) {
 			return;
 		}
 
@@ -317,18 +320,20 @@ class Module_Registry {
 	}
 
 	/**
-	 * Check if any module in the given exclusive group is already booted
-	 * with equal or higher priority.
+	 * Check if any module in the given exclusive group is already booted.
 	 *
-	 * @param string $group    Exclusive group name.
-	 * @param int    $priority Priority of the module being registered.
-	 * @return bool True if a competing module is already booted.
+	 * Only one module per exclusive group may boot. The first module to boot
+	 * in a group wins — subsequent modules in the same group are blocked
+	 * regardless of their priority. Registration order (driven by the
+	 * declarative list in register_all()) determines which module boots first.
+	 *
+	 * @param string $group Exclusive group name.
+	 * @return bool True if any module in this group is already booted.
 	 */
-	private function has_booted_in_group( string $group, int $priority ): bool {
+	private function has_booted_in_group( string $group ): bool {
 		foreach ( $this->booted as $booted_id ) {
 			$booted_module = $this->modules[ $booted_id ];
-			if ( $booted_module->get_exclusive_group() === $group
-				&& $booted_module->get_exclusive_priority() >= $priority ) {
+			if ( $booted_module->get_exclusive_group() === $group ) {
 				return true;
 			}
 		}

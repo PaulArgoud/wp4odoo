@@ -30,7 +30,8 @@ trait CLI_Queue_Commands {
 
 		$allowed_formats = [ 'table', 'csv', 'json', 'yaml', 'count' ];
 		if ( ! in_array( $format, $allowed_formats, true ) ) {
-			\WP_CLI::error( sprintf( 'Invalid format "%s". Allowed: %s', $format, implode( ', ', $allowed_formats ) ) );
+			/* translators: 1: format name, 2: allowed format names */
+			\WP_CLI::error( sprintf( __( 'Invalid format "%1$s". Allowed: %2$s', 'wp4odoo' ), $format, implode( ', ', $allowed_formats ) ) );
 		}
 
 		\WP_CLI\Utils\format_items(
@@ -61,13 +62,14 @@ trait CLI_Queue_Commands {
 
 		$allowed_formats = [ 'table', 'csv', 'json', 'yaml', 'count' ];
 		if ( ! in_array( $format, $allowed_formats, true ) ) {
-			\WP_CLI::error( sprintf( 'Invalid format "%s". Allowed: %s', $format, implode( ', ', $allowed_formats ) ) );
+			/* translators: 1: format name, 2: allowed format names */
+			\WP_CLI::error( sprintf( __( 'Invalid format "%1$s". Allowed: %2$s', 'wp4odoo' ), $format, implode( ', ', $allowed_formats ) ) );
 		}
 
 		$data = $this->query_service->get_queue_jobs( $page, $per_page );
 
 		if ( empty( $data['items'] ) ) {
-			\WP_CLI::line( 'No jobs found.' );
+			\WP_CLI::line( __( 'No jobs found.', 'wp4odoo' ) );
 			return;
 		}
 
@@ -100,7 +102,8 @@ trait CLI_Queue_Commands {
 			]
 		);
 
-		\WP_CLI::line( sprintf( 'Page %d/%d (%d total)', $page, $data['pages'], $data['total'] ) );
+		/* translators: 1: current page number, 2: total pages, 3: total items */
+		\WP_CLI::line( sprintf( __( 'Page %1$d/%2$d (%3$d total)', 'wp4odoo' ), $page, $data['pages'], $data['total'] ) );
 	}
 
 	/**
@@ -116,7 +119,8 @@ trait CLI_Queue_Commands {
 		);
 
 		$count = Queue_Manager::retry_failed();
-		\WP_CLI::success( sprintf( '%d failed job(s) retried.', $count ) );
+		/* translators: %d: number of jobs retried */
+		\WP_CLI::success( sprintf( __( '%d failed job(s) retried.', 'wp4odoo' ), $count ) );
 	}
 
 	/**
@@ -128,7 +132,8 @@ trait CLI_Queue_Commands {
 	private function queue_cleanup( array $assoc_args ): void {
 		$days    = max( 1, (int) ( $assoc_args['days'] ?? 7 ) );
 		$deleted = Queue_Manager::cleanup( $days );
-		\WP_CLI::success( sprintf( '%d job(s) deleted (older than %d days).', $deleted, $days ) );
+		/* translators: 1: number of jobs deleted, 2: number of days */
+		\WP_CLI::success( sprintf( __( '%1$d job(s) deleted (older than %2$d days).', 'wp4odoo' ), $deleted, $days ) );
 	}
 
 	/**
@@ -139,13 +144,15 @@ trait CLI_Queue_Commands {
 	 */
 	private function queue_cancel( int $job_id ): void {
 		if ( $job_id <= 0 ) {
-			\WP_CLI::error( 'Please provide a valid job ID. Usage: wp wp4odoo queue cancel <id>' );
+			\WP_CLI::error( __( 'Please provide a valid job ID. Usage: wp wp4odoo queue cancel <id>', 'wp4odoo' ) );
 		}
 
 		if ( Queue_Manager::cancel( $job_id ) ) {
-			\WP_CLI::success( sprintf( 'Job %d cancelled.', $job_id ) );
+			/* translators: %d: job ID */
+			\WP_CLI::success( sprintf( __( 'Job %d cancelled.', 'wp4odoo' ), $job_id ) );
 		} else {
-			\WP_CLI::error( sprintf( 'Unable to cancel job %d (not found or not pending).', $job_id ) );
+			/* translators: %d: job ID */
+			\WP_CLI::error( sprintf( __( 'Unable to cancel job %d (not found or not pending).', 'wp4odoo' ), $job_id ) );
 		}
 	}
 }

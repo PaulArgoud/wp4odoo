@@ -5,7 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.3.0] - Unreleased
+## [3.4.0] - Unreleased
+
+### Added
+- **Queue depth alerting** — `Queue_Manager` monitors pending job count and fires `wp4odoo_queue_depth_warning` (≥ 1 000 jobs) and `wp4odoo_queue_depth_critical` (≥ 5 000 jobs) action hooks with a 5-minute cooldown between alerts. Consumers can use these to trigger admin notices, email alerts, or pause enqueuing
+- **Queue_Job readonly DTO** — New `Queue_Job` readonly class provides typed, immutable access to sync queue job data (`id`, `module`, `entity_type`, `action`, `wp_id`, `odoo_id`, `status`, `retry_count`, `error_message`, `created_at`, `scheduled_at`, `claimed_at`). `Sync_Queue_Repository::fetch_pending()` now returns `Queue_Job[]` instead of raw `stdClass` arrays
+- **Advisory_Lock utility class** — Reusable MySQL advisory lock wrapper (`acquire()`, `release()`, `is_held()`) consolidating 3 duplicate implementations across `Sync_Engine`, `Partner_Service`, and `Push_Lock`
+
+### Changed
+- **Queue_Manager injectable** — `Queue_Manager` is now instantiable with an optional `Sync_Queue_Repository` dependency. `Module_Base` exposes `queue()` accessor and `set_queue_manager()` setter. Module push/pull operations use the injectable instance. Static API preserved for backward compatibility
+- **Chunked DELETE in cleanup** — `Sync_Queue_Repository::cleanup()` and `Logger::cleanup()` now delete in chunks of 10 000 rows to avoid long-running table locks on large sites
+- **CLI i18n** — 42+ `WP_CLI::log()` / `WP_CLI::success()` / `WP_CLI::error()` strings across `CLI`, `CLI_Queue_Commands`, and `CLI_Module_Commands` wrapped in `__()` for translation support
+- **Injectable transport for Odoo_Client** — `Odoo_Client` constructor now accepts optional `?Transport` and `?Settings_Repository` parameters, enabling test doubles without monkey-patching and improving DI testability
+- **Standardized Logger construction** — `Logger` now consistently receives `Settings_Repository` across all construction sites (`Odoo_Client`, `Translation_Service`, `Ajax_Monitor_Handlers`), eliminating bare `new Logger()` calls
+- **Webhook_Handler dependency injection** — `Webhook_Handler` now receives `Module_Registry` via constructor instead of resolving the plugin singleton internally
+- **Advisory lock on batch creates** — `push_batch_creates()` acquires a per-model advisory lock (`wp4odoo_batch_{module}_{model}`) to prevent concurrent batch creates from producing duplicates
+- **Settings write-time validation** — `Settings_Repository` gains `save_sync_settings()` and `save_log_settings()` with enum validation (protocol, direction, log level) and numeric range clamping (timeout 5–120, batch_size 1–500)
+- **Rate_Limiter atomic increment** — Dual-strategy rate limiting: `wp_cache_incr()` for sites with Redis/Memcached (atomic, no TOCTOU), transient fallback for standard installs
+- **Module_Helpers trait split** — Split `Module_Helpers` into 4 focused sub-traits: `Partner_Helpers`, `Accounting_Helpers`, `Dependency_Helpers`, `Sync_Helpers`. `Module_Helpers` now composes all 4 via `use` for backward compatibility
+
+### Fixed
+- **Exclusive group priority bug** — `Module_Registry::has_booted_in_group()` now blocks any module in the same exclusive group regardless of priority (first-registered wins), fixing a bug where higher-priority modules could bypass exclusion
+
+### Tests
+- 3 614 unit tests (5 612 assertions) — new tests covering Queue_Job DTO, advisory locks, Queue_Manager DI, queue depth alerting, chunked cleanup, settings validation, rate limiter, and module registry fixes
+
+## [3.3.0] - 2026-02-16
 
 ### Added
 - **Queue observability hook** — New `wp4odoo_job_processed` action fires after each sync job with module ID, elapsed time (ms), `Sync_Result`, and raw job object. Enables external monitoring and performance dashboards

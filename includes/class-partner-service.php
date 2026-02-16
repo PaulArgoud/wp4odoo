@@ -209,16 +209,9 @@ class Partner_Service {
 		// Advisory lock prevents duplicate partner creation when concurrent
 		// queue workers resolve the same email simultaneously (TOCTOU race
 		// between search and create). Same proven pattern as Circuit_Breaker.
-		global $wpdb;
+		$lock = new Advisory_Lock( 'wp4odoo_partner_' . md5( $email ) );
 
-		$lock_name = 'wp4odoo_partner_' . md5( $email );
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-		$locked = $wpdb->get_var(
-			$wpdb->prepare( 'SELECT GET_LOCK( %s, %d )', $lock_name, 5 )
-		);
-
-		if ( '1' !== (string) $locked ) {
+		if ( ! $lock->acquire() ) {
 			$this->logger->warning(
 				'Could not acquire partner lock — returning null to let Sync_Engine retry.',
 				[ 'email' => $email ]
@@ -229,10 +222,7 @@ class Partner_Service {
 		try {
 			return $this->search_or_create_partner( $client, $email, $data, $wp_id );
 		} finally {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-			$wpdb->get_var(
-				$wpdb->prepare( 'SELECT RELEASE_LOCK( %s )', $lock_name )
-			);
+			$lock->release();
 		}
 	}
 

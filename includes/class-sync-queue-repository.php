@@ -19,6 +19,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Sync_Queue_Repository {
 
 	/**
+	 * Number of rows to delete per iteration during cleanup.
+	 *
+	 * Prevents long-running table locks on large sites by chunking
+	 * the DELETE into bounded batches.
+	 */
+	private const CLEANUP_CHUNK_SIZE = 10000;
+
+	/**
 	 * Get the table name.
 	 *
 	 * @return string
@@ -285,12 +293,20 @@ class Sync_Queue_Repository {
 		$table  = $this->table();
 		$cutoff = gmdate( 'Y-m-d H:i:s', time() - ( $days_old * DAY_IN_SECONDS ) );
 
-		return (int) $wpdb->query(
-			$wpdb->prepare(
-				"DELETE FROM {$table} WHERE status IN ('completed', 'failed') AND created_at < %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
-				$cutoff
-			)
-		);
+		// Chunk the DELETE to avoid long-running table locks on large sites.
+		$total_deleted = 0;
+		do {
+			$deleted = (int) $wpdb->query( // phpcs:ignore Generic.Formatting.MultipleStatementAlignment.NotSameWarning
+				$wpdb->prepare(
+					"DELETE FROM {$table} WHERE status IN ('completed', 'failed') AND created_at < %s LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+					$cutoff,
+					self::CLEANUP_CHUNK_SIZE
+				)
+			);
+			$total_deleted += $deleted;
+		} while ( $deleted > 0 );
+
+		return $total_deleted;
 	}
 
 	/**
@@ -342,7 +358,7 @@ class Sync_Queue_Repository {
 	 * @param string      $module      Module identifier.
 	 * @param string|null $entity_type Optional entity type filter.
 	 * @param int         $limit       Maximum number of jobs to return (0 = no limit).
-	 * @return array Array of job objects.
+	 * @return Queue_Job[] Array of Queue_Job value objects.
 	 */
 	public function get_pending( string $module, ?string $entity_type = null, int $limit = 1000 ): array {
 		global $wpdb;
@@ -351,21 +367,25 @@ class Sync_Queue_Repository {
 		$limit_sql = $limit > 0 ? sprintf( ' LIMIT %d', $limit ) : ''; // $limit is typed int — no injection risk.
 
 		if ( null !== $entity_type ) {
-			return $wpdb->get_results(
+			$rows = $wpdb->get_results(
 				$wpdb->prepare(
 					"SELECT * FROM {$table} WHERE module = %s AND entity_type = %s AND status = 'pending' ORDER BY priority ASC, created_at ASC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
 					$module,
 					$entity_type
 				) . $limit_sql
 			);
+
+			return array_map( [ Queue_Job::class, 'from_row' ], $rows );
 		}
 
-		return $wpdb->get_results(
+		$rows = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT * FROM {$table} WHERE module = %s AND status = 'pending' ORDER BY priority ASC, created_at ASC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
 				$module
 			) . $limit_sql
 		);
+
+		return array_map( [ Queue_Job::class, 'from_row' ], $rows );
 	}
 
 	/**
@@ -374,7 +394,7 @@ class Sync_Queue_Repository {
 	 * @param string $module     Module identifier.
 	 * @param int    $batch_size Maximum number of jobs to fetch.
 	 * @param string $now        Current datetime string (GMT).
-	 * @return array Array of job objects.
+	 * @return Queue_Job[] Array of Queue_Job value objects.
 	 */
 	public function fetch_pending_for_module( string $module, int $batch_size, string $now ): array {
 		global $wpdb;
@@ -390,7 +410,9 @@ class Sync_Queue_Repository {
 				 LIMIT %d";
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $sql built above from safe $wpdb->prefix.
-		return $wpdb->get_results( $wpdb->prepare( $sql, $module, $now, $batch_size ) );
+		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $module, $now, $batch_size ) );
+
+		return array_map( [ Queue_Job::class, 'from_row' ], $rows );
 	}
 
 	/**
@@ -398,7 +420,7 @@ class Sync_Queue_Repository {
 	 *
 	 * @param int    $batch_size Maximum number of jobs to fetch.
 	 * @param string $now        Current datetime string (GMT).
-	 * @return array Array of job objects.
+	 * @return Queue_Job[] Array of Queue_Job value objects.
 	 */
 	public function fetch_pending( int $batch_size, string $now ): array {
 		global $wpdb;
@@ -413,7 +435,9 @@ class Sync_Queue_Repository {
 				 LIMIT %d";
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $sql built above from safe $wpdb->prefix.
-		return $wpdb->get_results( $wpdb->prepare( $sql, $now, $batch_size ) );
+		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $now, $batch_size ) );
+
+		return array_map( [ Queue_Job::class, 'from_row' ], $rows );
 	}
 
 	/**
@@ -510,5 +534,31 @@ class Sync_Queue_Repository {
 	public function invalidate_stats_cache(): void {
 		delete_transient( 'wp4odoo_queue_stats' );
 		delete_transient( 'wp4odoo_queue_health' );
+	}
+
+	/**
+	 * Get the count of pending jobs in the queue.
+	 *
+	 * Lightweight single-value query for queue depth alerting.
+	 * Not cached — callers should apply their own cooldown.
+	 *
+	 * @since 3.4.0
+	 *
+	 * @return int Number of pending jobs.
+	 */
+	public function get_pending_count(): int {
+		global $wpdb;
+
+		$table = $this->table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$count = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table} WHERE status = %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				'pending'
+			)
+		);
+
+		return (int) $count;
 	}
 }

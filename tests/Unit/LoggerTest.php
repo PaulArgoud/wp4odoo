@@ -314,21 +314,23 @@ class LoggerTest extends TestCase {
 			'level'          => 'debug',
 			'retention_days' => 7,
 		];
-		$this->wpdb->query_return                       = 3;
-		$logger                                         = new Logger();
+		// Simulate one chunk of 3 rows, then 0 to stop the loop.
+		$this->wpdb->query_return_sequence = [ 3, 0 ];
+		$logger                            = new Logger();
 
 		$result = $logger->cleanup();
 
 		$this->assertSame( 3, $result );
 		$queries = $this->get_calls( 'query' );
-		$this->assertCount( 1, $queries );
+		$this->assertCount( 2, $queries );
 	}
 
 	public function test_cleanup_uses_correct_table(): void {
 		$GLOBALS['_wp_options']['wp4odoo_log_settings'] = [
 			'retention_days' => 30,
 		];
-		$logger                                         = new Logger();
+		$this->wpdb->query_return_sequence = [ 0 ];
+		$logger                            = new Logger();
 
 		$logger->cleanup();
 
@@ -341,7 +343,8 @@ class LoggerTest extends TestCase {
 		$GLOBALS['_wp_options']['wp4odoo_log_settings'] = [
 			'retention_days' => 14,
 		];
-		$logger                                         = new Logger();
+		$this->wpdb->query_return_sequence = [ 0 ];
+		$logger                            = new Logger();
 
 		$logger->cleanup();
 
@@ -349,6 +352,52 @@ class LoggerTest extends TestCase {
 		$this->assertNotEmpty( $prepare );
 		// Should have WHERE created_at < cutoff date.
 		$this->assertStringContainsString( 'WHERE created_at <', $prepare[0]['args'][0] );
+	}
+
+	public function test_cleanup_uses_limit_in_query(): void {
+		$GLOBALS['_wp_options']['wp4odoo_log_settings'] = [
+			'retention_days' => 7,
+		];
+		$this->wpdb->query_return_sequence = [ 0 ];
+		$logger                            = new Logger();
+
+		$logger->cleanup();
+
+		$prepare = $this->get_calls( 'prepare' );
+		$this->assertNotEmpty( $prepare );
+		$this->assertStringContainsString( 'LIMIT', $prepare[0]['args'][0] );
+	}
+
+	public function test_cleanup_accumulates_rows_across_chunks(): void {
+		$GLOBALS['_wp_options']['wp4odoo_log_settings'] = [
+			'retention_days' => 7,
+		];
+		// Simulate two full chunks then a partial, then 0 to stop.
+		$this->wpdb->query_return_sequence = [ 10000, 10000, 3000, 0 ];
+		$logger                            = new Logger();
+
+		$result = $logger->cleanup();
+
+		$this->assertSame( 23000, $result );
+
+		// Verify query was called 4 times (3 chunks + final 0).
+		$queries = $this->get_calls( 'query' );
+		$this->assertCount( 4, $queries );
+	}
+
+	public function test_cleanup_loops_until_zero_rows_deleted(): void {
+		$GLOBALS['_wp_options']['wp4odoo_log_settings'] = [
+			'retention_days' => 7,
+		];
+		// First chunk deletes 100, second deletes 0 → loop stops.
+		$this->wpdb->query_return_sequence = [ 100, 0 ];
+		$logger                            = new Logger();
+
+		$result = $logger->cleanup();
+
+		$this->assertSame( 100, $result );
+		$queries = $this->get_calls( 'query' );
+		$this->assertCount( 2, $queries );
 	}
 
 	// ─── cleanup() returns 0 when retention_days <= 0 ───────
@@ -382,8 +431,9 @@ class LoggerTest extends TestCase {
 			'enabled' => true,
 		];
 		// Default retention_days is 30 (not 0), so it will run.
-		$this->wpdb->query_return = 2;
-		$logger                   = new Logger();
+		// Simulate one chunk of 2 rows, then 0 to stop.
+		$this->wpdb->query_return_sequence = [ 2, 0 ];
+		$logger                            = new Logger();
 
 		$result = $logger->cleanup();
 
@@ -393,8 +443,9 @@ class LoggerTest extends TestCase {
 
 	public function test_cleanup_uses_default_30_days_when_not_specified(): void {
 		// No log settings at all.
-		$this->wpdb->query_return = 5;
-		$logger                   = new Logger();
+		// Simulate one chunk of 5 rows, then 0 to stop.
+		$this->wpdb->query_return_sequence = [ 5, 0 ];
+		$logger                            = new Logger();
 
 		$result = $logger->cleanup();
 
@@ -435,6 +486,37 @@ class LoggerTest extends TestCase {
 		$insert = $this->get_last_call( 'insert' );
 		$data   = $insert['args'][1];
 		$this->assertNull( $data['module'] );
+	}
+
+	// ─── Constructor with Settings_Repository ─────────────
+
+	public function test_logger_with_settings_repository_reads_from_settings(): void {
+		$GLOBALS['_wp_options']['wp4odoo_log_settings'] = [
+			'enabled' => true,
+			'level'   => 'debug',
+		];
+		$settings = wp4odoo_test_settings();
+		$logger   = new Logger( 'api', $settings );
+
+		$result = $logger->info( 'Test with settings' );
+
+		$this->assertTrue( $result );
+		$insert = $this->get_last_call( 'insert' );
+		$data   = $insert['args'][1];
+		$this->assertSame( 'api', $data['module'] );
+		$this->assertSame( 'Test with settings', $data['message'] );
+	}
+
+	public function test_logger_with_null_settings_falls_back_to_options(): void {
+		$this->enable_logging();
+		$logger = new Logger( 'fallback', null );
+
+		$result = $logger->info( 'Fallback test' );
+
+		$this->assertTrue( $result );
+		$insert = $this->get_last_call( 'insert' );
+		$data   = $insert['args'][1];
+		$this->assertSame( 'fallback', $data['module'] );
 	}
 
 	// ─── Helpers ───────────────────────────────────────────

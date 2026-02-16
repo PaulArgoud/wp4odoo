@@ -29,7 +29,7 @@ trait CLI_Module_Commands {
 		$settings = $plugin->settings();
 
 		if ( empty( $modules ) ) {
-			\WP_CLI::line( 'No modules registered.' );
+			\WP_CLI::line( __( 'No modules registered.', 'wp4odoo' ) );
 			return;
 		}
 
@@ -54,13 +54,14 @@ trait CLI_Module_Commands {
 	 */
 	private function module_toggle( string $id, bool $enabled ): void {
 		if ( empty( $id ) ) {
-			\WP_CLI::error( 'Please provide a module ID. Usage: wp wp4odoo module enable <id>' );
+			\WP_CLI::error( __( 'Please provide a module ID. Usage: wp wp4odoo module enable <id>', 'wp4odoo' ) );
 		}
 
 		$plugin  = \WP4Odoo_Plugin::instance();
 		$modules = $plugin->get_modules();
 		if ( ! isset( $modules[ $id ] ) ) {
-			\WP_CLI::error( sprintf( 'Unknown module: %s. Use "wp wp4odoo module list" to see available modules.', $id ) );
+			/* translators: %s: module identifier */
+			\WP_CLI::error( sprintf( __( 'Unknown module: %s. Use "wp wp4odoo module list" to see available modules.', 'wp4odoo' ), $id ) );
 		}
 
 		// When enabling, check for mutual exclusivity conflicts.
@@ -70,14 +71,16 @@ trait CLI_Module_Commands {
 			if ( ! empty( $conflicts ) ) {
 				\WP_CLI::warning(
 					sprintf(
-						'Module "%s" conflicts with currently enabled module(s): %s. They will be disabled.',
+						/* translators: 1: module identifier, 2: conflicting module identifiers */
+						__( 'Module "%1$s" conflicts with currently enabled module(s): %2$s. They will be disabled.', 'wp4odoo' ),
 						$id,
 						implode( ', ', $conflicts )
 					)
 				);
 				foreach ( $conflicts as $conflict_id ) {
 					$plugin->settings()->set_module_enabled( $conflict_id, false );
-					\WP_CLI::line( sprintf( '  Disabled conflicting module: %s', $conflict_id ) );
+					/* translators: %s: conflicting module identifier */
+					\WP_CLI::line( sprintf( __( '  Disabled conflicting module: %s', 'wp4odoo' ), $conflict_id ) );
 				}
 			}
 		}
@@ -85,9 +88,11 @@ trait CLI_Module_Commands {
 		$plugin->settings()->set_module_enabled( $id, $enabled );
 
 		if ( $enabled ) {
-			\WP_CLI::success( sprintf( 'Module "%s" enabled.', $id ) );
+			/* translators: %s: module identifier */
+			\WP_CLI::success( sprintf( __( 'Module "%s" enabled.', 'wp4odoo' ), $id ) );
 		} else {
-			\WP_CLI::success( sprintf( 'Module "%s" disabled.', $id ) );
+			/* translators: %s: module identifier */
+			\WP_CLI::success( sprintf( __( 'Module "%s" disabled.', 'wp4odoo' ), $id ) );
 		}
 	}
 }

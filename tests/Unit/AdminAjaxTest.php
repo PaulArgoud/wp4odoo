@@ -118,7 +118,8 @@ class AdminAjaxTest extends TestCase {
 	// ─── cleanup_queue ───────────────────────────────────
 
 	public function test_cleanup_queue_defaults_to_7_days(): void {
-		$this->wpdb->query_return = 3;
+		// Simulate one chunk of 3 rows, then 0 to stop the chunked loop.
+		$this->wpdb->query_return_sequence = [ 3, 0 ];
 
 		try {
 			$this->ajax->cleanup_queue();
@@ -129,8 +130,9 @@ class AdminAjaxTest extends TestCase {
 	}
 
 	public function test_cleanup_queue_uses_custom_days(): void {
-		$this->wpdb->query_return = 10;
-		$_POST['days']            = '30';
+		// Simulate one chunk of 10 rows, then 0 to stop the chunked loop.
+		$this->wpdb->query_return_sequence = [ 10, 0 ];
+		$_POST['days']                     = '30';
 
 		try {
 			$this->ajax->cleanup_queue();
@@ -142,7 +144,7 @@ class AdminAjaxTest extends TestCase {
 	}
 
 	public function test_cleanup_queue_returns_zero(): void {
-		$this->wpdb->query_return = 0;
+		$this->wpdb->query_return_sequence = [ 0 ];
 
 		try {
 			$this->ajax->cleanup_queue();
@@ -182,7 +184,8 @@ class AdminAjaxTest extends TestCase {
 
 	public function test_purge_logs_returns_deleted_count(): void {
 		$GLOBALS['_wp_options']['wp4odoo_log_settings'] = [ 'retention_days' => 30 ];
-		$this->wpdb->query_return                       = 12;
+		// Simulate one chunk of 12 rows, then 0 to stop the chunked loop.
+		$this->wpdb->query_return_sequence = [ 12, 0 ];
 
 		try {
 			$this->ajax->purge_logs();
@@ -195,7 +198,7 @@ class AdminAjaxTest extends TestCase {
 
 	public function test_purge_logs_returns_zero(): void {
 		$GLOBALS['_wp_options']['wp4odoo_log_settings'] = [ 'retention_days' => 30 ];
-		$this->wpdb->query_return                       = 0;
+		$this->wpdb->query_return_sequence              = [ 0 ];
 
 		try {
 			$this->ajax->purge_logs();
