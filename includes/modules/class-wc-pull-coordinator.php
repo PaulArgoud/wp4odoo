@@ -6,7 +6,6 @@ namespace WP4Odoo\Modules;
 use WP4Odoo\Error_Classification;
 use WP4Odoo\Error_Type;
 use WP4Odoo\Field_Mapper;
-use WP4Odoo\I18n\Translation_Service;
 use WP4Odoo\Logger;
 use WP4Odoo\Queue_Manager;
 use WP4Odoo\Sync_Result;
@@ -21,6 +20,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Extracted from WooCommerce_Module to separate pull-side complexity
  * (variant dispatch, shipment dispatch, image/pricelist/shipment
  * post-pull hooks) from the main module class.
+ *
+ * Translation accumulation is delegated to WC_Translation_Accumulator.
  *
  * @package WP4Odoo
  * @since   2.9.0
@@ -85,11 +86,13 @@ class WC_Pull_Coordinator {
 	private Shipment_Handler $shipment_handler;
 
 	/**
-	 * Closure returning the Translation_Service.
+	 * Translation accumulator.
 	 *
-	 * @var \Closure(): Translation_Service
+	 * @since 3.4.0
+	 *
+	 * @var WC_Translation_Accumulator
 	 */
-	private \Closure $translation_fn;
+	private WC_Translation_Accumulator $translation_accumulator;
 
 	/**
 	 * Raw Odoo data captured during pull for post-save image processing.
@@ -97,34 +100,6 @@ class WC_Pull_Coordinator {
 	 * @var array<string, mixed>
 	 */
 	private array $last_odoo_data = [];
-
-	/**
-	 * Accumulator for pulled products: Odoo ID => WP ID.
-	 *
-	 * Populated during the batch, flushed after all jobs are processed
-	 * to apply translations in a single batched Odoo read per language.
-	 *
-	 * @var array<int, int>
-	 */
-	private array $pulled_products = [];
-
-	/**
-	 * Accumulator for pulled categories: Odoo categ_id => WP term_id.
-	 *
-	 * @since 3.1.0
-	 *
-	 * @var array<int, int>
-	 */
-	private array $pulled_categories = [];
-
-	/**
-	 * Accumulator for pulled attribute values: Odoo value_id => WP term_id.
-	 *
-	 * @since 3.1.0
-	 *
-	 * @var array<int, int>
-	 */
-	private array $pulled_attribute_values = [];
 
 	/**
 	 * Constructor.
@@ -158,7 +133,12 @@ class WC_Pull_Coordinator {
 		$this->image_handler     = $image_handler;
 		$this->pricelist_handler = $pricelist_handler;
 		$this->shipment_handler  = $shipment_handler;
-		$this->translation_fn    = $translation_fn;
+
+		$this->translation_accumulator = new WC_Translation_Accumulator(
+			$logger,
+			$settings_fn,
+			$translation_fn
+		);
 	}
 
 	/**
@@ -225,8 +205,8 @@ class WC_Pull_Coordinator {
 		$ok = $this->variant_handler->pull_variants( $template_odoo_id, $parent_wp_id );
 
 		// Accumulate attribute value mappings for translation flush.
-		$attr_values                   = $this->variant_handler->get_pulled_attribute_values();
-		$this->pulled_attribute_values = array_replace( $this->pulled_attribute_values, $attr_values );
+		$attr_values = $this->variant_handler->get_pulled_attribute_values();
+		$this->translation_accumulator->accumulate_attribute_values( $attr_values );
 		$this->variant_handler->clear_pulled_attribute_values();
 
 		return $ok
@@ -319,12 +299,12 @@ class WC_Pull_Coordinator {
 		$this->maybe_apply_pricelist_price( $wp_id, $odoo_id );
 
 		// Accumulate category for translation flush.
-		$this->accumulate_category();
+		$this->translation_accumulator->accumulate_category( $this->last_odoo_data );
 
 		$this->clear_odoo_data();
 
 		// Accumulate for batch translation flush.
-		$this->pulled_products[ $odoo_id ] = $wp_id;
+		$this->translation_accumulator->accumulate_product( $odoo_id, $wp_id );
 	}
 
 	/**
@@ -339,6 +319,60 @@ class WC_Pull_Coordinator {
 	public function on_order_pulled( int $odoo_order_id, int $wc_order_id ): void {
 		$this->maybe_pull_shipments( $odoo_order_id, $wc_order_id );
 	}
+
+	/**
+	 * Flush accumulated translations in batch.
+	 *
+	 * Delegates to WC_Translation_Accumulator.
+	 *
+	 * @return void
+	 */
+	public function flush_translations(): void {
+		$this->translation_accumulator->flush_translations();
+	}
+
+	/**
+	 * Apply translated field values to a WC product post.
+	 *
+	 * Delegates to WC_Translation_Accumulator.
+	 *
+	 * @param int                  $trans_wp_id Translated WP post ID.
+	 * @param array<string, string> $data       WP field => translated value.
+	 * @param string               $lang        Language code.
+	 * @return void
+	 */
+	public function apply_product_translation( int $trans_wp_id, array $data, string $lang ): void {
+		$this->translation_accumulator->apply_product_translation( $trans_wp_id, $data, $lang );
+	}
+
+	/**
+	 * Apply a translated name to a taxonomy term.
+	 *
+	 * Delegates to WC_Translation_Accumulator.
+	 *
+	 * @since 3.1.0
+	 *
+	 * @param int    $trans_term_id Translated WP term ID.
+	 * @param string $name         Translated term name.
+	 * @param string $lang         Language code.
+	 * @return void
+	 */
+	public function apply_term_translation( int $trans_term_id, string $name, string $lang ): void {
+		$this->translation_accumulator->apply_term_translation( $trans_term_id, $name, $lang );
+	}
+
+	/**
+	 * Get the translation accumulator instance.
+	 *
+	 * @since 3.4.0
+	 *
+	 * @return WC_Translation_Accumulator
+	 */
+	public function get_translation_accumulator(): WC_Translation_Accumulator {
+		return $this->translation_accumulator;
+	}
+
+	// ─── Private helpers ────────────────────────────────────
 
 	/**
 	 * Import the featured image for a product if image sync is enabled.
@@ -482,242 +516,5 @@ class WC_Pull_Coordinator {
 				'variant_count'    => count( $variant_ids ),
 			]
 		);
-	}
-
-	// ─── Translation flush ──────────────────────────────────
-
-	/**
-	 * Flush accumulated product translations in batch.
-	 *
-	 * Called after all jobs in a Sync_Engine batch are processed.
-	 * Makes one Odoo read() per language for ALL accumulated products.
-	 *
-	 * @return void
-	 */
-	public function flush_translations(): void {
-		$has_products   = ! empty( $this->pulled_products );
-		$has_categories = ! empty( $this->pulled_categories );
-		$has_attr_vals  = ! empty( $this->pulled_attribute_values );
-
-		if ( ! $has_products && ! $has_categories && ! $has_attr_vals ) {
-			return;
-		}
-
-		$settings     = ( $this->settings_fn )();
-		$sync_setting = $settings['sync_translations'] ?? [];
-
-		// Backward compat: old boolean format (true = all languages, false = none).
-		if ( ! is_array( $sync_setting ) ) {
-			if ( empty( $sync_setting ) ) {
-				$this->clear_all_accumulators();
-				return;
-			}
-			$enabled_langs = []; // Boolean true → all languages.
-		} else {
-			if ( empty( $sync_setting ) ) {
-				$this->clear_all_accumulators();
-				return;
-			}
-			$enabled_langs = $sync_setting;
-		}
-
-		/** @var Translation_Service $ts */
-		$ts = ( $this->translation_fn )();
-		if ( ! $ts->is_available() ) {
-			$this->clear_all_accumulators();
-			return;
-		}
-
-		// ── Product translations ────────────────────────────
-		if ( $has_products ) {
-			/**
-			 * Filter the translatable field map for WooCommerce products.
-			 *
-			 * Keys are Odoo field names, values are WP field names.
-			 *
-			 * @since 3.0.0
-			 *
-			 * @param array<string, string> $field_map Odoo field => WP field.
-			 */
-			$field_map = apply_filters(
-				'wp4odoo_translatable_fields_woocommerce',
-				[
-					'name'             => 'post_title',
-					'description_sale' => 'post_content',
-				]
-			);
-
-			$ts->pull_translations_batch(
-				'product.template',
-				$this->pulled_products,
-				array_keys( $field_map ),
-				$field_map,
-				'product',
-				[ $this, 'apply_product_translation' ],
-				$enabled_langs
-			);
-
-			$this->logger->info(
-				'Flushed product translations.',
-				[ 'count' => count( $this->pulled_products ) ]
-			);
-		}
-
-		// ── Category translations ───────────────────────────
-		if ( $has_categories ) {
-			$ts->pull_term_translations_batch(
-				'product.category',
-				$this->pulled_categories,
-				'product_cat',
-				[ $this, 'apply_term_translation' ],
-				$enabled_langs
-			);
-
-			$this->logger->info(
-				'Flushed category translations.',
-				[ 'count' => count( $this->pulled_categories ) ]
-			);
-		}
-
-		// ── Attribute value translations ────────────────────
-		if ( $has_attr_vals ) {
-			$by_taxonomy = $this->group_attribute_values_by_taxonomy();
-
-			foreach ( $by_taxonomy as $taxonomy => $odoo_wp_map ) {
-				$ts->pull_term_translations_batch(
-					'product.attribute.value',
-					$odoo_wp_map,
-					$taxonomy,
-					[ $this, 'apply_term_translation' ],
-					$enabled_langs
-				);
-			}
-
-			$this->logger->info(
-				'Flushed attribute value translations.',
-				[ 'count' => count( $this->pulled_attribute_values ) ]
-			);
-		}
-
-		$this->clear_all_accumulators();
-	}
-
-	/**
-	 * Apply translated field values to a WC product post.
-	 *
-	 * Used as the callback for Translation_Service::pull_translations_batch().
-	 *
-	 * @param int                  $trans_wp_id Translated WP post ID.
-	 * @param array<string, string> $data       WP field => translated value.
-	 * @param string               $lang        Language code.
-	 * @return void
-	 */
-	public function apply_product_translation( int $trans_wp_id, array $data, string $lang ): void {
-		$product = wc_get_product( $trans_wp_id );
-		if ( $product ) {
-			if ( isset( $data['post_title'] ) ) {
-				$product->set_name( $data['post_title'] );
-			}
-			if ( isset( $data['post_content'] ) ) {
-				$product->set_description( $data['post_content'] );
-			}
-			$product->save();
-			return;
-		}
-
-		// Fallback: direct post update if WC product cannot be loaded.
-		$update = [ 'ID' => $trans_wp_id ];
-		if ( isset( $data['post_title'] ) ) {
-			$update['post_title'] = $data['post_title'];
-		}
-		if ( isset( $data['post_content'] ) ) {
-			$update['post_content'] = $data['post_content'];
-		}
-
-		wp_update_post( $update );
-	}
-
-	/**
-	 * Apply a translated name to a taxonomy term.
-	 *
-	 * Used as the callback for Translation_Service::pull_term_translations_batch().
-	 *
-	 * @since 3.1.0
-	 *
-	 * @param int    $trans_term_id Translated WP term ID.
-	 * @param string $name         Translated term name.
-	 * @param string $lang         Language code.
-	 * @return void
-	 */
-	public function apply_term_translation( int $trans_term_id, string $name, string $lang ): void {
-		wp_update_term( $trans_term_id, '', [ 'name' => $name ] );
-	}
-
-	// ─── Private helpers ────────────────────────────────────
-
-	/**
-	 * Accumulate the category from the last captured Odoo data.
-	 *
-	 * Reads categ_id (Many2one: [id, name]) from last_odoo_data and
-	 * resolves it to an existing product_cat term for accumulation.
-	 *
-	 * @since 3.1.0
-	 *
-	 * @return void
-	 */
-	private function accumulate_category(): void {
-		$categ = $this->last_odoo_data['categ_id'] ?? null;
-
-		if ( ! is_array( $categ ) || count( $categ ) < 2 ) {
-			return;
-		}
-
-		$odoo_categ_id = (int) $categ[0];
-		$categ_name    = (string) $categ[1];
-
-		if ( $odoo_categ_id <= 0 || '' === $categ_name ) {
-			return;
-		}
-
-		// Look up the term that Product_Handler just created/found.
-		$term = term_exists( $categ_name, 'product_cat' );
-		if ( $term ) {
-			$term_id                                   = (int) ( is_array( $term ) ? $term['term_id'] : $term ); // @phpstan-ignore function.alreadyNarrowedType
-			$this->pulled_categories[ $odoo_categ_id ] = $term_id;
-		}
-	}
-
-	/**
-	 * Group accumulated attribute values by their WP taxonomy.
-	 *
-	 * @since 3.1.0
-	 *
-	 * @return array<string, array<int, int>> taxonomy => [odoo_id => term_id].
-	 */
-	private function group_attribute_values_by_taxonomy(): array {
-		$grouped = [];
-
-		foreach ( $this->pulled_attribute_values as $odoo_id => $term_id ) {
-			$term = get_term( $term_id );
-
-			if ( $term && ! is_wp_error( $term ) ) {
-				$grouped[ $term->taxonomy ][ $odoo_id ] = $term_id;
-			}
-		}
-
-		return $grouped;
-	}
-
-	/**
-	 * Clear all translation accumulators.
-	 *
-	 * @since 3.1.0
-	 *
-	 * @return void
-	 */
-	private function clear_all_accumulators(): void {
-		$this->pulled_products         = [];
-		$this->pulled_categories       = [];
-		$this->pulled_attribute_values = [];
 	}
 }

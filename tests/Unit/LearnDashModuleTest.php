@@ -6,19 +6,10 @@ namespace WP4Odoo\Tests\Unit;
 use WP4Odoo\Modules\LearnDash_Module;
 use WP4Odoo\Modules\LearnDash_Handler;
 use WP4Odoo\Logger;
-use PHPUnit\Framework\TestCase;
 
-/**
- * Unit tests for LearnDash_Module, LearnDash_Handler, and LearnDash_Hooks.
- *
- * Tests module configuration, handler data loading, invoice/order formatting,
- * and hook guard logic.
- */
-class LearnDashModuleTest extends TestCase {
+class LearnDashModuleTest extends LMSModuleTestBase {
 
-	private LearnDash_Module $module;
 	private LearnDash_Handler $handler;
-	private \WP_DB_Stub $wpdb;
 
 	protected function setUp(): void {
 		global $wpdb;
@@ -38,44 +29,27 @@ class LearnDashModuleTest extends TestCase {
 		$this->handler = new LearnDash_Handler( new Logger( 'learndash', wp4odoo_test_settings() ) );
 	}
 
-	// ─── Module Identity ───────────────────────────────────
-
-	public function test_module_id_is_learndash(): void {
-		$this->assertSame( 'learndash', $this->module->get_id() );
+	protected function get_module_id(): string {
+		return 'learndash';
 	}
 
-	public function test_module_name_is_learndash(): void {
-		$this->assertSame( 'LearnDash', $this->module->get_name() );
+	protected function get_module_name(): string {
+		return 'LearnDash';
 	}
 
-	public function test_no_exclusive_group(): void {
-		$this->assertSame( '', $this->module->get_exclusive_group() );
+	protected function get_order_entity(): string {
+		return 'transaction';
 	}
 
-	public function test_sync_direction_is_bidirectional(): void {
-		$this->assertSame( 'bidirectional', $this->module->get_sync_direction() );
+	protected function get_sync_order_key(): string {
+		return 'sync_transactions';
 	}
 
 	// ─── Odoo Models ───────────────────────────────────────
 
-	public function test_declares_course_model(): void {
-		$models = $this->module->get_odoo_models();
-		$this->assertSame( 'product.product', $models['course'] );
-	}
-
 	public function test_declares_group_model(): void {
 		$models = $this->module->get_odoo_models();
 		$this->assertSame( 'product.product', $models['group'] );
-	}
-
-	public function test_declares_transaction_model(): void {
-		$models = $this->module->get_odoo_models();
-		$this->assertSame( 'account.move', $models['transaction'] );
-	}
-
-	public function test_declares_enrollment_model(): void {
-		$models = $this->module->get_odoo_models();
-		$this->assertSame( 'sale.order', $models['enrollment'] );
 	}
 
 	public function test_declares_exactly_four_entity_types(): void {
@@ -85,29 +59,9 @@ class LearnDashModuleTest extends TestCase {
 
 	// ─── Default Settings ──────────────────────────────────
 
-	public function test_default_settings_has_sync_courses(): void {
-		$settings = $this->module->get_default_settings();
-		$this->assertTrue( $settings['sync_courses'] );
-	}
-
 	public function test_default_settings_has_sync_groups(): void {
 		$settings = $this->module->get_default_settings();
 		$this->assertTrue( $settings['sync_groups'] );
-	}
-
-	public function test_default_settings_has_sync_transactions(): void {
-		$settings = $this->module->get_default_settings();
-		$this->assertTrue( $settings['sync_transactions'] );
-	}
-
-	public function test_default_settings_has_sync_enrollments(): void {
-		$settings = $this->module->get_default_settings();
-		$this->assertTrue( $settings['sync_enrollments'] );
-	}
-
-	public function test_default_settings_has_auto_post_invoices(): void {
-		$settings = $this->module->get_default_settings();
-		$this->assertTrue( $settings['auto_post_invoices'] );
 	}
 
 	public function test_default_settings_has_exactly_seven_keys(): void {
@@ -117,56 +71,10 @@ class LearnDashModuleTest extends TestCase {
 
 	// ─── Settings Fields ───────────────────────────────────
 
-	public function test_settings_fields_exposes_sync_courses(): void {
-		$fields = $this->module->get_settings_fields();
-		$this->assertArrayHasKey( 'sync_courses', $fields );
-		$this->assertSame( 'checkbox', $fields['sync_courses']['type'] );
-	}
-
 	public function test_settings_fields_exposes_sync_groups(): void {
 		$fields = $this->module->get_settings_fields();
 		$this->assertArrayHasKey( 'sync_groups', $fields );
 		$this->assertSame( 'checkbox', $fields['sync_groups']['type'] );
-	}
-
-	public function test_settings_fields_exposes_sync_transactions(): void {
-		$fields = $this->module->get_settings_fields();
-		$this->assertArrayHasKey( 'sync_transactions', $fields );
-		$this->assertSame( 'checkbox', $fields['sync_transactions']['type'] );
-	}
-
-	public function test_settings_fields_exposes_sync_enrollments(): void {
-		$fields = $this->module->get_settings_fields();
-		$this->assertArrayHasKey( 'sync_enrollments', $fields );
-		$this->assertSame( 'checkbox', $fields['sync_enrollments']['type'] );
-	}
-
-	public function test_settings_fields_exposes_auto_post_invoices(): void {
-		$fields = $this->module->get_settings_fields();
-		$this->assertArrayHasKey( 'auto_post_invoices', $fields );
-		$this->assertSame( 'checkbox', $fields['auto_post_invoices']['type'] );
-	}
-
-	// ─── Field Mappings: Course ────────────────────────────
-
-	public function test_course_mapping_includes_name(): void {
-		$odoo = $this->module->map_to_odoo( 'course', [ 'title' => 'PHP Basics' ] );
-		$this->assertSame( 'PHP Basics', $odoo['name'] );
-	}
-
-	public function test_course_mapping_includes_list_price(): void {
-		$odoo = $this->module->map_to_odoo( 'course', [ 'list_price' => 49.99 ] );
-		$this->assertSame( 49.99, $odoo['list_price'] );
-	}
-
-	public function test_course_mapping_includes_type(): void {
-		$odoo = $this->module->map_to_odoo( 'course', [ 'type' => 'service' ] );
-		$this->assertSame( 'service', $odoo['type'] );
-	}
-
-	public function test_course_mapping_includes_description(): void {
-		$odoo = $this->module->map_to_odoo( 'course', [ 'description' => 'Learn PHP' ] );
-		$this->assertSame( 'Learn PHP', $odoo['description_sale'] );
 	}
 
 	// ─── Field Mappings: Group ─────────────────────────────
@@ -181,42 +89,6 @@ class LearnDashModuleTest extends TestCase {
 		$this->assertSame( 199.0, $odoo['list_price'] );
 	}
 
-	// ─── Field Mappings: Transaction ───────────────────────
-
-	public function test_transaction_mapping_includes_move_type(): void {
-		$odoo = $this->module->map_to_odoo( 'transaction', [ 'move_type' => 'out_invoice' ] );
-		$this->assertSame( 'out_invoice', $odoo['move_type'] );
-	}
-
-	public function test_transaction_mapping_includes_partner_id(): void {
-		$odoo = $this->module->map_to_odoo( 'transaction', [ 'partner_id' => 42 ] );
-		$this->assertSame( 42, $odoo['partner_id'] );
-	}
-
-	public function test_transaction_mapping_includes_invoice_line_ids(): void {
-		$lines = [ [ 0, 0, [ 'product_id' => 5, 'quantity' => 1, 'price_unit' => 49.99 ] ] ];
-		$odoo  = $this->module->map_to_odoo( 'transaction', [ 'invoice_line_ids' => $lines ] );
-		$this->assertSame( $lines, $odoo['invoice_line_ids'] );
-	}
-
-	// ─── Field Mappings: Enrollment ────────────────────────
-
-	public function test_enrollment_mapping_includes_partner_id(): void {
-		$odoo = $this->module->map_to_odoo( 'enrollment', [ 'partner_id' => 42 ] );
-		$this->assertSame( 42, $odoo['partner_id'] );
-	}
-
-	public function test_enrollment_mapping_includes_order_line(): void {
-		$lines = [ [ 0, 0, [ 'product_id' => 5, 'quantity' => 1 ] ] ];
-		$odoo  = $this->module->map_to_odoo( 'enrollment', [ 'order_line' => $lines ] );
-		$this->assertSame( $lines, $odoo['order_line'] );
-	}
-
-	public function test_enrollment_mapping_includes_state(): void {
-		$odoo = $this->module->map_to_odoo( 'enrollment', [ 'state' => 'sale' ] );
-		$this->assertSame( 'sale', $odoo['state'] );
-	}
-
 	// ─── Dependency Status ────────────────────────────────
 
 	public function test_dependency_unavailable_without_learndash(): void {
@@ -228,13 +100,6 @@ class LearnDashModuleTest extends TestCase {
 		$status = $this->module->get_dependency_status();
 		$this->assertNotEmpty( $status['notices'] );
 		$this->assertSame( 'warning', $status['notices'][0]['type'] );
-	}
-
-	// ─── Boot Guard ───────────────────────────────────────
-
-	public function test_boot_does_not_crash_without_learndash(): void {
-		$this->module->boot();
-		$this->assertTrue( true );
 	}
 
 	// ─── Handler: load_course ─────────────────────────────
@@ -468,7 +333,6 @@ class LearnDashModuleTest extends TestCase {
 		$this->create_post( 100, 'sfwd-courses', 'PHP Basics' );
 		$GLOBALS['_wp_options']['wp4odoo_module_learndash_settings'] = [ 'sync_courses' => true ];
 
-		// Simulate importing.
 		$reflection = new \ReflectionClass( \WP4Odoo\Module_Base::class );
 		$prop       = $reflection->getProperty( 'importing' );
 		$prop->setValue( null, [ 'learndash' => true ] );
@@ -477,7 +341,6 @@ class LearnDashModuleTest extends TestCase {
 
 		$this->assertQueueEmpty();
 
-		// Clean up.
 		$prop->setValue( null, [] );
 	}
 
@@ -567,7 +430,7 @@ class LearnDashModuleTest extends TestCase {
 
 		$this->module->on_enrollment_change( 5, 100, [ 100 ], false );
 
-		$expected_id = 5 * 1_000_000 + 100; // 5000100
+		$expected_id = 5 * 1_000_000 + 100;
 		$this->assertQueueContains( 'learndash', 'enrollment', 'create', $expected_id );
 	}
 
@@ -593,7 +456,7 @@ class LearnDashModuleTest extends TestCase {
 
 		$this->module->on_enrollment_change( 42, 350, [ 350 ], false );
 
-		$expected_id = 42 * 1_000_000 + 350; // 42000350
+		$expected_id = 42 * 1_000_000 + 350;
 		$this->assertQueueContains( 'learndash', 'enrollment', 'create', $expected_id );
 	}
 
@@ -621,20 +484,6 @@ class LearnDashModuleTest extends TestCase {
 		$this->assertSame( 'checkbox', $fields['pull_groups']['type'] );
 	}
 
-	// ─── Pull: transaction/enrollment skipped ───────────
-
-	public function test_pull_transaction_skipped(): void {
-		$result = $this->module->pull_from_odoo( 'transaction', 'create', 100, 0 );
-		$this->assertTrue( $result->succeeded() );
-		$this->assertNull( $result->get_entity_id() );
-	}
-
-	public function test_pull_enrollment_skipped(): void {
-		$result = $this->module->pull_from_odoo( 'enrollment', 'create', 200, 0 );
-		$this->assertTrue( $result->succeeded() );
-		$this->assertNull( $result->get_entity_id() );
-	}
-
 	// ─── Pull: delete ───────────────────────────────────
 
 	public function test_pull_course_delete_removes_post(): void {
@@ -653,20 +502,6 @@ class LearnDashModuleTest extends TestCase {
 
 	// ─── map_from_odoo ──────────────────────────────────
 
-	public function test_map_from_odoo_course(): void {
-		$odoo_data = [
-			'name'             => 'Pulled Course',
-			'description_sale' => 'From Odoo',
-			'list_price'       => 79.99,
-		];
-
-		$wp_data = $this->module->map_from_odoo( 'course', $odoo_data );
-
-		$this->assertSame( 'Pulled Course', $wp_data['title'] );
-		$this->assertSame( 'From Odoo', $wp_data['description'] );
-		$this->assertSame( 79.99, $wp_data['list_price'] );
-	}
-
 	public function test_map_from_odoo_group(): void {
 		$odoo_data = [
 			'name'             => 'Pulled Group',
@@ -679,54 +514,6 @@ class LearnDashModuleTest extends TestCase {
 		$this->assertSame( 'Pulled Group', $wp_data['title'] );
 		$this->assertSame( 'Group from Odoo', $wp_data['description'] );
 		$this->assertSame( 199.0, $wp_data['list_price'] );
-	}
-
-	// ─── Helpers ───────────────────────────────────────────
-
-	private function create_post( int $id, string $post_type, string $title, string $content = '', int $author = 0, string $date_gmt = '' ): void {
-		$GLOBALS['_wp_posts'][ $id ] = (object) [
-			'ID'            => $id,
-			'post_type'     => $post_type,
-			'post_title'    => $title,
-			'post_content'  => $content,
-			'post_status'   => 'publish',
-			'post_author'   => $author,
-			'post_date_gmt' => $date_gmt ?: '2026-01-01 00:00:00',
-		];
-	}
-
-	private function create_user( int $id, string $email, string $display_name ): void {
-		$user                = new \stdClass();
-		$user->ID            = $id;
-		$user->user_email    = $email;
-		$user->display_name  = $display_name;
-		$user->first_name    = explode( ' ', $display_name )[0] ?? '';
-		$user->last_name     = explode( ' ', $display_name )[1] ?? '';
-
-		$GLOBALS['_wp_users'][ $id ] = $user;
-	}
-
-	private function assertQueueContains( string $module, string $entity, string $action, int $wp_id ): void {
-		$inserts = array_filter( $this->wpdb->calls, fn( $c ) => 'insert' === $c['method'] );
-		foreach ( $inserts as $call ) {
-			$data = $call['args'][1] ?? [];
-			if ( ( $data['module'] ?? '' ) === $module
-				&& ( $data['entity_type'] ?? '' ) === $entity
-				&& ( $data['action'] ?? '' ) === $action
-				&& ( $data['wp_id'] ?? 0 ) === $wp_id ) {
-				$this->assertTrue( true );
-				return;
-			}
-		}
-		$this->fail( "Queue does not contain [{$module}, {$entity}, {$action}, {$wp_id}]" );
-	}
-
-	private function assertQueueEmpty(): void {
-		$inserts = array_filter(
-			$this->wpdb->calls,
-			fn( $c ) => 'insert' === $c['method'] && str_contains( $c['args'][0] ?? '', 'sync_queue' )
-		);
-		$this->assertEmpty( $inserts, 'Queue should be empty.' );
 	}
 
 	// ─── Translatable Fields ──────────────────────────────

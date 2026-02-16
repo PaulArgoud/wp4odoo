@@ -27,6 +27,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Exclusive group priority bug** — `Module_Registry::has_booted_in_group()` now blocks any module in the same exclusive group regardless of priority (first-registered wins), fixing a bug where higher-priority modules could bypass exclusion
 
+### Refactored
+- **Settings_Repository helpers** — Extracted `get_bool_option()` / `set_bool_option()` / `get_int_option()` / `set_int_option()` private helpers, reducing 8 getter/setter pairs to one-liner delegations
+- **Form_Field_Extractor** — Extracted 7 `extract_from_*` methods from `Form_Handler` (514 → 97 LOC) into a strategy-based `Form_Field_Extractor` class with registered closures per form plugin
+- **WC_Translation_Accumulator** — Extracted translation accumulation logic from `WC_Pull_Coordinator` (723 → 520 LOC) into a focused `WC_Translation_Accumulator` class (289 LOC)
+- **Translation strategies** — Extracted Odoo version-specific push/pull logic from `Translation_Service` (768 → 629 LOC) into `Translation_Strategy_Modern` (Odoo 16+) and `Translation_Strategy_Legacy` (Odoo 14–15) behind a `Translation_Strategy` interface
+- **Sync_Orchestrator trait** — Extracted `push_to_odoo()`, `push_batch_creates()`, and `pull_from_odoo()` from `Module_Base` (1 245 → 921 LOC) into a `Sync_Orchestrator` trait (344 LOC)
+- **Batch_Create_Processor** — Extracted batch create pipeline from `Sync_Engine` (811 → 731 LOC) into a dedicated `Batch_Create_Processor` class (208 LOC) with injected dependencies
+- **Test base classes** — Extracted `MembershipModuleTestBase` (30 shared tests) and `LMSModuleTestBase` (29 shared tests) abstract classes, reducing 6 module test files by ~580 lines total
+
 ### Tests
 - 3 614 unit tests (5 612 assertions) — new tests covering Queue_Job DTO, advisory locks, Queue_Manager DI, queue depth alerting, chunked cleanup, settings validation, rate limiter, and module registry fixes
 

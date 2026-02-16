@@ -328,6 +328,36 @@ class Settings_Repository {
 		return $data;
 	}
 
+	// ── Typed option helpers ──────────────────────────────
+
+	/**
+	 * @since 3.4.0
+	 */
+	private function get_bool_option( string $key, bool $default = false ): bool {
+		return (bool) get_option( $key, $default );
+	}
+
+	/**
+	 * @since 3.4.0
+	 */
+	private function set_bool_option( string $key, bool $value, bool $autoload = false ): bool {
+		return update_option( $key, $value, $autoload );
+	}
+
+	/**
+	 * @since 3.4.0
+	 */
+	private function get_int_option( string $key, int $default = 0 ): int {
+		return (int) get_option( $key, $default );
+	}
+
+	/**
+	 * @since 3.4.0
+	 */
+	private function set_int_option( string $key, int $value, bool $autoload = false ): bool {
+		return update_option( $key, $value, $autoload );
+	}
+
 	// ── Module helpers ─────────────────────────────────────
 
 	/**
@@ -337,7 +367,7 @@ class Settings_Repository {
 	 * @return bool
 	 */
 	public function is_module_enabled( string $id ): bool {
-		return (bool) get_option( 'wp4odoo_module_' . $id . '_enabled', false );
+		return $this->get_bool_option( 'wp4odoo_module_' . $id . '_enabled' );
 	}
 
 	/**
@@ -348,7 +378,7 @@ class Settings_Repository {
 	 * @return bool
 	 */
 	public function set_module_enabled( string $id, bool $enabled ): bool {
-		return update_option( 'wp4odoo_module_' . $id . '_enabled', $enabled );
+		return $this->set_bool_option( 'wp4odoo_module_' . $id . '_enabled', $enabled, true );
 	}
 
 	/**
@@ -425,7 +455,7 @@ class Settings_Repository {
 	 * @return int
 	 */
 	public function get_consecutive_failures(): int {
-		return (int) get_option( self::OPT_CONSECUTIVE_FAILURES, 0 );
+		return $this->get_int_option( self::OPT_CONSECUTIVE_FAILURES );
 	}
 
 	/**
@@ -435,7 +465,7 @@ class Settings_Repository {
 	 * @return bool
 	 */
 	public function save_consecutive_failures( int $count ): bool {
-		return update_option( self::OPT_CONSECUTIVE_FAILURES, $count, false );
+		return $this->set_int_option( self::OPT_CONSECUTIVE_FAILURES, $count );
 	}
 
 	/**
@@ -444,7 +474,7 @@ class Settings_Repository {
 	 * @return int Unix timestamp.
 	 */
 	public function get_last_failure_email(): int {
-		return (int) get_option( self::OPT_LAST_FAILURE_EMAIL, 0 );
+		return $this->get_int_option( self::OPT_LAST_FAILURE_EMAIL );
 	}
 
 	/**
@@ -454,7 +484,7 @@ class Settings_Repository {
 	 * @return bool
 	 */
 	public function save_last_failure_email( int $timestamp ): bool {
-		return update_option( self::OPT_LAST_FAILURE_EMAIL, $timestamp, false );
+		return $this->set_int_option( self::OPT_LAST_FAILURE_EMAIL, $timestamp );
 	}
 
 	// ── Onboarding / Checklist ─────────────────────────────
@@ -465,7 +495,7 @@ class Settings_Repository {
 	 * @return bool
 	 */
 	public function is_onboarding_dismissed(): bool {
-		return (bool) get_option( self::OPT_ONBOARDING_DISMISSED, false );
+		return $this->get_bool_option( self::OPT_ONBOARDING_DISMISSED );
 	}
 
 	/**
@@ -474,7 +504,7 @@ class Settings_Repository {
 	 * @return bool
 	 */
 	public function dismiss_onboarding(): bool {
-		return update_option( self::OPT_ONBOARDING_DISMISSED, true, false );
+		return $this->set_bool_option( self::OPT_ONBOARDING_DISMISSED, true );
 	}
 
 	/**
@@ -483,7 +513,7 @@ class Settings_Repository {
 	 * @return bool
 	 */
 	public function is_checklist_dismissed(): bool {
-		return (bool) get_option( self::OPT_CHECKLIST_DISMISSED, false );
+		return $this->get_bool_option( self::OPT_CHECKLIST_DISMISSED );
 	}
 
 	/**
@@ -492,7 +522,7 @@ class Settings_Repository {
 	 * @return bool
 	 */
 	public function dismiss_checklist(): bool {
-		return update_option( self::OPT_CHECKLIST_DISMISSED, true, false );
+		return $this->set_bool_option( self::OPT_CHECKLIST_DISMISSED, true );
 	}
 
 	/**
@@ -501,7 +531,7 @@ class Settings_Repository {
 	 * @return bool
 	 */
 	public function is_webhooks_confirmed(): bool {
-		return (bool) get_option( self::OPT_CHECKLIST_WEBHOOKS, false );
+		return $this->get_bool_option( self::OPT_CHECKLIST_WEBHOOKS );
 	}
 
 	/**
@@ -510,7 +540,7 @@ class Settings_Repository {
 	 * @return bool
 	 */
 	public function confirm_webhooks(): bool {
-		return update_option( self::OPT_CHECKLIST_WEBHOOKS, true, false );
+		return $this->set_bool_option( self::OPT_CHECKLIST_WEBHOOKS, true );
 	}
 
 	// ── Cron health ───────────────────────────────────────
@@ -521,7 +551,7 @@ class Settings_Repository {
 	 * @return int Unix timestamp, or 0 if never run.
 	 */
 	public function get_last_cron_run(): int {
-		return (int) get_option( self::OPT_LAST_CRON_RUN, 0 );
+		return $this->get_int_option( self::OPT_LAST_CRON_RUN );
 	}
 
 	/**

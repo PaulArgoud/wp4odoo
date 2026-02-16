@@ -5,6 +5,7 @@ namespace WP4Odoo\Tests\Unit;
 
 use WP4Odoo\Logger;
 use WP4Odoo\Modules\WC_Pull_Coordinator;
+use WP4Odoo\Modules\WC_Translation_Accumulator;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -68,6 +69,16 @@ class WCPullCoordinatorTest extends TestCase {
 				return [];
 			}
 		};
+	}
+
+	/**
+	 * Get the WC_Translation_Accumulator from a coordinator via the public getter.
+	 *
+	 * @param WC_Pull_Coordinator $coordinator Coordinator instance.
+	 * @return WC_Translation_Accumulator
+	 */
+	private function get_accumulator( WC_Pull_Coordinator $coordinator ): WC_Translation_Accumulator {
+		return $coordinator->get_translation_accumulator();
 	}
 
 	// ─── capture_odoo_data ─────────────────────────────────
@@ -209,11 +220,12 @@ class WCPullCoordinatorTest extends TestCase {
 		$coordinator->on_product_pulled( 10, 100 );
 		$coordinator->on_product_pulled( 20, 200 );
 
-		// Verify via reflection that pulled_products is populated.
-		$ref = new \ReflectionClass( $coordinator );
+		// Verify via reflection that pulled_products is populated on the accumulator.
+		$accumulator = $this->get_accumulator( $coordinator );
+		$ref  = new \ReflectionClass( $accumulator );
 		$prop = $ref->getProperty( 'pulled_products' );
 		$prop->setAccessible( true );
-		$pulled = $prop->getValue( $coordinator );
+		$pulled = $prop->getValue( $accumulator );
 
 		$this->assertSame( [ 100 => 10, 200 => 20 ], $pulled );
 	}
@@ -233,32 +245,34 @@ class WCPullCoordinatorTest extends TestCase {
 	public function test_flush_translations_skips_when_setting_disabled(): void {
 		$coordinator = $this->make_coordinator( [ 'sync_translations' => false ] );
 
-		// Manually accumulate products.
-		$ref = new \ReflectionClass( $coordinator );
+		// Manually accumulate products on the accumulator.
+		$accumulator = $this->get_accumulator( $coordinator );
+		$ref  = new \ReflectionClass( $accumulator );
 		$prop = $ref->getProperty( 'pulled_products' );
 		$prop->setAccessible( true );
-		$prop->setValue( $coordinator, [ 100 => 10 ] );
+		$prop->setValue( $accumulator, [ 100 => 10 ] );
 
 		$coordinator->flush_translations();
 
 		// Should have cleared the accumulator.
-		$pulled = $prop->getValue( $coordinator );
+		$pulled = $prop->getValue( $accumulator );
 		$this->assertEmpty( $pulled );
 	}
 
 	public function test_flush_translations_clears_accumulator(): void {
 		$coordinator = $this->make_coordinator( [ 'sync_translations' => true ] );
 
-		// Manually accumulate products.
-		$ref = new \ReflectionClass( $coordinator );
+		// Manually accumulate products on the accumulator.
+		$accumulator = $this->get_accumulator( $coordinator );
+		$ref  = new \ReflectionClass( $accumulator );
 		$prop = $ref->getProperty( 'pulled_products' );
 		$prop->setAccessible( true );
-		$prop->setValue( $coordinator, [ 100 => 10 ] );
+		$prop->setValue( $accumulator, [ 100 => 10 ] );
 
 		$coordinator->flush_translations();
 
 		// Accumulator should be cleared after flush.
-		$pulled = $prop->getValue( $coordinator );
+		$pulled = $prop->getValue( $accumulator );
 		$this->assertEmpty( $pulled );
 	}
 
@@ -266,16 +280,17 @@ class WCPullCoordinatorTest extends TestCase {
 		// New array format: only 'fr' enabled.
 		$coordinator = $this->make_coordinator( [ 'sync_translations' => [ 'fr' ] ] );
 
-		// Manually accumulate products.
-		$ref = new \ReflectionClass( $coordinator );
+		// Manually accumulate products on the accumulator.
+		$accumulator = $this->get_accumulator( $coordinator );
+		$ref  = new \ReflectionClass( $accumulator );
 		$prop = $ref->getProperty( 'pulled_products' );
 		$prop->setAccessible( true );
-		$prop->setValue( $coordinator, [ 100 => 10 ] );
+		$prop->setValue( $accumulator, [ 100 => 10 ] );
 
 		$coordinator->flush_translations();
 
 		// Accumulator should be cleared.
-		$pulled = $prop->getValue( $coordinator );
+		$pulled = $prop->getValue( $accumulator );
 		$this->assertEmpty( $pulled );
 	}
 
@@ -283,15 +298,16 @@ class WCPullCoordinatorTest extends TestCase {
 		// Old boolean true format → should process all languages.
 		$coordinator = $this->make_coordinator( [ 'sync_translations' => true ] );
 
-		$ref = new \ReflectionClass( $coordinator );
+		$accumulator = $this->get_accumulator( $coordinator );
+		$ref  = new \ReflectionClass( $accumulator );
 		$prop = $ref->getProperty( 'pulled_products' );
 		$prop->setAccessible( true );
-		$prop->setValue( $coordinator, [ 100 => 10 ] );
+		$prop->setValue( $accumulator, [ 100 => 10 ] );
 
 		$coordinator->flush_translations();
 
 		// Accumulator should be cleared (processed, not skipped).
-		$pulled = $prop->getValue( $coordinator );
+		$pulled = $prop->getValue( $accumulator );
 		$this->assertEmpty( $pulled );
 	}
 
@@ -299,15 +315,16 @@ class WCPullCoordinatorTest extends TestCase {
 		// New array format with empty array → translation disabled.
 		$coordinator = $this->make_coordinator( [ 'sync_translations' => [] ] );
 
-		$ref = new \ReflectionClass( $coordinator );
+		$accumulator = $this->get_accumulator( $coordinator );
+		$ref  = new \ReflectionClass( $accumulator );
 		$prop = $ref->getProperty( 'pulled_products' );
 		$prop->setAccessible( true );
-		$prop->setValue( $coordinator, [ 100 => 10 ] );
+		$prop->setValue( $accumulator, [ 100 => 10 ] );
 
 		$coordinator->flush_translations();
 
 		// Accumulator should be cleared (skipped early).
-		$pulled = $prop->getValue( $coordinator );
+		$pulled = $prop->getValue( $accumulator );
 		$this->assertEmpty( $pulled );
 	}
 
@@ -354,9 +371,11 @@ class WCPullCoordinatorTest extends TestCase {
 
 		$coordinator->on_product_pulled( 10, 100 );
 
-		$cat_prop = $ref->getProperty( 'pulled_categories' );
+		$accumulator = $this->get_accumulator( $coordinator );
+		$acc_ref  = new \ReflectionClass( $accumulator );
+		$cat_prop = $acc_ref->getProperty( 'pulled_categories' );
 		$cat_prop->setAccessible( true );
-		$pulled_cats = $cat_prop->getValue( $coordinator );
+		$pulled_cats = $cat_prop->getValue( $accumulator );
 
 		$this->assertSame( [ 7 => 300 ], $pulled_cats );
 	}
@@ -372,9 +391,11 @@ class WCPullCoordinatorTest extends TestCase {
 
 		$coordinator->on_product_pulled( 10, 100 );
 
-		$cat_prop = $ref->getProperty( 'pulled_categories' );
+		$accumulator = $this->get_accumulator( $coordinator );
+		$acc_ref  = new \ReflectionClass( $accumulator );
+		$cat_prop = $acc_ref->getProperty( 'pulled_categories' );
 		$cat_prop->setAccessible( true );
-		$pulled_cats = $cat_prop->getValue( $coordinator );
+		$pulled_cats = $cat_prop->getValue( $accumulator );
 
 		$this->assertEmpty( $pulled_cats );
 	}
@@ -384,29 +405,31 @@ class WCPullCoordinatorTest extends TestCase {
 	public function test_flush_translations_clears_category_accumulator(): void {
 		$coordinator = $this->make_coordinator( [ 'sync_translations' => true ] );
 
-		$ref = new \ReflectionClass( $coordinator );
+		$accumulator = $this->get_accumulator( $coordinator );
+		$ref = new \ReflectionClass( $accumulator );
 
 		$cat_prop = $ref->getProperty( 'pulled_categories' );
 		$cat_prop->setAccessible( true );
-		$cat_prop->setValue( $coordinator, [ 50 => 300 ] );
+		$cat_prop->setValue( $accumulator, [ 50 => 300 ] );
 
 		$coordinator->flush_translations();
 
-		$this->assertEmpty( $cat_prop->getValue( $coordinator ) );
+		$this->assertEmpty( $cat_prop->getValue( $accumulator ) );
 	}
 
 	public function test_flush_translations_clears_attribute_value_accumulator(): void {
 		$coordinator = $this->make_coordinator( [ 'sync_translations' => true ] );
 
-		$ref = new \ReflectionClass( $coordinator );
+		$accumulator = $this->get_accumulator( $coordinator );
+		$ref = new \ReflectionClass( $accumulator );
 
 		$attr_prop = $ref->getProperty( 'pulled_attribute_values' );
 		$attr_prop->setAccessible( true );
-		$attr_prop->setValue( $coordinator, [ 88 => 400 ] );
+		$attr_prop->setValue( $accumulator, [ 88 => 400 ] );
 
 		$coordinator->flush_translations();
 
-		$this->assertEmpty( $attr_prop->getValue( $coordinator ) );
+		$this->assertEmpty( $attr_prop->getValue( $accumulator ) );
 	}
 
 	// ─── pull_variant accumulates attribute values ───────
@@ -440,11 +463,12 @@ class WCPullCoordinatorTest extends TestCase {
 
 		$this->assertTrue( $result->succeeded() );
 
-		// Verify attribute values accumulated.
-		$ref = new \ReflectionClass( $coordinator );
+		// Verify attribute values accumulated on the accumulator.
+		$accumulator = $this->get_accumulator( $coordinator );
+		$ref       = new \ReflectionClass( $accumulator );
 		$attr_prop = $ref->getProperty( 'pulled_attribute_values' );
 		$attr_prop->setAccessible( true );
-		$this->assertSame( [ 55 => 600 ], $attr_prop->getValue( $coordinator ) );
+		$this->assertSame( [ 55 => 600 ], $attr_prop->getValue( $accumulator ) );
 	}
 
 	// ─── on_order_pulled ──────────────────────────────────

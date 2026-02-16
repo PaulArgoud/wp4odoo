@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WordPress For Odoo 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-16 13:37+0100\n"
+"POT-Creation-Date: 2026-02-16 14:10+0100\n"
 "PO-Revision-Date: 2026-02-15 12:00+0100\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
@@ -15,14 +15,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-
-#: wp4odoo.php:298
-msgid "Every 5 Minutes"
-msgstr "Toutes les 5 minutes"
-
-#: wp4odoo.php:302
-msgid "Every 15 Minutes"
-msgstr "Toutes les 15 minutes"
 
 #: includes/admin/class-admin-ajax.php:132
 #: includes/modules/class-portal-manager.php:138
@@ -113,33 +105,28 @@ msgstr ""
 msgid "Loading..."
 msgstr "Chargement…"
 
-#: includes/admin/class-admin.php:119 admin/views/tab-queue.php:68
+#: includes/admin/class-admin.php:119
 #, php-format
 msgid "Last sync: %s"
 msgstr "Dernière synchro : %s"
 
-#: includes/admin/class-admin.php:120 admin/views/tab-queue.php:147
+#: includes/admin/class-admin.php:120
 msgid "Cancel"
 msgstr "Annuler"
 
-#: includes/admin/class-admin.php:121 admin/views/tab-health.php:48
-#: admin/views/tab-health.php:167 admin/views/tab-queue.php:23
-#: admin/views/tab-queue.php:35
+#: includes/admin/class-admin.php:121
 msgid "Pending"
 msgstr "En attente"
 
-#: includes/admin/class-admin.php:122 admin/views/tab-queue.php:24
-#: admin/views/tab-queue.php:39
+#: includes/admin/class-admin.php:122
 msgid "Processing"
 msgstr "En cours"
 
-#: includes/admin/class-admin.php:123 admin/views/tab-queue.php:25
-#: admin/views/tab-queue.php:43
+#: includes/admin/class-admin.php:123
 msgid "Completed"
 msgstr "Terminé"
 
-#: includes/admin/class-admin.php:124 admin/views/tab-queue.php:26
-#: admin/views/tab-queue.php:47
+#: includes/admin/class-admin.php:124
 msgid "Failed"
 msgstr "Échoué"
 
@@ -155,8 +142,7 @@ msgstr "par défaut"
 msgid "Have you backed up your WordPress and Odoo databases?"
 msgstr "Avez-vous sauvegardé vos bases de données WordPress et Odoo ?"
 
-#: includes/admin/class-admin.php:128 admin/views/tab-modules.php:33
-#: admin/views/tab-queue.php:18
+#: includes/admin/class-admin.php:128
 msgid "WP → Odoo"
 msgstr "WP → Odoo"
 
@@ -172,17 +158,15 @@ msgstr "Erreur inconnue."
 msgid "completed"
 msgstr "terminé"
 
-#: includes/admin/class-admin.php:132 admin/views/tab-modules.php:243
+#: includes/admin/class-admin.php:132
 msgid "Remove"
 msgstr "Supprimer"
 
-#: includes/admin/class-admin.php:133 admin/views/tab-modules.php:34
-#: admin/views/tab-queue.php:19
+#: includes/admin/class-admin.php:133
 msgid "Odoo → WP"
 msgstr "Odoo → WP"
 
 #: includes/admin/class-admin.php:194 includes/admin/class-admin.php:238
-#: admin/views/page-settings.php:16
 msgid "WordPress For Odoo"
 msgstr "WordPress For Odoo"
 
@@ -215,7 +199,7 @@ msgstr ""
 msgid "WordPress For Odoo — Untested plugin versions detected:"
 msgstr "WordPress For Odoo — Versions de plugins non testées détectées :"
 
-#: includes/admin/class-admin.php:319 admin/views/tab-modules.php:76
+#: includes/admin/class-admin.php:319
 msgid "Report compatibility"
 msgstr "Signaler la compatibilité"
 
@@ -264,25 +248,23 @@ msgstr "%d produit(s) mis en file d'attente pour l'export."
 msgid "Connection"
 msgstr "Connexion"
 
-#: includes/admin/class-settings-page.php:44 admin/views/tab-sync.php:18
+#: includes/admin/class-settings-page.php:44
 msgid "Synchronization"
 msgstr "Synchronisation"
 
-#: includes/admin/class-settings-page.php:45 admin/views/tab-logs.php:39
-#: admin/views/tab-modules.php:14
+#: includes/admin/class-settings-page.php:45
 msgid "Modules"
 msgstr "Modules"
 
-#: includes/admin/class-settings-page.php:46 admin/views/tab-logs.php:35
-#: admin/views/tab-queue.php:29
+#: includes/admin/class-settings-page.php:46
 msgid "Queue"
 msgstr "File d'attente"
 
-#: includes/admin/class-settings-page.php:47 admin/views/tab-logs.php:16
+#: includes/admin/class-settings-page.php:47
 msgid "Logs"
 msgstr "Journaux"
 
-#: includes/admin/class-settings-page.php:48 admin/views/tab-health.php:31
+#: includes/admin/class-settings-page.php:48
 msgid "Health"
 msgstr "Santé"
 
@@ -442,9 +424,9 @@ msgid "Server error HTTP %1$d on %2$s."
 msgstr "Erreur serveur HTTP %1$d sur %2$s."
 
 #: includes/class-cli.php:54
-#, fuzzy, php-format
+#, php-format
 msgid "WordPress For Odoo v%s"
-msgstr "WordPress For Odoo"
+msgstr "WordPress For Odoo v%s"
 
 #: includes/class-cli.php:62
 #, php-format
@@ -456,38 +438,38 @@ msgid "Not configured — no Odoo URL set."
 msgstr "Non configuré — aucune URL Odoo définie."
 
 #: includes/class-cli.php:75
-#, fuzzy
 msgid "Queue:"
-msgstr "File d'attente"
+msgstr "File d'attente :"
 
 #: includes/class-cli.php:91
-#, fuzzy, php-format
+#, php-format
 msgid "Last completed: %s"
-msgstr "terminé"
+msgstr "Dernier traitement : %s"
 
 #: includes/class-cli.php:97
-#, fuzzy
 msgid "Modules:"
-msgstr "Modules"
+msgstr "Modules :"
 
 #: includes/class-cli.php:122
 msgid "No Odoo connection configured. Go to Odoo Connector settings first."
-msgstr "Aucune connexion Odoo configurée. Configurez d'abord les paramètres du connecteur Odoo."
+msgstr ""
+"Aucune connexion Odoo configurée. Configurez d'abord les paramètres du "
+"connecteur Odoo."
 
 #: includes/class-cli.php:126
-#, fuzzy, php-format
+#, php-format
 msgid "Testing connection to %s..."
-msgstr "Tester la connexion"
+msgstr "Test de la connexion à %s…"
 
 #: includes/class-cli.php:138
-#, fuzzy, php-format
+#, php-format
 msgid "Connection successful! UID: %d"
-msgstr "Connexion réussie !"
+msgstr "Connexion réussie ! UID : %d"
 
 #: includes/class-cli.php:141
-#, fuzzy, php-format
+#, php-format
 msgid "Connection failed: %s"
-msgstr "Échec de la connexion."
+msgstr "Échec de la connexion : %s"
 
 #: includes/class-cli.php:170
 #, php-format
@@ -506,14 +488,12 @@ msgid "Process the sync queue now?"
 msgstr "Traiter la file de synchronisation maintenant ?"
 
 #: includes/class-cli.php:187
-#, fuzzy
 msgid "Processing sync queue (dry-run mode)..."
-msgstr "Traiter la file de synchronisation maintenant ?"
+msgstr "Traitement de la file de synchronisation (mode simulation)…"
 
 #: includes/class-cli.php:189
-#, fuzzy
 msgid "Processing sync queue..."
-msgstr "Traiter la file de synchronisation maintenant ?"
+msgstr "Traitement de la file de synchronisation…"
 
 #: includes/class-cli.php:206
 #, php-format
@@ -521,14 +501,16 @@ msgid "%d job(s) would be processed (dry-run)."
 msgstr "%d tâche(s) serai(en)t traitée(s) (simulation)."
 
 #: includes/class-cli.php:209
-#, fuzzy, php-format
+#, php-format
 msgid "%d job(s) processed."
-msgstr "%d job(s) relancé(s)."
+msgstr "%d tâche(s) traitée(s)."
 
 #: includes/class-cli.php:237
 #, php-format
 msgid "Unknown subcommand: %s. Available: stats, list, retry, cleanup, cancel"
-msgstr "Sous-commande inconnue : %s. Disponibles : stats, list, retry, cleanup, cancel"
+msgstr ""
+"Sous-commande inconnue : %s. Disponibles : stats, list, retry, cleanup, "
+"cancel"
 
 #: includes/class-cli.php:274
 msgid "Usage: wp wp4odoo reconcile <module> <entity_type> [--fix]"
@@ -540,10 +522,11 @@ msgid "Module \"%s\" not found."
 msgstr "Module « %s » introuvable."
 
 #: includes/class-cli.php:290
-#, fuzzy, php-format
+#, php-format
 msgid "Entity type \"%1$s\" not found in module \"%2$s\". Available: %3$s"
 msgstr ""
-"Le type d'entité « %1$s » n'est pas enregistré dans le module « %2$s »."
+"Le type d'entité « %1$s » est introuvable dans le module « %2$s ». "
+"Disponibles : %3$s"
 
 #: includes/class-cli.php:302
 msgid "This will permanently remove orphaned entity mappings. Continue?"
@@ -556,9 +539,9 @@ msgid "Reconciling %1$s/%2$s against Odoo model %3$s%4$s..."
 msgstr "Réconciliation de %1$s/%2$s avec le modèle Odoo %3$s%4$s…"
 
 #: includes/class-cli.php:328
-#, fuzzy, php-format
+#, php-format
 msgid "Checked: %d mapping(s)"
-msgstr "Mappages de champs"
+msgstr "Vérifiées : %d correspondance(s)"
 
 #: includes/class-cli.php:330
 #, php-format
@@ -575,9 +558,8 @@ msgid "Run with --fix to remove orphaned mappings."
 msgstr "Exécutez avec --fix pour supprimer les correspondances orphelines."
 
 #: includes/class-cli.php:349
-#, fuzzy
 msgid "No orphans found."
-msgstr "Aucune commande trouvée."
+msgstr "Aucun orphelin trouvé."
 
 #: includes/class-cli.php:373
 #, php-format
@@ -620,11 +602,7 @@ msgstr ""
 "\n"
 "Veuillez vérifier la file de synchronisation à %2$s"
 
-#: includes/class-module-base.php:287
-msgid "Push lock timeout — will retry."
-msgstr "Délai d'attente du verrou push dépassé — nouvel essai."
-
-#: includes/class-module-base.php:1068
+#: includes/class-module-base.php:745
 #, php-format
 msgid "Entity type \"%1$s\" is not registered in module \"%2$s\"."
 msgstr ""
@@ -639,7 +617,7 @@ msgstr "%1$s nécessite l'activation des modules suivants : %2$s."
 msgid "Too many requests. Please try again later."
 msgstr "Trop de requêtes. Veuillez réessayer plus tard."
 
-#: includes/class-settings-repository.php:559
+#: includes/class-settings-repository.php:589
 msgid ""
 "WP-Cron is disabled (DISABLE_WP_CRON). Ensure a system cron job calls wp-"
 "cron.php regularly, or queue processing will not run."
@@ -648,7 +626,7 @@ msgstr ""
 "système appelle wp-cron.php régulièrement, sinon la file d'attente ne sera "
 "pas traitée."
 
-#: includes/class-settings-repository.php:561
+#: includes/class-settings-repository.php:591
 msgid ""
 "WP-Cron has not triggered recently. On low-traffic sites, scheduled sync may "
 "be delayed. Consider setting up a system cron job."
@@ -657,17 +635,17 @@ msgstr ""
 "synchronisation planifiée peut être retardée. Envisagez de configurer une "
 "tâche cron système."
 
-#: includes/class-sync-engine.php:330
+#: includes/class-sync-engine.php:337
 #, php-format
 msgid "Module \"%s\" not found or not registered."
 msgstr "Module « %s » introuvable ou non enregistré."
 
-#: includes/class-sync-engine.php:343
+#: includes/class-sync-engine.php:350
 #, php-format
 msgid "Invalid JSON payload in job #%d."
 msgstr "Payload JSON invalide dans le job #%d."
 
-#: includes/class-sync-engine.php:381
+#: includes/class-sync-engine.php:388
 #, php-format
 msgid "Invalid sync direction \"%1$s\" in job #%2$d."
 msgstr "Direction de synchronisation invalide « %1$s » dans le job #%2$d."
@@ -1213,47 +1191,47 @@ msgstr ""
 "Récupérer les modifications de listes de diffusion depuis Odoo vers "
 "FluentCRM."
 
-#: includes/modules/class-form-handler.php:83
+#: includes/modules/class-form-field-extractor.php:122
 #, php-format
 msgid "Gravity Forms: %s"
 msgstr "Gravity Forms : %s"
 
-#: includes/modules/class-form-handler.php:84
-#: includes/modules/class-form-handler.php:129
-#: includes/modules/class-form-handler.php:165
-#: includes/modules/class-form-handler.php:205
-#: includes/modules/class-form-handler.php:245
-#: includes/modules/class-form-handler.php:266
-#: includes/modules/class-form-handler.php:325
+#: includes/modules/class-form-field-extractor.php:123
+#: includes/modules/class-form-field-extractor.php:158
+#: includes/modules/class-form-field-extractor.php:187
+#: includes/modules/class-form-field-extractor.php:218
+#: includes/modules/class-form-field-extractor.php:249
+#: includes/modules/class-form-field-extractor.php:262
+#: includes/modules/class-form-field-extractor.php:310
 msgid "Unknown Form"
 msgstr "Formulaire inconnu"
 
-#: includes/modules/class-form-handler.php:145
+#: includes/modules/class-form-field-extractor.php:173
 #, php-format
 msgid "WPForms: %s"
 msgstr "WPForms : %s"
 
-#: includes/modules/class-form-handler.php:164
+#: includes/modules/class-form-field-extractor.php:186
 #, php-format
 msgid "Contact Form 7: %s"
 msgstr "Contact Form 7 : %s"
 
-#: includes/modules/class-form-handler.php:204
+#: includes/modules/class-form-field-extractor.php:217
 #, php-format
 msgid "Fluent Forms: %s"
 msgstr "Fluent Forms : %s"
 
-#: includes/modules/class-form-handler.php:244
+#: includes/modules/class-form-field-extractor.php:248
 #, php-format
 msgid "Formidable: %s"
 msgstr "Formidable : %s"
 
-#: includes/modules/class-form-handler.php:265
+#: includes/modules/class-form-field-extractor.php:261
 #, php-format
 msgid "Ninja Forms: %s"
 msgstr "Ninja Forms : %s"
 
-#: includes/modules/class-form-handler.php:324
+#: includes/modules/class-form-field-extractor.php:309
 #, php-format
 msgid "Forminator: %s"
 msgstr "Forminator : %s"
@@ -1445,7 +1423,6 @@ msgstr ""
 "service."
 
 #: includes/modules/class-invoice-helper.php:48
-#: templates/customer-portal.php:25
 msgid "Invoices"
 msgstr "Factures"
 
@@ -1472,7 +1449,6 @@ msgid "Search Invoices"
 msgstr "Rechercher des factures"
 
 #: includes/modules/class-invoice-helper.php:54
-#: templates/customer-portal.php:78
 msgid "No invoices found."
 msgstr "Aucune facture trouvée."
 
@@ -1615,7 +1591,7 @@ msgstr "Téléphone"
 msgid "Company"
 msgstr "Société"
 
-#: includes/modules/class-lead-manager.php:129 admin/views/tab-logs.php:97
+#: includes/modules/class-lead-manager.php:129
 msgid "Message"
 msgstr "Message"
 
@@ -1935,7 +1911,7 @@ msgid "Number of orders/invoices shown per page in the customer portal."
 msgstr ""
 "Nombre de commandes/factures affichées par page dans le portail client."
 
-#: includes/modules/class-sales-module.php:167 templates/customer-portal.php:21
+#: includes/modules/class-sales-module.php:167
 msgid "Orders"
 msgstr "Commandes"
 
@@ -1960,7 +1936,7 @@ msgstr "Voir la commande"
 msgid "Search Orders"
 msgstr "Rechercher des commandes"
 
-#: includes/modules/class-sales-module.php:173 templates/customer-portal.php:33
+#: includes/modules/class-sales-module.php:173
 msgid "No orders found."
 msgstr "Aucune commande trouvée."
 
@@ -1979,7 +1955,6 @@ msgstr "Envoyer les produits ShopWP vers Odoo."
 #: includes/modules/class-simplepay-handler.php:286
 #: includes/modules/class-sprout-invoices-handler.php:116
 #: includes/modules/class-sprout-invoices-handler.php:291
-#: templates/customer-portal.php:87
 msgid "Payment"
 msgstr "Paiement"
 
@@ -2193,23 +2168,23 @@ msgstr ""
 "L'ID du programme de fidélité Odoo avec lequel synchroniser. Créez d'abord "
 "un programme de fidélité dans Odoo, puis entrez son ID ici."
 
-#: includes/modules/class-wc-pull-coordinator.php:248
+#: includes/modules/class-wc-pull-coordinator.php:228
 msgid "Shipment sync is disabled."
 msgstr "La synchronisation des expéditions est désactivée."
 
-#: includes/modules/class-wc-pull-coordinator.php:266
+#: includes/modules/class-wc-pull-coordinator.php:246
 msgid "stock.picking not found."
 msgstr "stock.picking introuvable."
 
-#: includes/modules/class-wc-pull-coordinator.php:282
+#: includes/modules/class-wc-pull-coordinator.php:262
 msgid "stock.picking has no linked sale.order."
 msgstr "Le stock.picking n'a pas de sale.order lié."
 
-#: includes/modules/class-wc-pull-coordinator.php:290
+#: includes/modules/class-wc-pull-coordinator.php:270
 msgid "No WC order mapped for the linked sale.order."
 msgstr "Aucune commande WC associée au sale.order lié."
 
-#: includes/modules/class-wc-pull-coordinator.php:300
+#: includes/modules/class-wc-pull-coordinator.php:280
 msgid "Shipment pull failed."
 msgstr "La récupération de l'expédition a échoué."
 
@@ -2552,31 +2527,36 @@ msgstr ""
 "WP All Import #%1$d : %2$d enregistrements mis en file d'attente pour la "
 "synchronisation Odoo."
 
-#: includes/trait-cli-module-commands.php:32 admin/views/tab-modules.php:360
+#: includes/trait-cli-module-commands.php:32
 msgid "No modules registered."
 msgstr "Aucun module enregistré."
 
 #: includes/trait-cli-module-commands.php:57
 msgid "Please provide a module ID. Usage: wp wp4odoo module enable <id>"
-msgstr "Veuillez fournir un ID de module. Utilisation : wp wp4odoo module enable <id>"
+msgstr ""
+"Veuillez fournir un ID de module. Utilisation : wp wp4odoo module enable <id>"
 
 #: includes/trait-cli-module-commands.php:64
 #, php-format
 msgid ""
 "Unknown module: %s. Use \"wp wp4odoo module list\" to see available modules."
-msgstr "Module inconnu : %s. Utilisez « wp wp4odoo module list » pour voir les modules disponibles."
+msgstr ""
+"Module inconnu : %s. Utilisez « wp wp4odoo module list » pour voir les "
+"modules disponibles."
 
 #: includes/trait-cli-module-commands.php:75
 #, php-format
 msgid ""
 "Module \"%1$s\" conflicts with currently enabled module(s): %2$s. They will "
 "be disabled."
-msgstr "Le module « %1$s » entre en conflit avec le(s) module(s) actif(s) : %2$s. Ils seront désactivés."
+msgstr ""
+"Le module « %1$s » entre en conflit avec le(s) module(s) actif(s) : %2$s. "
+"Ils seront désactivés."
 
 #: includes/trait-cli-module-commands.php:83
-#, fuzzy, php-format
+#, php-format
 msgid "  Disabled conflicting module: %s"
-msgstr "Activez ou désactivez les modules de synchronisation."
+msgstr "  Module en conflit désactivé : %s"
 
 #: includes/trait-cli-queue-commands.php:34
 #: includes/trait-cli-queue-commands.php:66
@@ -2585,9 +2565,8 @@ msgid "Invalid format \"%1$s\". Allowed: %2$s"
 msgstr "Format invalide « %1$s ». Autorisés : %2$s"
 
 #: includes/trait-cli-queue-commands.php:72
-#, fuzzy
 msgid "No jobs found."
-msgstr "Aucune commande trouvée."
+msgstr "Aucune tâche trouvée."
 
 #: includes/trait-cli-queue-commands.php:106
 #, php-format
@@ -2599,9 +2578,9 @@ msgid "Retry all failed jobs?"
 msgstr "Relancer tous les jobs échoués ?"
 
 #: includes/trait-cli-queue-commands.php:123
-#, fuzzy, php-format
+#, php-format
 msgid "%d failed job(s) retried."
-msgstr "%d job(s) relancé(s)."
+msgstr "%d tâche(s) échouée(s) relancée(s)."
 
 #: includes/trait-cli-queue-commands.php:136
 #, php-format
@@ -2610,12 +2589,14 @@ msgstr "%1$d tâche(s) supprimée(s) (plus de %2$d jours)."
 
 #: includes/trait-cli-queue-commands.php:147
 msgid "Please provide a valid job ID. Usage: wp wp4odoo queue cancel <id>"
-msgstr "Veuillez fournir un ID de tâche valide. Utilisation : wp wp4odoo queue cancel <id>"
+msgstr ""
+"Veuillez fournir un ID de tâche valide. Utilisation : wp wp4odoo queue "
+"cancel <id>"
 
 #: includes/trait-cli-queue-commands.php:152
-#, fuzzy, php-format
+#, php-format
 msgid "Job %d cancelled."
-msgstr "Job annulé."
+msgstr "Tâche %d annulée."
 
 #: includes/trait-cli-queue-commands.php:155
 #, php-format
@@ -2658,781 +2639,612 @@ msgstr ""
 "minutes, configurez un cron système et définissez DISABLE_WP_CRON dans wp-"
 "config.php."
 
-#: admin/views/partial-checklist.php:22
-msgid "Setup Checklist"
-msgstr "Liste de vérification"
+#: includes/trait-sync-orchestrator.php:86
+msgid "Push lock timeout — will retry."
+msgstr "Délai d'attente du verrou push dépassé — nouvel essai."
 
-#: admin/views/partial-checklist.php:27
+#~ msgid "Every 5 Minutes"
+#~ msgstr "Toutes les 5 minutes"
+
+#~ msgid "Every 15 Minutes"
+#~ msgstr "Toutes les 15 minutes"
+
+#~ msgid "Setup Checklist"
+#~ msgstr "Liste de vérification"
+
 #, php-format
-msgid "%1$d / %2$d completed"
-msgstr "%1$d / %2$d terminé(s)"
+#~ msgid "%1$d / %2$d completed"
+#~ msgstr "%1$d / %2$d terminé(s)"
 
-#: admin/views/partial-checklist.php:33
-msgid "Dismiss checklist"
-msgstr "Masquer la liste"
+#~ msgid "Dismiss checklist"
+#~ msgstr "Masquer la liste"
 
-#: admin/views/tab-connection.php:19
-msgid "Getting Started"
-msgstr "Pour commencer"
+#~ msgid "Getting Started"
+#~ msgstr "Pour commencer"
 
-#: admin/views/tab-connection.php:21
-msgid "Prerequisites"
-msgstr "Prérequis"
+#~ msgid "Prerequisites"
+#~ msgstr "Prérequis"
 
-#: admin/views/tab-connection.php:23
-msgid "An Odoo instance (version 14 or later) with API access enabled."
-msgstr "Une instance Odoo (version 14 ou ultérieure) avec l'accès API activé."
+#~ msgid "An Odoo instance (version 14 or later) with API access enabled."
+#~ msgstr ""
+#~ "Une instance Odoo (version 14 ou ultérieure) avec l'accès API activé."
 
-#: admin/views/tab-connection.php:24
-msgid ""
-"An Odoo user with administrator privileges (or at least access to the "
-"modules you want to sync)."
-msgstr ""
-"Un utilisateur Odoo avec les droits d'administrateur (ou au moins l'accès "
-"aux modules à synchroniser)."
+#~ msgid ""
+#~ "An Odoo user with administrator privileges (or at least access to the "
+#~ "modules you want to sync)."
+#~ msgstr ""
+#~ "Un utilisateur Odoo avec les droits d'administrateur (ou au moins l'accès "
+#~ "aux modules à synchroniser)."
 
-#: admin/views/tab-connection.php:25
-msgid ""
-"An API key generated from your Odoo user profile (see instructions below)."
-msgstr ""
-"Une clé API générée depuis votre profil utilisateur Odoo (voir les "
-"instructions ci-dessous)."
+#~ msgid ""
+#~ "An API key generated from your Odoo user profile (see instructions below)."
+#~ msgstr ""
+#~ "Une clé API générée depuis votre profil utilisateur Odoo (voir les "
+#~ "instructions ci-dessous)."
 
-#: admin/views/tab-connection.php:27
-msgid "Required Odoo Modules"
-msgstr "Modules Odoo requis"
+#~ msgid "Required Odoo Modules"
+#~ msgstr "Modules Odoo requis"
 
-#: admin/views/tab-connection.php:29
-msgid "CRM:"
-msgstr "CRM :"
+#~ msgid "CRM:"
+#~ msgstr "CRM :"
 
-#: admin/views/tab-connection.php:29
-msgid "Contacts (base) + CRM (crm) for leads"
-msgstr "Contacts (base) + CRM (crm) pour les pistes"
+#~ msgid "Contacts (base) + CRM (crm) for leads"
+#~ msgstr "Contacts (base) + CRM (crm) pour les pistes"
 
-#: admin/views/tab-connection.php:30
-msgid "Sales:"
-msgstr "Ventes :"
+#~ msgid "Sales:"
+#~ msgstr "Ventes :"
 
-#: admin/views/tab-connection.php:30
-msgid "Sales (sale_management) + Invoicing (account)"
-msgstr "Ventes (sale_management) + Facturation (account)"
+#~ msgid "Sales (sale_management) + Invoicing (account)"
+#~ msgstr "Ventes (sale_management) + Facturation (account)"
 
-#: admin/views/tab-connection.php:31
-msgid "WooCommerce:"
-msgstr "WooCommerce :"
+#~ msgid "WooCommerce:"
+#~ msgstr "WooCommerce :"
 
-#: admin/views/tab-connection.php:31
-msgid "Inventory (stock) + Sales (sale_management) + Invoicing (account)"
-msgstr "Inventaire (stock) + Ventes (sale_management) + Facturation (account)"
+#~ msgid "Inventory (stock) + Sales (sale_management) + Invoicing (account)"
+#~ msgstr ""
+#~ "Inventaire (stock) + Ventes (sale_management) + Facturation (account)"
 
-#: admin/views/tab-connection.php:41
-msgid "Odoo Connection"
-msgstr "Connexion Odoo"
+#~ msgid "Odoo Connection"
+#~ msgstr "Connexion Odoo"
 
-#: admin/views/tab-connection.php:46
-msgid "Odoo URL"
-msgstr "URL Odoo"
+#~ msgid "Odoo URL"
+#~ msgstr "URL Odoo"
 
-#: admin/views/tab-connection.php:56
-msgid "Database"
-msgstr "Base de données"
+#~ msgid "Database"
+#~ msgstr "Base de données"
 
-#: admin/views/tab-connection.php:66
-msgid "Username"
-msgstr "Nom d'utilisateur"
+#~ msgid "Username"
+#~ msgstr "Nom d'utilisateur"
 
-#: admin/views/tab-connection.php:76
-msgid "API Key"
-msgstr "Clé API"
+#~ msgid "API Key"
+#~ msgstr "Clé API"
 
-#: admin/views/tab-connection.php:81
-msgid "Leave empty to keep the current key"
-msgstr "Laisser vide pour conserver la clé actuelle"
+#~ msgid "Leave empty to keep the current key"
+#~ msgstr "Laisser vide pour conserver la clé actuelle"
 
-#: admin/views/tab-connection.php:86
-msgid "An API key is already configured. Leave empty to keep it."
-msgstr "Une clé API est déjà configurée. Laissez vide pour la conserver."
+#~ msgid "An API key is already configured. Leave empty to keep it."
+#~ msgstr "Une clé API est déjà configurée. Laissez vide pour la conserver."
 
-#: admin/views/tab-connection.php:88
-msgid "Enter your Odoo API key."
-msgstr "Saisissez votre clé API Odoo."
+#~ msgid "Enter your Odoo API key."
+#~ msgstr "Saisissez votre clé API Odoo."
 
-#: admin/views/tab-connection.php:94
-msgid "How to generate an API key in Odoo"
-msgstr "Comment générer une clé API dans Odoo"
+#~ msgid "How to generate an API key in Odoo"
+#~ msgstr "Comment générer une clé API dans Odoo"
 
-#: admin/views/tab-connection.php:96
-msgid "Odoo 17+ (recommended)"
-msgstr "Odoo 17+ (recommandé)"
+#~ msgid "Odoo 17+ (recommended)"
+#~ msgstr "Odoo 17+ (recommandé)"
 
-#: admin/views/tab-connection.php:98
-msgid "Go to Settings > Users & Companies > Users."
-msgstr "Allez dans Paramètres > Utilisateurs & Sociétés > Utilisateurs."
+#~ msgid "Go to Settings > Users & Companies > Users."
+#~ msgstr "Allez dans Paramètres > Utilisateurs & Sociétés > Utilisateurs."
 
-#: admin/views/tab-connection.php:99
-msgid "Select your user, then click the \"Preferences\" tab."
-msgstr ""
-"Sélectionnez votre utilisateur, puis cliquez sur l'onglet « Préférences »."
+#~ msgid "Select your user, then click the \"Preferences\" tab."
+#~ msgstr ""
+#~ "Sélectionnez votre utilisateur, puis cliquez sur l'onglet « Préférences »."
 
-#: admin/views/tab-connection.php:100
-msgid "Scroll to \"Account Security\" and click \"New API Key\"."
-msgstr ""
-"Faites défiler jusqu'à « Sécurité du compte » et cliquez sur « Nouvelle clé "
-"API »."
+#~ msgid "Scroll to \"Account Security\" and click \"New API Key\"."
+#~ msgstr ""
+#~ "Faites défiler jusqu'à « Sécurité du compte » et cliquez sur « Nouvelle "
+#~ "clé API »."
 
-#: admin/views/tab-connection.php:101
-msgid ""
-"Enter a description (e.g. \"WordPress For Odoo\") and copy the generated key."
-msgstr ""
-"Entrez une description (par ex. « WordPress For Odoo ») et copiez la clé "
-"générée."
+#~ msgid ""
+#~ "Enter a description (e.g. \"WordPress For Odoo\") and copy the generated "
+#~ "key."
+#~ msgstr ""
+#~ "Entrez une description (par ex. « WordPress For Odoo ») et copiez la clé "
+#~ "générée."
 
-#: admin/views/tab-connection.php:103
-msgid "Odoo 14-16"
-msgstr "Odoo 14-16"
+#~ msgid "Odoo 14-16"
+#~ msgstr "Odoo 14-16"
 
-#: admin/views/tab-connection.php:105
-msgid ""
-"Go to Settings > Activate the developer mode (from the General settings "
-"page)."
-msgstr ""
-"Allez dans Paramètres > Activez le mode développeur (depuis la page des "
-"paramètres généraux)."
+#~ msgid ""
+#~ "Go to Settings > Activate the developer mode (from the General settings "
+#~ "page)."
+#~ msgstr ""
+#~ "Allez dans Paramètres > Activez le mode développeur (depuis la page des "
+#~ "paramètres généraux)."
 
-#: admin/views/tab-connection.php:106
-msgid "Click your user avatar (top right) > My Profile > \"Preferences\" tab."
-msgstr ""
-"Cliquez sur votre avatar (en haut à droite) > Mon profil > onglet "
-"« Préférences »."
+#~ msgid ""
+#~ "Click your user avatar (top right) > My Profile > \"Preferences\" tab."
+#~ msgstr ""
+#~ "Cliquez sur votre avatar (en haut à droite) > Mon profil > onglet "
+#~ "« Préférences »."
 
-#: admin/views/tab-connection.php:107
-msgid "Under \"Account Security\", click \"New API Key\"."
-msgstr "Sous « Sécurité du compte », cliquez sur « Nouvelle clé API »."
+#~ msgid "Under \"Account Security\", click \"New API Key\"."
+#~ msgstr "Sous « Sécurité du compte », cliquez sur « Nouvelle clé API »."
 
-#: admin/views/tab-connection.php:108
-msgid "Copy the key immediately — it will not be shown again."
-msgstr "Copiez la clé immédiatement — elle ne sera plus affichée."
+#~ msgid "Copy the key immediately — it will not be shown again."
+#~ msgstr "Copiez la clé immédiatement — elle ne sera plus affichée."
 
-#: admin/views/tab-connection.php:113
-msgid ""
-"API keys are encrypted at rest. For multi-environment or staging setups, "
-"define WP4ODOO_ENCRYPTION_KEY in wp-config.php to ensure keys remain "
-"decryptable after salt rotation."
-msgstr ""
-"Les clés API sont chiffrées au repos. Pour les configurations multi-"
-"environnements ou staging, définissez WP4ODOO_ENCRYPTION_KEY dans wp-"
-"config.php afin que les clés restent déchiffrables après une rotation des "
-"salts."
+#~ msgid ""
+#~ "API keys are encrypted at rest. For multi-environment or staging setups, "
+#~ "define WP4ODOO_ENCRYPTION_KEY in wp-config.php to ensure keys remain "
+#~ "decryptable after salt rotation."
+#~ msgstr ""
+#~ "Les clés API sont chiffrées au repos. Pour les configurations multi-"
+#~ "environnements ou staging, définissez WP4ODOO_ENCRYPTION_KEY dans wp-"
+#~ "config.php afin que les clés restent déchiffrables après une rotation des "
+#~ "salts."
 
-#: admin/views/tab-connection.php:120
-msgid "Protocol"
-msgstr "Protocole"
+#~ msgid "Protocol"
+#~ msgstr "Protocole"
 
-#: admin/views/tab-connection.php:125
-msgid "JSON-RPC (Odoo 17+)"
-msgstr "JSON-RPC (Odoo 17+)"
+#~ msgid "JSON-RPC (Odoo 17+)"
+#~ msgstr "JSON-RPC (Odoo 17+)"
 
-#: admin/views/tab-connection.php:128
-msgid "XML-RPC (Odoo 14+)"
-msgstr "XML-RPC (Odoo 14+)"
+#~ msgid "XML-RPC (Odoo 14+)"
+#~ msgstr "XML-RPC (Odoo 14+)"
 
-#: admin/views/tab-connection.php:135
-msgid "Timeout (seconds)"
-msgstr "Timeout (secondes)"
+#~ msgid "Timeout (seconds)"
+#~ msgstr "Timeout (secondes)"
 
-#: admin/views/tab-connection.php:147
-msgid "Test connection"
-msgstr "Tester la connexion"
+#~ msgid "Test connection"
+#~ msgstr "Tester la connexion"
 
-#: admin/views/tab-connection.php:152 admin/views/tab-sync.php:143
-msgid "Save"
-msgstr "Enregistrer"
+#~ msgid "Save"
+#~ msgstr "Enregistrer"
 
-#: admin/views/tab-connection.php:157
-msgid "Webhook"
-msgstr "Webhook"
+#~ msgid "Webhook"
+#~ msgstr "Webhook"
 
-#: admin/views/tab-connection.php:160
-msgid "Token"
-msgstr "Token"
+#~ msgid "Token"
+#~ msgstr "Token"
 
-#: admin/views/tab-connection.php:164
-msgid "Copy"
-msgstr "Copier"
+#~ msgid "Copy"
+#~ msgstr "Copier"
 
-#: admin/views/tab-connection.php:170
 #, php-format
-msgid "Configure this token in Odoo as the %s header."
-msgstr "Configurez ce token dans Odoo comme en-tête %s."
+#~ msgid "Configure this token in Odoo as the %s header."
+#~ msgstr "Configurez ce token dans Odoo comme en-tête %s."
 
-#: admin/views/tab-connection.php:178
-msgid "Webhook URL"
-msgstr "URL du webhook"
+#~ msgid "Webhook URL"
+#~ msgstr "URL du webhook"
 
-#: admin/views/tab-connection.php:187
-msgid "How to configure webhooks in Odoo"
-msgstr "Comment configurer les webhooks dans Odoo"
+#~ msgid "How to configure webhooks in Odoo"
+#~ msgstr "Comment configurer les webhooks dans Odoo"
 
-#: admin/views/tab-connection.php:189
-msgid "Odoo 17+ (native webhooks)"
-msgstr "Odoo 17+ (webhooks natifs)"
+#~ msgid "Odoo 17+ (native webhooks)"
+#~ msgstr "Odoo 17+ (webhooks natifs)"
 
-#: admin/views/tab-connection.php:191
-msgid "Go to Settings > Technical > Automation > Webhooks."
-msgstr "Allez dans Paramètres > Technique > Automatisation > Webhooks."
+#~ msgid "Go to Settings > Technical > Automation > Webhooks."
+#~ msgstr "Allez dans Paramètres > Technique > Automatisation > Webhooks."
 
-#: admin/views/tab-connection.php:192
-msgid ""
-"Create a new webhook for each model you want to sync (e.g. res.partner, "
-"sale.order)."
-msgstr ""
-"Créez un nouveau webhook pour chaque modèle à synchroniser (par ex. "
-"res.partner, sale.order)."
+#~ msgid ""
+#~ "Create a new webhook for each model you want to sync (e.g. res.partner, "
+#~ "sale.order)."
+#~ msgstr ""
+#~ "Créez un nouveau webhook pour chaque modèle à synchroniser (par ex. "
+#~ "res.partner, sale.order)."
 
-#: admin/views/tab-connection.php:197
 #, php-format
-msgid "Set the URL to: %s"
-msgstr "Définissez l'URL : %s"
+#~ msgid "Set the URL to: %s"
+#~ msgstr "Définissez l'URL : %s"
 
-#: admin/views/tab-connection.php:206
 #, php-format
-msgid "Add a custom header %s with the token shown above."
-msgstr "Ajoutez un en-tête personnalisé %s avec le jeton ci-dessus."
+#~ msgid "Add a custom header %s with the token shown above."
+#~ msgstr "Ajoutez un en-tête personnalisé %s avec le jeton ci-dessus."
 
-#: admin/views/tab-connection.php:211
-msgid "Select the events: Create, Update, Delete (as needed)."
-msgstr ""
-"Sélectionnez les événements : Création, Modification, Suppression (selon les "
-"besoins)."
+#~ msgid "Select the events: Create, Update, Delete (as needed)."
+#~ msgstr ""
+#~ "Sélectionnez les événements : Création, Modification, Suppression (selon "
+#~ "les besoins)."
 
-#: admin/views/tab-connection.php:213
-msgid "Odoo 14-16 (Automated Actions)"
-msgstr "Odoo 14-16 (Actions automatisées)"
+#~ msgid "Odoo 14-16 (Automated Actions)"
+#~ msgstr "Odoo 14-16 (Actions automatisées)"
 
-#: admin/views/tab-connection.php:215
-msgid ""
-"Activate the developer mode, then go to Settings > Technical > Automation > "
-"Automated Actions."
-msgstr ""
-"Activez le mode développeur, puis allez dans Paramètres > Technique > "
-"Automatisation > Actions automatisées."
+#~ msgid ""
+#~ "Activate the developer mode, then go to Settings > Technical > Automation "
+#~ "> Automated Actions."
+#~ msgstr ""
+#~ "Activez le mode développeur, puis allez dans Paramètres > Technique > "
+#~ "Automatisation > Actions automatisées."
 
-#: admin/views/tab-connection.php:216
-msgid "Create an action for each model (e.g. res.partner)."
-msgstr "Créez une action pour chaque modèle (par ex. res.partner)."
+#~ msgid "Create an action for each model (e.g. res.partner)."
+#~ msgstr "Créez une action pour chaque modèle (par ex. res.partner)."
 
-#: admin/views/tab-connection.php:217
-msgid ""
-"Set trigger to \"On Creation & Update\" and action type to \"Execute Python "
-"Code\"."
-msgstr ""
-"Définissez le déclencheur sur « Lors de la création et de la mise à jour » "
-"et le type d'action sur « Exécuter du code Python »."
+#~ msgid ""
+#~ "Set trigger to \"On Creation & Update\" and action type to \"Execute "
+#~ "Python Code\"."
+#~ msgstr ""
+#~ "Définissez le déclencheur sur « Lors de la création et de la mise à "
+#~ "jour » et le type d'action sur « Exécuter du code Python »."
 
-#: admin/views/tab-connection.php:219
-msgid "Use the following Python code template:"
-msgstr "Utilisez le modèle de code Python suivant :"
+#~ msgid "Use the following Python code template:"
+#~ msgstr "Utilisez le modèle de code Python suivant :"
 
-#: admin/views/tab-health.php:27
-msgid "Degraded"
-msgstr "Dégradé"
+#~ msgid "Degraded"
+#~ msgstr "Dégradé"
 
-#: admin/views/tab-health.php:28
-msgid "Healthy"
-msgstr "Opérationnel"
+#~ msgid "Healthy"
+#~ msgstr "Opérationnel"
 
-#: admin/views/tab-health.php:36
-msgid "System Status"
-msgstr "État du système"
+#~ msgid "System Status"
+#~ msgstr "État du système"
 
-#: admin/views/tab-health.php:44
-msgid "Active modules"
-msgstr "Modules actifs"
+#~ msgid "Active modules"
+#~ msgstr "Modules actifs"
 
-#: admin/views/tab-health.php:57
-msgid "Average latency"
-msgstr "Latence moyenne"
+#~ msgid "Average latency"
+#~ msgstr "Latence moyenne"
 
-#: admin/views/tab-health.php:61
-msgid "Success rate"
-msgstr "Taux de réussite"
+#~ msgid "Success rate"
+#~ msgstr "Taux de réussite"
 
-#: admin/views/tab-health.php:70
-msgid "Circuit Breaker"
-msgstr "Disjoncteur"
+#~ msgid "Circuit Breaker"
+#~ msgstr "Disjoncteur"
 
-#: admin/views/tab-health.php:74
-msgid "Open"
-msgstr "Ouvert"
+#~ msgid "Open"
+#~ msgstr "Ouvert"
 
-#: admin/views/tab-health.php:80
 #, php-format
-msgid "%1$d failures — opened %2$s"
-msgstr "%1$d échecs — ouvert le %2$s"
+#~ msgid "%1$d failures — opened %2$s"
+#~ msgstr "%1$d échecs — ouvert le %2$s"
 
-#: admin/views/tab-health.php:88
-msgid "Closed"
-msgstr "Fermé"
+#~ msgid "Closed"
+#~ msgstr "Fermé"
 
-#: admin/views/tab-health.php:96
-msgid "Next cron run"
-msgstr "Prochaine exécution cron"
+#~ msgid "Next cron run"
+#~ msgstr "Prochaine exécution cron"
 
-#: admin/views/tab-health.php:104
 #, php-format
-msgid "in %s"
-msgstr "dans %s"
+#~ msgid "in %s"
+#~ msgstr "dans %s"
 
-#: admin/views/tab-health.php:108
-msgid "overdue"
-msgstr "en retard"
+#~ msgid "overdue"
+#~ msgstr "en retard"
 
-#: admin/views/tab-health.php:113
-msgid "Not scheduled"
-msgstr "Non planifié"
+#~ msgid "Not scheduled"
+#~ msgstr "Non planifié"
 
-#: admin/views/tab-health.php:122
-msgid "Cron status"
-msgstr "État du cron"
+#~ msgid "Cron status"
+#~ msgstr "État du cron"
 
-#: admin/views/tab-health.php:133
-msgid "Compatibility warnings"
-msgstr "Avertissements de compatibilité"
+#~ msgid "Compatibility warnings"
+#~ msgstr "Avertissements de compatibilité"
 
-#: admin/views/tab-health.php:162
-msgid "Queue Depth by Module"
-msgstr "Profondeur de la file par module"
+#~ msgid "Queue Depth by Module"
+#~ msgstr "Profondeur de la file par module"
 
-#: admin/views/tab-health.php:166 admin/views/tab-logs.php:96
-#: admin/views/tab-queue.php:82
-msgid "Module"
-msgstr "Module"
+#~ msgid "Module"
+#~ msgstr "Module"
 
-#: admin/views/tab-logs.php:22
-msgid "All levels"
-msgstr "Tous les niveaux"
+#~ msgid "All levels"
+#~ msgstr "Tous les niveaux"
 
-#: admin/views/tab-logs.php:23 admin/views/tab-sync.php:123
-msgid "Debug"
-msgstr "Débogage"
+#~ msgid "Debug"
+#~ msgstr "Débogage"
 
-#: admin/views/tab-logs.php:24 admin/views/tab-sync.php:124
-msgid "Info"
-msgstr "Info"
+#~ msgid "Info"
+#~ msgstr "Info"
 
-#: admin/views/tab-logs.php:25 admin/views/tab-sync.php:125
-msgid "Warning"
-msgstr "Avertissement"
+#~ msgid "Warning"
+#~ msgstr "Avertissement"
 
-#: admin/views/tab-logs.php:26 admin/views/tab-sync.php:126
-msgid "Error"
-msgstr "Erreur"
+#~ msgid "Error"
+#~ msgstr "Erreur"
 
-#: admin/views/tab-logs.php:27 admin/views/tab-sync.php:127
-msgid "Critical"
-msgstr "Critique"
+#~ msgid "Critical"
+#~ msgstr "Critique"
 
-#: admin/views/tab-logs.php:31
-msgid "All modules"
-msgstr "Tous les modules"
+#~ msgid "All modules"
+#~ msgstr "Tous les modules"
 
-#: admin/views/tab-logs.php:32 admin/views/tab-logs.php:37
-msgid "System"
-msgstr "Système"
+#~ msgid "System"
+#~ msgstr "Système"
 
-#: admin/views/tab-logs.php:33
-msgid "API"
-msgstr "API"
+#~ msgid "API"
+#~ msgstr "API"
 
-#: admin/views/tab-logs.php:34
-msgid "i18n"
-msgstr "i18n"
+#~ msgid "i18n"
+#~ msgstr "i18n"
 
-#: admin/views/tab-logs.php:36
-msgid "Reconcile"
-msgstr "Réconciliation"
+#~ msgid "Reconcile"
+#~ msgstr "Réconciliation"
 
-#: admin/views/tab-logs.php:40
-msgid "ACF"
-msgstr "ACF"
+#~ msgid "ACF"
+#~ msgstr "ACF"
 
-#: admin/views/tab-logs.php:41
-msgid "AffiliateWP"
-msgstr "AffiliateWP"
+#~ msgid "AffiliateWP"
+#~ msgstr "AffiliateWP"
 
-#: admin/views/tab-logs.php:42
-msgid "Amelia"
-msgstr "Amelia"
+#~ msgid "Amelia"
+#~ msgstr "Amelia"
 
-#: admin/views/tab-logs.php:43
-msgid "Awesome Support"
-msgstr "Awesome Support"
+#~ msgid "Awesome Support"
+#~ msgstr "Awesome Support"
 
-#: admin/views/tab-logs.php:44
-msgid "Bookly"
-msgstr "Bookly"
+#~ msgid "Bookly"
+#~ msgstr "Bookly"
 
-#: admin/views/tab-logs.php:45
-msgid "Charitable"
-msgstr "Charitable"
+#~ msgid "Charitable"
+#~ msgstr "Charitable"
 
-#: admin/views/tab-logs.php:46
-msgid "CRM"
-msgstr "CRM"
+#~ msgid "CRM"
+#~ msgstr "CRM"
 
-#: admin/views/tab-logs.php:47
-msgid "Ecwid"
-msgstr "Ecwid"
+#~ msgid "Ecwid"
+#~ msgstr "Ecwid"
 
-#: admin/views/tab-logs.php:48
-msgid "EDD"
-msgstr "EDD"
+#~ msgid "EDD"
+#~ msgstr "EDD"
 
-#: admin/views/tab-logs.php:49
-msgid "Events Calendar"
-msgstr "Events Calendar"
+#~ msgid "Events Calendar"
+#~ msgstr "Events Calendar"
 
-#: admin/views/tab-logs.php:50
-msgid "Forms"
-msgstr "Formulaires"
+#~ msgid "Forms"
+#~ msgstr "Formulaires"
 
-#: admin/views/tab-logs.php:51
-msgid "GiveWP"
-msgstr "GiveWP"
+#~ msgid "GiveWP"
+#~ msgstr "GiveWP"
 
-#: admin/views/tab-logs.php:52
-msgid "LearnDash"
-msgstr "LearnDash"
+#~ msgid "LearnDash"
+#~ msgstr "LearnDash"
 
-#: admin/views/tab-logs.php:53
-msgid "LifterLMS"
-msgstr "LifterLMS"
+#~ msgid "LifterLMS"
+#~ msgstr "LifterLMS"
 
-#: admin/views/tab-logs.php:54
-msgid "MemberPress"
-msgstr "MemberPress"
+#~ msgid "MemberPress"
+#~ msgstr "MemberPress"
 
-#: admin/views/tab-logs.php:55
-msgid "Memberships"
-msgstr "Adhésions"
+#~ msgid "Memberships"
+#~ msgstr "Adhésions"
 
-#: admin/views/tab-logs.php:56
-msgid "PMPro"
-msgstr "PMPro"
+#~ msgid "PMPro"
+#~ msgstr "PMPro"
 
-#: admin/views/tab-logs.php:57
-msgid "RCP"
-msgstr "RCP"
+#~ msgid "RCP"
+#~ msgstr "RCP"
 
-#: admin/views/tab-logs.php:58
-msgid "Sales"
-msgstr "Ventes"
+#~ msgid "Sales"
+#~ msgstr "Ventes"
 
-#: admin/views/tab-logs.php:59
-msgid "ShopWP"
-msgstr "ShopWP"
+#~ msgid "ShopWP"
+#~ msgstr "ShopWP"
 
-#: admin/views/tab-logs.php:60
-msgid "SimplePay"
-msgstr "SimplePay"
+#~ msgid "SimplePay"
+#~ msgstr "SimplePay"
 
-#: admin/views/tab-logs.php:61
-msgid "Sprout Invoices"
-msgstr "Sprout Invoices"
+#~ msgid "Sprout Invoices"
+#~ msgstr "Sprout Invoices"
 
-#: admin/views/tab-logs.php:62
-msgid "SupportCandy"
-msgstr "SupportCandy"
+#~ msgid "SupportCandy"
+#~ msgstr "SupportCandy"
 
-#: admin/views/tab-logs.php:63
-msgid "WC Bookings"
-msgstr "WC Bookings"
+#~ msgid "WC Bookings"
+#~ msgstr "WC Bookings"
 
-#: admin/views/tab-logs.php:64
-msgid "WC Bundle BOM"
-msgstr "WC Bundle BOM"
+#~ msgid "WC Bundle BOM"
+#~ msgstr "WC Bundle BOM"
 
-#: admin/views/tab-logs.php:65
-msgid "WC Points & Rewards"
-msgstr "WC Points & Rewards"
+#~ msgid "WC Points & Rewards"
+#~ msgstr "WC Points & Rewards"
 
-#: admin/views/tab-logs.php:66
-msgid "WC Subscriptions"
-msgstr "WC Subscriptions"
+#~ msgid "WC Subscriptions"
+#~ msgstr "WC Subscriptions"
 
-#: admin/views/tab-logs.php:67
-msgid "WooCommerce"
-msgstr "WooCommerce"
+#~ msgid "WooCommerce"
+#~ msgstr "WooCommerce"
 
-#: admin/views/tab-logs.php:68
-msgid "WP Crowdfunding"
-msgstr "WP Crowdfunding"
+#~ msgid "WP Crowdfunding"
+#~ msgstr "WP Crowdfunding"
 
-#: admin/views/tab-logs.php:69
-msgid "WP-Invoice"
-msgstr "WP-Invoice"
+#~ msgid "WP-Invoice"
+#~ msgstr "WP-Invoice"
 
-#: admin/views/tab-logs.php:70
-msgid "WP Job Manager"
-msgstr "WP Job Manager"
+#~ msgid "WP Job Manager"
+#~ msgstr "WP Job Manager"
 
-#: admin/views/tab-logs.php:71
-msgid "WP All Import"
-msgstr "WP All Import"
+#~ msgid "WP All Import"
+#~ msgstr "WP All Import"
 
-#: admin/views/tab-logs.php:72
-msgid "WPRM"
-msgstr "WPRM"
+#~ msgid "WPRM"
+#~ msgstr "WPRM"
 
-#: admin/views/tab-logs.php:76
-msgid "From"
-msgstr "Du"
+#~ msgid "From"
+#~ msgstr "Du"
 
-#: admin/views/tab-logs.php:77
-msgid "To"
-msgstr "Au"
+#~ msgid "To"
+#~ msgstr "Au"
 
-#: admin/views/tab-logs.php:80
-msgid "Filter"
-msgstr "Filtrer"
+#~ msgid "Filter"
+#~ msgstr "Filtrer"
 
-#: admin/views/tab-logs.php:85
-msgid "Purge logs"
-msgstr "Purger les journaux"
+#~ msgid "Purge logs"
+#~ msgstr "Purger les journaux"
 
-#: admin/views/tab-logs.php:95
-msgid "Level"
-msgstr "Niveau"
+#~ msgid "Level"
+#~ msgstr "Niveau"
 
-#: admin/views/tab-logs.php:98
-msgid "Context"
-msgstr "Contexte"
+#~ msgid "Context"
+#~ msgstr "Contexte"
 
-#: admin/views/tab-logs.php:99 templates/customer-portal.php:39
-#: templates/customer-portal.php:84
-msgid "Date"
-msgstr "Date"
+#~ msgid "Date"
+#~ msgstr "Date"
 
-#: admin/views/tab-logs.php:105
-msgid "No log entries."
-msgstr "Aucun journal."
+#~ msgid "No log entries."
+#~ msgstr "Aucun journal."
 
-#: admin/views/tab-modules.php:16
-msgid "Enable or disable synchronization modules."
-msgstr "Activez ou désactivez les modules de synchronisation."
+#~ msgid "Enable or disable synchronization modules."
+#~ msgstr "Activez ou désactivez les modules de synchronisation."
 
-#: admin/views/tab-modules.php:32 admin/views/tab-sync.php:28
-msgid "Bidirectional"
-msgstr "Bidirectionnelle"
+#~ msgid "Bidirectional"
+#~ msgstr "Bidirectionnelle"
 
-#: admin/views/tab-modules.php:64
 #, php-format
-msgid "Enable %s module"
-msgstr "Activer le module %s"
+#~ msgid "Enable %s module"
+#~ msgstr "Activer le module %s"
 
-#: admin/views/tab-modules.php:87
 #, php-format
-msgid "Cannot be active simultaneously with \"%s\"."
-msgstr "Ne peut pas être actif en même temps que « %s »."
+#~ msgid "Cannot be active simultaneously with \"%s\"."
+#~ msgstr "Ne peut pas être actif en même temps que « %s »."
 
-#: admin/views/tab-modules.php:188
-msgid "Target module"
-msgstr "Module cible"
+#~ msgid "Target module"
+#~ msgstr "Module cible"
 
-#: admin/views/tab-modules.php:189
-msgid "Entity type"
-msgstr "Type d'entité"
+#~ msgid "Entity type"
+#~ msgstr "Type d'entité"
 
-#: admin/views/tab-modules.php:190
-msgid "ACF field"
-msgstr "Champ ACF"
+#~ msgid "ACF field"
+#~ msgstr "Champ ACF"
 
-#: admin/views/tab-modules.php:191
-msgid "Odoo field"
-msgstr "Champ Odoo"
+#~ msgid "Odoo field"
+#~ msgstr "Champ Odoo"
 
-#: admin/views/tab-modules.php:192 admin/views/tab-queue.php:83
-msgid "Type"
-msgstr "Type"
+#~ msgid "Type"
+#~ msgstr "Type"
 
-#: admin/views/tab-modules.php:202
-msgid "— Select —"
-msgstr "— Sélectionner —"
+#~ msgid "— Select —"
+#~ msgstr "— Sélectionner —"
 
-#: admin/views/tab-modules.php:251
-msgid "Add mapping"
-msgstr "Ajouter un mappage"
+#~ msgid "Add mapping"
+#~ msgstr "Ajouter un mappage"
 
-#: admin/views/tab-modules.php:278
-msgid "Load from Odoo"
-msgstr "Charger depuis Odoo"
+#~ msgid "Load from Odoo"
+#~ msgstr "Charger depuis Odoo"
 
-#: admin/views/tab-modules.php:312
-msgid "Detect languages"
-msgstr "Détecter les langues"
+#~ msgid "Detect languages"
+#~ msgstr "Détecter les langues"
 
-#: admin/views/tab-modules.php:350
-msgid "Save settings"
-msgstr "Enregistrer les paramètres"
+#~ msgid "Save settings"
+#~ msgstr "Enregistrer les paramètres"
 
-#: admin/views/tab-queue.php:54
-msgid "Retry failed"
-msgstr "Relancer les échoués"
+#~ msgid "Retry failed"
+#~ msgstr "Relancer les échoués"
 
-#: admin/views/tab-queue.php:57
-msgid "Clean up (> 7 days)"
-msgstr "Nettoyer (> 7 jours)"
+#~ msgid "Clean up (> 7 days)"
+#~ msgstr "Nettoyer (> 7 jours)"
 
-#: admin/views/tab-queue.php:60
-msgid "Refresh"
-msgstr "Actualiser"
+#~ msgid "Refresh"
+#~ msgstr "Actualiser"
 
-#: admin/views/tab-queue.php:84 admin/views/tab-sync.php:23
-msgid "Direction"
-msgstr "Direction"
+#~ msgid "Direction"
+#~ msgstr "Direction"
 
-#: admin/views/tab-queue.php:85
-msgid "Action"
-msgstr "Action"
+#~ msgid "Action"
+#~ msgstr "Action"
 
-#: admin/views/tab-queue.php:86 templates/customer-portal.php:41
-#: templates/customer-portal.php:86
-msgid "Status"
-msgstr "Statut"
+#~ msgid "Status"
+#~ msgstr "Statut"
 
-#: admin/views/tab-queue.php:87
-msgid "Attempts"
-msgstr "Tentatives"
+#~ msgid "Attempts"
+#~ msgstr "Tentatives"
 
-#: admin/views/tab-queue.php:88
-msgid "Scheduled"
-msgstr "Planifié"
+#~ msgid "Scheduled"
+#~ msgstr "Planifié"
 
-#: admin/views/tab-queue.php:89
-msgid "Created at"
-msgstr "Créé le"
+#~ msgid "Created at"
+#~ msgstr "Créé le"
 
-#: admin/views/tab-queue.php:90
-msgid "Actions"
-msgstr "Actions"
+#~ msgid "Actions"
+#~ msgstr "Actions"
 
-#: admin/views/tab-queue.php:96
-msgid "No jobs in the queue."
-msgstr "Aucun job dans la file."
+#~ msgid "No jobs in the queue."
+#~ msgstr "Aucun job dans la file."
 
-#: admin/views/tab-queue.php:134
-msgid "Now"
-msgstr "Maintenant"
+#~ msgid "Now"
+#~ msgstr "Maintenant"
 
-#: admin/views/tab-queue.php:168
 #, php-format
-msgid "%s item(s)"
-msgstr "%s élément(s)"
+#~ msgid "%s item(s)"
+#~ msgstr "%s élément(s)"
 
-#: admin/views/tab-sync.php:31
-msgid "WordPress → Odoo"
-msgstr "WordPress → Odoo"
+#~ msgid "WordPress → Odoo"
+#~ msgstr "WordPress → Odoo"
 
-#: admin/views/tab-sync.php:34
-msgid "Odoo → WordPress"
-msgstr "Odoo → WordPress"
+#~ msgid "Odoo → WordPress"
+#~ msgstr "Odoo → WordPress"
 
-#: admin/views/tab-sync.php:41
-msgid "Conflict rule"
-msgstr "Règle de conflit"
+#~ msgid "Conflict rule"
+#~ msgstr "Règle de conflit"
 
-#: admin/views/tab-sync.php:46
-msgid "Newest wins"
-msgstr "Le plus récent gagne"
+#~ msgid "Newest wins"
+#~ msgstr "Le plus récent gagne"
 
-#: admin/views/tab-sync.php:49
-msgid "Odoo priority"
-msgstr "Odoo prioritaire"
+#~ msgid "Odoo priority"
+#~ msgstr "Odoo prioritaire"
 
-#: admin/views/tab-sync.php:52
-msgid "WordPress priority"
-msgstr "WordPress prioritaire"
+#~ msgid "WordPress priority"
+#~ msgstr "WordPress prioritaire"
 
-#: admin/views/tab-sync.php:59
-msgid "Batch size"
-msgstr "Taille du lot"
+#~ msgid "Batch size"
+#~ msgstr "Taille du lot"
 
-#: admin/views/tab-sync.php:66
-msgid "Number of jobs processed per cron run."
-msgstr "Nombre de jobs traités par exécution du cron."
+#~ msgid "Number of jobs processed per cron run."
+#~ msgstr "Nombre de jobs traités par exécution du cron."
 
-#: admin/views/tab-sync.php:72
-msgid "Interval"
-msgstr "Intervalle"
+#~ msgid "Interval"
+#~ msgstr "Intervalle"
 
-#: admin/views/tab-sync.php:77
-msgid "Every 5 minutes"
-msgstr "Toutes les 5 minutes"
+#~ msgid "Every 5 minutes"
+#~ msgstr "Toutes les 5 minutes"
 
-#: admin/views/tab-sync.php:80
-msgid "Every 15 minutes"
-msgstr "Toutes les 15 minutes"
+#~ msgid "Every 15 minutes"
+#~ msgstr "Toutes les 15 minutes"
 
-#: admin/views/tab-sync.php:87
-msgid "Auto sync"
-msgstr "Synchronisation automatique"
+#~ msgid "Auto sync"
+#~ msgstr "Synchronisation automatique"
 
-#: admin/views/tab-sync.php:93
-msgid "Enable automatic sync via cron"
-msgstr "Activer la synchronisation automatique via cron"
+#~ msgid "Enable automatic sync via cron"
+#~ msgstr "Activer la synchronisation automatique via cron"
 
-#: admin/views/tab-sync.php:99
-msgid "Logging"
-msgstr "Journalisation"
+#~ msgid "Logging"
+#~ msgstr "Journalisation"
 
-#: admin/views/tab-sync.php:104
-msgid "Enable logging"
-msgstr "Activer les logs"
+#~ msgid "Enable logging"
+#~ msgstr "Activer les logs"
 
-#: admin/views/tab-sync.php:110
-msgid "Log events to the database"
-msgstr "Enregistrer les événements dans la base de données"
+#~ msgid "Log events to the database"
+#~ msgstr "Enregistrer les événements dans la base de données"
 
-#: admin/views/tab-sync.php:113
-msgid "Critical messages are always logged."
-msgstr "Les messages critiques sont toujours enregistrés."
+#~ msgid "Critical messages are always logged."
+#~ msgstr "Les messages critiques sont toujours enregistrés."
 
-#: admin/views/tab-sync.php:119
-msgid "Minimum level"
-msgstr "Niveau minimum"
+#~ msgid "Minimum level"
+#~ msgstr "Niveau minimum"
 
-#: admin/views/tab-sync.php:133
-msgid "Retention (days)"
-msgstr "Rétention (jours)"
+#~ msgid "Retention (days)"
+#~ msgstr "Rétention (jours)"
 
-#: admin/views/tab-sync.php:148
-msgid "Bulk Operations"
-msgstr "Opérations en masse"
+#~ msgid "Bulk Operations"
+#~ msgstr "Opérations en masse"
 
-#: admin/views/tab-sync.php:150
-msgid ""
-"Import or export all products at once via the queue. Jobs are processed in "
-"the background by the sync engine."
-msgstr ""
-"Importez ou exportez tous les produits en une fois via la file d'attente. "
-"Les jobs sont traités en arrière-plan par le moteur de synchronisation."
+#~ msgid ""
+#~ "Import or export all products at once via the queue. Jobs are processed "
+#~ "in the background by the sync engine."
+#~ msgstr ""
+#~ "Importez ou exportez tous les produits en une fois via la file d'attente. "
+#~ "Les jobs sont traités en arrière-plan par le moteur de synchronisation."
 
-#: admin/views/tab-sync.php:154
-msgid "Import all products from Odoo"
-msgstr "Importer tous les produits depuis Odoo"
+#~ msgid "Import all products from Odoo"
+#~ msgstr "Importer tous les produits depuis Odoo"
 
-#: admin/views/tab-sync.php:157
-msgid "Export all products to Odoo"
-msgstr "Exporter tous les produits vers Odoo"
+#~ msgid "Export all products to Odoo"
+#~ msgstr "Exporter tous les produits vers Odoo"
 
-#: templates/customer-portal.php:38 templates/customer-portal.php:83
-msgid "Reference"
-msgstr "Référence"
+#~ msgid "Reference"
+#~ msgstr "Référence"
 
-#: templates/customer-portal.php:40 templates/customer-portal.php:85
-msgid "Total"
-msgstr "Total"
+#~ msgid "Total"
+#~ msgstr "Total"
 
 #~ msgid "Pull stock levels from Odoo into WooCommerce products."
 #~ msgstr ""

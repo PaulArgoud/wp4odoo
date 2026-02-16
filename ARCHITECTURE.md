@@ -53,6 +53,7 @@ WordPress For Odoo/
 │   │   ├── class-shipment-handler.php       # WooCommerce: shipment tracking import (stock.picking → WC order meta, AST format)
 │   │   ├── class-stock-handler.php        # WooCommerce: bidirectional stock push (WC → Odoo), version-adaptive (quant v16+ / wizard v14-15)
 │   │   ├── class-wc-pull-coordinator.php   # WooCommerce: pull orchestration (variant/shipment dispatch, post-pull hooks)
+│   │   ├── class-wc-translation-accumulator.php # WooCommerce: translation accumulation (product/category/attribute flush)
 │   │   │
 │   │   ├── # ─── EDD ───────────────────────────────────────────
 │   │   ├── trait-edd-hooks.php               # EDD: hook callbacks (download save/delete, order status)
@@ -101,7 +102,8 @@ WordPress For Odoo/
 │   │   ├── class-wprm-module.php             # WPRM: push sync coordinator (uses WPRM_Hooks trait)
 │   │   │
 │   │   ├── # ─── Forms ─────────────────────────────────────────
-│   │   ├── class-form-handler.php            # Forms: field extraction from GF/WPForms submissions (auto-detection)
+│   │   ├── class-form-handler.php            # Forms: thin facade delegating to Form_Field_Extractor
+│   │   ├── class-form-field-extractor.php   # Forms: strategy-based field extraction for 7 form plugins
 │   │   ├── class-forms-module.php            # Forms: push sync coordinator (GF/WPForms → crm.lead)
 │   │   │
 │   │   ├── # ─── PMPro ─────────────────────────────────────────
@@ -233,7 +235,10 @@ WordPress For Odoo/
 │   │   ├── interface-translation-adapter.php   # Adapter interface (8 methods: post + term translations, default lang, active langs)
 │   │   ├── class-wpml-adapter.php              # WPML implementation (filter API: wpml_default_language, wpml_active_languages, etc.)
 │   │   ├── class-polylang-adapter.php          # Polylang implementation (function API: pll_default_language, pll_get_post_translations, etc.)
-│   │   ├── class-translation-service.php       # Core service: adapter detection, locale mapping (34 WP→Odoo), Odoo version detection, dual-path push/pull
+│   │   ├── class-translation-service.php       # Core service: adapter detection, locale mapping (34 WP→Odoo), strategy delegation
+│   │   ├── interface-translation-strategy.php  # Strategy interface for Odoo version-specific translation push/pull
+│   │   ├── class-translation-strategy-modern.php # Context-based translations (Odoo 16+)
+│   │   ├── class-translation-strategy-legacy.php # ir.translation model translations (Odoo 14–15)
 │   │   └── index.php                           # Silence is golden
 │   │
 │   ├── admin/
@@ -251,7 +256,8 @@ WordPress For Odoo/
 │   ├── class-database-migration.php   # Table creation (dbDelta), default options, versioned migrations (schema_version)
 │   ├── class-settings-repository.php  # Centralized option access: keys, defaults, typed accessors (DI)
 │   ├── class-module-registry.php      # Module registration, mutual exclusivity, lifecycle
-│   ├── class-module-base.php          # Abstract base class for modules (push/pull, mapping, anti-loop)
+│   ├── class-module-base.php          # Abstract base class for modules (mapping, anti-loop, trait composition)
+│   ├── trait-sync-orchestrator.php   # Push/pull orchestration trait (push_to_odoo, push_batch_creates, pull_from_odoo)
 │   ├── trait-module-helpers.php       # Composition trait: uses Partner_Helpers, Accounting_Helpers, Dependency_Helpers, Sync_Helpers
 │   ├── trait-partner-helpers.php     # Partner resolution: partner_service(), resolve_partner_from_user/email
 │   ├── trait-accounting-helpers.php  # Invoice helpers: auto_post_invoice()
@@ -265,7 +271,8 @@ WordPress For Odoo/
 │   ├── class-partner-service.php       # Shared res.partner lookup/creation service (advisory lock dedup)
 │   ├── class-failure-notifier.php     # Admin email notification on consecutive sync failures
 │   ├── class-circuit-breaker.php     # Circuit breaker for Odoo connectivity (3-state, advisory lock probe mutex, DB-backed fallback)
-│   ├── class-sync-engine.php          # Queue processor, batch operations, advisory locking, smart retry (Error_Type), memory guard
+│   ├── class-sync-engine.php          # Queue processor, advisory locking, smart retry (Error_Type), memory guard
+│   ├── class-batch-create-processor.php # Batch create pipeline (grouping, claiming, fallback) extracted from Sync_Engine
 │   ├── class-queue-manager.php        # Instantiable queue manager with DI, queue depth alerting, static + instance API
 │   ├── class-queue-job.php            # Readonly DTO for sync queue jobs (typed properties, from_row() factory)
 │   ├── class-advisory-lock.php        # Reusable MySQL advisory lock wrapper (acquire, release, is_held)
@@ -480,6 +487,8 @@ WordPress For Odoo/
 │       ├── LMSModuleBaseTest.php       #   3 tests for LMS_Module_Base
 │       ├── MembershipHandlerBaseTest.php #  2 tests for Membership_Handler_Base
 │       ├── DonationHandlerBaseTest.php #   10 tests for Donation_Handler_Base
+│       ├── MembershipModuleTestBase.php # Abstract base: 30 shared membership module tests
+│       ├── LMSModuleTestBase.php       # Abstract base: 29 shared LMS module tests
 │       ├── HelpdeskHandlerBaseTest.php #   14 tests for Helpdesk_Handler_Base
 │       ├── LMSHandlerBaseTest.php      #   12 tests for LMS_Handler_Base
 │       ├── MembershipModuleBaseTest.php #  15 tests for Membership_Module_Base

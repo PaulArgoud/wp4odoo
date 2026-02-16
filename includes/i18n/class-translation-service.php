@@ -56,6 +56,13 @@ class Translation_Service {
 	private ?bool $has_ir_translation_cache = null;
 
 	/**
+	 * Cached translation strategy (version-specific Odoo I/O).
+	 *
+	 * @var Translation_Strategy|null
+	 */
+	private ?Translation_Strategy $strategy = null;
+
+	/**
 	 * WordPress 2-letter language code → Odoo locale mapping.
 	 *
 	 * Covers all major Odoo-supported languages. Filterable via
@@ -554,7 +561,7 @@ class Translation_Service {
 	/**
 	 * Read translated field values for a batch of Odoo records.
 	 *
-	 * Uses context-based read for Odoo 16+ or ir.translation search for 14-15.
+	 * Delegates to the version-specific strategy (modern or legacy).
 	 *
 	 * @param string           $model       Odoo model name.
 	 * @param array<int, int>  $odoo_ids    Record IDs.
@@ -563,63 +570,7 @@ class Translation_Service {
 	 * @return array<int, array<string, mixed>> Records indexed by position.
 	 */
 	private function read_translated_batch( string $model, array $odoo_ids, array $fields, string $odoo_locale ): array {
-		if ( $this->has_ir_translation() ) {
-			return $this->read_batch_via_ir_translation( $model, $odoo_ids, $fields, $odoo_locale );
-		}
-
-		// Odoo 16+: read with context={'lang': 'fr_FR'} returns translated values.
-		return $this->client()->read( $model, $odoo_ids, array_merge( [ 'id' ], $fields ), [ 'lang' => $odoo_locale ] );
-	}
-
-	/**
-	 * Read translations via ir.translation model (Odoo 14-15).
-	 *
-	 * Performs a single search_read on ir.translation, then reconstructs
-	 * per-record arrays matching the read() format.
-	 *
-	 * @param string           $model       Odoo model name.
-	 * @param array<int, int>  $odoo_ids    Record IDs.
-	 * @param array<int, string> $fields    Field names to read.
-	 * @param string           $odoo_locale Odoo locale (e.g. 'fr_FR').
-	 * @return array<int, array<string, mixed>> Reconstructed records.
-	 */
-	private function read_batch_via_ir_translation( string $model, array $odoo_ids, array $fields, string $odoo_locale ): array {
-		$field_names = array_map(
-			fn( string $field ) => $model . ',' . $field,
-			$fields
-		);
-
-		$translations = $this->client()->search_read(
-			'ir.translation',
-			[
-				[ 'type', '=', 'model' ],
-				[ 'name', 'in', $field_names ],
-				[ 'res_id', 'in', $odoo_ids ],
-				[ 'lang', '=', $odoo_locale ],
-			],
-			[ 'name', 'res_id', 'value' ]
-		);
-
-		// Reconstruct per-record arrays: [id => [field => value, ...]].
-		$result = [];
-		foreach ( $translations as $row ) {
-			$res_id = (int) ( $row['res_id'] ?? 0 );
-			$name   = $row['name'] ?? '';
-			$value  = $row['value'] ?? '';
-
-			// Extract field name from "model,field".
-			$parts = explode( ',', $name, 2 );
-			$field = $parts[1] ?? '';
-
-			if ( $res_id > 0 && '' !== $field ) {
-				if ( ! isset( $result[ $res_id ] ) ) {
-					$result[ $res_id ] = [ 'id' => $res_id ];
-				}
-				$result[ $res_id ][ $field ] = $value;
-			}
-		}
-
-		return array_values( $result );
+		return $this->strategy()->read_translated_batch( $this->client(), $model, $odoo_ids, $fields, $odoo_locale );
 	}
 
 	// ─── Push translations ──────────────────────────────────
@@ -627,12 +578,8 @@ class Translation_Service {
 	/**
 	 * Push translated field values to Odoo for a specific record.
 	 *
-	 * For Odoo 16+ (no ir.translation): writes directly with
-	 * context={'lang': 'fr_FR'} so Odoo stores translations in
-	 * JSONB columns.
-	 *
-	 * For Odoo 14-15 (ir.translation exists): writes to the
-	 * ir.translation model directly with type='model'.
+	 * Delegates to the version-specific strategy (modern for Odoo 16+
+	 * context-based writes, legacy for Odoo 14-15 ir.translation).
 	 *
 	 * @param string               $model   Odoo model (e.g. 'product.product').
 	 * @param int                  $odoo_id Odoo record ID.
@@ -647,114 +594,27 @@ class Translation_Service {
 
 		$odoo_locale = $this->wp_to_odoo_locale( $wp_lang );
 
-		if ( $this->has_ir_translation() ) {
-			$this->push_via_ir_translation( $model, $odoo_id, $values, $odoo_locale );
-		} else {
-			$this->push_via_context( $model, $odoo_id, $values, $odoo_locale );
-		}
+		$this->strategy()->push_translation( $this->client(), $model, $odoo_id, $values, $odoo_locale );
 	}
 
-	/**
-	 * Push translations using context (Odoo 16+).
-	 *
-	 * @param string               $model       Odoo model name.
-	 * @param int                  $odoo_id     Record ID.
-	 * @param array<string, mixed> $values      Translated field values.
-	 * @param string               $odoo_locale Odoo locale (e.g. 'fr_FR').
-	 * @return void
-	 */
-	private function push_via_context( string $model, int $odoo_id, array $values, string $odoo_locale ): void {
-		try {
-			$this->client()->write( $model, [ $odoo_id ], $values, [ 'lang' => $odoo_locale ] );
-
-			$this->logger->info(
-				'Pushed translation via context.',
-				[
-					'model'  => $model,
-					'id'     => $odoo_id,
-					'locale' => $odoo_locale,
-					'fields' => array_keys( $values ),
-				]
-			);
-		} catch ( \Exception $e ) {
-			$this->logger->warning(
-				'Failed to push translation via context.',
-				[
-					'model'  => $model,
-					'id'     => $odoo_id,
-					'locale' => $odoo_locale,
-					'error'  => $e->getMessage(),
-				]
-			);
-		}
-	}
+	// ─── Strategy resolution ───────────────────────────────
 
 	/**
-	 * Push translations using ir.translation (Odoo 14-15).
+	 * Get the version-specific translation strategy.
 	 *
-	 * For each field, searches for an existing ir.translation record
-	 * and updates it, or creates a new one.
+	 * Auto-detects Odoo version via has_ir_translation() and
+	 * instantiates the appropriate strategy (cached).
 	 *
-	 * @param string               $model       Odoo model name.
-	 * @param int                  $odoo_id     Record ID.
-	 * @param array<string, mixed> $values      Translated field values.
-	 * @param string               $odoo_locale Odoo locale (e.g. 'fr_FR').
-	 * @return void
+	 * @return Translation_Strategy
 	 */
-	private function push_via_ir_translation( string $model, int $odoo_id, array $values, string $odoo_locale ): void {
-		$client = $this->client();
-
-		foreach ( $values as $field => $value ) {
-			$field_name = $model . ',' . $field;
-
-			try {
-				// Search for existing translation.
-				$existing = $client->search(
-					'ir.translation',
-					[
-						[ 'type', '=', 'model' ],
-						[ 'name', '=', $field_name ],
-						[ 'res_id', '=', $odoo_id ],
-						[ 'lang', '=', $odoo_locale ],
-					]
-				);
-
-				if ( ! empty( $existing ) ) {
-					$client->write( 'ir.translation', $existing, [ 'value' => (string) $value ] );
-				} else {
-					$client->create(
-						'ir.translation',
-						[
-							'type'   => 'model',
-							'name'   => $field_name,
-							'res_id' => $odoo_id,
-							'lang'   => $odoo_locale,
-							'src'    => '',
-							'value'  => (string) $value,
-						]
-					);
-				}
-
-				$this->logger->info(
-					'Pushed translation via ir.translation.',
-					[
-						'field'  => $field_name,
-						'id'     => $odoo_id,
-						'locale' => $odoo_locale,
-					]
-				);
-			} catch ( \Exception $e ) {
-				$this->logger->warning(
-					'Failed to push translation via ir.translation.',
-					[
-						'field'  => $field_name,
-						'id'     => $odoo_id,
-						'locale' => $odoo_locale,
-						'error'  => $e->getMessage(),
-					]
-				);
-			}
+	private function strategy(): Translation_Strategy {
+		if ( null === $this->strategy ) {
+			$this->strategy = $this->has_ir_translation()
+				? new Translation_Strategy_Legacy( $this->logger )
+				: new Translation_Strategy_Modern( $this->logger );
 		}
+
+		return $this->strategy;
 	}
 
 	/**
