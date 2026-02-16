@@ -3,8 +3,6 @@ declare( strict_types=1 );
 
 namespace WP4Odoo\Modules;
 
-use WP4Odoo\Queue_Manager;
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -97,6 +95,6 @@ trait SimplePay_Hooks {
 			return;
 		}
 
-		Queue_Manager::push( 'simplepay', 'payment', 'create', $post_id );
+		$this->push_entity( 'payment', 'sync_payments', $post_id );
 	}
 }

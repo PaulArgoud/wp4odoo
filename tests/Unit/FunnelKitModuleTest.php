@@ -529,7 +529,7 @@ class FunnelKitModuleTest extends TestCase {
 
 		$this->module->on_contact_updated( 5 );
 
-		$this->assertQueueContains( 'funnelkit', 'contact', 'update', 5 );
+		$this->assertQueueContains( 'funnelkit', 'contact', 'create', 5 );
 	}
 
 	public function test_on_contact_updated_skips_when_disabled(): void {

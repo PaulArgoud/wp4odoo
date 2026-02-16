@@ -53,7 +53,7 @@ trait Membership_Hooks {
 
 		// Push the membership line.
 		if ( $this->should_sync( 'sync_memberships' ) ) {
-			Queue_Manager::push( 'memberships', 'membership', 'create', $membership_id );
+			$this->push_entity( 'membership', 'sync_memberships', $membership_id );
 		}
 	}
 
@@ -66,14 +66,8 @@ trait Membership_Hooks {
 	 * @return void
 	 */
 	public function on_membership_status_changed( $user_membership, string $old_status, string $new_status ): void {
-		if ( ! $this->should_sync( 'sync_memberships' ) ) {
-			return;
-		}
-
 		$membership_id = $user_membership->get_id();
-		$odoo_id       = $this->get_mapping( 'membership', $membership_id ) ?? 0;
-
-		Queue_Manager::push( 'memberships', 'membership', 'update', $membership_id, $odoo_id );
+		$this->push_entity( 'membership', 'sync_memberships', $membership_id );
 	}
 
 	/**

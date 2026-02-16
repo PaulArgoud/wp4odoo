@@ -36,18 +36,11 @@ trait BuddyBoss_Hooks {
 	 * @return void
 	 */
 	public function on_profile_updated( int $user_id, array $posted_field_ids = [], bool $errors = false, array $old_values = [], array $new_values = [] ): void {
-		if ( ! $this->should_sync( 'sync_profiles' ) ) {
-			return;
-		}
-
 		if ( $user_id <= 0 ) {
 			return;
 		}
 
-		$odoo_id = $this->get_mapping( 'profile', $user_id ) ?? 0;
-		$action  = $odoo_id ? 'update' : 'create';
-
-		Queue_Manager::push( 'buddyboss', 'profile', $action, $user_id, $odoo_id );
+		$this->push_entity( 'profile', 'sync_profiles', $user_id );
 	}
 
 	/**
@@ -57,15 +50,11 @@ trait BuddyBoss_Hooks {
 	 * @return void
 	 */
 	public function on_user_activated( int $user_id ): void {
-		if ( ! $this->should_sync( 'sync_profiles' ) ) {
-			return;
-		}
-
 		if ( $user_id <= 0 ) {
 			return;
 		}
 
-		Queue_Manager::push( 'buddyboss', 'profile', 'create', $user_id );
+		$this->push_entity( 'profile', 'sync_profiles', $user_id );
 	}
 
 	/**
@@ -94,19 +83,12 @@ trait BuddyBoss_Hooks {
 	 * @return void
 	 */
 	public function on_group_saved( object $group ): void {
-		if ( ! $this->should_sync( 'sync_groups' ) ) {
-			return;
-		}
-
 		$group_id = (int) ( $group->id ?? 0 );
 		if ( $group_id <= 0 ) {
 			return;
 		}
 
-		$odoo_id = $this->get_mapping( 'group', $group_id ) ?? 0;
-		$action  = $odoo_id ? 'update' : 'create';
-
-		Queue_Manager::push( 'buddyboss', 'group', $action, $group_id, $odoo_id );
+		$this->push_entity( 'group', 'sync_groups', $group_id );
 	}
 
 	/**

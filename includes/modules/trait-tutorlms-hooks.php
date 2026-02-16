@@ -58,12 +58,8 @@ trait TutorLMS_Hooks {
 	 * @return void
 	 */
 	public function on_enrollment( int $course_id, int $user_id ): void {
-		if ( ! $this->should_sync( 'sync_enrollments' ) ) {
-			return;
-		}
-
 		$synthetic_id = self::encode_synthetic_id( $user_id, $course_id );
-		Queue_Manager::push( 'tutorlms', 'enrollment', 'create', $synthetic_id );
+		$this->push_entity( 'enrollment', 'sync_enrollments', $synthetic_id );
 	}
 
 	/**

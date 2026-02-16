@@ -467,7 +467,7 @@ class FluentCRMModuleTest extends TestCase {
 
 		$this->module->on_subscriber_status_changed( $subscriber, 'subscribed' );
 
-		$this->assertQueueContains( 'fluentcrm', 'subscriber', 'update', 5 );
+		$this->assertQueueContains( 'fluentcrm', 'subscriber', 'create', 5 );
 	}
 
 	public function test_on_subscriber_status_changed_skips_when_disabled(): void {

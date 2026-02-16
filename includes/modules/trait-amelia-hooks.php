@@ -67,10 +67,6 @@ trait Amelia_Hooks {
 	 * @return void
 	 */
 	public function on_booking_saved( array $booking, array $service, array $appointment ): void {
-		if ( ! $this->should_sync( 'sync_appointments' ) ) {
-			return;
-		}
-
 		$status = $appointment['status'] ?? '';
 		if ( 'approved' !== $status ) {
 			return;
@@ -81,7 +77,7 @@ trait Amelia_Hooks {
 			return;
 		}
 
-		Queue_Manager::push( 'amelia', 'appointment', 'create', $appointment_id );
+		$this->push_entity( 'appointment', 'sync_appointments', $appointment_id );
 	}
 
 	/**

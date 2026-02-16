@@ -161,12 +161,7 @@ trait WooCommerce_Hooks {
 	 * @return void
 	 */
 	public function on_order_status_changed( int $order_id, string $old_status, string $new_status ): void {
-		if ( ! $this->should_sync( 'sync_orders' ) ) {
-			return;
-		}
-
-		$odoo_id = $this->get_mapping( 'order', $order_id ) ?? 0;
-		Queue_Manager::push( 'woocommerce', 'order', 'update', $order_id, $odoo_id );
+		$this->push_entity( 'order', 'sync_orders', $order_id );
 	}
 
 	/**

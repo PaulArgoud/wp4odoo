@@ -3,8 +3,6 @@ declare( strict_types=1 );
 
 namespace WP4Odoo\Modules;
 
-use WP4Odoo\Queue_Manager;
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -34,15 +32,11 @@ trait FunnelKit_Hooks {
 	 * @return void
 	 */
 	public function on_contact_created( int $contact_id ): void {
-		if ( ! $this->should_sync( 'sync_contacts' ) ) {
-			return;
-		}
-
 		if ( $contact_id <= 0 ) {
 			return;
 		}
 
-		Queue_Manager::push( 'funnelkit', 'contact', 'create', $contact_id );
+		$this->push_entity( 'contact', 'sync_contacts', $contact_id );
 	}
 
 	/**
@@ -54,16 +48,11 @@ trait FunnelKit_Hooks {
 	 * @return void
 	 */
 	public function on_contact_updated( int $contact_id ): void {
-		if ( ! $this->should_sync( 'sync_contacts' ) ) {
-			return;
-		}
-
 		if ( $contact_id <= 0 ) {
 			return;
 		}
 
-		$odoo_id = $this->get_mapping( 'contact', $contact_id ) ?? 0;
-		Queue_Manager::push( 'funnelkit', 'contact', 'update', $contact_id, $odoo_id );
+		$this->push_entity( 'contact', 'sync_contacts', $contact_id );
 	}
 
 	/**

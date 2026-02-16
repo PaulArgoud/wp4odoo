@@ -52,7 +52,7 @@ trait RCP_Hooks {
 			return;
 		}
 
-		Queue_Manager::push( 'rcp', 'payment', 'create', $payment_id );
+		$this->push_entity( 'payment', 'sync_payments', $payment_id );
 	}
 
 	/**
