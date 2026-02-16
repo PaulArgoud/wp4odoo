@@ -133,6 +133,7 @@ class Module_Registry {
 			// Marketplace group.
 			[ 'dokan', Modules\Dokan_Module::class, fn() => defined( 'DOKAN_PLUGIN_VERSION' ) ],
 			[ 'wcfm', Modules\WCFM_Module::class, fn() => defined( 'WCFM_VERSION' ) ],
+			[ 'wc_vendors', Modules\WC_Vendors_Module::class, fn() => class_exists( 'WCV_Vendors' ) || defined( 'WCV_PRO_VERSION' ) ],
 
 			// Helpdesk group.
 			[ 'awesome_support', Modules\Awesome_Support_Module::class, fn() => defined( 'WPAS_VERSION' ) ],
@@ -144,6 +145,7 @@ class Module_Registry {
 			// Marketing CRM.
 			[ 'fluentcrm', Modules\FluentCRM_Module::class, fn() => defined( 'FLUENTCRM' ) ],
 			[ 'mailpoet', Modules\MailPoet_Module::class, fn() => defined( 'MAILPOET_VERSION' ) ],
+			[ 'mc4wp', Modules\MC4WP_Module::class, fn() => defined( 'MC4WP_VERSION' ) ],
 
 			// Funnel / Sales pipeline.
 			[ 'funnelkit', Modules\FunnelKit_Module::class, fn() => defined( 'WFFN_VERSION' ) ],

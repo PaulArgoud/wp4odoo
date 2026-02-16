@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - logger: Logger              (from Module_Base)
  *
  * @package WP4Odoo
- * @since   3.5.0
+ * @since   3.4.0
  */
 trait SureCart_Hooks {
 

@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - SureCart_Handler — product/order/subscription load, status mapping, line formatting
  *
  * @package WP4Odoo
- * @since   3.5.0
+ * @since   3.4.0
  */
 class SureCart_Module extends Module_Base {
 

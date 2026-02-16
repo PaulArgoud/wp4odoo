@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Requires the WooCommerce module to be active.
  *
  * @package WP4Odoo
- * @since   3.5.0
+ * @since   3.4.0
  */
 class WC_B2B_Module extends Module_Base {
 

@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Called by SureCart_Module via its load_wp_data / save_wp_data dispatch.
  *
  * @package WP4Odoo
- * @since   3.5.0
+ * @since   3.4.0
  */
 class SureCart_Handler {
 

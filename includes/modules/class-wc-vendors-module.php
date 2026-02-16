@@ -10,9 +10,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Dokan Marketplace Module — bidirectional multi-vendor marketplace sync.
+ * WC Vendors Marketplace Module — bidirectional multi-vendor marketplace sync.
  *
- * Syncs Dokan vendors as Odoo partners (res.partner with supplier_rank),
+ * Syncs WC Vendors vendors as Odoo partners (res.partner with supplier_rank),
  * sub-orders as purchase orders (purchase.order), commissions as vendor
  * bills (account.move with move_type=in_invoice), and payouts as account
  * payments (account.payment).
@@ -20,18 +20,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Vendors are bidirectional (push + pull status). Sub-orders, commissions,
  * and payouts are push-only (WP → Odoo).
  *
- * Requires WooCommerce + Dokan to be active.
- * In the `marketplace` exclusive group (priority 10).
+ * Requires WooCommerce + WC Vendors to be active.
+ * In the `marketplace` exclusive group (priority 20).
  *
  * @package WP4Odoo
  * @since   3.4.0
  */
-class Dokan_Module extends \WP4Odoo\Module_Base {
+class WC_Vendors_Module extends \WP4Odoo\Module_Base {
 
-	use Dokan_Hooks;
+	use WC_Vendors_Hooks;
 
-	protected const PLUGIN_MIN_VERSION  = '3.7';
-	protected const PLUGIN_TESTED_UP_TO = '4.2';
+	protected const PLUGIN_MIN_VERSION  = '2.0';
+	protected const PLUGIN_TESTED_UP_TO = '2.5';
 
 	/**
 	 * Exclusive group: marketplace (only one marketplace module active).
@@ -45,7 +45,7 @@ class Dokan_Module extends \WP4Odoo\Module_Base {
 	 *
 	 * @var int
 	 */
-	protected int $exclusive_priority = 10;
+	protected int $exclusive_priority = 20;
 
 	/**
 	 * Odoo models by entity type.
@@ -103,14 +103,14 @@ class Dokan_Module extends \WP4Odoo\Module_Base {
 	];
 
 	/**
-	 * Dokan data handler.
+	 * WC Vendors data handler.
 	 *
 	 * Initialized in __construct() (not boot()) because Sync_Engine can
 	 * call push_to_odoo on non-booted modules for residual queue jobs.
 	 *
-	 * @var Dokan_Handler
+	 * @var WC_Vendors_Handler
 	 */
-	private Dokan_Handler $handler;
+	private WC_Vendors_Handler $handler;
 
 	/**
 	 * Constructor.
@@ -120,8 +120,8 @@ class Dokan_Module extends \WP4Odoo\Module_Base {
 	 * @param \WP4Odoo\Settings_Repository   $settings        Settings repository.
 	 */
 	public function __construct( \Closure $client_provider, \WP4Odoo\Entity_Map_Repository $entity_map, \WP4Odoo\Settings_Repository $settings ) {
-		parent::__construct( 'dokan', 'Dokan', $client_provider, $entity_map, $settings );
-		$this->handler = new Dokan_Handler( $this->logger );
+		parent::__construct( 'wc_vendors', 'WC Vendors', $client_provider, $entity_map, $settings );
+		$this->handler = new WC_Vendors_Handler( $this->logger );
 	}
 
 	/**
@@ -134,13 +134,13 @@ class Dokan_Module extends \WP4Odoo\Module_Base {
 	}
 
 	/**
-	 * Boot the module: register Dokan hooks.
+	 * Boot the module: register WC Vendors hooks.
 	 *
 	 * @return void
 	 */
 	public function boot(): void {
-		if ( ! function_exists( 'dokan' ) ) {
-			$this->logger->warning( __( 'Dokan module enabled but Dokan is not active.', 'wp4odoo' ) );
+		if ( ! class_exists( 'WCV_Vendors' ) ) {
+			$this->logger->warning( __( 'WC Vendors module enabled but WC Vendors is not active.', 'wp4odoo' ) );
 			return;
 		}
 
@@ -182,12 +182,12 @@ class Dokan_Module extends \WP4Odoo\Module_Base {
 			'sync_vendors'     => [
 				'label'       => __( 'Sync vendors', 'wp4odoo' ),
 				'type'        => 'checkbox',
-				'description' => __( 'Push Dokan vendors to Odoo as supplier partners.', 'wp4odoo' ),
+				'description' => __( 'Push WC Vendors vendors to Odoo as supplier partners.', 'wp4odoo' ),
 			],
 			'sync_sub_orders'  => [
 				'label'       => __( 'Sync sub-orders', 'wp4odoo' ),
 				'type'        => 'checkbox',
-				'description' => __( 'Push Dokan sub-orders to Odoo as purchase orders.', 'wp4odoo' ),
+				'description' => __( 'Push WC Vendors sub-orders to Odoo as purchase orders.', 'wp4odoo' ),
 			],
 			'sync_commissions' => [
 				'label'       => __( 'Sync commissions', 'wp4odoo' ),
@@ -197,7 +197,7 @@ class Dokan_Module extends \WP4Odoo\Module_Base {
 			'sync_payouts'     => [
 				'label'       => __( 'Sync payouts', 'wp4odoo' ),
 				'type'        => 'checkbox',
-				'description' => __( 'Push approved withdrawal requests to Odoo as payments.', 'wp4odoo' ),
+				'description' => __( 'Push approved vendor payments to Odoo as payments.', 'wp4odoo' ),
 			],
 			'auto_post_bills'  => [
 				'label'       => __( 'Auto-post vendor bills', 'wp4odoo' ),
@@ -207,33 +207,33 @@ class Dokan_Module extends \WP4Odoo\Module_Base {
 			'pull_vendors'     => [
 				'label'       => __( 'Pull vendor updates from Odoo', 'wp4odoo' ),
 				'type'        => 'checkbox',
-				'description' => __( 'Pull vendor status changes from Odoo back to Dokan.', 'wp4odoo' ),
+				'description' => __( 'Pull vendor status changes from Odoo back to WC Vendors.', 'wp4odoo' ),
 			],
 		];
 	}
 
 	/**
-	 * Get external dependency status for Dokan.
+	 * Get external dependency status for WC Vendors.
 	 *
 	 * @return array{available: bool, notices: array<array{type: string, message: string}>}
 	 */
 	public function get_dependency_status(): array {
-		return $this->check_dependency( function_exists( 'dokan' ), 'Dokan' );
+		return $this->check_dependency( class_exists( 'WCV_Vendors' ), 'WC Vendors' );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	protected function get_plugin_version(): string {
-		return defined( 'DOKAN_PLUGIN_VERSION' ) ? DOKAN_PLUGIN_VERSION : '';
+		return defined( 'WCV_PRO_VERSION' ) ? WCV_PRO_VERSION : '';
 	}
 
 	/**
 	 * Get the handler instance.
 	 *
-	 * @return Dokan_Handler
+	 * @return WC_Vendors_Handler
 	 */
-	public function get_handler(): Dokan_Handler {
+	public function get_handler(): WC_Vendors_Handler {
 		return $this->handler;
 	}
 
@@ -276,8 +276,7 @@ class Dokan_Module extends \WP4Odoo\Module_Base {
 	 *
 	 * Override to:
 	 * 1. Ensure vendor is synced before sub_order/commission/payout.
-	 * 2. Force supplier_rank on vendor create.
-	 * 3. Auto-post vendor bill when setting enabled.
+	 * 2. Auto-post vendor bill when setting enabled.
 	 *
 	 * @param string $entity_type Entity type.
 	 * @param string $action      Action (create, update, delete).
@@ -311,7 +310,7 @@ class Dokan_Module extends \WP4Odoo\Module_Base {
 	 * Pull an Odoo entity to WordPress.
 	 *
 	 * Only vendor status can be pulled. Sub-orders, commissions, and
-	 * payouts originate in WooCommerce/Dokan — pull not supported.
+	 * payouts originate in WooCommerce/WC Vendors — pull not supported.
 	 *
 	 * @param string $entity_type Entity type.
 	 * @param string $action      'create', 'update', or 'delete'.
@@ -323,7 +322,7 @@ class Dokan_Module extends \WP4Odoo\Module_Base {
 	public function pull_from_odoo( string $entity_type, string $action, int $odoo_id, int $wp_id = 0, array $payload = [] ): Sync_Result {
 		if ( in_array( $entity_type, [ 'sub_order', 'commission', 'payout' ], true ) ) {
 			$this->logger->info(
-				\sprintf( '%s pull not supported — originates in WooCommerce/Dokan.', $entity_type ),
+				\sprintf( '%s pull not supported — originates in WooCommerce/WC Vendors.', $entity_type ),
 				[ 'odoo_id' => $odoo_id ]
 			);
 			return Sync_Result::success();
@@ -416,7 +415,7 @@ class Dokan_Module extends \WP4Odoo\Module_Base {
 	private function load_sub_order_data( int $order_id ): array {
 		$vendor_id = $this->handler->get_vendor_id_for_order( $order_id );
 		if ( ! $vendor_id ) {
-			$this->logger->warning( 'Cannot resolve vendor for Dokan sub-order.', [ 'order_id' => $order_id ] );
+			$this->logger->warning( 'Cannot resolve vendor for WC Vendors sub-order.', [ 'order_id' => $order_id ] );
 			return [];
 		}
 
@@ -460,7 +459,8 @@ class Dokan_Module extends \WP4Odoo\Module_Base {
 			return [];
 		}
 
-		$amount = (float) dokan_get_earning_by_order( $order_id, 'admin' );
+		$commission = $GLOBALS['_wcv_orders'][ $order_id ] ?? null;
+		$amount     = $commission ? (float) ( $commission['commission'] ?? 0.0 ) : 0.0;
 
 		return $this->handler->load_commission( $order_id, $partner_id, $amount );
 	}
@@ -468,13 +468,13 @@ class Dokan_Module extends \WP4Odoo\Module_Base {
 	/**
 	 * Load payout data with resolved vendor partner ID.
 	 *
-	 * @param int $withdraw_id Dokan withdraw ID.
+	 * @param int $payout_id WC Vendors payout ID.
 	 * @return array<string, mixed>
 	 */
-	private function load_payout_data( int $withdraw_id ): array {
-		$vendor_id = $this->handler->get_vendor_id_for_withdraw( $withdraw_id );
+	private function load_payout_data( int $payout_id ): array {
+		$vendor_id = $this->handler->get_vendor_id_for_payout( $payout_id );
 		if ( ! $vendor_id ) {
-			$this->logger->warning( 'Cannot resolve vendor for payout.', [ 'withdraw_id' => $withdraw_id ] );
+			$this->logger->warning( 'Cannot resolve vendor for payout.', [ 'payout_id' => $payout_id ] );
 			return [];
 		}
 
@@ -483,14 +483,14 @@ class Dokan_Module extends \WP4Odoo\Module_Base {
 			$this->logger->warning(
 				'Cannot resolve Odoo partner for vendor.',
 				[
-					'withdraw_id' => $withdraw_id,
-					'vendor_id'   => $vendor_id,
+					'payout_id' => $payout_id,
+					'vendor_id' => $vendor_id,
 				]
 			);
 			return [];
 		}
 
-		return $this->handler->load_payout( $withdraw_id, $partner_id );
+		return $this->handler->load_payout( $payout_id, $partner_id );
 	}
 
 	/**
@@ -504,7 +504,7 @@ class Dokan_Module extends \WP4Odoo\Module_Base {
 		return match ( $entity_type ) {
 			'sub_order'  => $this->handler->get_vendor_id_for_order( $wp_id ),
 			'commission' => $this->handler->get_vendor_id_for_order( $wp_id ),
-			'payout'     => $this->handler->get_vendor_id_for_withdraw( $wp_id ),
+			'payout'     => $this->handler->get_vendor_id_for_payout( $wp_id ),
 			default      => 0,
 		};
 	}

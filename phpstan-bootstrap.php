@@ -1072,6 +1072,28 @@ if ( ! function_exists( 'wcfm_get_withdrawal' ) ) {
 	function wcfm_get_withdrawal( $withdrawal_id ) { return false; }
 }
 
+// ─── WC Vendors stubs ────────────────────────────────────
+
+if ( ! defined( 'WCV_PRO_VERSION' ) ) {
+	define( 'WCV_PRO_VERSION', '2.2.0' );
+}
+
+if ( ! class_exists( 'WCV_Vendors' ) ) {
+	class WCV_Vendors {
+		/**
+		 * @param int $order_id
+		 * @return int
+		 */
+		public static function get_vendor_from_order( $order_id ) { return 0; }
+
+		/**
+		 * @param int $user_id
+		 * @return bool
+		 */
+		public static function is_vendor( $user_id ) { return false; }
+	}
+}
+
 // ─── WPML stubs ─────────────────────────────────────────
 
 if ( ! defined( 'ICL_SITEPRESS_VERSION' ) ) {
@@ -1261,6 +1283,18 @@ if ( ! defined( 'MAILPOET_VERSION' ) ) {
 
 // MailPoet namespace stub loaded from separate file (PHP namespace rules).
 require_once __DIR__ . '/phpstan-mailpoet-stubs.php';
+
+// ─── MC4WP stubs ─────────────────────────────────────────
+
+if ( ! defined( 'MC4WP_VERSION' ) ) {
+	define( 'MC4WP_VERSION', '4.9.0' );
+}
+
+if ( ! class_exists( 'MC4WP_Form' ) ) {
+	class MC4WP_Form {
+		public int $id = 0;
+	}
+}
 
 // WP_CLI\Utils namespace stub loaded from separate file (PHP namespace rules).
 require_once __DIR__ . '/phpstan-wp-cli-stubs.php';

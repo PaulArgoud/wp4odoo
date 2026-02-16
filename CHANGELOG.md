@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.4.0] - Unreleased
 
 ### Added
+- **Dokan module** — New marketplace module for Dokan 3.7+. Syncs vendors → `res.partner` (bidirectional, `supplier_rank=1`), sub-orders → `purchase.order` (push), commissions → `account.move` (push, vendor bills via `Odoo_Accounting_Formatter`), withdrawals → `account.payment` (push). Exclusive group `marketplace`. Requires WooCommerce module
+- **WCFM module** — New marketplace module for WCFM Marketplace 6.5+. Syncs vendors → `res.partner` (bidirectional, `supplier_rank=1`), sub-orders → `purchase.order` (push), commissions → `account.move` (push, vendor bills), withdrawals → `account.payment` (push). Exclusive group `marketplace`. Requires WooCommerce module
+- **WC Vendors module** — New marketplace module for WC Vendors Pro 2.0+. Syncs vendors → `res.partner` (bidirectional, `supplier_rank=1`), sub-orders → `purchase.order` (push), commissions → `account.move` (push, vendor bills), payouts → `account.payment` (push). Exclusive group `marketplace`. Requires WooCommerce module
+- **SureCart module** — New e-commerce module for SureCart 2.0+. Syncs products → `product.template` (bidirectional), orders → `sale.order` (bidirectional), subscriptions → `sale.subscription` (push). Exclusive group `ecommerce_alt`
+- **WC B2B module** — New B2B/wholesale module for Wholesale Suite (WWP) 2.0+. Syncs company accounts → `res.partner` (bidirectional, `is_company=true`, payment terms, partner categories), pricelist rules → `product.pricelist.item` (push, wholesale pricing). Requires WooCommerce module
+- **MailPoet module** — New email marketing module for MailPoet 4.0+. Syncs subscribers → `mailing.contact` (bidirectional, M2M list_ids resolution), mailing lists → `mailing.list` (bidirectional). Dedup by email/name
+- **Mailchimp for WP (MC4WP) module** — New email marketing module for MC4WP 4.8+. Syncs subscribers → `mailing.contact` (bidirectional, M2M list_ids resolution), lists → `mailing.list` (bidirectional). Hooks into `mc4wp_form_subscribed` and `mc4wp_integration_subscribed`. Dedup by email/name
+- **Odoo_Model enum additions** — 6 new cases: `MailingContact`, `MailingList`, `PurchaseOrder`, `AccountPaymentTerm`, `PartnerCategory`, `ProductCategory`
 - **Queue depth alerting** — `Queue_Manager` monitors pending job count and fires `wp4odoo_queue_depth_warning` (≥ 1 000 jobs) and `wp4odoo_queue_depth_critical` (≥ 5 000 jobs) action hooks with a 5-minute cooldown between alerts. Consumers can use these to trigger admin notices, email alerts, or pause enqueuing
 - **Queue_Job readonly DTO** — New `Queue_Job` readonly class provides typed, immutable access to sync queue job data (`id`, `module`, `entity_type`, `action`, `wp_id`, `odoo_id`, `status`, `retry_count`, `error_message`, `created_at`, `scheduled_at`, `claimed_at`). `Sync_Queue_Repository::fetch_pending()` now returns `Queue_Job[]` instead of raw `stdClass` arrays
 - **Advisory_Lock utility class** — Reusable MySQL advisory lock wrapper (`acquire()`, `release()`, `is_held()`) consolidating 3 duplicate implementations across `Sync_Engine`, `Partner_Service`, and `Push_Lock`
@@ -37,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Test base classes** — Extracted `MembershipModuleTestBase` (30 shared tests) and `LMSModuleTestBase` (29 shared tests) abstract classes, reducing 6 module test files by ~580 lines total
 
 ### Tests
-- 3 614 unit tests (5 612 assertions) — new tests covering Queue_Job DTO, advisory locks, Queue_Manager DI, queue depth alerting, chunked cleanup, settings validation, rate limiter, and module registry fixes
+- 3 895 unit tests (5 967 assertions) — new tests covering 7 new modules (Dokan, WCFM, WC Vendors, SureCart, WC B2B, MailPoet, MC4WP), Queue_Job DTO, advisory locks, Queue_Manager DI, queue depth alerting, chunked cleanup, settings validation, rate limiter, and module registry fixes
 
 ## [3.3.0] - 2026-02-16
 

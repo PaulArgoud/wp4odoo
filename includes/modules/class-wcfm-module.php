@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * In the `marketplace` exclusive group (priority 15).
  *
  * @package WP4Odoo
- * @since   3.5.0
+ * @since   3.4.0
  */
 class WCFM_Module extends \WP4Odoo\Module_Base {
 

@@ -157,25 +157,25 @@ enum Odoo_Model: string {
 
 	// ─── Email Marketing ───────────────────────────────────
 
-	/** Mailing contacts (subscribers). @since 3.5.0 */
+	/** Mailing contacts (subscribers). @since 3.4.0 */
 	case MailingContact = 'mailing.contact';
 
-	/** Mailing lists. @since 3.5.0 */
+	/** Mailing lists. @since 3.4.0 */
 	case MailingList = 'mailing.list';
 
 	// ─── Purchasing ───────────────────────────────────────
 
-	/** Purchase orders. @since 3.5.0 */
+	/** Purchase orders. @since 3.4.0 */
 	case PurchaseOrder = 'purchase.order';
 
 	// ─── B2B ──────────────────────────────────────────────
 
-	/** Payment terms. @since 3.5.0 */
+	/** Payment terms. @since 3.4.0 */
 	case AccountPaymentTerm = 'account.payment.term';
 
-	/** Partner categories (tags). @since 3.5.0 */
+	/** Partner categories (tags). @since 3.4.0 */
 	case PartnerCategory = 'res.partner.category';
 
-	/** Product categories. @since 3.5.0 */
+	/** Product categories. @since 3.4.0 */
 	case ProductCategory = 'product.category';
 }

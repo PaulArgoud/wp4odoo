@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - Lists via getList / addList / updateList
  *
  * @package WP4Odoo
- * @since   3.5.0
+ * @since   3.4.0
  */
 class MailPoet_Handler {
 

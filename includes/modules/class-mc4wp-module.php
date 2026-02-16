@@ -10,25 +10,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * MailPoet Module — bidirectional sync between MailPoet and Odoo.
+ * MC4WP Module — bidirectional sync between Mailchimp for WP and Odoo.
  *
- * Syncs MailPoet subscribers to Odoo mailing.contact (bidirectional)
+ * Syncs MC4WP subscribers to Odoo mailing.contact (bidirectional)
  * and mailing lists to mailing.list (bidirectional).
  *
- * MailPoet stores data in custom DB tables and provides access via
- * the \MailPoet\API\API class.
+ * MC4WP stores subscriber data as WP user meta and caches Mailchimp
+ * list data in transients / globals.
  *
- * Requires the MailPoet plugin to be active.
+ * Requires the Mailchimp for WP plugin to be active.
  *
  * @package WP4Odoo
  * @since   3.4.0
  */
-class MailPoet_Module extends Module_Base {
+class MC4WP_Module extends Module_Base {
 
-	use MailPoet_Hooks;
+	use MC4WP_Hooks;
 
-	protected const PLUGIN_MIN_VERSION  = '4.0';
-	protected const PLUGIN_TESTED_UP_TO = '5.5';
+	protected const PLUGIN_MIN_VERSION  = '4.8';
+	protected const PLUGIN_TESTED_UP_TO = '4.10';
 
 	/**
 	 * Odoo models by entity type.
@@ -61,14 +61,14 @@ class MailPoet_Module extends Module_Base {
 	];
 
 	/**
-	 * MailPoet data handler.
+	 * MC4WP data handler.
 	 *
 	 * Initialized in __construct() (not boot()) because Sync_Engine can
 	 * call push_to_odoo on non-booted modules for residual queue jobs.
 	 *
-	 * @var MailPoet_Handler
+	 * @var MC4WP_Handler
 	 */
-	private MailPoet_Handler $handler;
+	private MC4WP_Handler $handler;
 
 	/**
 	 * Constructor.
@@ -78,8 +78,8 @@ class MailPoet_Module extends Module_Base {
 	 * @param \WP4Odoo\Settings_Repository   $settings        Settings repository.
 	 */
 	public function __construct( \Closure $client_provider, \WP4Odoo\Entity_Map_Repository $entity_map, \WP4Odoo\Settings_Repository $settings ) {
-		parent::__construct( 'mailpoet', 'MailPoet', $client_provider, $entity_map, $settings );
-		$this->handler = new MailPoet_Handler( $this->logger );
+		parent::__construct( 'mc4wp', 'Mailchimp for WP', $client_provider, $entity_map, $settings );
+		$this->handler = new MC4WP_Handler( $this->logger );
 	}
 
 	/**
@@ -92,13 +92,13 @@ class MailPoet_Module extends Module_Base {
 	}
 
 	/**
-	 * Boot the module: register MailPoet hooks.
+	 * Boot the module: register MC4WP hooks.
 	 *
 	 * @return void
 	 */
 	public function boot(): void {
-		if ( ! defined( 'MAILPOET_VERSION' ) ) {
-			$this->logger->warning( __( 'MailPoet module enabled but MailPoet is not active.', 'wp4odoo' ) );
+		if ( ! defined( 'MC4WP_VERSION' ) ) {
+			$this->logger->warning( __( 'MC4WP module enabled but Mailchimp for WP is not active.', 'wp4odoo' ) );
 			return;
 		}
 
@@ -129,40 +129,40 @@ class MailPoet_Module extends Module_Base {
 			'sync_subscribers' => [
 				'label'       => __( 'Sync subscribers', 'wp4odoo' ),
 				'type'        => 'checkbox',
-				'description' => __( 'Push MailPoet subscribers to Odoo as mailing contacts.', 'wp4odoo' ),
+				'description' => __( 'Push MC4WP subscribers to Odoo as mailing contacts.', 'wp4odoo' ),
 			],
 			'sync_lists'       => [
 				'label'       => __( 'Sync lists', 'wp4odoo' ),
 				'type'        => 'checkbox',
-				'description' => __( 'Push MailPoet mailing lists to Odoo.', 'wp4odoo' ),
+				'description' => __( 'Push Mailchimp mailing lists to Odoo.', 'wp4odoo' ),
 			],
 			'pull_subscribers' => [
 				'label'       => __( 'Pull subscribers from Odoo', 'wp4odoo' ),
 				'type'        => 'checkbox',
-				'description' => __( 'Pull mailing contact changes from Odoo back to MailPoet.', 'wp4odoo' ),
+				'description' => __( 'Pull mailing contact changes from Odoo back to MC4WP.', 'wp4odoo' ),
 			],
 			'pull_lists'       => [
 				'label'       => __( 'Pull lists from Odoo', 'wp4odoo' ),
 				'type'        => 'checkbox',
-				'description' => __( 'Pull mailing list changes from Odoo back to MailPoet.', 'wp4odoo' ),
+				'description' => __( 'Pull mailing list changes from Odoo back to MC4WP.', 'wp4odoo' ),
 			],
 		];
 	}
 
 	/**
-	 * Get external dependency status for MailPoet.
+	 * Get external dependency status for MC4WP.
 	 *
 	 * @return array{available: bool, notices: array<array{type: string, message: string}>}
 	 */
 	public function get_dependency_status(): array {
-		return $this->check_dependency( defined( 'MAILPOET_VERSION' ), 'MailPoet' );
+		return $this->check_dependency( defined( 'MC4WP_VERSION' ), 'Mailchimp for WP' );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	protected function get_plugin_version(): string {
-		return defined( 'MAILPOET_VERSION' ) ? MAILPOET_VERSION : '';
+		return defined( 'MC4WP_VERSION' ) ? MC4WP_VERSION : '';
 	}
 
 	// ─── Data Loading ────────────────────────────────────────
@@ -188,7 +188,7 @@ class MailPoet_Module extends Module_Base {
 	 * Transform WordPress data to Odoo field values.
 	 *
 	 * For subscribers, resolves list_ids to Odoo M2M format:
-	 * maps each MailPoet list ID to Odoo mailing.list ID via entity_map,
+	 * maps each MC4WP list ID to Odoo mailing.list ID via entity_map,
 	 * then formats as [(6, 0, [ids])].
 	 *
 	 * @param string $entity_type Entity type.
@@ -201,8 +201,8 @@ class MailPoet_Module extends Module_Base {
 		if ( 'subscriber' === $entity_type && isset( $wp_data['list_ids'] ) && is_array( $wp_data['list_ids'] ) ) {
 			$odoo_list_ids = [];
 
-			foreach ( $wp_data['list_ids'] as $mp_list_id ) {
-				$odoo_id = $this->get_mapping( 'list', (int) $mp_list_id );
+			foreach ( $wp_data['list_ids'] as $mc4wp_list_id ) {
+				$odoo_id = $this->get_mapping( 'list', (int) $mc4wp_list_id );
 				if ( $odoo_id ) {
 					$odoo_list_ids[] = $odoo_id;
 				}

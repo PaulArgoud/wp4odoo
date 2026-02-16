@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Called by Dokan_Module via its load_wp_data dispatch.
  *
  * @package WP4Odoo
- * @since   3.5.0
+ * @since   3.4.0
  */
 class Dokan_Handler {
 

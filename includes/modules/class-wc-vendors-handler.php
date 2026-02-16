@@ -10,24 +10,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * WCFM Marketplace Handler — data access for marketplace vendors,
- * sub-orders, commissions, and payouts.
+ * WC Vendors Handler — data access for marketplace vendors, sub-orders,
+ * commissions, and payouts.
  *
- * Loads WCFM vendor data and formats sub-orders as purchase orders,
+ * Loads WC Vendors vendor data and formats sub-orders as purchase orders,
  * commissions as vendor bills (`account.move` with `move_type=in_invoice`),
  * and payouts as account payments (`account.payment`).
  *
- * Uses WCFM API functions and globals (`$WCFM->wcfmmp_vendor`) for data access.
- *
- * Called by WCFM_Module via its load_wp_data dispatch.
+ * Called by WC_Vendors_Module via its load_wp_data dispatch.
  *
  * @package WP4Odoo
  * @since   3.4.0
  */
-class WCFM_Handler {
+class WC_Vendors_Handler {
 
 	/**
-	 * Vendor status mapping: WCFM → Odoo-friendly label.
+	 * Vendor status mapping: WC Vendors → Odoo-friendly label.
+	 *
+	 * - enabled (active vendor) → active
+	 * - disabled (suspended vendor) → inactive
 	 *
 	 * @var array<string, string>
 	 */
@@ -80,18 +81,17 @@ class WCFM_Handler {
 	public function load_vendor( int $user_id ): array {
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
-			$this->logger->warning( 'WCFM vendor user not found.', [ 'user_id' => $user_id ] );
+			$this->logger->warning( 'WC Vendors vendor user not found.', [ 'user_id' => $user_id ] );
 			return [];
 		}
 
-		$store_name = wcfm_get_vendor_store_name( $user_id );
 		$store_info = $this->get_vendor_store_info( $user_id );
-		$address    = $store_info['address'] ?? [];
+		$store_name = $store_info['store_name'] ?? '';
 
 		$name         = $store_name ?: $user->display_name;
 		$street_parts = array_filter(
 			[
-				$address['street_1'] ?? '',
+				$store_info['address'] ?? '',
 			]
 		);
 
@@ -101,8 +101,8 @@ class WCFM_Handler {
 			'email'         => $user->user_email,
 			'phone'         => $store_info['phone'] ?? '',
 			'street'        => implode( ', ', $street_parts ),
-			'city'          => $address['city'] ?? '',
-			'zip'           => $address['zip'] ?? '',
+			'city'          => $store_info['city'] ?? '',
+			'zip'           => $store_info['postcode'] ?? '',
 			'supplier_rank' => 1,
 			'is_company'    => $this->is_company_name( $name ),
 		];
@@ -118,15 +118,15 @@ class WCFM_Handler {
 	public function save_vendor_status( int $user_id, string $status ): bool {
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
-			$this->logger->warning( 'Cannot save WCFM vendor status — user not found.', [ 'user_id' => $user_id ] );
+			$this->logger->warning( 'Cannot save vendor status — user not found.', [ 'user_id' => $user_id ] );
 			return false;
 		}
 
 		$enabled = 'active' === $status;
-		update_user_meta( $user_id, '_wcfm_vendor_disable', $enabled ? 'no' : 'yes' );
+		update_user_meta( $user_id, '_wcv_vendor_status', $enabled ? 'enabled' : 'disabled' );
 
 		$this->logger->info(
-			'Updated WCFM vendor status from Odoo.',
+			'Updated WC Vendors vendor status from Odoo.',
 			[
 				'user_id' => $user_id,
 				'status'  => $status,
@@ -138,19 +138,22 @@ class WCFM_Handler {
 	}
 
 	/**
-	 * Map a WCFM vendor status to an Odoo-friendly status string.
+	 * Map a WC Vendors vendor status to an Odoo-friendly status string.
 	 *
-	 * @param string $status WCFM vendor status.
+	 * @param string $status WC Vendors vendor status.
 	 * @return string Odoo-friendly status.
 	 */
 	public function map_vendor_status_to_odoo( string $status ): string {
-		return Status_Mapper::resolve( $status, self::VENDOR_STATUS_MAP, 'wp4odoo_wcfm_vendor_status_map', 'active' );
+		return Status_Mapper::resolve( $status, self::VENDOR_STATUS_MAP, 'wp4odoo_wc_vendors_vendor_status_map', 'active' );
 	}
 
 	// ─── Sub-order ──────────────────────────────────────────
 
 	/**
-	 * Load a WCFM sub-order as Odoo purchase order fields.
+	 * Load a WC Vendors sub-order as Odoo purchase order fields.
+	 *
+	 * Resolves the vendor user ID and formats WC order items as
+	 * purchase.order line One2many tuples `[(0, 0, {...})]`.
 	 *
 	 * @param int $order_id WC sub-order ID.
 	 * @param int $partner_id Resolved Odoo partner ID (vendor).
@@ -159,7 +162,7 @@ class WCFM_Handler {
 	public function load_sub_order( int $order_id, int $partner_id ): array {
 		$order = wc_get_order( $order_id );
 		if ( ! $order ) {
-			$this->logger->warning( 'WCFM sub-order not found.', [ 'order_id' => $order_id ] );
+			$this->logger->warning( 'WC Vendors sub-order not found.', [ 'order_id' => $order_id ] );
 			return [];
 		}
 
@@ -184,17 +187,16 @@ class WCFM_Handler {
 	 * Load a commission as Odoo vendor bill fields.
 	 *
 	 * Uses Odoo_Accounting_Formatter::for_vendor_bill() for consistent
-	 * formatting with other modules (AffiliateWP, etc.).
+	 * formatting with other modules (AffiliateWP, Dokan, etc.).
 	 *
-	 * @param int   $commission_id WCFM commission ID.
-	 * @param int   $order_id      WC order ID.
-	 * @param int   $partner_id    Resolved Odoo partner ID (vendor).
-	 * @param float $amount        Commission amount.
+	 * @param int   $order_id   WC order ID the commission is for.
+	 * @param int   $partner_id Resolved Odoo partner ID (vendor).
+	 * @param float $amount     Commission amount.
 	 * @return array<string, mixed> Vendor bill data.
 	 */
-	public function load_commission( int $commission_id, int $order_id, int $partner_id, float $amount ): array {
-		/* translators: 1: commission ID, 2: order ID */
-		$line_name = sprintf( __( 'Marketplace commission #%1$d — Order #%2$d', 'wp4odoo' ), $commission_id, $order_id );
+	public function load_commission( int $order_id, int $partner_id, float $amount ): array {
+		/* translators: 1: order ID */
+		$line_name = sprintf( __( 'Marketplace commission — Order #%d', 'wp4odoo' ), $order_id );
 
 		$order        = wc_get_order( $order_id );
 		$date_created = $order ? $order->get_date_created() : null;
@@ -204,32 +206,34 @@ class WCFM_Handler {
 			$partner_id,
 			$amount,
 			$date,
-			'wcfm-comm-' . $commission_id,
+			'wcvendors-comm-' . $order_id,
 			$line_name
 		);
 	}
 
 	/**
-	 * Load a withdrawal as Odoo account.payment fields.
+	 * Load a payout as Odoo account.payment fields.
 	 *
-	 * @param int $withdrawal_id WCFM withdrawal ID.
-	 * @param int $partner_id    Resolved Odoo partner ID (vendor).
+	 * @param int $payout_id WC Vendors payout ID.
+	 * @param int $partner_id Resolved Odoo partner ID (vendor).
 	 * @return array<string, mixed> Payment data, or empty if not found.
 	 */
-	public function load_payout( int $withdrawal_id, int $partner_id ): array {
-		$withdrawal = wcfm_get_withdrawal( $withdrawal_id );
-		if ( ! $withdrawal ) {
-			$this->logger->warning( 'WCFM withdrawal not found.', [ 'withdrawal_id' => $withdrawal_id ] );
+	public function load_payout( int $payout_id, int $partner_id ): array {
+		$payout = $GLOBALS['_wcv_payouts'][ $payout_id ] ?? null;
+		if ( ! $payout ) {
+			$this->logger->warning( 'WC Vendors payout not found.', [ 'payout_id' => $payout_id ] );
 			return [];
 		}
 
-		$date = isset( $withdrawal->date ) ? substr( $withdrawal->date, 0, 10 ) : gmdate( 'Y-m-d' );
+		$date   = $payout->date ?? gmdate( 'Y-m-d' );
+		$date   = substr( $date, 0, 10 );
+		$amount = (float) ( $payout->amount ?? 0.0 );
 
 		return [
 			'partner_id'   => $partner_id,
-			'amount'       => (float) $withdrawal->amount,
+			'amount'       => $amount,
 			'date'         => $date,
-			'ref'          => 'wcfm-payout-' . $withdrawal_id,
+			'ref'          => 'wcvendors-payout-' . $payout_id,
 			'payment_type' => 'outbound',
 			'partner_type' => 'supplier',
 		];
@@ -238,24 +242,24 @@ class WCFM_Handler {
 	// ─── Helpers ────────────────────────────────────────────
 
 	/**
-	 * Get the vendor user ID for a WCFM sub-order.
+	 * Get the vendor user ID for a WC Vendors sub-order.
 	 *
 	 * @param int $order_id WC sub-order ID.
 	 * @return int Vendor user ID, or 0 if not found.
 	 */
 	public function get_vendor_id_for_order( int $order_id ): int {
-		return (int) wcfm_get_vendor_id_by_order( $order_id );
+		return (int) \WCV_Vendors::get_vendor_from_order( $order_id );
 	}
 
 	/**
-	 * Get the vendor user ID for a WCFM withdrawal.
+	 * Get the vendor user ID for a WC Vendors payout.
 	 *
-	 * @param int $withdrawal_id WCFM withdrawal ID.
+	 * @param int $payout_id WC Vendors payout ID.
 	 * @return int Vendor user ID, or 0 if not found.
 	 */
-	public function get_vendor_id_for_withdrawal( int $withdrawal_id ): int {
-		$withdrawal = wcfm_get_withdrawal( $withdrawal_id );
-		return $withdrawal && isset( $withdrawal->vendor_id ) ? (int) $withdrawal->vendor_id : 0;
+	public function get_vendor_id_for_payout( int $payout_id ): int {
+		$payout = $GLOBALS['_wcv_payouts'][ $payout_id ] ?? null;
+		return $payout ? (int) ( $payout->vendor_id ?? 0 ) : 0;
 	}
 
 	/**
@@ -303,11 +307,14 @@ class WCFM_Handler {
 	 * @return string Odoo purchase.order state.
 	 */
 	public function map_order_status_to_odoo( string $status ): string {
-		return Status_Mapper::resolve( $status, self::ORDER_STATUS_MAP, 'wp4odoo_wcfm_order_status_map', 'draft' );
+		return Status_Mapper::resolve( $status, self::ORDER_STATUS_MAP, 'wp4odoo_wc_vendors_order_status_map', 'draft' );
 	}
 
 	/**
 	 * Determine whether a name looks like a company name.
+	 *
+	 * Simple heuristic: names containing common business suffixes or
+	 * more than 3 words are treated as companies.
 	 *
 	 * @param string $name Name to check.
 	 * @return bool True if likely a company name.
@@ -325,22 +332,27 @@ class WCFM_Handler {
 	}
 
 	/**
-	 * Get vendor store info from WCFM.
+	 * Get vendor store info from WC Vendors.
+	 *
+	 * Reads vendor metadata from user_meta: pv_shop_name, _wcv_store_phone,
+	 * _wcv_store_address1, _wcv_store_city, _wcv_store_postcode.
 	 *
 	 * @param int $user_id Vendor user ID.
-	 * @return array<string, mixed> Store info array.
+	 * @return array<string, string> Store info array.
 	 */
 	private function get_vendor_store_info( int $user_id ): array {
-		$store_info = (array) get_user_meta( $user_id, 'wcfmmp_profile_settings', true );
+		$store_name = (string) get_user_meta( $user_id, 'pv_shop_name', true );
+		$phone      = (string) get_user_meta( $user_id, '_wcv_store_phone', true );
+		$address    = (string) get_user_meta( $user_id, '_wcv_store_address1', true );
+		$city       = (string) get_user_meta( $user_id, '_wcv_store_city', true );
+		$postcode   = (string) get_user_meta( $user_id, '_wcv_store_postcode', true );
 
-		if ( empty( $store_info ) ) {
-			return [
-				'store_name' => '',
-				'address'    => [],
-				'phone'      => '',
-			];
-		}
-
-		return $store_info;
+		return [
+			'store_name' => $store_name,
+			'phone'      => $phone,
+			'address'    => $address,
+			'city'       => $city,
+			'postcode'   => $postcode,
+		];
 	}
 }

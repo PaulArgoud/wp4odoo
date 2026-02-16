@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Composed into WCFM_Module via `use WCFM_Hooks`.
  *
  * @package WP4Odoo
- * @since   3.5.0
+ * @since   3.4.0
  */
 trait WCFM_Hooks {
 

@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - push_entity(string $type, string $key, int $id): void (from Module_Helpers)
  *
  * @package WP4Odoo
- * @since   3.5.0
+ * @since   3.4.0
  */
 trait MailPoet_Hooks {
 
