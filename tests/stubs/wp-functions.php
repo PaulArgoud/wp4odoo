@@ -657,6 +657,14 @@ if ( ! function_exists( 'term_exists' ) ) {
 	}
 }
 
+if ( ! function_exists( 'wp_get_object_terms' ) ) {
+	function wp_get_object_terms( $object_ids, $taxonomies, $args = [] ) {
+		$id  = is_array( $object_ids ) ? $object_ids[0] : $object_ids;
+		$tax = is_array( $taxonomies ) ? $taxonomies[0] : $taxonomies;
+		return $GLOBALS['_wp_object_terms'][ $id ][ $tax ] ?? [];
+	}
+}
+
 if ( ! function_exists( 'get_term_by' ) ) {
 	function get_term_by( $field, $value, $taxonomy = '', $output = OBJECT, $filter = 'raw' ) {
 		return $GLOBALS['_wp_terms_by'][ $taxonomy ][ $field ][ $value ] ?? false;

@@ -131,11 +131,30 @@ enum Odoo_Model: string {
 
 	// ─── Project ───────────────────────────────────────────
 
+	/** Projects. @since 3.5.0 */
+	case ProjectProject = 'project.project';
+
 	/** Project tasks (Community fallback for tickets). */
 	case ProjectTask = 'project.task';
 
 	/** Project task stages (Community). */
 	case ProjectTaskType = 'project.task.type';
+
+	// ─── Analytics ─────────────────────────────────────────
+
+	/** Analytic lines (timesheets). @since 3.5.0 */
+	case AccountAnalyticLine = 'account.analytic.line';
+
+	// ─── Product Attributes ────────────────────────────────
+
+	/** Product attributes. @since 3.5.0 */
+	case ProductAttribute = 'product.attribute';
+
+	/** Product attribute values. @since 3.5.0 */
+	case ProductAttributeValue = 'product.attribute.value';
+
+	/** Product template attribute lines. @since 3.5.0 */
+	case ProductTemplateAttributeLine = 'product.template.attribute.line';
 
 	// ─── Manufacturing ─────────────────────────────────────
 

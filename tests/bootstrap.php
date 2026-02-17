@@ -160,6 +160,10 @@ require_once __DIR__ . '/stubs/funnelkit-classes.php';
 require_once __DIR__ . '/stubs/wperp-classes.php';
 require_once __DIR__ . '/stubs/knowledge-classes.php';
 require_once __DIR__ . '/stubs/surecart-classes.php';
+require_once __DIR__ . '/stubs/jet-appointments-classes.php';
+require_once __DIR__ . '/stubs/wp-project-manager-classes.php';
+require_once __DIR__ . '/stubs/jetengine-classes.php';
+require_once __DIR__ . '/stubs/wc-product-addons-classes.php';
 
 // ─── Composer autoloader ────────────────────────────────
 

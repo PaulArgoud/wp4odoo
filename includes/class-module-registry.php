@@ -109,6 +109,8 @@ class Module_Registry {
 			[ 'wprm', Modules\WPRM_Module::class, fn() => defined( 'WPRM_VERSION' ) ],
 			[ 'amelia', Modules\Amelia_Module::class, fn() => defined( 'AMELIA_VERSION' ) ],
 			[ 'bookly', Modules\Bookly_Module::class, fn() => class_exists( 'Bookly\Lib\Plugin' ) ],
+			[ 'jet_appointments', Modules\Jet_Appointments_Module::class, fn() => defined( 'JET_APB_VERSION' ) || class_exists( 'JET_APB\Plugin' ) ],
+			[ 'project_manager', Modules\Project_Manager_Module::class, fn() => defined( 'CPM_VERSION' ) || class_exists( 'WeDevs\PM\Core\WP\WP_Project_Manager' ) ],
 			[ 'learndash', Modules\LearnDash_Module::class, fn() => defined( 'LEARNDASH_VERSION' ) ],
 			[ 'tutorlms', Modules\TutorLMS_Module::class, fn() => defined( 'TUTOR_VERSION' ) ],
 			[ 'lifterlms', Modules\LifterLMS_Module::class, fn() => defined( 'LLMS_VERSION' ) ],
@@ -119,6 +121,7 @@ class Module_Registry {
 			[ 'events_calendar', Modules\Events_Calendar_Module::class, fn() => class_exists( 'Tribe__Events__Main' ) ],
 			[ 'job_manager', Modules\Job_Manager_Module::class, fn() => defined( 'JOB_MANAGER_VERSION' ) ],
 			[ 'wc_bundle_bom', Modules\WC_Bundle_BOM_Module::class, fn() => class_exists( 'WC_Bundles' ) || class_exists( 'WC_Composite_Products' ) ],
+			[ 'wc_addons', Modules\WC_Addons_Module::class, fn() => class_exists( 'WC_Product_Addons' ) || defined( 'THWEPO_VERSION' ) || defined( 'PPOM_VERSION' ) ],
 
 			// Invoicing group.
 			[ 'sprout_invoices', Modules\Sprout_Invoices_Module::class, fn() => class_exists( 'SI_Invoice' ) ],
@@ -161,6 +164,9 @@ class Module_Registry {
 
 			// Knowledge — always registered; detection is Odoo-side.
 			[ 'knowledge', Modules\Knowledge_Module::class, null ],
+
+			// Generic CPT mapping.
+			[ 'jetengine', Modules\JetEngine_Module::class, fn() => defined( 'JET_ENGINE_VERSION' ) || class_exists( 'Jet_Engine' ) ],
 
 			// Meta-modules (enrich other modules, no own entity types).
 			[ 'acf', Modules\ACF_Module::class, fn() => class_exists( 'ACF' ) || defined( 'ACF_MAJOR_VERSION' ) ],
