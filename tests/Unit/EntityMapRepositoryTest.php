@@ -117,7 +117,7 @@ class EntityMapRepositoryTest extends TestCase {
 		$delete = $this->get_last_call( 'delete' );
 		$this->assertNotNull( $delete );
 		$this->assertSame(
-			[ 'module' => 'sales', 'entity_type' => 'order', 'wp_id' => 77 ],
+			[ 'blog_id' => 1, 'module' => 'sales', 'entity_type' => 'order', 'wp_id' => 77 ],
 			$delete['args'][1]
 		);
 	}

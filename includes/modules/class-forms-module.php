@@ -13,12 +13,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Forms Module — form plugin submissions → Odoo CRM leads.
  *
- * Intercepts form submissions from 7 supported plugins, extracts
+ * Intercepts form submissions from 8 supported plugins, extracts
  * lead data via Form_Handler, saves to the wp4odoo_lead CPT,
  * and enqueues a push job to Odoo's crm.lead model.
  *
  * Supported: Gravity Forms, WPForms, Contact Form 7, Fluent Forms,
- * Formidable Forms, Ninja Forms, Forminator.
+ * Formidable Forms, Ninja Forms, Forminator, JetFormBuilder.
  *
  * @package WP4Odoo
  * @since   2.0.0
@@ -121,6 +121,11 @@ class Forms_Module extends Module_Base {
 		// Forminator hook.
 		if ( ! empty( $settings['sync_forminator'] ) && defined( 'FORMINATOR_VERSION' ) ) {
 			add_action( 'forminator_custom_form_submit_before_set_fields', $this->safe_callback( [ $this, 'on_forminator_submitted' ] ), 10, 3 );
+		}
+
+		// JetFormBuilder hook.
+		if ( ! empty( $settings['sync_jetformbuilder'] ) && defined( 'JET_FORM_BUILDER_VERSION' ) ) {
+			add_action( 'jet-form-builder/form-handler/after-send', $this->safe_callback( [ $this, 'on_jetformbuilder_submitted' ] ), 10, 2 );
 		}
 	}
 
@@ -345,6 +350,26 @@ class Forms_Module extends Module_Base {
 		$this->process_lead( $lead_data, 'forminator', [ 'form_data' => $form_data_array ] );
 	}
 
+	/**
+	 * Handle JetFormBuilder submission.
+	 *
+	 * @param object $handler    JetFormBuilder form handler.
+	 * @param bool   $is_success Whether the submission was successful.
+	 * @return void
+	 */
+	public function on_jetformbuilder_submitted( $handler, $is_success ): void {
+		if ( ! $is_success || $this->is_importing() ) {
+			return;
+		}
+
+		$form_data  = $handler->get_form_data();
+		$form_id    = $handler->get_form_id();
+		$form_title = get_the_title( $form_id );
+
+		$lead_data = $this->form_handler->extract_from_jetformbuilder( $form_data, $form_title );
+		$this->process_lead( $lead_data, 'jetformbuilder', [ 'form_data' => $form_data ] );
+	}
+
 	// ─── Settings ────────────────────────────────────────────
 
 	/**
@@ -354,13 +379,14 @@ class Forms_Module extends Module_Base {
 	 */
 	public function get_default_settings(): array {
 		return [
-			'sync_gravity_forms' => true,
-			'sync_wpforms'       => true,
-			'sync_cf7'           => true,
-			'sync_fluent_forms'  => true,
-			'sync_formidable'    => true,
-			'sync_ninja_forms'   => true,
-			'sync_forminator'    => true,
+			'sync_gravity_forms'  => true,
+			'sync_wpforms'        => true,
+			'sync_cf7'            => true,
+			'sync_fluent_forms'   => true,
+			'sync_formidable'     => true,
+			'sync_ninja_forms'    => true,
+			'sync_forminator'     => true,
+			'sync_jetformbuilder' => true,
 		];
 	}
 
@@ -371,40 +397,45 @@ class Forms_Module extends Module_Base {
 	 */
 	public function get_settings_fields(): array {
 		return [
-			'sync_gravity_forms' => [
+			'sync_gravity_forms'  => [
 				'label'       => __( 'Sync Gravity Forms', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Create Odoo leads from Gravity Forms submissions.', 'wp4odoo' ),
 			],
-			'sync_wpforms'       => [
+			'sync_wpforms'        => [
 				'label'       => __( 'Sync WPForms', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Create Odoo leads from WPForms submissions.', 'wp4odoo' ),
 			],
-			'sync_cf7'           => [
+			'sync_cf7'            => [
 				'label'       => __( 'Sync Contact Form 7', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Create Odoo leads from Contact Form 7 submissions.', 'wp4odoo' ),
 			],
-			'sync_fluent_forms'  => [
+			'sync_fluent_forms'   => [
 				'label'       => __( 'Sync Fluent Forms', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Create Odoo leads from Fluent Forms submissions.', 'wp4odoo' ),
 			],
-			'sync_formidable'    => [
+			'sync_formidable'     => [
 				'label'       => __( 'Sync Formidable Forms', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Create Odoo leads from Formidable Forms submissions.', 'wp4odoo' ),
 			],
-			'sync_ninja_forms'   => [
+			'sync_ninja_forms'    => [
 				'label'       => __( 'Sync Ninja Forms', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Create Odoo leads from Ninja Forms submissions.', 'wp4odoo' ),
 			],
-			'sync_forminator'    => [
+			'sync_forminator'     => [
 				'label'       => __( 'Sync Forminator', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Create Odoo leads from Forminator submissions.', 'wp4odoo' ),
+			],
+			'sync_jetformbuilder' => [
+				'label'       => __( 'Sync JetFormBuilder', 'wp4odoo' ),
+				'type'        => 'checkbox',
+				'description' => __( 'Create Odoo leads from JetFormBuilder submissions.', 'wp4odoo' ),
 			],
 		];
 	}
@@ -425,6 +456,7 @@ class Forms_Module extends Module_Base {
 			'Formidable Forms' => class_exists( 'FrmAppHelper' ),
 			'Ninja Forms'      => class_exists( 'Ninja_Forms' ),
 			'Forminator'       => defined( 'FORMINATOR_VERSION' ),
+			'JetFormBuilder'   => defined( 'JET_FORM_BUILDER_VERSION' ),
 		];
 
 		$active = array_filter( $plugins );
@@ -536,7 +568,7 @@ class Forms_Module extends Module_Base {
 	/**
 	 * Filter and enqueue extracted lead data.
 	 *
-	 * Shared by all 7 hook callbacks to avoid duplication.
+	 * Shared by all 8 hook callbacks to avoid duplication.
 	 *
 	 * @param array  $lead_data   Extracted lead data (may be empty).
 	 * @param string $source_type Source identifier for the filter.

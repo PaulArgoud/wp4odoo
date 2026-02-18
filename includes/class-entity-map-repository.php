@@ -46,6 +46,16 @@ class Entity_Map_Repository {
 	public const POLL_LIMIT = 50000;
 
 	/**
+	 * Blog ID for multisite scoping.
+	 *
+	 * Defaults to the current blog ID. Single-site installs always
+	 * return 1, so existing behavior is preserved.
+	 *
+	 * @var int
+	 */
+	private int $blog_id;
+
+	/**
 	 * Per-request lookup cache.
 	 *
 	 * Keys use the format "{module}:{entity_type}:wp:{wp_id}" or
@@ -54,6 +64,15 @@ class Entity_Map_Repository {
 	 * @var array<string, int|null>
 	 */
 	private array $cache = [];
+
+	/**
+	 * Constructor.
+	 *
+	 * @param int|null $blog_id Optional blog ID for multisite scoping. Defaults to current blog.
+	 */
+	public function __construct( ?int $blog_id = null ) {
+		$this->blog_id = $blog_id ?? (int) get_current_blog_id();
+	}
 
 	/**
 	 * Get the Odoo ID mapped to a WordPress entity.
@@ -80,7 +99,8 @@ class Entity_Map_Repository {
 
 		$odoo_id = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT odoo_id FROM {$table} WHERE module = %s AND entity_type = %s AND wp_id = %d LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				"SELECT odoo_id FROM {$table} WHERE blog_id = %d AND module = %s AND entity_type = %s AND wp_id = %d LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				$this->blog_id,
 				$module,
 				$entity_type,
 				$wp_id
@@ -123,7 +143,8 @@ class Entity_Map_Repository {
 
 		$wp_id = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT wp_id FROM {$table} WHERE module = %s AND entity_type = %s AND odoo_id = %d LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				"SELECT wp_id FROM {$table} WHERE blog_id = %d AND module = %s AND entity_type = %s AND odoo_id = %d LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				$this->blog_id,
 				$module,
 				$entity_type,
 				$odoo_id
@@ -182,10 +203,10 @@ class Entity_Map_Repository {
 
 		foreach ( array_chunk( $uncached, self::BATCH_CHUNK_SIZE ) as $chunk ) {
 			$placeholders = implode( ',', array_fill( 0, count( $chunk ), '%d' ) );
-			$prepare_args = array_merge( [ $module, $entity_type ], array_map( 'intval', $chunk ) );
+			$prepare_args = array_merge( [ $this->blog_id, $module, $entity_type ], array_map( 'intval', $chunk ) );
 
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table and $placeholders are safe (prefix + array_fill).
-			$sql = "SELECT odoo_id, wp_id FROM {$table} WHERE module = %s AND entity_type = %s AND odoo_id IN ({$placeholders})";
+			$sql = "SELECT odoo_id, wp_id FROM {$table} WHERE blog_id = %d AND module = %s AND entity_type = %s AND odoo_id IN ({$placeholders})";
 
 			$rows = $wpdb->get_results(
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic placeholders for batch query; $sql from safe prefix + array_fill.
@@ -251,10 +272,10 @@ class Entity_Map_Repository {
 
 		foreach ( array_chunk( $uncached, self::BATCH_CHUNK_SIZE ) as $chunk ) {
 			$placeholders = implode( ',', array_fill( 0, count( $chunk ), '%d' ) );
-			$prepare_args = array_merge( [ $module, $entity_type ], array_map( 'intval', $chunk ) );
+			$prepare_args = array_merge( [ $this->blog_id, $module, $entity_type ], array_map( 'intval', $chunk ) );
 
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table and $placeholders safe (prefix + array_fill).
-			$sql = "SELECT wp_id, odoo_id FROM {$table} WHERE module = %s AND entity_type = %s AND wp_id IN ({$placeholders})";
+			$sql = "SELECT wp_id, odoo_id FROM {$table} WHERE blog_id = %d AND module = %s AND entity_type = %s AND wp_id IN ({$placeholders})";
 
 			$rows = $wpdb->get_results(
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic placeholders for batch query; $sql from safe prefix + array_fill.
@@ -302,10 +323,11 @@ class Entity_Map_Repository {
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
 		$result = $wpdb->query(
 			$wpdb->prepare(
-				"INSERT INTO {$table} (module, entity_type, wp_id, odoo_id, odoo_model, sync_hash, last_synced_at)
-				VALUES (%s, %s, %d, %d, %s, %s, %s)
+				"INSERT INTO {$table} (blog_id, module, entity_type, wp_id, odoo_id, odoo_model, sync_hash, last_synced_at)
+				VALUES (%d, %s, %s, %d, %d, %s, %s, %s)
 				ON DUPLICATE KEY UPDATE odoo_id = VALUES(odoo_id), odoo_model = VALUES(odoo_model), sync_hash = VALUES(sync_hash), last_synced_at = VALUES(last_synced_at)",
 		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$this->blog_id,
 				$module,
 				$entity_type,
 				$wp_id,
@@ -349,11 +371,12 @@ class Entity_Map_Repository {
 		$deleted = $wpdb->delete(
 			$table,
 			[
+				'blog_id'     => $this->blog_id,
 				'module'      => $module,
 				'entity_type' => $entity_type,
 				'wp_id'       => $wp_id,
 			],
-			[ '%s', '%s', '%d' ]
+			[ '%d', '%s', '%s', '%d' ]
 		);
 
 		unset( $this->cache[ $forward_key ] );
@@ -384,7 +407,8 @@ class Entity_Map_Repository {
 		$limit = self::POLL_LIMIT;
 		$rows  = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT wp_id, odoo_id, sync_hash FROM {$table} WHERE module = %s AND entity_type = %s LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				"SELECT wp_id, odoo_id, sync_hash FROM {$table} WHERE blog_id = %d AND module = %s AND entity_type = %s LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				$this->blog_id,
 				$module,
 				$entity_type,
 				$limit
@@ -440,10 +464,10 @@ class Entity_Map_Repository {
 
 		foreach ( array_chunk( $wp_ids, self::BATCH_CHUNK_SIZE ) as $chunk ) {
 			$placeholders = implode( ',', array_fill( 0, count( $chunk ), '%d' ) );
-			$prepare_args = array_merge( [ $module, $entity_type ], $chunk );
+			$prepare_args = array_merge( [ $this->blog_id, $module, $entity_type ], $chunk );
 
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table and $placeholders safe (prefix + array_fill).
-			$sql = "SELECT wp_id, odoo_id, sync_hash FROM {$table} WHERE module = %s AND entity_type = %s AND wp_id IN ({$placeholders})";
+			$sql = "SELECT wp_id, odoo_id, sync_hash FROM {$table} WHERE blog_id = %d AND module = %s AND entity_type = %s AND wp_id IN ({$placeholders})";
 
 			$rows = $wpdb->get_results(
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic placeholders for batch query.
@@ -486,10 +510,10 @@ class Entity_Map_Repository {
 
 		foreach ( array_chunk( $wp_ids, self::BATCH_CHUNK_SIZE ) as $chunk ) {
 			$placeholders = implode( ',', array_fill( 0, count( $chunk ), '%d' ) );
-			$prepare_args = array_merge( [ $timestamp, $module, $entity_type ], array_map( 'intval', $chunk ) );
+			$prepare_args = array_merge( [ $timestamp, $this->blog_id, $module, $entity_type ], array_map( 'intval', $chunk ) );
 
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table and $placeholders safe (prefix + array_fill).
-			$sql = "UPDATE {$table} SET last_polled_at = %s WHERE module = %s AND entity_type = %s AND wp_id IN ({$placeholders})";
+			$sql = "UPDATE {$table} SET last_polled_at = %s WHERE blog_id = %d AND module = %s AND entity_type = %s AND wp_id IN ({$placeholders})";
 
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Dynamic placeholders for batch update.
 			$wpdb->query( $wpdb->prepare( $sql, $prepare_args ) );
@@ -518,7 +542,8 @@ class Entity_Map_Repository {
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT wp_id, odoo_id FROM {$table} WHERE module = %s AND entity_type = %s AND last_polled_at IS NOT NULL AND last_polled_at < %s LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				"SELECT wp_id, odoo_id FROM {$table} WHERE blog_id = %d AND module = %s AND entity_type = %s AND last_polled_at IS NOT NULL AND last_polled_at < %s LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$this->blog_id,
 				$module,
 				$entity_type,
 				$before,

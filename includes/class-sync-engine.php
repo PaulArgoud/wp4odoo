@@ -177,21 +177,24 @@ class Sync_Engine {
 	 * @return int Number of jobs processed successfully.
 	 */
 	public function process_queue(): int {
-		return $this->run_with_lock( self::LOCK_PREFIX, null );
+		$blog_id = (int) get_current_blog_id();
+		return $this->run_with_lock( self::LOCK_PREFIX . '_' . $blog_id, null );
 	}
 
 	/**
 	 * Process the sync queue for a specific module only.
 	 *
-	 * Uses a module-specific advisory lock (`wp4odoo_sync_{module}`)
+	 * Uses a module-specific advisory lock (`wp4odoo_sync_{blog_id}_{module}`)
 	 * so multiple modules can be processed in parallel from separate
-	 * WP-Cron workers or CLI calls.
+	 * WP-Cron workers or CLI calls. Blog-scoped locks prevent cross-site
+	 * contention in multisite environments.
 	 *
 	 * @param string $module Module identifier.
 	 * @return int Number of jobs processed successfully.
 	 */
 	public function process_module_queue( string $module ): int {
-		return $this->run_with_lock( self::LOCK_PREFIX . '_' . $module, $module );
+		$blog_id = (int) get_current_blog_id();
+		return $this->run_with_lock( self::LOCK_PREFIX . '_' . $blog_id . '_' . $module, $module );
 	}
 
 	/**

@@ -110,6 +110,7 @@ class Module_Registry {
 			[ 'amelia', Modules\Amelia_Module::class, fn() => defined( 'AMELIA_VERSION' ) ],
 			[ 'bookly', Modules\Bookly_Module::class, fn() => class_exists( 'Bookly\Lib\Plugin' ) ],
 			[ 'jet_appointments', Modules\Jet_Appointments_Module::class, fn() => defined( 'JET_APB_VERSION' ) || class_exists( 'JET_APB\Plugin' ) ],
+			[ 'jet_booking', Modules\Jet_Booking_Module::class, fn() => defined( 'JET_ABAF_VERSION' ) || class_exists( 'JET_ABAF\Plugin' ) ],
 			[ 'project_manager', Modules\Project_Manager_Module::class, fn() => defined( 'CPM_VERSION' ) || class_exists( 'WeDevs\PM\Core\WP\WP_Project_Manager' ) ],
 			[ 'learndash', Modules\LearnDash_Module::class, fn() => defined( 'LEARNDASH_VERSION' ) ],
 			[ 'tutorlms', Modules\TutorLMS_Module::class, fn() => defined( 'TUTOR_VERSION' ) ],
@@ -162,6 +163,9 @@ class Module_Registry {
 			// HR.
 			[ 'wperp', Modules\WPERP_Module::class, fn() => defined( 'WPERP_VERSION' ) ],
 
+			// CRM (WP ERP) — separate from the core CRM module.
+			[ 'wperp_crm', Modules\WPERP_CRM_Module::class, fn() => defined( 'WPERP_VERSION' ) ],
+
 			// Knowledge — always registered; detection is Odoo-side.
 			[ 'knowledge', Modules\Knowledge_Module::class, null ],
 
@@ -170,6 +174,7 @@ class Module_Registry {
 
 			// Meta-modules (enrich other modules, no own entity types).
 			[ 'acf', Modules\ACF_Module::class, fn() => class_exists( 'ACF' ) || defined( 'ACF_MAJOR_VERSION' ) ],
+			[ 'jetengine_meta', Modules\JetEngine_Meta_Module::class, fn() => defined( 'JET_ENGINE_VERSION' ) || class_exists( 'Jet_Engine' ) ],
 			[ 'wpai', Modules\WP_All_Import_Module::class, fn() => defined( 'PMXI_VERSION' ) || class_exists( 'PMXI_Plugin' ) ],
 		];
 		// phpcs:enable
@@ -180,14 +185,15 @@ class Module_Registry {
 			}
 		}
 
-		// Forms module — aggregate detection (any of 7 form plugins).
+		// Forms module — aggregate detection (any of 8 form plugins).
 		$forms_active = class_exists( 'GFAPI' )
 			|| function_exists( 'wpforms' )
 			|| defined( 'WPCF7_VERSION' )
 			|| defined( 'FLUENTFORM' )
 			|| class_exists( 'FrmAppHelper' )
 			|| class_exists( 'Ninja_Forms' )
-			|| defined( 'FORMINATOR_VERSION' );
+			|| defined( 'FORMINATOR_VERSION' )
+			|| defined( 'JET_FORM_BUILDER_VERSION' );
 		if ( $forms_active ) {
 			$this->register( 'forms', new Modules\Forms_Module( $client_provider, $entity_map, $settings ) );
 		}

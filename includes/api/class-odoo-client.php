@@ -44,6 +44,17 @@ class Odoo_Client {
 	private Logger $logger;
 
 	/**
+	 * Odoo company ID for multi-company context.
+	 *
+	 * When > 0, injected as `allowed_company_ids` into every API call's
+	 * kwargs context. Used by multisite to scope operations to a
+	 * specific Odoo res.company.
+	 *
+	 * @var int
+	 */
+	private int $company_id = 0;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param Transport|null          $transport Optional pre-configured transport (skips auto-connection).
@@ -104,7 +115,8 @@ class Odoo_Client {
 		}
 
 		$this->transport->authenticate( $credentials['username'] );
-		$this->connected = true;
+		$this->company_id = (int) $credentials['company_id'];
+		$this->connected  = true;
 	}
 
 	/**
@@ -372,6 +384,18 @@ class Odoo_Client {
 	 */
 	private function call( string $model, string $method, array $args = [], array $kwargs = [] ): mixed {
 		$this->ensure_connected();
+
+		// Multi-company context injection: scope all API calls to the
+		// configured Odoo company. Odoo uses allowed_company_ids in
+		// the context to restrict record visibility and defaults.
+		if ( $this->company_id > 0 ) {
+			if ( ! isset( $kwargs['context'] ) ) {
+				$kwargs['context'] = [];
+			}
+			if ( ! isset( $kwargs['context']['allowed_company_ids'] ) ) {
+				$kwargs['context']['allowed_company_ids'] = [ $this->company_id ];
+			}
+		}
 
 		try {
 			$result = $this->transport->execute_kw( $model, $method, $args, $kwargs );

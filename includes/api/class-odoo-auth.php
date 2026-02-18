@@ -113,7 +113,11 @@ class Odoo_Auth {
 	 * Caches the result within the current request to avoid repeated
 	 * option reads and sodium/OpenSSL decryption on batch operations.
 	 *
-	 * @return array{url: string, database: string, username: string, api_key: string, protocol: string, timeout: int}
+	 * In multisite, falls back to the network-level connection when the
+	 * current site has no local connection configured. Also applies the
+	 * site-specific company_id from the network mapping.
+	 *
+	 * @return array{url: string, database: string, username: string, api_key: string, protocol: string, timeout: int, company_id: int}
 	 */
 	public static function get_credentials(): array {
 		if ( null !== self::$credentials_cache ) {
@@ -122,13 +126,29 @@ class Odoo_Auth {
 
 		$connection = get_option( Settings_Repository::OPT_CONNECTION, [] );
 
+		// Multisite network fallback: use shared connection when site has none.
+		if ( is_multisite() && empty( $connection['url'] ) ) {
+			$network = get_site_option( Settings_Repository::OPT_NETWORK_CONNECTION, [] );
+			if ( is_array( $network ) && ! empty( $network['url'] ) ) {
+				$connection = array_merge( is_array( $connection ) ? $connection : [], $network );
+
+				// Apply site-specific company_id from the network mapping.
+				$site_companies = get_site_option( Settings_Repository::OPT_NETWORK_SITE_COMPANIES, [] );
+				$blog_id        = (string) get_current_blog_id();
+				if ( is_array( $site_companies ) && isset( $site_companies[ $blog_id ] ) ) {
+					$connection['company_id'] = (int) $site_companies[ $blog_id ];
+				}
+			}
+		}
+
 		$credentials = [
-			'url'      => $connection['url'] ?? '',
-			'database' => $connection['database'] ?? '',
-			'username' => $connection['username'] ?? '',
-			'api_key'  => '',
-			'protocol' => $connection['protocol'] ?? 'jsonrpc',
-			'timeout'  => (int) ( $connection['timeout'] ?? 30 ),
+			'url'        => $connection['url'] ?? '',
+			'database'   => $connection['database'] ?? '',
+			'username'   => $connection['username'] ?? '',
+			'api_key'    => '',
+			'protocol'   => $connection['protocol'] ?? 'jsonrpc',
+			'timeout'    => (int) ( $connection['timeout'] ?? 30 ),
+			'company_id' => (int) ( $connection['company_id'] ?? 0 ),
 		];
 
 		if ( ! empty( $connection['api_key'] ) ) {
@@ -160,14 +180,15 @@ class Odoo_Auth {
 	 */
 	public static function save_credentials( array $credentials ): bool {
 		$sanitized = [
-			'url'      => esc_url_raw( $credentials['url'] ?? '' ),
-			'database' => sanitize_text_field( $credentials['database'] ?? '' ),
-			'username' => sanitize_text_field( $credentials['username'] ?? '' ),
-			'api_key'  => '',
-			'protocol' => in_array( $credentials['protocol'] ?? '', [ 'jsonrpc', 'xmlrpc' ], true )
+			'url'        => esc_url_raw( $credentials['url'] ?? '' ),
+			'database'   => sanitize_text_field( $credentials['database'] ?? '' ),
+			'username'   => sanitize_text_field( $credentials['username'] ?? '' ),
+			'api_key'    => '',
+			'protocol'   => in_array( $credentials['protocol'] ?? '', [ 'jsonrpc', 'xmlrpc' ], true )
 				? $credentials['protocol']
 				: 'jsonrpc',
-			'timeout'  => absint( $credentials['timeout'] ?? 30 ),
+			'timeout'    => absint( $credentials['timeout'] ?? 30 ),
+			'company_id' => max( 0, (int) ( $credentials['company_id'] ?? 0 ) ),
 		];
 
 		if ( ! empty( $credentials['api_key'] ) ) {

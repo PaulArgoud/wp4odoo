@@ -105,13 +105,14 @@ class Form_Field_Extractor {
 	}
 
 	private function register_default_strategies(): void {
-		$this->strategies['gravity_forms'] = $this->gravity_forms_strategy();
-		$this->strategies['wpforms']       = $this->wpforms_strategy();
-		$this->strategies['cf7']           = $this->cf7_strategy();
-		$this->strategies['fluent_forms']  = $this->fluent_forms_strategy();
-		$this->strategies['formidable']    = $this->formidable_strategy();
-		$this->strategies['ninja_forms']   = $this->ninja_forms_strategy();
-		$this->strategies['forminator']    = $this->forminator_strategy();
+		$this->strategies['gravity_forms']  = $this->gravity_forms_strategy();
+		$this->strategies['wpforms']        = $this->wpforms_strategy();
+		$this->strategies['cf7']            = $this->cf7_strategy();
+		$this->strategies['fluent_forms']   = $this->fluent_forms_strategy();
+		$this->strategies['formidable']     = $this->formidable_strategy();
+		$this->strategies['ninja_forms']    = $this->ninja_forms_strategy();
+		$this->strategies['forminator']     = $this->forminator_strategy();
+		$this->strategies['jetformbuilder'] = $this->jetformbuilder_strategy();
 	}
 
 	private function gravity_forms_strategy(): \Closure {
@@ -311,6 +312,36 @@ class Form_Field_Extractor {
 				),
 				$form_title
 			);
+		};
+	}
+
+	private function jetformbuilder_strategy(): \Closure {
+		return function ( array $form_data, string $form_title ): array {
+			$data = $this->empty_lead(
+				sprintf(
+					/* translators: %s: form title */
+					__( 'JetFormBuilder: %s', 'wp4odoo' ),
+					$form_title ?: __( 'Unknown Form', 'wp4odoo' )
+				)
+			);
+
+			foreach ( $form_data as $name => $value ) {
+				if ( is_array( $value ) ) {
+					$value = implode( ' ', array_filter( array_map( 'trim', $value ) ) );
+				}
+
+				$value = trim( (string) $value );
+				if ( '' === $value ) {
+					continue;
+				}
+
+				$lower = mb_strtolower( $name );
+				$type  = $this->infer_type_from_key( $lower );
+
+				$this->assign_field( $data, $type, $name, $value );
+			}
+
+			return $this->finalise( $data, $form_title );
 		};
 	}
 

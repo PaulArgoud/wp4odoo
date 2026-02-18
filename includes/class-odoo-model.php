@@ -174,6 +174,14 @@ enum Odoo_Model: string {
 	/** Knowledge articles (Odoo Enterprise 16+). */
 	case KnowledgeArticle = 'knowledge.article';
 
+	// ─── Mail / Activities ─────────────────────────────────
+
+	/** Mail activities. @since 3.5.0 */
+	case MailActivity = 'mail.activity';
+
+	/** Mail activity types. @since 3.5.0 */
+	case MailActivityType = 'mail.activity.type';
+
 	// ─── Email Marketing ───────────────────────────────────
 
 	/** Mailing contacts (subscribers). @since 3.4.0 */

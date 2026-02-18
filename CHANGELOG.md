@@ -5,7 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.4.0] - Unreleased
+## [3.5.0] - Unreleased
+
+### Added
+- **WordPress Multisite → Multi-company Odoo** — Full multisite support: each site in a WordPress network syncs with a specific Odoo company (`res.company`). Migration 7 adds `blog_id` column to `wp4odoo_entity_map`, `wp4odoo_sync_queue`, and `wp4odoo_logs` tables. Repository layer (`Entity_Map_Repository`, `Sync_Queue_Repository`, `Logger`) scopes all queries by `blog_id`. `Odoo_Client` injects `allowed_company_ids` into kwargs context when `company_id > 0`. Network activation iterates all sites, `wp_initialize_site` hook provisions new sites. Backward compatible: `DEFAULT 1` ensures single-site installs are unaffected
+- **Network Admin page** — Centralized settings page in the WordPress network admin for shared Odoo connection (URL, DB, user, API key, protocol, timeout) and site → company_id mapping. Individual sites inherit the network connection by default but can override with their own connection in Settings > Odoo Connector
+- **JetBooking module** — New booking module for JetBooking (Crocoblock) 3.0+. Extends `Booking_Module_Base`. Syncs services → `product.product` (bidirectional), bookings → `calendar.event` (push). Hybrid data access: CPT for services, custom table `jet_apartment_bookings` for bookings. Hooks: `jet-abaf/db/booking/after-insert`, `jet-abaf/db/booking/after-update`, `save_post_{service_cpt}`
+- **WP ERP CRM module** — New CRM module for WP ERP 1.6+. Syncs contacts → `crm.lead` (bidirectional), activities → `mail.activity` (push). Custom table access (`erp_peoples`, `erp_crm_customer_activities`). Activity type resolution via `mail.activity.type` (cached). Cross-module partner linking with existing CRM module via email lookup. Life stage mapping: subscriber/lead → lead, opportunity → opportunity, customer → won
+- **JetEngine Meta-Module** — New meta-module for JetEngine (Crocoblock) 3.0+. Enriches other modules' sync pipelines with JetEngine meta-fields (pattern identical to ACF meta-module). Admin-configured mappings: target_module, entity_type, jet_field, odoo_field, type. Registers `wp4odoo_map_to_odoo_*`, `wp4odoo_map_from_odoo_*`, and `wp4odoo_after_save_*` filters at boot. No own entity types
+- **JetFormBuilder support** — 8th form plugin in the Forms module. Hooks into `jet-form-builder/form-handler/after-send`. Key-value data extraction via strategy pattern (same as Fluent Forms). Detection: `JET_FORM_BUILDER_VERSION` constant
+- **Odoo_Model enum additions** — 2 new cases: `MailActivity`, `MailActivityType`
+- **WP-CLI `--blog_id` parameter** — `wp wp4odoo sync run --blog_id=3` and `wp wp4odoo reconcile crm contact --blog_id=3` target a specific site in multisite (switches blog context, flushes credential cache)
+
+### Changed
+- **Settings_Repository multisite support** — New methods: `get_effective_connection()` (local → network fallback), `get_network_connection()`, `save_network_connection()`, `get_site_company_id()`, `get_network_site_companies()`, `save_network_site_companies()`, `is_using_network_connection()`. New constants: `OPT_NETWORK_CONNECTION`, `OPT_NETWORK_SITE_COMPANIES`. `company_id` added to `DEFAULTS_CONNECTION`
+- **Odoo_Auth multisite credential resolution** — `get_credentials()` falls back to network-level shared connection when site has no local URL configured. Applies site-specific `company_id` from network mapping. `save_credentials()` preserves `company_id`
+- **Sync_Engine lock scoping** — Advisory lock names include `blog_id`: `wp4odoo_sync_{blog_id}` and `wp4odoo_sync_{blog_id}_{module}` for multisite isolation
+- **Connection tab UI** — Shows "Using network connection" indicator when site inherits from network. New Company ID input field after Timeout
+
+### Tests
+- 4 226 unit tests (6 471 assertions) — new tests covering multisite blog_id scoping (Entity_Map_Repository, Sync_Queue_Repository), company_id injection (Odoo_Client), credential resolution (Odoo_Auth network fallback), Settings_Repository multisite methods, switch_to_blog stubs, JetBooking module+handler, WP ERP CRM module+handler, JetEngine Meta-Module, JetFormBuilder form extraction, migration 7
+
+## [3.4.0] - 2026-02-18
 
 ### Added
 - **Dokan module** — New marketplace module for Dokan 3.7+. Syncs vendors → `res.partner` (bidirectional, `supplier_rank=1`), sub-orders → `purchase.order` (push), commissions → `account.move` (push, vendor bills via `Odoo_Accounting_Formatter`), withdrawals → `account.payment` (push). Exclusive group `marketplace`. Requires WooCommerce module

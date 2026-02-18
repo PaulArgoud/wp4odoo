@@ -2,7 +2,7 @@
 
 ## Overview
 
-Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 51 modules across 34 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Product Add-Ons, WC Points & Rewards, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (7 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS + TutorLMS), Booking (Amelia + Bookly + JetAppointments + WC Bookings), Projects (WP Project Manager), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP + SureCart), Marketplace (Dokan + WCFM + WC Vendors), B2B/Wholesale (WC B2B), Email Marketing (MailPoet + MC4WP + FluentCRM), Helpdesk (Awesome Support + SupportCandy), HR (WP Job Manager + WP ERP), Affiliates (AffiliateWP), Funnels (FunnelKit), Gamification (GamiPress), Community (BuddyBoss), Knowledge (Knowledge), Generic CPT (JetEngine), and Meta-modules (ACF + WP All Import).
+Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 54 modules across 35 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Product Add-Ons, WC Points & Rewards, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (8 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS + TutorLMS), Booking (Amelia + Bookly + JetAppointments + JetBooking + WC Bookings), Projects (WP Project Manager), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP + SureCart), Marketplace (Dokan + WCFM + WC Vendors), B2B/Wholesale (WC B2B), Email Marketing (MailPoet + MC4WP + FluentCRM), Helpdesk (Awesome Support + SupportCandy), HR (WP Job Manager + WP ERP + WP ERP CRM), Affiliates (AffiliateWP), Funnels (FunnelKit), Gamification (GamiPress), Community (BuddyBoss), Knowledge (Knowledge), Generic CPT (JetEngine), and Meta-modules (ACF + JetEngine Meta + WP All Import). Supports WordPress Multisite with per-site company scoping.
 
 ![WP4ODOO Full Architecture](assets/images/architecture-full.svg)
 
@@ -103,8 +103,8 @@ WordPress For Odoo/
 │   │   │
 │   │   ├── # ─── Forms ─────────────────────────────────────────
 │   │   ├── class-form-handler.php            # Forms: thin facade delegating to Form_Field_Extractor
-│   │   ├── class-form-field-extractor.php   # Forms: strategy-based field extraction for 7 form plugins
-│   │   ├── class-forms-module.php            # Forms: push sync coordinator (GF/WPForms → crm.lead)
+│   │   ├── class-form-field-extractor.php   # Forms: strategy-based field extraction for 8 form plugins
+│   │   ├── class-forms-module.php            # Forms: push sync coordinator (GF/WPForms/JetFormBuilder → crm.lead)
 │   │   │
 │   │   ├── # ─── PMPro ─────────────────────────────────────────
 │   │   ├── trait-pmpro-hooks.php             # PMPro: hook callbacks (level saved, order created/updated, membership changed)
@@ -116,7 +116,7 @@ WordPress For Odoo/
 │   │   ├── class-rcp-handler.php             # RCP: level/payment/membership data load via RCP v3.0+ classes
 │   │   ├── class-rcp-module.php              # RCP: extends Membership_Module_Base (uses RCP_Hooks trait)
 │   │   │
-│   │   ├── # ─── Booking (Amelia + Bookly + JetAppointments + WC Bookings) ──────
+│   │   ├── # ─── Booking (Amelia + Bookly + JetAppointments + JetBooking + WC Bookings) ──
 │   │   ├── class-booking-module-base.php     # Shared: abstract base class for booking/appointment modules
 │   │   ├── trait-amelia-hooks.php            # Amelia: hook callbacks (booking saved/canceled/rescheduled, service saved)
 │   │   ├── class-amelia-handler.php          # Amelia: $wpdb queries on amelia_* tables (no CPT)
@@ -127,6 +127,9 @@ WordPress For Odoo/
 │   │   ├── trait-jet-appointments-hooks.php  # JetAppointments: hook callbacks (appointment after-insert/update, service save)
 │   │   ├── class-jet-appointments-handler.php # JetAppointments: CPT-based (jet-appointment + jet-service), meta fields
 │   │   ├── class-jet-appointments-module.php # JetAppointments: extends Booking_Module_Base (uses Jet_Appointments_Hooks trait)
+│   │   ├── trait-jet-booking-hooks.php       # JetBooking: hook callbacks (service save, booking insert/update)
+│   │   ├── class-jet-booking-handler.php     # JetBooking: hybrid data access (CPT services + custom table bookings)
+│   │   ├── class-jet-booking-module.php      # JetBooking: extends Booking_Module_Base (uses Jet_Booking_Hooks trait)
 │   │   ├── trait-wc-bookings-hooks.php       # WC Bookings: hook callbacks (product save, booking status changed)
 │   │   ├── class-wc-bookings-handler.php     # WC Bookings: WC CRUD (WC_Booking, WC_Product_Booking)
 │   │   ├── class-wc-bookings-module.php      # WC Bookings: extends Booking_Module_Base (uses WC_Bookings_Hooks trait)
@@ -194,6 +197,9 @@ WordPress For Odoo/
 │   │   ├── class-wperp-module.php            # WP ERP: extends Module_Base (uses WPERP_Hooks trait)
 │   │   ├── trait-wperp-hooks.php             # WP ERP: employee/department/leave hooks
 │   │   ├── class-wperp-handler.php           # WP ERP: custom DB table data load/save/format
+│   │   ├── class-wperp-crm-module.php       # WP ERP CRM: extends Module_Base (uses WPERP_CRM_Hooks trait)
+│   │   ├── trait-wperp-crm-hooks.php        # WP ERP CRM: contact/activity hooks
+│   │   ├── class-wperp-crm-handler.php      # WP ERP CRM: erp_peoples/erp_crm_customer_activities tables
 │   │   ├── # ─── Helpdesk (Awesome Support + SupportCandy) ──
 │   │   ├── class-helpdesk-module-base.php    # Shared: abstract base for helpdesk modules (dual-model, stage resolution)
 │   │   ├── trait-awesome-support-hooks.php   # AS: hook callbacks (ticket created, status updated)
@@ -246,6 +252,8 @@ WordPress For Odoo/
 │   │   ├── # ─── Meta-modules (enrichment / interception) ──
 │   │   ├── class-acf-handler.php             # ACF: type conversions, enrich push/pull, write ACF fields
 │   │   ├── class-acf-module.php              # ACF: filter-based enrichment, mapping configurator, no own entity types
+│   │   ├── class-jetengine-meta-handler.php  # JetEngine Meta: type conversions, enrich push/pull, write JetEngine fields
+│   │   ├── class-jetengine-meta-module.php   # JetEngine Meta: filter-based enrichment (pattern identical to ACF), no own entity types
 │   │   ├── class-wp-all-import-module.php    # WP All Import: intercept CSV/XML imports, route to sync queue
 │   │   └── trait-wpai-hooks.php              # WPAI hooks: pmxi_saved_post routing, import summary logging
 │   │
@@ -261,6 +269,7 @@ WordPress For Odoo/
 │   │
 │   ├── admin/
 │   │   ├── class-admin.php            # Admin menu, assets, activation redirect, setup notice, backup warning
+│   │   ├── class-network-admin.php    # Network admin: shared Odoo connection + site → company_id mapping
 │   │   ├── class-bulk-handler.php     # Bulk product import/export (paginated, batch lookups)
 │   │   ├── trait-ajax-monitor-handlers.php  # AJAX: queue management + log viewing (7 handlers)
 │   │   ├── trait-ajax-module-handlers.php   # AJAX: module settings + bulk operations (4 handlers)
@@ -270,7 +279,7 @@ WordPress For Odoo/
 │   │
 │   ├── class-sync-result.php          # Value object: success/fail, ?int entity_id, error message, Error_Type
 │   ├── class-error-type.php           # Backed enum: Transient, Permanent (retry strategy)
-│   ├── class-odoo-model.php           # String-backed enum: 29 Odoo model names (mrp.bom, mrp.bom.line, product.pricelist, stock.picking, etc.)
+│   ├── class-odoo-model.php           # String-backed enum: 47 Odoo model names (mrp.bom, mrp.bom.line, product.pricelist, stock.picking, etc.)
 │   ├── class-database-migration.php   # Table creation (dbDelta), default options, versioned migrations (schema_version)
 │   ├── class-settings-repository.php  # Centralized option access: keys, defaults, typed accessors (DI)
 │   ├── class-module-registry.php      # Module registration, mutual exclusivity, lifecycle
@@ -317,7 +326,8 @@ WordPress For Odoo/
 │       ├── tab-modules.php            #   Module cards with AJAX toggles + inline settings panels
 │       ├── tab-queue.php              #   Stats cards + paginated jobs table
 │       ├── tab-logs.php               #   Filter bar + AJAX paginated log table
-│       └── tab-health.php             #   Health dashboard (system status, queue stats, circuit breaker, cron)
+│       ├── tab-health.php             #   Health dashboard (system status, queue stats, circuit breaker, cron)
+│       └── network-settings.php       #   Network admin: shared connection + site → company_id table
 │
 ├── assets/                            # Frontend assets
 │   ├── css/frontend.css              #   Lead form styling
@@ -332,7 +342,7 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # 4051 unit tests (6210 assertions) + 26 integration tests (wp-env)
+├── tests/                             # 4226 unit tests (6471 assertions) + 26 integration tests (wp-env)
 │   ├── bootstrap.php                 #   Unit test bootstrap: constants, stub loading, plugin class requires
 │   ├── bootstrap-integration.php     #   Integration test bootstrap: loads WP test framework (wp-env)
 │   ├── stubs/
@@ -377,8 +387,11 @@ WordPress For Odoo/
 │   │   ├── buddyboss-classes.php          # BuddyBoss: BP_VERSION, buddypress(), xprofile/groups functions
 │   │   ├── knowledge-classes.php      # Knowledge module stubs (no WP plugin dependency, minimal)
 │   │   ├── wperp-classes.php          # WP ERP stubs (WPERP_VERSION constant)
+│   │   ├── wperp-crm-classes.php       # WP ERP CRM hooks/functions stubs
 │   │   ├── wpai-classes.php            # PMXI_VERSION, wp_all_import_get_import_id
 │   │   ├── jet-appointments-classes.php # JET_APB_VERSION, JET_APB\Plugin
+│   │   ├── jet-booking-classes.php     # JET_ABAF_VERSION, JET_ABAF\Plugin
+│   │   ├── jetformbuilder-classes.php  # JET_FORM_BUILDER_VERSION
 │   │   ├── jetengine-classes.php       # JET_ENGINE_VERSION, Jet_Engine
 │   │   ├── wp-project-manager-classes.php # CPM_VERSION, WeDevs PM classes
 │   │   ├── wc-product-addons-classes.php  # WC_PRODUCT_ADDONS_VERSION, WC_Product_Addons, THWEPO_VERSION, PPOM_VERSION
@@ -541,7 +554,14 @@ WordPress For Odoo/
 │       ├── WPERPModuleTest.php         # 101 tests for WP ERP module
 │       ├── ErrorClassificationTest.php # 19 tests for Error_Classification trait
 │       ├── PushDedupLockTest.php      #   6 tests for Push_Lock advisory lock
-│       └── DatabaseMigrationTest.php  #   8 tests for Database_Migration (migration 6)
+│       ├── DatabaseMigrationTest.php  #   9 tests for Database_Migration (migrations 1–7)
+│       ├── MultisiteTest.php          #   29 tests for multisite (blog_id scoping, company_id, network fallback)
+│       ├── JetBookingModuleTest.php   # Tests for Jet_Booking_Module
+│       ├── JetBookingHandlerTest.php  # Tests for Jet_Booking_Handler
+│       ├── WPERPCRMModuleTest.php     # Tests for WPERP_CRM_Module
+│       ├── WPERPCRMHandlerTest.php    # Tests for WPERP_CRM_Handler
+│       ├── JetEngineMetaModuleTest.php  # Tests for JetEngine_Meta_Module
+│       └── JetEngineMetaHandlerTest.php # Tests for JetEngine_Meta_Handler
 │
 ├── uninstall.php                      # Cleanup on plugin uninstall
 │
@@ -599,6 +619,7 @@ Module_Base (abstract)
 │   ├── Amelia_Module           → product.product, calendar.event                    [bidirectional]
 │   ├── Bookly_Module           → product.product, calendar.event                    [bidirectional]
 │   ├── Jet_Appointments_Module → product.product, calendar.event                    [bidirectional]
+│   ├── Jet_Booking_Module     → product.product, calendar.event                    [bidirectional]
 │   └── WC_Bookings_Module     → product.product, calendar.event                    [bidirectional]
 ├── Helpdesk_Module_Base (abstract)
 │   ├── Awesome_Support_Module  → helpdesk.ticket / project.task                     [bidirectional]
@@ -625,10 +646,12 @@ Module_Base (abstract)
 ├── BuddyBoss_Module            → res.partner, res.partner.category                  [bidirectional]
 ├── Knowledge_Module            → knowledge.article                                  [bidirectional]
 ├── WPERP_Module                → hr.employee, hr.department, hr.leave               [bidirectional]
+├── WPERP_CRM_Module            → crm.lead, mail.activity                            [bidirectional]
 ├── Project_Manager_Module      → project.project, project.task, account.analytic.line [bidirectional]
 ├── WC_Addons_Module            → product.attribute, product.template.attribute.line / mrp.bom [WP → Odoo]
 ├── JetEngine_Module            → (dynamic: admin-configured CPT → Odoo model mappings)  [WP → Odoo]
 ├── ACF_Module                  → (meta-module: enriches other modules' pipelines)   [bidirectional]
+├── JetEngine_Meta_Module       → (meta-module: enriches other modules with JetEngine meta-fields) [bidirectional]
 ├── WP_All_Import_Module        → (meta-module: routes imports to sync queue)        [WP → Odoo]
 └── [Custom_Module]             → extensible via action hook
 ```
@@ -638,7 +661,7 @@ Module_Base (abstract)
 - **Memberships**: WC Memberships, MemberPress, PMPro, and RCP are mutually exclusive (all target `membership.membership_line`). Priority (highest number wins): WC Memberships (20) > PMPro (15) > RCP (12) > MemberPress (10).
 - **Invoicing**: Sprout Invoices and WP-Invoice are mutually exclusive (both target `account.move` for invoicing). Priority: Sprout Invoices (10) > WP-Invoice (5).
 - **Helpdesk**: Awesome Support and SupportCandy are mutually exclusive (both target `helpdesk.ticket` / `project.task`). Priority: SupportCandy (15) > Awesome Support (10).
-- All other modules are independent and can coexist freely (LMS, Subscriptions, Points & Rewards, Events, Booking, Donations, Forms, WPRM, Crowdfunding, BOM, WC Add-Ons, AffiliateWP, FluentCRM, FunnelKit, GamiPress, BuddyBoss, Knowledge, WP ERP, WP Project Manager, JetEngine, ACF, WP All Import, Job Manager).
+- All other modules are independent and can coexist freely (LMS, Subscriptions, Points & Rewards, Events, Booking, Donations, Forms, WPRM, Crowdfunding, BOM, WC Add-Ons, AffiliateWP, FluentCRM, FunnelKit, GamiPress, BuddyBoss, Knowledge, WP ERP, WP ERP CRM, WP Project Manager, JetEngine, JetEngine Meta, ACF, WP All Import, Job Manager).
 
 **Module_Base provides:**
 - Version bounds: `PLUGIN_MIN_VERSION` (blocks boot if too old) and `PLUGIN_TESTED_UP_TO` (warns if newer than tested). Subclasses override `get_plugin_version()` to return the detected plugin version. Patch-level normalization ensures `10.5.0` is within `10.5` range. `Module_Registry` enforces MIN before boot and collects TESTED warnings for the admin notice.

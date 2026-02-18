@@ -37,6 +37,38 @@ class CLI {
 	}
 
 	/**
+	 * Switch to the specified blog in multisite.
+	 *
+	 * Call before operations that should target a specific site.
+	 * Returns true if a switch was made (caller should call
+	 * restore_current_blog() after the operation).
+	 *
+	 * @param array<string, mixed> $assoc_args Associative args from WP-CLI.
+	 * @return bool True if switch_to_blog() was called.
+	 */
+	private function maybe_switch_blog( array $assoc_args ): bool {
+		if ( ! is_multisite() || ! isset( $assoc_args['blog_id'] ) ) {
+			return false;
+		}
+
+		$blog_id = absint( $assoc_args['blog_id'] );
+		if ( 0 === $blog_id ) {
+			\WP_CLI::error( __( '--blog_id must be a positive integer.', 'wp4odoo' ) );
+		}
+
+		if ( ! get_blog_details( $blog_id ) ) {
+			/* translators: %d: blog ID */
+			\WP_CLI::error( sprintf( __( 'Blog ID %d does not exist.', 'wp4odoo' ), $blog_id ) );
+		}
+
+		switch_to_blog( $blog_id );
+		// Flush cached credentials so they re-read from the target site.
+		Odoo_Auth::flush_credentials_cache();
+
+		return true;
+	}
+
+	/**
 	 * Show plugin status: connection, queue stats, modules.
 	 *
 	 * ## EXAMPLES
@@ -153,19 +185,27 @@ class CLI {
 	 * [--yes]
 	 * : Skip confirmation prompt.
 	 *
+	 * [--blog_id=<id>]
+	 * : Target a specific site in multisite (switches blog context).
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     wp wp4odoo sync run
 	 *     wp wp4odoo sync run --dry-run
 	 *     wp wp4odoo sync run --yes
+	 *     wp wp4odoo sync run --blog_id=3
 	 *
 	 * @subcommand sync
 	 * @when after_wp_load
 	 */
 	public function sync( array $args, array $assoc_args = [] ): void {
-		$sub = $args[0] ?? 'run';
+		$switched = $this->maybe_switch_blog( $assoc_args );
+		$sub      = $args[0] ?? 'run';
 
 		if ( 'run' !== $sub ) {
+			if ( $switched ) {
+				restore_current_blog();
+			}
 			/* translators: %s: subcommand name */
 			\WP_CLI::error( sprintf( __( 'Unknown subcommand: %s. Usage: wp wp4odoo sync run', 'wp4odoo' ), $sub ) );
 		}
@@ -200,6 +240,10 @@ class CLI {
 		}
 
 		$processed = $engine->process_queue();
+
+		if ( $switched ) {
+			restore_current_blog();
+		}
 
 		if ( $dry_run ) {
 			/* translators: %d: number of jobs */
@@ -257,16 +301,21 @@ class CLI {
 	 * [--yes]
 	 * : Skip confirmation prompt for --fix.
 	 *
+	 * [--blog_id=<id>]
+	 * : Target a specific site in multisite (switches blog context).
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     wp wp4odoo reconcile crm contact
 	 *     wp wp4odoo reconcile woocommerce product --fix
 	 *     wp wp4odoo reconcile woocommerce product --fix --yes
+	 *     wp wp4odoo reconcile crm contact --blog_id=3
 	 *
 	 * @subcommand reconcile
 	 * @when after_wp_load
 	 */
 	public function reconcile( array $args, array $assoc_args = [] ): void {
+		$switched    = $this->maybe_switch_blog( $assoc_args );
 		$module_id   = $args[0] ?? '';
 		$entity_type = $args[1] ?? '';
 
@@ -338,6 +387,10 @@ class CLI {
 				];
 			}
 			\WP_CLI\Utils\format_items( 'table', $rows, [ 'wp_id', 'odoo_id' ] );
+		}
+
+		if ( $switched ) {
+			restore_current_blog();
 		}
 
 		if ( $fix ) {

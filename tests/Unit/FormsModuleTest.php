@@ -92,9 +92,14 @@ class FormsModuleTest extends TestCase {
 		$this->assertTrue( $settings['sync_forminator'] );
 	}
 
-	public function test_default_settings_has_exactly_seven_keys(): void {
+	public function test_default_sync_jetformbuilder_is_true(): void {
 		$settings = $this->module->get_default_settings();
-		$this->assertCount( 7, $settings );
+		$this->assertTrue( $settings['sync_jetformbuilder'] );
+	}
+
+	public function test_default_settings_has_exactly_eight_keys(): void {
+		$settings = $this->module->get_default_settings();
+		$this->assertCount( 8, $settings );
 	}
 
 	// ─── Settings Fields ───────────────────────────────────
@@ -141,9 +146,15 @@ class FormsModuleTest extends TestCase {
 		$this->assertSame( 'checkbox', $fields['sync_forminator']['type'] );
 	}
 
-	public function test_settings_fields_has_exactly_seven_keys(): void {
+	public function test_settings_fields_exposes_sync_jetformbuilder(): void {
 		$fields = $this->module->get_settings_fields();
-		$this->assertCount( 7, $fields );
+		$this->assertArrayHasKey( 'sync_jetformbuilder', $fields );
+		$this->assertSame( 'checkbox', $fields['sync_jetformbuilder']['type'] );
+	}
+
+	public function test_settings_fields_has_exactly_eight_keys(): void {
+		$fields = $this->module->get_settings_fields();
+		$this->assertCount( 8, $fields );
 	}
 
 	// ─── Field Mappings ────────────────────────────────────

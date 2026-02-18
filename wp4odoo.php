@@ -2,8 +2,8 @@
 /**
  * Plugin Name: WordPress For Odoo
  * Plugin URI: https://github.com/PaulArgoud/wordpress-for-odoo
- * Description: Modular WordPress/WooCommerce sync with Odoo ERP (v14+). 40 modules — CRM, Sales, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Points & Rewards, WC Bookings, EDD, Ecwid, ShopWP, WP Crowdfunding, Memberships, MemberPress, Restrict Content Pro, Paid Memberships Pro, GiveWP, Charitable, WP Simple Pay, WP Recipe Maker, Forms (7 plugins), Amelia, Bookly, LearnDash, LifterLMS, TutorLMS, The Events Calendar, Sprout Invoices, WP-Invoice, WP Job Manager, Awesome Support, SupportCandy, AffiliateWP, FluentCRM, FunnelKit, GamiPress, BuddyBoss, WP ERP, Knowledge, ACF, WP All Import — covering contacts, leads, orders, invoices, products, donations, bookings, recipes, LMS courses, recurring subscriptions, events, manufacturing BOMs, helpdesk tickets, affiliate commissions, marketing CRM, HR employees, knowledge articles. Async queue, webhooks, customer portal, WP-CLI, encrypted credentials.
- * Version: 3.4.0
+ * Description: Modular WordPress/WooCommerce sync with Odoo ERP (v14+). 51 modules — CRM, Sales, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Product Add-Ons, WC Points & Rewards, WC Bookings, WC B2B, EDD, Ecwid, ShopWP, SureCart, WP Crowdfunding, Memberships, MemberPress, Restrict Content Pro, Paid Memberships Pro, GiveWP, Charitable, WP Simple Pay, WP Recipe Maker, Forms (7 plugins), Amelia, Bookly, JetAppointments, LearnDash, LifterLMS, TutorLMS, The Events Calendar, Sprout Invoices, WP-Invoice, WP Job Manager, WP Project Manager, Awesome Support, SupportCandy, AffiliateWP, FluentCRM, FunnelKit, GamiPress, BuddyBoss, WP ERP, Knowledge, JetEngine, Dokan, WCFM, WC Vendors, MailPoet, MC4WP, ACF, WP All Import — covering contacts, leads, orders, invoices, products, donations, bookings, recipes, LMS courses, recurring subscriptions, events, manufacturing BOMs, helpdesk tickets, affiliate commissions, marketing CRM, HR employees, knowledge articles, projects, generic CPT mapping, email marketing, marketplace vendors. Async queue, webhooks, customer portal, WP-CLI, encrypted credentials.
+ * Version: 3.5.0
  * Requires at least: 6.0
  * Requires PHP: 8.2
  * Author: Paul ARGOUD
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'WP4ODOO_VERSION', '3.4.0' );
+define( 'WP4ODOO_VERSION', '3.5.0' );
 define( 'WP4ODOO_PLUGIN_FILE', __FILE__ );
 define( 'WP4ODOO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WP4ODOO_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -134,12 +134,40 @@ final class WP4Odoo_Plugin {
 
 		// WooCommerce HPOS compatibility
 		add_action( 'before_woocommerce_init', [ $this, 'declare_hpos_compatibility' ] );
+
+		// Multisite: provision new sites added to the network.
+		add_action( 'wp_initialize_site', [ $this, 'on_new_site' ], 10, 1 );
 	}
 
 	/**
 	 * Plugin activation.
+	 *
+	 * In multisite with network activation, provisions every existing site.
+	 *
+	 * @param bool $network_wide Whether network-activated.
 	 */
-	public function activate(): void {
+	public function activate( bool $network_wide = false ): void {
+		if ( is_multisite() && $network_wide ) {
+			$sites = get_sites(
+				[
+					'fields' => 'ids',
+					'number' => 0,
+				]
+			);
+			foreach ( $sites as $site_id ) {
+				switch_to_blog( (int) $site_id );
+				$this->activate_single_site();
+				restore_current_blog();
+			}
+		} else {
+			$this->activate_single_site();
+		}
+	}
+
+	/**
+	 * Activate for a single site (tables, defaults, cron).
+	 */
+	private function activate_single_site(): void {
 		WP4Odoo\Database_Migration::create_tables();
 		$this->settings->seed_defaults();
 
@@ -151,10 +179,25 @@ final class WP4Odoo_Plugin {
 			wp_schedule_event( time(), 'daily', 'wp4odoo_log_cleanup' );
 		}
 
-		// Flag for post-activation redirect.
 		set_transient( 'wp4odoo_activated', '1', 60 );
-
 		flush_rewrite_rules();
+	}
+
+	/**
+	 * Provision a newly created site in the network.
+	 *
+	 * Fired by wp_initialize_site when a new blog is added.
+	 *
+	 * @param \WP_Site $new_site New site object.
+	 */
+	public function on_new_site( \WP_Site $new_site ): void {
+		if ( ! is_plugin_active_for_network( WP4ODOO_PLUGIN_BASENAME ) ) {
+			return;
+		}
+
+		switch_to_blog( (int) $new_site->blog_id );
+		$this->activate_single_site();
+		restore_current_blog();
 	}
 
 	/**
@@ -185,6 +228,11 @@ final class WP4Odoo_Plugin {
 	public function on_plugins_loaded(): void {
 		if ( is_admin() ) {
 			new WP4Odoo\Admin\Admin();
+		}
+
+		// Network admin page for multisite.
+		if ( is_multisite() && is_network_admin() ) {
+			new WP4Odoo\Admin\Network_Admin( $this->settings );
 		}
 
 		do_action( 'wp4odoo_loaded' );

@@ -78,6 +78,13 @@ class Form_Handler {
 	}
 
 	/**
+	 * @since 3.5.0
+	 */
+	public function extract_from_jetformbuilder( array $form_data, string $form_title ): array {
+		return $this->extractor->extract( 'jetformbuilder', $form_data, $form_title );
+	}
+
+	/**
 	 * @since 2.0.0
 	 */
 	public function is_company_label( string $label ): bool {

@@ -121,13 +121,14 @@ class Logger {
 		$result = $wpdb->insert(
 			$table,
 			[
+				'blog_id'        => (int) get_current_blog_id(),
 				'correlation_id' => $this->correlation_id,
 				'level'          => $level,
 				'module'         => $this->module,
 				'message'        => $message,
 				'context'        => ! empty( $context ) ? self::truncate_context( $context ) : null,
 			],
-			[ '%s', '%s', '%s', '%s', '%s' ]
+			[ '%d', '%s', '%s', '%s', '%s', '%s' ]
 		);
 
 		return false !== $result;

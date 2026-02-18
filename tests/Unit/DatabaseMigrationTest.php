@@ -54,24 +54,24 @@ class DatabaseMigrationTest extends TestCase {
 
 		$applied = Database_Migration::run_migrations();
 
-		$this->assertSame( 6, $applied );
-		$this->assertSame( 6, Database_Migration::get_schema_version() );
+		$this->assertSame( 7, $applied );
+		$this->assertSame( 7, Database_Migration::get_schema_version() );
 	}
 
 	public function test_run_migrations_skips_already_applied(): void {
 		$GLOBALS['_wp_options'][ Database_Migration::OPT_SCHEMA_VERSION ] = 5;
 
-		// Only migration 6 should run.
+		// Migrations 6 and 7 should run.
 		$this->wpdb->get_col_return = [ 'id', 'module', 'entity_type' ];
 
 		$applied = Database_Migration::run_migrations();
 
-		$this->assertSame( 1, $applied );
-		$this->assertSame( 6, Database_Migration::get_schema_version() );
+		$this->assertSame( 2, $applied );
+		$this->assertSame( 7, Database_Migration::get_schema_version() );
 	}
 
 	public function test_run_migrations_returns_zero_when_up_to_date(): void {
-		$GLOBALS['_wp_options'][ Database_Migration::OPT_SCHEMA_VERSION ] = 6;
+		$GLOBALS['_wp_options'][ Database_Migration::OPT_SCHEMA_VERSION ] = 7;
 
 		$applied = Database_Migration::run_migrations();
 
@@ -134,8 +134,8 @@ class DatabaseMigrationTest extends TestCase {
 	public function test_migration_6_is_idempotent(): void {
 		$GLOBALS['_wp_options'][ Database_Migration::OPT_SCHEMA_VERSION ] = 5;
 
-		// Column already exists.
-		$this->wpdb->get_col_return = [ 'id', 'module', 'entity_type', 'last_polled_at' ];
+		// Column already exists (including blog_id for migration 7 idempotency).
+		$this->wpdb->get_col_return = [ 'id', 'blog_id', 'module', 'entity_type', 'last_polled_at' ];
 
 		Database_Migration::run_migrations();
 
@@ -143,23 +143,23 @@ class DatabaseMigrationTest extends TestCase {
 			array_filter( $this->wpdb->calls, fn( $c ) => 'query' === $c['method'] )
 		);
 
-		// No ALTER TABLE should be issued since column already exists.
+		// No ALTER TABLE should be issued since columns already exist.
 		$alter_calls = array_filter(
 			$query_calls,
 			fn( $c ) => str_contains( $c['args'][0], 'ALTER TABLE' )
 		);
 
-		$this->assertEmpty( $alter_calls, 'Migration 6 should skip ALTER when column exists.' );
+		$this->assertEmpty( $alter_calls, 'Migrations 6-7 should skip ALTER when columns exist.' );
 	}
 
 	// ─── get_migrations() coverage ─────────────────────────
 
-	public function test_migrations_are_sequential_from_1_to_6(): void {
+	public function test_migrations_are_sequential_from_1_to_7(): void {
 		$method     = new \ReflectionMethod( Database_Migration::class, 'get_migrations' );
 		$migrations = $method->invoke( null );
 
-		$this->assertCount( 6, $migrations );
-		for ( $i = 1; $i <= 6; $i++ ) {
+		$this->assertCount( 7, $migrations );
+		for ( $i = 1; $i <= 7; $i++ ) {
 			$this->assertArrayHasKey( $i, $migrations, "Migration $i should exist." );
 			// Callbacks are [class, 'migration_N'] arrays pointing to private static methods.
 			$this->assertIsArray( $migrations[ $i ] );

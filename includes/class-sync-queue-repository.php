@@ -27,6 +27,22 @@ class Sync_Queue_Repository {
 	private const CLEANUP_CHUNK_SIZE = 10000;
 
 	/**
+	 * Blog ID for multisite scoping.
+	 *
+	 * @var int
+	 */
+	private int $blog_id;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param int|null $blog_id Optional blog ID for multisite scoping. Defaults to current blog.
+	 */
+	public function __construct( ?int $blog_id = null ) {
+		$this->blog_id = $blog_id ?? (int) get_current_blog_id();
+	}
+
+	/**
 	 * Get the table name.
 	 *
 	 * @return string
@@ -104,6 +120,7 @@ class Sync_Queue_Repository {
 		// Deduplication: look for an existing pending or processing job with same key fields.
 		// Including 'processing' prevents re-enqueuing an entity that is currently being synced.
 		$where_parts = [
+			$wpdb->prepare( 'blog_id = %d', $this->blog_id ),
 			$wpdb->prepare( 'module = %s', $module ),
 			$wpdb->prepare( 'entity_type = %s', $entity_type ),
 			$wpdb->prepare( 'direction = %s', $direction ),
@@ -143,6 +160,7 @@ class Sync_Queue_Repository {
 		}
 
 		$insert_data = [
+			'blog_id'        => $this->blog_id,
 			'correlation_id' => wp_generate_uuid4(),
 			'module'         => $module,
 			'direction'      => $direction,
@@ -403,14 +421,15 @@ class Sync_Queue_Repository {
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
 		$sql = "SELECT * FROM {$table}
-				 WHERE status = 'pending'
+				 WHERE blog_id = %d
+				   AND status = 'pending'
 				   AND module = %s
 				   AND ( scheduled_at IS NULL OR scheduled_at <= %s )
 				 ORDER BY priority ASC, created_at ASC
 				 LIMIT %d";
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $sql built above from safe $wpdb->prefix.
-		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $module, $now, $batch_size ) );
+		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $this->blog_id, $module, $now, $batch_size ) );
 
 		return array_map( [ Queue_Job::class, 'from_row' ], $rows );
 	}
@@ -429,13 +448,14 @@ class Sync_Queue_Repository {
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
 		$sql = "SELECT * FROM {$table}
-				 WHERE status = 'pending'
+				 WHERE blog_id = %d
+				   AND status = 'pending'
 				   AND ( scheduled_at IS NULL OR scheduled_at <= %s )
 				 ORDER BY priority ASC, created_at ASC
 				 LIMIT %d";
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $sql built above from safe $wpdb->prefix.
-		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $now, $batch_size ) );
+		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $this->blog_id, $now, $batch_size ) );
 
 		return array_map( [ Queue_Job::class, 'from_row' ], $rows );
 	}

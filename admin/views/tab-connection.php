@@ -35,6 +35,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 </div>
 <?php endif; ?>
 
+<?php
+// Multisite network connection indicator.
+if ( is_multisite() ) :
+	$settings_repo = \WP4Odoo_Plugin::instance()->settings();
+	if ( $settings_repo->is_using_network_connection() ) :
+		?>
+		<div class="notice notice-info inline">
+			<p>
+				<?php esc_html_e( 'This site is using the shared network connection. Configure a site-specific connection below to override.', 'wp4odoo' ); ?>
+			</p>
+		</div>
+		<?php
+	endif;
+endif;
+?>
+
 <form method="post" action="options.php">
 	<?php settings_fields( 'wp4odoo_connection_group' ); ?>
 
@@ -138,6 +154,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<input type="number" id="wp4odoo_timeout" name="wp4odoo_connection[timeout]"
 					value="<?php echo esc_attr( (string) $credentials['timeout'] ); ?>"
 					min="5" max="120" class="small-text" />
+			</td>
+		</tr>
+		<tr>
+			<th scope="row">
+				<label for="wp4odoo_company_id"><?php esc_html_e( 'Odoo Company ID', 'wp4odoo' ); ?></label>
+			</th>
+			<td>
+				<input type="number" id="wp4odoo_company_id" name="wp4odoo_connection[company_id]"
+					value="<?php echo esc_attr( (string) ( $credentials['company_id'] ?? 0 ) ); ?>"
+					min="0" class="small-text" />
+				<p class="description">
+					<?php esc_html_e( 'Odoo res.company ID for multi-company setups. Leave at 0 for no company restriction.', 'wp4odoo' ); ?>
+				</p>
 			</td>
 		</tr>
 	</table>

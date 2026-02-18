@@ -791,6 +791,81 @@ if ( ! function_exists( 'wp_remote_retrieve_response_code' ) ) {
 	}
 }
 
+// ─── Multisite ──────────────────────────────────────────
+
+if ( ! function_exists( 'get_current_blog_id' ) ) {
+	function get_current_blog_id() {
+		return $GLOBALS['_wp_current_blog_id'] ?? 1;
+	}
+}
+
+if ( ! function_exists( 'is_multisite' ) ) {
+	function is_multisite() {
+		return $GLOBALS['_wp_is_multisite'] ?? false;
+	}
+}
+
+if ( ! function_exists( 'get_site_option' ) ) {
+	function get_site_option( $option, $default = false ) {
+		return array_key_exists( $option, $GLOBALS['_wp_site_options'] ?? [] ) ? $GLOBALS['_wp_site_options'][ $option ] : $default;
+	}
+}
+
+if ( ! function_exists( 'update_site_option' ) ) {
+	function update_site_option( $option, $value ) {
+		$GLOBALS['_wp_site_options'][ $option ] = $value;
+		return true;
+	}
+}
+
+if ( ! function_exists( 'switch_to_blog' ) ) {
+	function switch_to_blog( $new_blog_id ) {
+		$GLOBALS['_wp_switched_stack'][]  = $GLOBALS['_wp_current_blog_id'] ?? 1;
+		$GLOBALS['_wp_current_blog_id']   = $new_blog_id;
+		return true;
+	}
+}
+
+if ( ! function_exists( 'restore_current_blog' ) ) {
+	function restore_current_blog() {
+		if ( ! empty( $GLOBALS['_wp_switched_stack'] ) ) {
+			$GLOBALS['_wp_current_blog_id'] = array_pop( $GLOBALS['_wp_switched_stack'] );
+		}
+		return true;
+	}
+}
+
+if ( ! function_exists( 'is_network_admin' ) ) {
+	function is_network_admin() {
+		return $GLOBALS['_wp_is_network_admin'] ?? false;
+	}
+}
+
+if ( ! function_exists( 'is_plugin_active_for_network' ) ) {
+	function is_plugin_active_for_network( $plugin ) {
+		return $GLOBALS['_wp_network_active_plugins'][ $plugin ] ?? false;
+	}
+}
+
+if ( ! function_exists( 'get_sites' ) ) {
+	function get_sites( $args = [] ) {
+		return $GLOBALS['_wp_sites'] ?? [];
+	}
+}
+
+if ( ! function_exists( 'get_blog_details' ) ) {
+	function get_blog_details( $fields = null, $get_all = true ) {
+		$id = is_numeric( $fields ) ? (int) $fields : 1;
+		return $GLOBALS['_wp_blog_details'][ $id ] ?? (object) [ 'blogname' => 'Test Blog', 'blog_id' => $id ];
+	}
+}
+
+if ( ! function_exists( 'network_admin_url' ) ) {
+	function network_admin_url( $path = '', $scheme = 'admin' ) {
+		return 'https://example.com/wp-admin/network/' . ltrim( $path, '/' );
+	}
+}
+
 // ─── WP-Cron ────────────────────────────────────────────
 
 if ( ! function_exists( 'wp_next_scheduled' ) ) {

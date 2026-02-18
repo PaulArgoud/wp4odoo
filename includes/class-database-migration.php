@@ -39,6 +39,7 @@ final class Database_Migration {
 
 		$sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}wp4odoo_sync_queue (
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+			blog_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 1,
 			correlation_id CHAR(36) DEFAULT NULL,
 			module VARCHAR(50) NOT NULL,
 			direction ENUM('wp_to_odoo','odoo_to_wp') NOT NULL,
@@ -57,9 +58,9 @@ final class Database_Migration {
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
 			KEY idx_status_priority (status, priority, scheduled_at),
-			KEY idx_status_module (status, module, priority, created_at),
+			KEY idx_status_module (blog_id, status, module, priority, created_at),
 			KEY idx_module_entity (module, entity_type),
-			KEY idx_dedup_wp (module, entity_type, direction, status, wp_id),
+			KEY idx_dedup_wp (blog_id, module, entity_type, direction, status, wp_id),
 			KEY idx_dedup_odoo (module, entity_type, direction, status, odoo_id),
 			KEY idx_wp_id (wp_id),
 			KEY idx_odoo_id (odoo_id),
@@ -69,6 +70,7 @@ final class Database_Migration {
 
 		CREATE TABLE IF NOT EXISTS {$wpdb->prefix}wp4odoo_entity_map (
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+			blog_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 1,
 			module VARCHAR(50) NOT NULL,
 			entity_type VARCHAR(100) NOT NULL,
 			wp_id BIGINT(20) UNSIGNED NOT NULL,
@@ -79,14 +81,15 @@ final class Database_Migration {
 			last_polled_at DATETIME DEFAULT NULL,
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
-			UNIQUE KEY idx_unique_mapping (module, entity_type, wp_id, odoo_id),
-			KEY idx_wp_lookup (module, entity_type, wp_id),
-			KEY idx_odoo_lookup (module, entity_type, odoo_id),
+			UNIQUE KEY idx_unique_mapping (blog_id, module, entity_type, wp_id, odoo_id),
+			KEY idx_wp_lookup (blog_id, module, entity_type, wp_id),
+			KEY idx_odoo_lookup (blog_id, module, entity_type, odoo_id),
 			KEY idx_poll_detection (module, entity_type, last_polled_at)
 		) $charset_collate;
 
 		CREATE TABLE IF NOT EXISTS {$wpdb->prefix}wp4odoo_logs (
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+			blog_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 1,
 			correlation_id CHAR(36) DEFAULT NULL,
 			level ENUM('debug','info','warning','error','critical') NOT NULL DEFAULT 'info',
 			module VARCHAR(50) DEFAULT NULL,
@@ -155,6 +158,7 @@ final class Database_Migration {
 			4 => [ self::class, 'migration_4' ],
 			5 => [ self::class, 'migration_5' ],
 			6 => [ self::class, 'migration_6' ],
+			7 => [ self::class, 'migration_7' ],
 		];
 	}
 
@@ -327,6 +331,57 @@ final class Database_Migration {
 			$wpdb->query( "ALTER TABLE {$entity_table} ADD COLUMN last_polled_at DATETIME DEFAULT NULL AFTER last_synced_at" );
 			$wpdb->query( "ALTER TABLE {$entity_table} ADD KEY idx_poll_detection (module, entity_type, last_polled_at)" );
 		}
+		// phpcs:enable
+	}
+
+	/**
+	 * Migration 7: Add blog_id column to all three plugin tables for multisite support.
+	 *
+	 * In WordPress multisite, each site has its own options table but shares
+	 * the plugin's custom tables. blog_id scopes entity_map, sync_queue, and
+	 * logs to the originating site. DEFAULT 1 ensures single-site installs
+	 * (where get_current_blog_id() always returns 1) are unaffected.
+	 *
+	 * @return void
+	 */
+	private static function migration_7(): void {
+		global $wpdb;
+
+		$entity_table = $wpdb->prefix . 'wp4odoo_entity_map';
+		$queue_table  = $wpdb->prefix . 'wp4odoo_sync_queue';
+		$logs_table   = $wpdb->prefix . 'wp4odoo_logs';
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.SchemaChange
+
+		// ── entity_map ──────────────────────────────────────
+		$cols = $wpdb->get_col( "SHOW COLUMNS FROM {$entity_table}" );
+		if ( ! in_array( 'blog_id', $cols, true ) ) {
+			$wpdb->query( "ALTER TABLE {$entity_table} ADD COLUMN blog_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 1 AFTER id" );
+
+			// Rebuild unique key to include blog_id.
+			$wpdb->query( "ALTER TABLE {$entity_table} DROP KEY idx_unique_mapping, ADD UNIQUE KEY idx_unique_mapping (blog_id, module, entity_type, wp_id, odoo_id)" );
+
+			// Rebuild lookup indexes with blog_id prefix.
+			$wpdb->query( "ALTER TABLE {$entity_table} DROP KEY idx_wp_lookup, ADD KEY idx_wp_lookup (blog_id, module, entity_type, wp_id)" );
+			$wpdb->query( "ALTER TABLE {$entity_table} DROP KEY idx_odoo_lookup, ADD KEY idx_odoo_lookup (blog_id, module, entity_type, odoo_id)" );
+		}
+
+		// ── sync_queue ──────────────────────────────────────
+		$cols = $wpdb->get_col( "SHOW COLUMNS FROM {$queue_table}" );
+		if ( ! in_array( 'blog_id', $cols, true ) ) {
+			$wpdb->query( "ALTER TABLE {$queue_table} ADD COLUMN blog_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 1 AFTER id" );
+
+			// Rebuild module-scoped indexes with blog_id prefix.
+			$wpdb->query( "ALTER TABLE {$queue_table} DROP KEY idx_status_module, ADD KEY idx_status_module (blog_id, status, module, priority, created_at)" );
+			$wpdb->query( "ALTER TABLE {$queue_table} DROP KEY idx_dedup_wp, ADD KEY idx_dedup_wp (blog_id, module, entity_type, direction, status, wp_id)" );
+		}
+
+		// ── logs ────────────────────────────────────────────
+		$cols = $wpdb->get_col( "SHOW COLUMNS FROM {$logs_table}" );
+		if ( ! in_array( 'blog_id', $cols, true ) ) {
+			$wpdb->query( "ALTER TABLE {$logs_table} ADD COLUMN blog_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 1 AFTER id" );
+		}
+
 		// phpcs:enable
 	}
 
