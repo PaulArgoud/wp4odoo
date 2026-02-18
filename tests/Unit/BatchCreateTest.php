@@ -344,6 +344,119 @@ class BatchCreateTest extends TestCase {
 		$this->assertEmpty( $module->individual_calls, 'No individual push in dry-run' );
 	}
 
+	// ─── Intra-group dedup by wp_id ─────────────────────────
+
+	public function test_group_dedup_by_wp_id(): void {
+		$this->wpdb->get_var_return = '1';
+
+		$module = new Batch_Mock_Module( 'test' );
+		\WP4Odoo_Plugin::instance()->register_module( 'test', $module );
+
+		// 3 create jobs where 2 share the same wp_id (10).
+		// The processor should deduplicate and only send 2 items to push_batch_creates().
+		$jobs = [
+			(object) [
+				'id' => 1, 'module' => 'test', 'direction' => 'wp_to_odoo',
+				'entity_type' => 'product', 'action' => 'create',
+				'wp_id' => 10, 'odoo_id' => 0, 'payload' => '{}',
+				'attempts' => 0, 'max_attempts' => 3,
+			],
+			(object) [
+				'id' => 2, 'module' => 'test', 'direction' => 'wp_to_odoo',
+				'entity_type' => 'product', 'action' => 'create',
+				'wp_id' => 10, 'odoo_id' => 0, 'payload' => '{"updated":true}',
+				'attempts' => 0, 'max_attempts' => 3,
+			],
+			(object) [
+				'id' => 3, 'module' => 'test', 'direction' => 'wp_to_odoo',
+				'entity_type' => 'product', 'action' => 'create',
+				'wp_id' => 20, 'odoo_id' => 0, 'payload' => '{}',
+				'attempts' => 0, 'max_attempts' => 3,
+			],
+		];
+
+		$this->wpdb->get_results_return = $jobs;
+
+		$engine    = new Sync_Engine( wp4odoo_test_module_resolver(), wp4odoo_test_queue_repo(), wp4odoo_test_settings() );
+		$processed = $engine->process_queue();
+
+		$this->assertCount( 1, $module->batch_calls, 'Should make exactly 1 batch call' );
+		$this->assertCount( 2, $module->batch_calls[0]['items'], 'Batch should contain 2 items (deduped from 3)' );
+
+		// Verify the wp_ids sent to push_batch_creates are 10 and 20 (not 10, 10, 20).
+		$batch_wp_ids = array_column( $module->batch_calls[0]['items'], 'wp_id' );
+		sort( $batch_wp_ids );
+		$this->assertSame( [ 10, 20 ], $batch_wp_ids );
+	}
+
+	// ─── Batch JSON payload errors ──────────────────────────
+
+	public function test_invalid_json_payload_marked_permanent(): void {
+		$this->wpdb->get_var_return = '1';
+
+		$module = new Batch_Mock_Module( 'test' );
+		\WP4Odoo_Plugin::instance()->register_module( 'test', $module );
+
+		// Track failure handler calls.
+		$failure_calls = [];
+		$failure_handler = function ( $job, $message, $error_type, $entity_id ) use ( &$failure_calls ) {
+			$failure_calls[] = [
+				'job_id'     => (int) $job->id,
+				'message'    => $message,
+				'error_type' => $error_type,
+			];
+		};
+
+		$logger     = new \WP4Odoo\Logger( 'test' );
+		$queue_repo = wp4odoo_test_queue_repo();
+
+		$processor = new \WP4Odoo\Batch_Create_Processor(
+			wp4odoo_test_module_resolver(),
+			$queue_repo,
+			$logger,
+			\Closure::fromCallable( $failure_handler )
+		);
+
+		// Create Queue_Job objects: one with valid JSON, one with invalid JSON.
+		$jobs = [
+			\WP4Odoo\Queue_Job::from_row( (object) [
+				'id' => 1, 'module' => 'test', 'direction' => 'wp_to_odoo',
+				'entity_type' => 'product', 'action' => 'create',
+				'wp_id' => 10, 'odoo_id' => 0,
+				'payload' => '{invalid json!!!',
+				'priority' => 5, 'status' => 'pending',
+				'attempts' => 0, 'max_attempts' => 3,
+				'created_at' => '2025-01-01 00:00:00',
+			] ),
+			\WP4Odoo\Queue_Job::from_row( (object) [
+				'id' => 2, 'module' => 'test', 'direction' => 'wp_to_odoo',
+				'entity_type' => 'product', 'action' => 'create',
+				'wp_id' => 20, 'odoo_id' => 0,
+				'payload' => '{"valid":true}',
+				'priority' => 5, 'status' => 'pending',
+				'attempts' => 0, 'max_attempts' => 3,
+				'created_at' => '2025-01-01 00:00:00',
+			] ),
+		];
+
+		$batched_ids = [];
+		$processor->process( $jobs, $batched_ids );
+
+		// Verify the failure handler was called for the invalid JSON job.
+		$this->assertNotEmpty( $failure_calls, 'Failure handler should have been called' );
+
+		$json_failure = null;
+		foreach ( $failure_calls as $call ) {
+			if ( $call['job_id'] === 1 ) {
+				$json_failure = $call;
+				break;
+			}
+		}
+
+		$this->assertNotNull( $json_failure, 'Job #1 with invalid JSON should trigger failure' );
+		$this->assertSame( Error_Type::Permanent, $json_failure['error_type'], 'Invalid JSON should be classified as Permanent' );
+	}
+
 	// ─── Batch failure → fallback ───────────────────────────
 
 	public function test_engine_handles_batch_failure_per_job(): void {

@@ -722,6 +722,23 @@ class Settings_Repository {
 		return empty( $local['url'] ) && ! empty( $this->get_network_connection()['url'] ?? '' );
 	}
 
+	// ── Cache management ─────────────────────────────────
+
+	/**
+	 * Flush the instance-level settings cache.
+	 *
+	 * Forces the next get_*() call to re-read from wp_options.
+	 * Call this after external modifications (WP-CLI, concurrent cron,
+	 * or another process updating settings via update_option() directly).
+	 *
+	 * @since 3.6.0
+	 *
+	 * @return void
+	 */
+	public function flush_cache(): void {
+		$this->cache = [];
+	}
+
 	// ── Static default accessors ───────────────────────────
 
 	/**

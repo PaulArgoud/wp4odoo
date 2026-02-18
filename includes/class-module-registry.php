@@ -438,9 +438,26 @@ class Module_Registry {
 		if ( null === $this->client_provider || null === $this->entity_map ) {
 			return; // @codeCoverageIgnore
 		}
-		$class                = $this->deferred[ $id ];
-		$this->modules[ $id ] = new $class( $this->client_provider, $this->entity_map, $this->settings );
+
+		$class = $this->deferred[ $id ];
 		unset( $this->deferred[ $id ] );
+
+		try {
+			$this->modules[ $id ] = new $class( $this->client_provider, $this->entity_map, $this->settings );
+		} catch ( \Throwable $e ) {
+			// Log the failure instead of silently swallowing it.
+			// The module remains absent from $this->modules — get()
+			// will return null, which callers already handle.
+			$logger = Logger::for_channel( 'core' );
+			$logger->error(
+				'Failed to instantiate deferred module.',
+				[
+					'module' => $id,
+					'class'  => $class,
+					'error'  => $e->getMessage(),
+				]
+			);
+		}
 	}
 
 	/**

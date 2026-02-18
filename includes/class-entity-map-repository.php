@@ -703,8 +703,8 @@ class Entity_Map_Repository {
 			return;
 		}
 
-		// Keep the most recent half of entries.
-		$kept = array_slice( $this->cache, (int) ( self::MAX_CACHE_SIZE / 2 ), null, true );
+		// Keep the most recent 75% of entries (evict oldest 25%).
+		$kept = array_slice( $this->cache, (int) ( self::MAX_CACHE_SIZE / 4 ), null, true );
 
 		// Remove orphaned entries whose bidirectional partner was evicted.
 		// Each mapping has two keys: "mod:type:wp:X" ↔ "mod:type:odoo:Y".

@@ -478,6 +478,42 @@ class EntityMapRepositoryTest extends TestCase {
 		);
 	}
 
+	// ─── LRU eviction ───────────────────────────────────────
+
+	public function test_evict_cache_keeps_75_percent(): void {
+		// Fill the cache beyond MAX_CACHE_SIZE (5000) using save().
+		// Each save() creates 2 cache entries (wp→odoo and odoo→wp),
+		// so 2600 saves = 5200 entries → triggers eviction.
+		for ( $i = 1; $i <= 2600; $i++ ) {
+			$this->repo->save( 'crm', 'contact', $i, $i + 10000, 'res.partner' );
+		}
+
+		// After eviction, the cache should retain ~75% of MAX_CACHE_SIZE.
+		// The newest entries should still be cached (no DB query needed).
+		$this->wpdb->get_var_return = null;
+		$this->wpdb->calls          = [];
+
+		// The most recent entry (2600) should be in cache.
+		$result = $this->repo->get_odoo_id( 'crm', 'contact', 2600 );
+		$this->assertSame( 12600, $result );
+
+		// No DB query should have been made (cache hit).
+		$get_var_calls = array_values(
+			array_filter( $this->wpdb->calls, fn( $c ) => $c['method'] === 'get_var' )
+		);
+		$this->assertEmpty( $get_var_calls, 'Recent entry should be cached, no DB query expected' );
+
+		// The oldest entries should have been evicted.
+		// Entry #1 should NOT be in cache → DB query triggers.
+		$this->wpdb->calls = [];
+		$this->repo->get_odoo_id( 'crm', 'contact', 1 );
+
+		$get_var_calls = array_values(
+			array_filter( $this->wpdb->calls, fn( $c ) => $c['method'] === 'get_var' )
+		);
+		$this->assertNotEmpty( $get_var_calls, 'Oldest entry should have been evicted, DB query expected' );
+	}
+
 	// ─── Helpers ───────────────────────────────────────────
 
 	private function get_last_call( string $method ): ?array {

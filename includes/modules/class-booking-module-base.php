@@ -136,7 +136,12 @@ abstract class Booking_Module_Base extends Module_Base {
 	 */
 	public function push_to_odoo( string $entity_type, string $action, int $wp_id, int $odoo_id = 0, array $payload = [] ): \WP4Odoo\Sync_Result {
 		if ( $this->get_booking_entity_type() === $entity_type && 'delete' !== $action ) {
-			$this->ensure_service_synced( $wp_id );
+			if ( ! $this->ensure_service_synced( $wp_id ) ) {
+				return \WP4Odoo\Sync_Result::failure(
+					'Service sync failed — cannot push booking without a valid Odoo service reference.',
+					\WP4Odoo\Error_Type::Transient
+				);
+			}
 		}
 
 		return parent::push_to_odoo( $entity_type, $action, $wp_id, $odoo_id, $payload );
@@ -331,11 +336,22 @@ abstract class Booking_Module_Base extends Module_Base {
 	/**
 	 * Ensure the service is synced to Odoo before pushing a booking.
 	 *
+	 * Returns false if the service could not be synced (push failed or
+	 * service_id is 0), allowing the caller to abort the booking push
+	 * instead of creating a booking with an invalid Odoo reference.
+	 *
 	 * @param int $booking_id Plugin booking/appointment ID.
-	 * @return void
+	 * @return bool True if the service has a valid Odoo mapping.
 	 */
-	private function ensure_service_synced( int $booking_id ): void {
+	private function ensure_service_synced( int $booking_id ): bool {
 		$service_id = $this->handler_get_service_id( $booking_id );
+		if ( $service_id <= 0 ) {
+			return false;
+		}
+
 		$this->ensure_entity_synced( 'service', $service_id );
+
+		// Verify the mapping was actually created (push may have failed).
+		return (bool) $this->get_mapping( 'service', $service_id );
 	}
 }

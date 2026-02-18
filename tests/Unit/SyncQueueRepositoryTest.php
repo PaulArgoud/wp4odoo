@@ -518,6 +518,34 @@ class SyncQueueRepositoryTest extends TestCase {
 		$this->assertSame( [], $jobs );
 	}
 
+	// ─── recover_stale_processing() ─────────────────────────
+
+	public function test_recover_stale_processing_does_not_increment_attempts(): void {
+		// Simulate one stale processing job recovered + zero at max_attempts.
+		$this->wpdb->query_return_sequence = [
+			1, // START TRANSACTION
+			1, // UPDATE ... SET status = 'pending' (retry — 1 row affected)
+			0, // UPDATE ... SET status = 'failed' (max_attempts — 0 rows)
+			1, // COMMIT
+		];
+
+		$result = $this->repo->recover_stale_processing( 600 );
+
+		// Should recover 1 job total (1 retried + 0 failed).
+		$this->assertSame( 1, $result );
+
+		// Verify the recovery UPDATE SQL does NOT contain 'attempts = attempts + 1'
+		// or any explicit attempts increment — it should only set status and error_message.
+		$queries = $this->get_calls( 'query' );
+		foreach ( $queries as $call ) {
+			$sql = $call['args'][0];
+			if ( str_contains( $sql, "status = 'pending'" ) && str_contains( $sql, 'Recovered' ) ) {
+				$this->assertStringNotContainsString( 'attempts = attempts + 1', $sql, 'Recovery should NOT increment attempts' );
+				$this->assertStringNotContainsString( 'attempts + 1', $sql, 'Recovery should NOT increment attempts' );
+			}
+		}
+	}
+
 	// ─── Helpers ───────────────────────────────────────────
 
 	/**

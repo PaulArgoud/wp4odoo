@@ -30,11 +30,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Per-module circuit breaker** — New `Module_Circuit_Breaker` class isolates failing modules without blocking the entire sync. Dual-level design: existing global `Circuit_Breaker` handles transport failures (Odoo down), new module breaker handles per-module failures (model uninstalled, access rights). Threshold: 5 consecutive batches with ≥80% failure ratio. Recovery delay: 600s (half-open probe). State stored in `wp4odoo_module_cb_states` option. Integrated into `Sync_Engine` (per-module outcome tracking), `Failure_Notifier` (per-module email with cooldown), and health dashboard (open modules display). Auto-cleans stale state older than 2 hours
 - **Entity_Map orphan cleanup** — New `Entity_Map_Repository::cleanup_orphans()` method detects and removes entity_map entries where the WP post no longer exists (LEFT JOIN against `wp_posts`). Excludes user-based modules (BuddyBoss, FluentCRM, etc.). New WP-CLI command: `wp wp4odoo cleanup orphans [--module=<module>] [--dry-run] [--yes]`
 
+### Fixed (Architecture)
+- **LRU cache eviction ratio** — `Entity_Map_Repository::evict_cache()` now keeps 75% of entries during eviction (was 50%). Prevents counter-productive cache thrashing during batch operations where frequent eviction caused redundant DB queries
+- **Stale job recovery** — `Sync_Queue_Repository::recover_stale_processing()` no longer increments `attempts` when recovering interrupted jobs. A stale-processing job was interrupted (crash/timeout), not genuinely failed — incrementing `attempts` caused premature failure at `max_attempts`
+- **Circuit breaker TTL** — `Circuit_Breaker` transient and DB state TTL now uses `RECOVERY_DELAY × 2` (600s) instead of `HOUR_IN_SECONDS` (3600s). During long Odoo outages (>1h), the old state expired and the circuit re-closed, sending a burst of requests to a still-down server. Stale DB state discard increased from 1h to 2h
+- **Transactional migrations** — `Database_Migration::run_migrations()` now wraps each migration in a `START TRANSACTION` / `COMMIT` block with `ROLLBACK` on failure, preventing partial schema changes from leaving tables in an inconsistent state
+- **Dual accounting entity type validation** — `Dual_Accounting_Module_Base::load_wp_data()` now validates `$entity_type` against the known parent/child types before processing. Invalid entity types are logged and return empty data instead of silently falling through
+- **Batch create intra-group dedup** — `Batch_Create_Processor::group_eligible_jobs()` now deduplicates by `wp_id` within each module:entity_type group. Prevents creating duplicate Odoo records when two create jobs for the same WP entity are in the same batch
+- **JSON decode error classification** — `Batch_Create_Processor` now classifies invalid JSON payloads as `Error_Type::Permanent` (was `Transient`). A corrupted payload will never self-fix, so retrying wastes 2 attempts
+- **Session detection robustness** — `Odoo_Client::is_session_error()` now detects HTTP 401 (Odoo 17+), JSON-RPC error code 100 (session invalid), and additional keywords (`session invalid`, `authentication failed`). Reduces risk of silent re-auth failure when Odoo changes error messages
+- **Non-idempotent method detection** — `Odoo_Client` session retry now skips all non-idempotent methods (`create`, `action_*`, `button_*`, `validate`), not just `create`. Prevents unintended side effects from retrying workflow actions
+- **Webhook HMAC logging** — `Webhook_Handler` now logs a debug message when a webhook is received without HMAC signature (token-only auth), surfacing the weaker auth mode to site admins
+- **Booking service sync failure propagation** — `Booking_Module_Base::push_to_odoo()` now aborts with a `Transient` failure if `ensure_service_synced()` fails, instead of pushing a booking with an invalid Odoo service reference
+- **DNS timeout for SSRF** — `Admin_Ajax::sanitize_url()` now applies a 5-second `default_socket_timeout` during DNS resolution, preventing malicious hostnames with slow DNS from blocking the PHP thread indefinitely
+- **Module_Registry materialization logging** — `Module_Registry::materialize()` now catches `\Throwable` and logs the error instead of silently swallowing it. The module remains absent (callers handle null), but the failure is visible in logs
+- **Settings cache invalidation** — New `Settings_Repository::flush_cache()` method forces re-read from `wp_options` after external modifications (WP-CLI, concurrent cron, or another process)
+
 ### Fixed (Documentation)
 - **ARCHITECTURE.md exclusive group priorities** — Replaced ~15 stale `exclusive_priority` references (removed as dead code in v3.5.0) with accurate "first-registered wins" descriptions and actual registration order from `Module_Registry::register_all()`
 
 ### Tests
-- 5 013 unit tests (7 623 assertions) — new tests covering `Module_Circuit_Breaker` (20 tests: state transitions, module isolation, recovery delay, stale cleanup, ratio-based detection, state persistence), `Entity_Map_Repository::cleanup_orphans()` (6 tests: orphan detection, dry-run, module filter, user-based module exclusion)
+- 5 025 unit tests (7 653 assertions) — new tests covering `Module_Circuit_Breaker` (20 tests), `Entity_Map_Repository::cleanup_orphans()` (6 tests), audit fixes (12 tests: LRU eviction 75%, stale recovery no-increment, circuit breaker 2h TTL, batch create dedup, JSON permanent error, session detection 401/100, non-idempotent method guard, settings cache flush)
 
 ### i18n
 - Regenerated `.pot` from all source files (931 → 944 msgid), translated 12 new strings in FR and ES (module circuit breaker, orphan cleanup CLI), recompiled `.mo` — 944 translated strings (was 931)

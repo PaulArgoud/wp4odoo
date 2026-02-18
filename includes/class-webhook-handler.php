@@ -439,9 +439,11 @@ class Webhook_Handler {
 			);
 		}
 
-		// Optional HMAC signature verification (backward-compatible).
-		// If the X-Odoo-Signature header is present, verify it against
-		// HMAC-SHA256(body, token). If absent, token-only auth is used.
+		// HMAC signature verification.
+		// If X-Odoo-Signature is present, verify it against HMAC-SHA256(body, token).
+		// If absent, log a warning — token-only auth is weaker because it is
+		// susceptible to replay attacks. Logging surfaces this to site admins
+		// so they can configure HMAC signing in their Odoo webhook action.
 		$signature = $request->get_header( 'X-Odoo-Signature' );
 		if ( null !== $signature ) {
 			$body     = $request->get_body();
@@ -461,6 +463,11 @@ class Webhook_Handler {
 					[ 'status' => 403 ]
 				);
 			}
+		} else {
+			$this->logger->debug(
+				'Webhook received without HMAC signature (token-only auth). Consider enabling HMAC signing in Odoo for stronger security.',
+				[ 'ip' => $ip ]
+			);
 		}
 
 		return true;

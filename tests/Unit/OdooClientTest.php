@@ -489,4 +489,120 @@ class OdooClientTest extends TestCase {
 
 		$this->assertFalse( $client->is_connected() );
 	}
+
+	// ─── Non-idempotent method detection ─────────────────
+
+	/**
+	 * Test that action_post (non-idempotent) is NOT retried on session error.
+	 *
+	 * action_post starts with 'action_' prefix, which is non-idempotent.
+	 * The original RuntimeException should be re-thrown, not a reconnect error.
+	 *
+	 * @return void
+	 */
+	public function test_session_retry_skipped_for_action_post(): void {
+		$this->transport->throw = new \RuntimeException( 'Session expired', 403 );
+
+		try {
+			$this->client->execute( 'sale.order', 'action_post', [ [ 1 ] ] );
+			$this->fail( 'Expected RuntimeException to be thrown' );
+		} catch ( \RuntimeException $e ) {
+			// Should be the original exception (code 403), not a reconnect error.
+			$this->assertSame( 403, $e->getCode() );
+			$this->assertSame( 'Session expired', $e->getMessage() );
+		}
+
+		// Only 1 transport call: the original (no retry).
+		$this->assertCount( 1, $this->transport->calls );
+	}
+
+	/**
+	 * Test that validate (non-idempotent) is NOT retried on session error.
+	 *
+	 * 'validate' is an exact match in the NON_IDEMPOTENT_METHODS list.
+	 *
+	 * @return void
+	 */
+	public function test_session_retry_skipped_for_validate(): void {
+		$this->transport->throw = new \RuntimeException( 'Session expired', 401 );
+
+		try {
+			$this->client->execute( 'donation.donation', 'validate', [ [ 1 ] ] );
+			$this->fail( 'Expected RuntimeException to be thrown' );
+		} catch ( \RuntimeException $e ) {
+			$this->assertSame( 401, $e->getCode() );
+			$this->assertSame( 'Session expired', $e->getMessage() );
+		}
+
+		// Only 1 transport call: the original (no retry).
+		$this->assertCount( 1, $this->transport->calls );
+	}
+
+	/**
+	 * Test that search (idempotent) IS retried on session error.
+	 *
+	 * After the first call fails with a session error, the client should
+	 * attempt to re-authenticate. Since no credentials are configured in
+	 * the test, the retry triggers ensure_connected() which throws
+	 * 'not configured'. This proves the retry path was entered.
+	 *
+	 * @return void
+	 */
+	public function test_session_retry_allowed_for_search(): void {
+		$this->transport->throw = new \RuntimeException( 'Session expired', 403 );
+
+		try {
+			$this->client->search( 'res.partner', [] );
+			$this->fail( 'Expected RuntimeException to be thrown' );
+		} catch ( \RuntimeException $e ) {
+			// The exception should be from ensure_connected() (retry path),
+			// NOT the original 'Session expired' — proving retry was attempted.
+			$this->assertStringContainsString( 'not configured', $e->getMessage() );
+		}
+
+		// Only 1 transport call: the original. The retry fails at ensure_connected
+		// before reaching the transport again.
+		$this->assertCount( 1, $this->transport->calls );
+	}
+
+	// ─── Session detection: code 401 and code 100 ───────
+
+	/**
+	 * Test that exception with code 401 triggers session retry.
+	 *
+	 * HTTP 401 (Unauthorized) should be recognized as a session error.
+	 *
+	 * @return void
+	 */
+	public function test_401_triggers_session_retry(): void {
+		$this->transport->throw = new \RuntimeException( 'Unauthorized', 401 );
+
+		try {
+			// Use search (idempotent) so the retry path is NOT blocked.
+			$this->client->search( 'res.partner', [] );
+			$this->fail( 'Expected RuntimeException' );
+		} catch ( \RuntimeException $e ) {
+			// Should hit the retry path → ensure_connected() fails → 'not configured'.
+			$this->assertStringContainsString( 'not configured', $e->getMessage() );
+		}
+	}
+
+	/**
+	 * Test that exception with code 100 triggers session retry.
+	 *
+	 * Odoo JSON-RPC returns error code 100 for invalid sessions.
+	 *
+	 * @return void
+	 */
+	public function test_code_100_triggers_session_retry(): void {
+		$this->transport->throw = new \RuntimeException( 'Session invalid', 100 );
+
+		try {
+			$this->client->search( 'res.partner', [] );
+			$this->fail( 'Expected RuntimeException' );
+		} catch ( \RuntimeException $e ) {
+			// Should hit the retry path → ensure_connected() fails → 'not configured'.
+			$this->assertStringContainsString( 'not configured', $e->getMessage() );
+		}
+	}
 }

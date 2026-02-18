@@ -121,6 +121,8 @@ final class Database_Migration {
 	 * @return int Number of migrations applied.
 	 */
 	public static function run_migrations(): int {
+		global $wpdb;
+
 		$current = (int) get_option( self::OPT_SCHEMA_VERSION, 0 );
 		$applied = 0;
 
@@ -132,10 +134,19 @@ final class Database_Migration {
 			}
 
 			try {
+				// Wrap each migration in a transaction so a partial failure
+				// (e.g. first ALTER succeeds, second fails) does not leave
+				// the schema in an inconsistent state. InnoDB DDL in MySQL
+				// 8.0+ is atomic; on older versions the ROLLBACK is best-effort.
+				$wpdb->query( 'START TRANSACTION' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+
 				$callback();
+
+				$wpdb->query( 'COMMIT' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 				++$applied;
 				update_option( self::OPT_SCHEMA_VERSION, $version );
 			} catch ( \Throwable $e ) {
+				$wpdb->query( 'ROLLBACK' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 					error_log( sprintf( 'WP4Odoo migration %d failed: %s', $version, $e->getMessage() ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug-only logging for migration failures.
 				}

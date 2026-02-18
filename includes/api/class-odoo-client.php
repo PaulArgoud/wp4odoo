@@ -430,10 +430,9 @@ class Odoo_Client {
 			return $result;
 		} catch ( \Throwable $e ) {
 			// Auto-retry on session/authentication errors (403, expired session).
-			// Skip retry for non-idempotent methods (create) to prevent
-			// duplicate records if the create succeeded but the response
-			// was lost due to a session error.
-			if ( 'create' !== $method && $this->is_session_error( $e ) ) {
+			// Skip retry for non-idempotent methods to prevent unintended
+			// side effects if the call succeeded but the response was lost.
+			if ( ! $this->is_non_idempotent( $method ) && $this->is_session_error( $e ) ) {
 				$this->logger->info(
 					'Session expired, re-authenticating and retrying.',
 					[
@@ -467,34 +466,75 @@ class Odoo_Client {
 	}
 
 	/**
+	 * Non-idempotent Odoo method prefixes/names.
+	 *
+	 * Methods that must NOT be retried on session errors because they
+	 * may have side effects even if the response was lost.
+	 */
+	private const NON_IDEMPOTENT_METHODS = [
+		'create',
+		'action_',      // Odoo workflow actions (action_post, action_confirm, etc.).
+		'button_',      // Odoo UI button methods.
+		'validate',     // OCA donation.donation validate().
+	];
+
+	/**
+	 * Check if an Odoo method is non-idempotent (should not be retried).
+	 *
+	 * @param string $method Odoo method name.
+	 * @return bool True if the method is non-idempotent.
+	 */
+	private function is_non_idempotent( string $method ): bool {
+		foreach ( self::NON_IDEMPOTENT_METHODS as $pattern ) {
+			if ( $method === $pattern || str_starts_with( $method, $pattern ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Check if an exception indicates a session/authentication error.
 	 *
-	 * Detects HTTP 403, Odoo session expiry errors that can be resolved
-	 * by re-authenticating. Does NOT match "access denied" because Odoo
-	 * raises AccessError with that phrase for business-level permission
-	 * errors (e.g. user lacks model access rights), which are not
-	 * resolvable by re-authentication.
+	 * Detection strategy (layered, most reliable first):
+	 * 1. HTTP 403 by exception code (set by transport layer).
+	 * 2. HTTP 401 by exception code (Odoo 17+ may return 401).
+	 * 3. Odoo JSON-RPC error code 100 (session invalid).
+	 * 4. Keyword-based message patterns (fallback for unlabeled errors).
+	 *
+	 * Does NOT match "access denied" because Odoo raises AccessError
+	 * with that phrase for business-level permission errors (e.g. user
+	 * lacks model access rights), which are not resolvable by re-auth.
 	 *
 	 * @param \Throwable $e The exception to inspect.
 	 * @return bool True if re-authentication might resolve the error.
 	 */
 	private function is_session_error( \Throwable $e ): bool {
-		// HTTP 403 by exception code (most reliable).
-		if ( 403 === $e->getCode() ) {
+		$code = $e->getCode();
+
+		// HTTP 403/401 by exception code (most reliable).
+		if ( 403 === $code || 401 === $code ) {
+			return true;
+		}
+
+		// Odoo JSON-RPC session error code.
+		if ( 100 === $code ) {
 			return true;
 		}
 
 		$message = strtolower( $e->getMessage() );
 
 		// Keyword-based detection for session/auth errors.
-		// Uses word-boundary regex for '403' to avoid false positives
+		// Uses word-boundary regex for '403'/'401' to avoid false positives
 		// (e.g. "Product #1403" should NOT trigger re-auth).
 		// Note: 'access denied' is deliberately excluded — Odoo uses it
 		// for AccessError business exceptions (insufficient model ACL),
 		// not session expiry. Retrying would be pointless.
 		return str_contains( $message, 'session expired' )
 			|| str_contains( $message, 'session_expired' )
+			|| str_contains( $message, 'session invalid' )
 			|| str_contains( $message, 'odoo session' )
-			|| (bool) preg_match( '/\bhttp\s*403\b|\b403\s*forbidden\b/', $message );
+			|| str_contains( $message, 'authentication failed' )
+			|| (bool) preg_match( '/\bhttp\s*(?:403|401)\b|\b(?:403|401)\s*(?:forbidden|unauthorized)\b/', $message );
 	}
 }

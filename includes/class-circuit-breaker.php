@@ -39,6 +39,20 @@ class Circuit_Breaker {
 	private const RECOVERY_DELAY = 300;
 
 	/**
+	 * TTL for circuit breaker transients and DB state discard.
+	 *
+	 * Set to 2× RECOVERY_DELAY so the state survives across multiple
+	 * recovery attempts. Using HOUR_IN_SECONDS was too short — during
+	 * long Odoo outages (>1h), the state expired and the circuit
+	 * would re-close, sending a burst of requests to a still-down server.
+	 *
+	 * DB state older than STALE_DISCARD_TTL (2h) is discarded to prevent
+	 * a forever-open circuit if record_success() is never called.
+	 */
+	private const STATE_TTL         = self::RECOVERY_DELAY * 2;
+	private const STALE_DISCARD_TTL = 7200;
+
+	/**
 	 * Failure ratio threshold for considering a batch as "failed".
 	 *
 	 * When 80%+ of jobs in a batch fail, the batch counts as a failure
@@ -133,15 +147,15 @@ class Circuit_Breaker {
 			$db_state  = get_option( self::OPT_CB_STATE, [] );
 			$opened_at = (int) ( is_array( $db_state ) ? ( $db_state['opened_at'] ?? 0 ) : 0 );
 			if ( $opened_at > 0 ) {
-				// Discard stale DB state (older than 1h) — prevents a
+				// Discard stale DB state (older than 2h) — prevents a
 				// forever-open circuit if record_success() was never called.
-				if ( ( time() - $opened_at ) > HOUR_IN_SECONDS ) {
+				if ( ( time() - $opened_at ) > self::STALE_DISCARD_TTL ) {
 					delete_option( self::OPT_CB_STATE );
 					$opened_at = 0;
 				} else {
 					// Restore transients from DB state.
-					set_transient( self::KEY_OPENED_AT, $opened_at, HOUR_IN_SECONDS );
-					set_transient( self::KEY_FAILURES, (int) ( $db_state['failures'] ?? self::FAILURE_THRESHOLD ), HOUR_IN_SECONDS );
+					set_transient( self::KEY_OPENED_AT, $opened_at, self::STATE_TTL );
+					set_transient( self::KEY_FAILURES, (int) ( $db_state['failures'] ?? self::FAILURE_THRESHOLD ), self::STATE_TTL );
 				}
 			}
 		}
@@ -286,11 +300,11 @@ class Circuit_Breaker {
 		// is acceptable (worst case: circuit opens one batch later).
 		try {
 			$count = (int) get_transient( self::KEY_FAILURES ) + 1;
-			set_transient( self::KEY_FAILURES, $count, HOUR_IN_SECONDS );
+			set_transient( self::KEY_FAILURES, $count, self::STATE_TTL );
 
 			if ( $count >= self::FAILURE_THRESHOLD ) {
 				$now = time();
-				set_transient( self::KEY_OPENED_AT, $now, HOUR_IN_SECONDS );
+				set_transient( self::KEY_OPENED_AT, $now, self::STATE_TTL );
 
 				// Persist to DB so state survives object cache flushes.
 				update_option(

@@ -218,9 +218,16 @@ class Admin_Ajax {
 		// Resolve hostname to IP for validation.
 		// Uses dns_get_record() instead of gethostbyname() to support both
 		// IPv4 and IPv6 resolution without blocking on slow DNS.
+		// A 5-second timeout prevents malicious hostnames with slow DNS
+		// from blocking the PHP thread indefinitely (SSRF mitigation).
 		$ip = $host;
 		if ( ! filter_var( $host, FILTER_VALIDATE_IP ) ) {
-			$dns = dns_get_record( $host, DNS_A | DNS_AAAA );
+			$prev_timeout = (int) ini_get( 'default_socket_timeout' );
+			// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.PHP.IniSet.Risky -- Temporary timeout for SSRF mitigation; restored immediately after.
+			@ini_set( 'default_socket_timeout', '5' );
+			$dns = @dns_get_record( $host, DNS_A | DNS_AAAA ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Suppress DNS resolution warnings for untrusted input.
+			// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.PHP.IniSet.Risky -- Restore original timeout after DNS lookup.
+			@ini_set( 'default_socket_timeout', (string) $prev_timeout );
 			if ( empty( $dns ) ) {
 				return '';
 			}

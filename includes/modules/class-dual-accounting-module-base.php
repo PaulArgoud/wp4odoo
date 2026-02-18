@@ -306,6 +306,18 @@ abstract class Dual_Accounting_Module_Base extends Module_Base {
 	 * @return array<string, mixed>
 	 */
 	protected function load_wp_data( string $entity_type, int $wp_id ): array {
+		$valid = [ $this->get_parent_entity_type(), $this->get_child_entity_type() ];
+		if ( ! in_array( $entity_type, $valid, true ) ) {
+			$this->logger->warning(
+				'Unknown entity type for dual accounting module.',
+				[
+					'entity_type' => $entity_type,
+					'valid_types' => $valid,
+				]
+			);
+			return [];
+		}
+
 		return match ( $entity_type ) {
 			$this->get_parent_entity_type() => $this->handler_load_parent( $wp_id ),
 			$this->get_child_entity_type()  => $this->load_child_data( $wp_id ),

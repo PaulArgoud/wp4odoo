@@ -99,10 +99,30 @@ class Batch_Create_Processor {
 	 */
 	private function group_eligible_jobs( array $jobs ): array {
 		$groups = [];
+		// Track wp_id → index per group to deduplicate within each group.
+		$wp_id_index = [];
+
 		foreach ( $jobs as $job ) {
 			if ( 'wp_to_odoo' === $job->direction && 'create' === $job->action ) {
-				$key              = $job->module . ':' . $job->entity_type;
-				$groups[ $key ][] = $job;
+				$key   = $job->module . ':' . $job->entity_type;
+				$wp_id = (int) $job->wp_id;
+
+				// Deduplicate by wp_id within each group: keep the latest job
+				// to prevent creating duplicate records in Odoo.
+				if ( $wp_id > 0 && isset( $wp_id_index[ $key ][ $wp_id ] ) ) {
+					$groups[ $key ][ $wp_id_index[ $key ][ $wp_id ] ] = $job;
+					continue;
+				}
+
+				if ( ! isset( $groups[ $key ] ) ) {
+					$groups[ $key ] = [];
+				}
+				$idx                    = count( $groups[ $key ] );
+				$groups[ $key ][ $idx ] = $job;
+
+				if ( $wp_id > 0 ) {
+					$wp_id_index[ $key ][ $wp_id ] = $idx;
+				}
 			}
 		}
 		return $groups;
@@ -187,7 +207,7 @@ class Batch_Create_Processor {
 			if ( ! empty( $job->payload ) ) {
 				$decoded = json_decode( $job->payload, true );
 				if ( null === $decoded && JSON_ERROR_NONE !== json_last_error() ) {
-					( $this->failure_handler )( $job, sprintf( 'Invalid JSON payload in batch job #%d.', (int) $job->id ), Error_Type::Transient, null );
+					( $this->failure_handler )( $job, sprintf( 'Invalid JSON payload in batch job #%d.', (int) $job->id ), Error_Type::Permanent, null );
 					++$failures;
 					$batched_job_ids[ (int) $job->id ] = true;
 					continue;

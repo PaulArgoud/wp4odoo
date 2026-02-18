@@ -530,6 +530,31 @@ class SettingsRepositoryTest extends TestCase {
 		$this->assertSame( 365, $this->repo->get_log_settings()['retention_days'] );
 	}
 
+	// ── flush_cache ──────────────────────────────────────
+
+	public function test_flush_cache_forces_reload(): void {
+		// Set initial connection URL.
+		$GLOBALS['_wp_options'][ Settings_Repository::OPT_CONNECTION ] = [
+			'url' => 'https://first.example.com',
+		];
+
+		// First call — populates the instance cache.
+		$conn = $this->repo->get_connection();
+		$this->assertSame( 'https://first.example.com', $conn['url'] );
+
+		// Change the option directly (simulating external modification).
+		$GLOBALS['_wp_options'][ Settings_Repository::OPT_CONNECTION ] = [
+			'url' => 'https://second.example.com',
+		];
+
+		// Without flush_cache, the cached value is returned.
+		$this->assertSame( 'https://first.example.com', $this->repo->get_connection()['url'] );
+
+		// After flush_cache, the new value is picked up.
+		$this->repo->flush_cache();
+		$this->assertSame( 'https://second.example.com', $this->repo->get_connection()['url'] );
+	}
+
 	// ── Constants ─────────────────────────────────────────
 
 	public function test_option_key_constants_are_prefixed(): void {

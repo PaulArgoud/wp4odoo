@@ -218,6 +218,45 @@ class CircuitBreakerTest extends TestCase {
 		$this->assertTrue( $this->breaker->is_available() );
 	}
 
+	// ─── DB-backed state TTL ────────────────────────────
+
+	public function test_stale_db_state_discarded_after_two_hours(): void {
+		// Set up a DB-backed open circuit state with opened_at > 2 hours ago.
+		// Transients are empty (simulating object cache flush).
+		$GLOBALS['_wp_options'][ Circuit_Breaker::OPT_CB_STATE ] = [
+			'opened_at' => time() - 7201,
+			'failures'  => 3,
+		];
+
+		// is_available() should discard stale DB state and return true.
+		$this->assertTrue( $this->breaker->is_available() );
+
+		// The stale DB state should have been deleted.
+		$this->assertSame( [], $GLOBALS['_wp_options'][ Circuit_Breaker::OPT_CB_STATE ] ?? [] );
+	}
+
+	public function test_db_state_survives_within_two_hours(): void {
+		// Set up a DB-backed open circuit state with opened_at = 1 hour ago (within 2h).
+		// Transients are empty (simulating object cache flush).
+		$GLOBALS['_wp_options'][ Circuit_Breaker::OPT_CB_STATE ] = [
+			'opened_at' => time() - 3600,
+			'failures'  => 3,
+		];
+
+		// is_available() should restore state from DB and circuit stays open.
+		// opened_at is 3600s ago, recovery delay is 300s, so recovery delay has elapsed.
+		// However, the circuit is open so it will try a probe. After the first probe,
+		// the KEY_PROBE transient is set, so a second call returns false.
+		// First call: probe allowed (half-open).
+		$this->assertTrue( $this->breaker->is_available() );
+
+		// Second call: probe blocked (KEY_PROBE already set).
+		$this->assertFalse( $this->breaker->is_available() );
+
+		// The DB state should NOT have been deleted (it's within 2h).
+		$this->assertNotEmpty( $GLOBALS['_wp_options'][ Circuit_Breaker::OPT_CB_STATE ] ?? [] );
+	}
+
 	// ─── Failure notifier integration ───────────────────
 
 	public function test_failure_notifier_called_when_circuit_opens(): void {
