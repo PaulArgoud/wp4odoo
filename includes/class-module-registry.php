@@ -123,6 +123,7 @@ class Module_Registry {
 			[ 'job_manager', Modules\Job_Manager_Module::class, fn() => defined( 'JOB_MANAGER_VERSION' ) ],
 			[ 'wc_bundle_bom', Modules\WC_Bundle_BOM_Module::class, fn() => class_exists( 'WC_Bundles' ) || class_exists( 'WC_Composite_Products' ) ],
 			[ 'wc_addons', Modules\WC_Addons_Module::class, fn() => class_exists( 'WC_Product_Addons' ) || defined( 'THWEPO_VERSION' ) || defined( 'PPOM_VERSION' ) ],
+			[ 'jeero_configurator', Modules\Jeero_Configurator_Module::class, fn() => class_exists( 'Jeero_Product_Configurator' ) || defined( 'JEERO_VERSION' ) ],
 
 			// WooCommerce extensions — advanced stock/shipping/returns.
 			[ 'wc_inventory', Modules\WC_Inventory_Module::class, fn() => class_exists( 'WooCommerce' ) ],
@@ -161,6 +162,7 @@ class Module_Registry {
 
 			// Gamification / Loyalty.
 			[ 'gamipress', Modules\GamiPress_Module::class, fn() => defined( 'GAMIPRESS_VERSION' ) ],
+			[ 'mycred', Modules\MyCRED_Module::class, fn() => defined( 'myCRED_VERSION' ) ],
 
 			// Community.
 			[ 'buddyboss', Modules\BuddyBoss_Module::class, fn() => defined( 'BP_VERSION' ) ],
@@ -179,6 +181,9 @@ class Module_Registry {
 
 			// Knowledge — always registered; detection is Odoo-side.
 			[ 'knowledge', Modules\Knowledge_Module::class, null ],
+
+			// Documents — WP Document Revisions / WP Download Manager.
+			[ 'documents', Modules\Documents_Module::class, fn() => class_exists( 'Document_Revisions' ) || defined( 'WPDM_VERSION' ) ],
 
 			// Generic CPT mapping.
 			[ 'jetengine', Modules\JetEngine_Module::class, fn() => defined( 'JET_ENGINE_VERSION' ) || class_exists( 'Jet_Engine' ) ],

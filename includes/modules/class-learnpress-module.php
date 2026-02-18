@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * as LearnDash and LifterLMS.
  *
  * @package WP4Odoo
- * @since   3.7.0
+ * @since   3.6.0
  */
 class LearnPress_Module extends LMS_Module_Base {
 

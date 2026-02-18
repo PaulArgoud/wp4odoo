@@ -1,0 +1,396 @@
+<?php
+declare( strict_types=1 );
+
+namespace WP4Odoo\Modules;
+
+use WP4Odoo\Error_Type;
+use WP4Odoo\Module_Base;
+use WP4Odoo\Odoo_Model;
+use WP4Odoo\Queue_Manager;
+use WP4Odoo\Sync_Result;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Jeero Configurator Module — push configurable WC products as Odoo Manufacturing BOMs.
+ *
+ * Syncs WooCommerce products with Jeero Product Configurator rules to
+ * Odoo Manufacturing BOMs (mrp.bom). Push-only (WP → Odoo).
+ *
+ * Component products must be synced by the WooCommerce module first.
+ * Cross-module lookup: uses Entity_Map_Repository::get_odoo_id('woocommerce', 'product', $wp_id)
+ * to resolve component Odoo IDs. If products aren't mapped yet, enqueues
+ * them and returns a Transient failure for retry.
+ *
+ * Requires Jeero Product Configurator + WooCommerce to be active.
+ *
+ * @package WP4Odoo
+ * @since   3.6.0
+ */
+class Jeero_Configurator_Module extends Module_Base {
+
+	use Jeero_Configurator_Hooks;
+
+	protected const PLUGIN_MIN_VERSION  = '1.0';
+	protected const PLUGIN_TESTED_UP_TO = '1.5';
+
+	/**
+	 * Sync direction: push-only (WP → Odoo).
+	 *
+	 * @return string
+	 */
+	public function get_sync_direction(): string {
+		return 'wp_to_odoo';
+	}
+
+	/**
+	 * Odoo models by entity type.
+	 *
+	 * @var array<string, string>
+	 */
+	protected array $odoo_models = [
+		'bom' => 'mrp.bom',
+	];
+
+	/**
+	 * Default field mappings.
+	 *
+	 * BOM data is pre-formatted by the handler (One2many tuples), so
+	 * the mapping is identity (each key maps to the same Odoo field name).
+	 *
+	 * @var array<string, array<string, string>>
+	 */
+	protected array $default_mappings = [
+		'bom' => [
+			'product_tmpl_id' => 'product_tmpl_id',
+			'type'            => 'type',
+			'product_qty'     => 'product_qty',
+			'bom_line_ids'    => 'bom_line_ids',
+			'code'            => 'code',
+		],
+	];
+
+	/**
+	 * Configurator data handler.
+	 *
+	 * @var Jeero_Configurator_Handler
+	 */
+	private Jeero_Configurator_Handler $handler;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param \Closure                       $client_provider Client provider closure.
+	 * @param \WP4Odoo\Entity_Map_Repository $entity_map      Entity map repository.
+	 * @param \WP4Odoo\Settings_Repository   $settings        Settings repository.
+	 */
+	public function __construct( \Closure $client_provider, \WP4Odoo\Entity_Map_Repository $entity_map, \WP4Odoo\Settings_Repository $settings ) {
+		parent::__construct( 'jeero_configurator', 'Jeero Configurator', $client_provider, $entity_map, $settings );
+		$this->handler = new Jeero_Configurator_Handler( $this->logger );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function get_required_modules(): array {
+		return [ 'woocommerce' ];
+	}
+
+	/**
+	 * Boot the module: register WC product save hooks.
+	 *
+	 * @return void
+	 */
+	public function boot(): void {
+		if ( ! class_exists( 'Jeero_Product_Configurator' ) && ! defined( 'JEERO_VERSION' ) ) {
+			$this->logger->warning( __( 'Jeero Configurator module enabled but Jeero Product Configurator is not active.', 'wp4odoo' ) );
+			return;
+		}
+
+		$settings = $this->get_settings();
+
+		if ( ! empty( $settings['sync_configurables'] ) ) {
+			add_action( 'save_post_product', $this->safe_callback( [ $this, 'on_configurable_save' ] ), 20, 1 );
+		}
+	}
+
+	/**
+	 * Get default settings.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function get_default_settings(): array {
+		return [
+			'sync_configurables' => true,
+			'bom_type'           => 'phantom',
+		];
+	}
+
+	/**
+	 * Get settings field definitions for the admin UI.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public function get_settings_fields(): array {
+		return [
+			'sync_configurables' => [
+				'label'       => __( 'Sync configurable products as BOMs', 'wp4odoo' ),
+				'type'        => 'checkbox',
+				'description' => __( 'Push Jeero configurable products to Odoo as Manufacturing BOMs (mrp.bom).', 'wp4odoo' ),
+			],
+			'bom_type'           => [
+				'label'       => __( 'BOM type', 'wp4odoo' ),
+				'type'        => 'select',
+				'description' => __( 'Kit (phantom) auto-explodes at delivery. Manufacture (normal) creates production orders.', 'wp4odoo' ),
+				'options'     => [
+					'phantom' => __( 'Kit (phantom)', 'wp4odoo' ),
+					'normal'  => __( 'Manufacture (normal)', 'wp4odoo' ),
+				],
+			],
+		];
+	}
+
+	/**
+	 * Get external dependency status.
+	 *
+	 * @return array{available: bool, notices: array<array{type: string, message: string}>}
+	 */
+	public function get_dependency_status(): array {
+		return $this->check_dependency(
+			class_exists( 'Jeero_Product_Configurator' ) || defined( 'JEERO_VERSION' ),
+			'Jeero Product Configurator'
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_plugin_version(): string {
+		return defined( 'JEERO_VERSION' ) ? (string) JEERO_VERSION : '';
+	}
+
+	/**
+	 * Get the handler instance (used by hooks trait).
+	 *
+	 * @return Jeero_Configurator_Handler
+	 */
+	public function get_handler(): Jeero_Configurator_Handler {
+		return $this->handler;
+	}
+
+	// ─── Deduplication ─────────────────────────────────────
+
+	/**
+	 * Deduplication domain for search-before-create.
+	 *
+	 * BOMs dedup by code (reference), or by product_tmpl_id when no
+	 * code is set.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param array  $odoo_values Odoo-ready field values.
+	 * @return array Odoo domain filter, or empty to skip dedup.
+	 */
+	protected function get_dedup_domain( string $entity_type, array $odoo_values ): array {
+		if ( 'bom' === $entity_type ) {
+			if ( ! empty( $odoo_values['code'] ) ) {
+				return [ [ 'code', '=', $odoo_values['code'] ] ];
+			}
+			if ( ! empty( $odoo_values['product_tmpl_id'] ) ) {
+				return [ [ 'product_tmpl_id', '=', $odoo_values['product_tmpl_id'] ] ];
+			}
+		}
+
+		return [];
+	}
+
+	// ─── MRP model detection ──────────────────────────────
+
+	/**
+	 * Check whether Odoo has the mrp.bom model (Manufacturing module).
+	 *
+	 * @return bool
+	 */
+	private function has_mrp_bom_model(): bool {
+		return $this->has_odoo_model( Odoo_Model::MrpBom, 'wp4odoo_has_mrp_bom' );
+	}
+
+	// ─── Push override ────────────────────────────────────
+
+	/**
+	 * Push a WordPress entity to Odoo.
+	 *
+	 * Validates that the Manufacturing module is installed in Odoo and
+	 * that all component products are synced before pushing.
+	 *
+	 * @param string $entity_type The entity type.
+	 * @param string $action      'create', 'update', or 'delete'.
+	 * @param int    $wp_id       WordPress entity ID.
+	 * @param int    $odoo_id     Odoo ID (0 if creating).
+	 * @param array  $payload     Additional data.
+	 * @return Sync_Result
+	 */
+	public function push_to_odoo( string $entity_type, string $action, int $wp_id, int $odoo_id = 0, array $payload = [] ): Sync_Result {
+		if ( 'bom' === $entity_type && 'delete' !== $action ) {
+			if ( ! $this->has_mrp_bom_model() ) {
+				$this->logger->info( 'mrp.bom not available — Manufacturing module not installed in Odoo.', [ 'product_id' => $wp_id ] );
+				return Sync_Result::success();
+			}
+
+			$missing = $this->ensure_components_synced( $wp_id );
+			if ( ! empty( $missing ) ) {
+				$this->logger->info(
+					'Component products not yet synced — retrying later.',
+					[
+						'product_id'    => $wp_id,
+						'missing_count' => count( $missing ),
+					]
+				);
+				return Sync_Result::failure( 'Waiting for component products to sync.', Error_Type::Transient );
+			}
+		}
+
+		return parent::push_to_odoo( $entity_type, $action, $wp_id, $odoo_id, $payload );
+	}
+
+	// ─── Data access ──────────────────────────────────────
+
+	/**
+	 * Load WordPress data for an entity.
+	 *
+	 * @param string $entity_type Entity type.
+	 * @param int    $wp_id       WordPress ID.
+	 * @return array<string, mixed>
+	 */
+	protected function load_wp_data( string $entity_type, int $wp_id ): array {
+		return match ( $entity_type ) {
+			'bom'   => $this->load_bom_data( $wp_id ),
+			default => [],
+		};
+	}
+
+	/**
+	 * Load and resolve BOM data for a configurable product.
+	 *
+	 * Resolves the parent product's product_tmpl_id from Odoo and each
+	 * component's Odoo product.product ID via cross-module entity_map lookup.
+	 *
+	 * @param int $product_id WC product ID.
+	 * @return array<string, mixed> Formatted BOM data, or empty on failure.
+	 */
+	private function load_bom_data( int $product_id ): array {
+		$rules = $this->handler->load_configuration_rules( $product_id );
+		if ( empty( $rules ) ) {
+			$this->logger->warning( 'No configuration rules found for product.', [ 'product_id' => $product_id ] );
+			return [];
+		}
+
+		// Resolve parent product → Odoo product.product ID → product.template ID.
+		$parent_odoo_id = $this->resolve_product_odoo_id( $product_id );
+		if ( ! $parent_odoo_id ) {
+			$this->logger->warning( 'Cannot resolve Odoo product for configurable product.', [ 'product_id' => $product_id ] );
+			return [];
+		}
+
+		$tmpl_id = $this->resolve_product_template_id( $parent_odoo_id );
+		if ( ! $tmpl_id ) {
+			$this->logger->warning( 'Cannot resolve product_tmpl_id from Odoo.', [ 'odoo_product_id' => $parent_odoo_id ] );
+			return [];
+		}
+
+		// Resolve each component → Odoo product.product ID.
+		$component_lines = [];
+		foreach ( $rules as $rule ) {
+			$comp_odoo_id = $this->resolve_product_odoo_id( $rule['wp_product_id'] );
+			if ( ! $comp_odoo_id ) {
+				$this->logger->warning( 'Cannot resolve Odoo product for component.', [ 'wp_product_id' => $rule['wp_product_id'] ] );
+				return [];
+			}
+			$component_lines[] = [
+				'odoo_id'  => $comp_odoo_id,
+				'quantity' => $rule['quantity'],
+			];
+		}
+
+		$settings = $this->get_settings();
+		$bom_type = $settings['bom_type'] ?? 'phantom';
+
+		return $this->handler->format_bom( $tmpl_id, $component_lines, $bom_type, $product_id );
+	}
+
+	// ─── Cross-module lookups ─────────────────────────────
+
+	/**
+	 * Resolve a WC product ID to its Odoo product.product ID.
+	 *
+	 * Uses cross-module entity_map lookup on the WooCommerce module.
+	 *
+	 * @param int $wp_id WC product ID.
+	 * @return int Odoo product.product ID, or 0 if not mapped.
+	 */
+	private function resolve_product_odoo_id( int $wp_id ): int {
+		return $this->entity_map()->get_odoo_id( 'woocommerce', 'product', $wp_id ) ?? 0;
+	}
+
+	/**
+	 * Resolve an Odoo product.product ID to its product.template ID.
+	 *
+	 * Reads the product_tmpl_id Many2one field from Odoo.
+	 *
+	 * @param int $odoo_product_id Odoo product.product ID.
+	 * @return int Odoo product.template ID, or 0 on failure.
+	 */
+	private function resolve_product_template_id( int $odoo_product_id ): int {
+		try {
+			$client = $this->client();
+			$result = $client->read( 'product.product', [ $odoo_product_id ], [ 'product_tmpl_id' ] );
+
+			if ( ! empty( $result[0]['product_tmpl_id'] ) && is_array( $result[0]['product_tmpl_id'] ) ) {
+				return (int) $result[0]['product_tmpl_id'][0];
+			}
+		} catch ( \Exception $e ) {
+			$this->logger->warning(
+				'Failed to read product_tmpl_id from Odoo.',
+				[
+					'odoo_product_id' => $odoo_product_id,
+					'error'           => $e->getMessage(),
+				]
+			);
+		}
+
+		return 0;
+	}
+
+	/**
+	 * Ensure all component products are synced in the WooCommerce module.
+	 *
+	 * Returns the list of WP product IDs that are not yet mapped.
+	 * For each missing one, enqueues a sync job in the WooCommerce module queue.
+	 *
+	 * @param int $product_id Parent configurable WC product ID.
+	 * @return array<int> WP product IDs that are not yet synced.
+	 */
+	private function ensure_components_synced( int $product_id ): array {
+		$rules   = $this->handler->load_configuration_rules( $product_id );
+		$missing = [];
+
+		// Check parent product.
+		$parent_odoo_id = $this->resolve_product_odoo_id( $product_id );
+		if ( ! $parent_odoo_id ) {
+			$missing[] = $product_id;
+			Queue_Manager::push( 'woocommerce', 'product', 'create', $product_id );
+		}
+
+		// Check component products.
+		foreach ( $rules as $rule ) {
+			$comp_odoo_id = $this->resolve_product_odoo_id( $rule['wp_product_id'] );
+			if ( ! $comp_odoo_id ) {
+				$missing[] = $rule['wp_product_id'];
+				Queue_Manager::push( 'woocommerce', 'product', 'create', $rule['wp_product_id'] );
+			}
+		}
+
+		return $missing;
+	}
+}

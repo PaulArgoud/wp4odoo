@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Enrollments are formatted as Odoo `sale.order` data.
  *
  * @package WP4Odoo
- * @since   3.7.0
+ * @since   3.6.0
  */
 class LearnPress_Handler extends LMS_Handler_Base {
 

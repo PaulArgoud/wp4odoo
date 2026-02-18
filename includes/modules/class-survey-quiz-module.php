@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Supported: Quiz Maker (Ays), Quiz And Survey Master (QSM).
  *
  * @package WP4Odoo
- * @since   3.7.0
+ * @since   3.6.0
  */
 class Survey_Quiz_Module extends Module_Base {
 

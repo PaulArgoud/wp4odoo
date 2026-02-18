@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * it as Odoo pos.order with embedded pos.order.line tuples.
  *
  * @package WP4Odoo
- * @since   3.7.0
+ * @since   3.6.0
  */
 class Food_Ordering_Handler {
 

@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * quiz/survey data from different plugins into a common format.
  *
  * @package WP4Odoo
- * @since   3.7.0
+ * @since   3.6.0
  */
 class Survey_Extractor {
 

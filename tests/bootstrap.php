@@ -104,6 +104,11 @@ $GLOBALS['_gamipress_points']        = [];
 $GLOBALS['_surecart_products']       = [];
 $GLOBALS['_surecart_orders']         = [];
 $GLOBALS['_surecart_subscriptions']  = [];
+$GLOBALS['_mycred_points']           = [];
+$GLOBALS['_mycred_badges']           = [];
+$GLOBALS['_documents_files']         = [];
+$GLOBALS['_jeero_configs']           = [];
+$GLOBALS['_wp_object_terms']         = [];
 
 // ─── Load stubs ─────────────────────────────────────────
 // Stubs must be loaded before the autoloader so that external
@@ -174,6 +179,10 @@ require_once __DIR__ . '/stubs/wperp-accounting-classes.php';
 require_once __DIR__ . '/stubs/learnpress-classes.php';
 require_once __DIR__ . '/stubs/food-ordering-classes.php';
 require_once __DIR__ . '/stubs/survey-quiz-classes.php';
+require_once __DIR__ . '/stubs/documents-classes.php';
+require_once __DIR__ . '/stubs/mycred-classes.php';
+require_once __DIR__ . '/stubs/documents-classes.php';
+require_once __DIR__ . '/stubs/jeero-configurator-classes.php';
 
 // ─── Composer autoloader ────────────────────────────────
 

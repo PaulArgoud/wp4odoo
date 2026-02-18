@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Requires the WP ERP plugin with Accounting component to be active.
  *
  * @package WP4Odoo
- * @since   3.7.0
+ * @since   3.6.0
  */
 class WPERP_Accounting_Module extends Module_Base {
 

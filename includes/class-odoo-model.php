@@ -73,18 +73,18 @@ enum Odoo_Model: string {
 	/** Tax definitions (customer/vendor). */
 	case AccountTax = 'account.tax';
 
-	/** Account journals. @since 3.7.0 */
+	/** Account journals. @since 3.6.0 */
 	case AccountJournal = 'account.journal';
 
-	/** Chart of accounts. @since 3.7.0 */
+	/** Chart of accounts. @since 3.6.0 */
 	case AccountAccount = 'account.account';
 
 	// ─── POS / Restaurant ──────────────────────────────────
 
-	/** Point of Sale orders. @since 3.7.0 */
+	/** Point of Sale orders. @since 3.6.0 */
 	case PosOrder = 'pos.order';
 
-	/** Point of Sale order lines. @since 3.7.0 */
+	/** Point of Sale order lines. @since 3.6.0 */
 	case PosOrderLine = 'pos.order.line';
 
 	// ─── Delivery ──────────────────────────────────────────
@@ -200,18 +200,18 @@ enum Odoo_Model: string {
 
 	// ─── Survey ────────────────────────────────────────────
 
-	/** Surveys. @since 3.7.0 */
+	/** Surveys. @since 3.6.0 */
 	case SurveySurvey = 'survey.survey';
 
-	/** Survey responses. @since 3.7.0 */
+	/** Survey responses. @since 3.6.0 */
 	case SurveyUserInput = 'survey.user_input';
 
 	// ─── Documents (Enterprise) ───────────────────────────
 
-	/** Documents. @since 3.8.0 */
+	/** Documents. @since 3.6.0 */
 	case DocumentsDocument = 'documents.document';
 
-	/** Document folders. @since 3.8.0 */
+	/** Document folders. @since 3.6.0 */
 	case DocumentsFolder = 'documents.folder';
 
 	// ─── Knowledge (Enterprise) ────────────────────────────

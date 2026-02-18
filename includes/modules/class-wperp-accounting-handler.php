@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * via $wpdb since WP ERP does not use WordPress CPTs for accounting entities.
  *
  * @package WP4Odoo
- * @since   3.7.0
+ * @since   3.6.0
  */
 class WPERP_Accounting_Handler {
 

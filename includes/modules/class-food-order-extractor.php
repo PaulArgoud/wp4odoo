@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - source:        string ('gloriafoood' | 'wppizza')
  *
  * @package WP4Odoo
- * @since   3.7.0
+ * @since   3.6.0
  */
 class Food_Order_Extractor {
 

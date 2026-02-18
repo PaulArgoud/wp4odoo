@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - logger: Logger                 (from Module_Base)
  *
  * @package WP4Odoo
- * @since   3.7.0
+ * @since   3.6.0
  */
 trait LearnPress_Hooks {
 

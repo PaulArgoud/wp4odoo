@@ -1355,5 +1355,82 @@ if ( ! function_exists( 'erp_acct_get_dashboard_overview' ) ) {
 	function erp_acct_get_dashboard_overview(): array { return []; }
 }
 
+// ─── myCRED stubs ─────────────────────────────────────────
+
+if ( ! defined( 'myCRED_VERSION' ) ) {
+	define( 'myCRED_VERSION', '2.7.0' );
+}
+
+if ( ! function_exists( 'mycred' ) ) {
+	/** @return stdClass */
+	function mycred(): stdClass { return new stdClass(); }
+}
+
+if ( ! function_exists( 'mycred_get_users_cred' ) ) {
+	/**
+	 * @param int    $user_id     WordPress user ID.
+	 * @param string $points_type Points type slug.
+	 * @return int
+	 */
+	function mycred_get_users_cred( int $user_id, string $points_type = 'mycred_default' ): int { return 0; }
+}
+
+if ( ! function_exists( 'mycred_add' ) ) {
+	/**
+	 * @param string $reference   Log reference.
+	 * @param int    $user_id     WordPress user ID.
+	 * @param int    $amount      Points to add.
+	 * @param string $log_entry   Log entry.
+	 * @param string $ref_id      Reference ID.
+	 * @param string $data        Additional data.
+	 * @param string $points_type Points type slug.
+	 * @return bool
+	 */
+	function mycred_add( string $reference, int $user_id, int $amount, string $log_entry = '', string $ref_id = '', string $data = '', string $points_type = 'mycred_default' ): bool { return true; }
+}
+
+if ( ! function_exists( 'mycred_subtract' ) ) {
+	/**
+	 * @param string $reference   Log reference.
+	 * @param int    $user_id     WordPress user ID.
+	 * @param int    $amount      Points to subtract.
+	 * @param string $log_entry   Log entry.
+	 * @param string $ref_id      Reference ID.
+	 * @param string $data        Additional data.
+	 * @param string $points_type Points type slug.
+	 * @return bool
+	 */
+	function mycred_subtract( string $reference, int $user_id, int $amount, string $log_entry = '', string $ref_id = '', string $data = '', string $points_type = 'mycred_default' ): bool { return true; }
+}
+
+// ─── Documents stubs ──────────────────────────────────────
+
+if ( ! defined( 'WPDM_VERSION' ) ) {
+	define( 'WPDM_VERSION', '3.5.0' );
+}
+
+if ( ! class_exists( 'Document_Revisions' ) ) {
+	class Document_Revisions {}
+}
+
+if ( ! function_exists( 'wp_delete_term' ) ) {
+	/**
+	 * @param int    $term_id  Term ID.
+	 * @param string $taxonomy Taxonomy name.
+	 * @return bool
+	 */
+	function wp_delete_term( int $term_id, string $taxonomy ): bool { return true; }
+}
+
+// ─── Jeero Configurator stubs ─────────────────────────────
+
+if ( ! defined( 'JEERO_VERSION' ) ) {
+	define( 'JEERO_VERSION', '1.2.0' );
+}
+
+if ( ! class_exists( 'Jeero_Product_Configurator' ) ) {
+	class Jeero_Product_Configurator {}
+}
+
 // WP_CLI\Utils namespace stub loaded from separate file (PHP namespace rules).
 require_once __DIR__ . '/phpstan-wp-cli-stubs.php';

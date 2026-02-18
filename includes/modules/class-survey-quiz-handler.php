@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * and survey.user_input for responses.
  *
  * @package WP4Odoo
- * @since   3.7.0
+ * @since   3.6.0
  */
 class Survey_Quiz_Handler {
 

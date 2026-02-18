@@ -5,18 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.7.0] - Unreleased
+## [3.6.0] - Unreleased
 
 ### Added
 - **WP ERP Accounting module** — Completes the WP ERP triptyque (HR + CRM + Accounting). Syncs journal entries → `account.move` (bidirectional), chart of accounts → `account.account` (bidirectional), journals → `account.journal` (bidirectional). Custom table access (`erp_acct_journals`, `erp_acct_ledger_details`, `erp_acct_chart_of_accounts`). Invoice status mapping (draft/awaiting_payment/paid/overdue/void → Odoo states). Hooks: `erp_acct_new_journal`, `erp_acct_new_invoice`, `erp_acct_update_invoice`, `erp_acct_new_bill`, `erp_acct_new_expense`
 - **LearnPress module** — LMS module for LearnPress 4.0+ (100k+ installations). Extends `LMS_Module_Base`. Syncs courses → `product.product` (bidirectional), orders → `account.move` (push, auto-post), enrollments → `sale.order` (push, synthetic ID encoding). Translation support for courses. Hooks: `save_post_lp_course`, `learn-press/order/status-completed`, `learn-press/user/course-enrolled`
 - **Food Ordering module** — Aggregate module for GloriaFood + WPPizza → Odoo POS Restaurant. Push-only, syncs food orders → `pos.order` with `pos.order.line` One2many tuples. Strategy-based extraction via `Food_Order_Extractor`. Per-plugin detection and setting toggles. Hooks: `save_post_flavor_order`, `wppizza_order_complete`
 - **Survey & Quiz module** — Aggregate module for Quiz Maker (Ays) + Quiz And Survey Master → Odoo Survey. Push-only, syncs quizzes → `survey.survey` with `question_and_page_ids` One2many, responses → `survey.user_input` with `user_input_line_ids` One2many. Strategy-based extraction via `Survey_Extractor`. Question type mapping (radio→simple_choice, checkbox→multiple_choice, etc.)
-- **Odoo_Model enum additions** — 6 new cases: `AccountJournal`, `AccountAccount`, `PosOrder`, `PosOrderLine`, `SurveySurvey`, `SurveyUserInput`
-
-## [3.6.0] - Unreleased
-
-### Added
+- **myCRED module** — Points & rewards module for myCRED 2.0+ (10k+ installations). Syncs point balances → `loyalty.card` (bidirectional via `Loyalty_Card_Resolver`), badge types → `product.template` (push-only, service products). Anti-loop via `odoo_sync` reference guard. Configurable Odoo loyalty program ID. Hooks: `mycred_update_user_balance`, `mycred_after_badge_assign`
+- **Jeero Configurator module** — Product configurator module for Jeero WC Product Configurator. Push-only, syncs configurable products → `mrp.bom` with `bom_line_ids` One2many tuples. Cross-module entity_map resolution for WooCommerce product → Odoo `product.template` ID. Transient error pattern for unsynced component dependencies. Requires WooCommerce module. Hooks: `save_post_product` (filtered for configurable products)
+- **Documents module** — Bidirectional document sharing between WordPress and Odoo Documents (Enterprise). Supports WP Document Revisions (`document` CPT) and WP Download Manager (`wpdmpro` CPT). Syncs documents → `documents.document` (bidirectional, base64 file encoding, SHA-256 change detection), folders → `documents.folder` (bidirectional, hierarchy via `parent_folder_id`). Hooks: `save_post_document`, `save_post_wpdmpro`, `before_delete_post`, `created_document_category`, `edited_document_category`
+- **Odoo_Model enum additions** — 8 new cases: `AccountJournal`, `AccountAccount`, `PosOrder`, `PosOrderLine`, `SurveySurvey`, `SurveyUserInput`, `DocumentsDocument`, `DocumentsFolder`
 - **WC Inventory module** — Advanced multi-warehouse stock management with optional ATUM Multi-Inventory integration. Syncs warehouses (`stock.warehouse`, pull-only), stock locations (`stock.location`, pull-only), and stock movements (`stock.move`, bidirectional). Complements the WooCommerce module's global stock.quant sync with individual move tracking. Hooks at priority 20 on `woocommerce_product_set_stock` (after WC module at 10). ATUM detection at runtime for multi-location support
 - **WC Shipping module** — Bidirectional shipment tracking sync with optional ShipStation, Sendcloud, Packlink, and AST integration. Pushes WC tracking data to Odoo `stock.picking` (`carrier_tracking_ref`), pulls Odoo shipment tracking back to WC order meta (AST-compatible format). Optionally syncs WC shipping methods as `delivery.carrier` records. Provider-specific extraction methods for each shipping plugin
 - **WC Returns module** — Full return/refund lifecycle with optional YITH WooCommerce Return & Warranty and ReturnGO integration. Pushes WC refunds as Odoo credit notes (`account.move` with `move_type=out_refund`), pulls credit notes back as WC refunds. Optionally creates return `stock.picking` entries. Auto-posts credit notes via `Odoo_Accounting_Formatter::auto_post()`. Cross-module entity resolution for original invoice (`reversed_entry_id`)
@@ -62,7 +61,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Connection tab UI** — Shows "Using network connection" indicator when site inherits from network. New Company ID input field after Timeout
 
 ### Tests
-- 4 188 unit tests (6 445 assertions) — new tests covering multisite blog_id scoping (Entity_Map_Repository, Sync_Queue_Repository), company_id injection (Odoo_Client), credential resolution (Odoo_Auth network fallback), Settings_Repository multisite methods, switch_to_blog stubs, JetBooking module+handler, WP ERP CRM module+handler, JetEngine Meta-Module, JetFormBuilder form extraction, migrations 7–10, webhook token auto-migration
+- 4 786 unit tests (7 363 assertions) — new tests covering WP ERP Accounting module+handler, LearnPress module+handler, Food Ordering module+handler+extractor, Survey & Quiz module+handler+extractor, myCRED module+handler, Jeero Configurator module+handler, Documents module+handler, plus multisite blog_id scoping (Entity_Map_Repository, Sync_Queue_Repository), company_id injection (Odoo_Client), credential resolution (Odoo_Auth network fallback), Settings_Repository multisite methods, switch_to_blog stubs, JetBooking module+handler, WP ERP CRM module+handler, JetEngine Meta-Module, JetFormBuilder form extraction, migrations 7–10, webhook token auto-migration
+
+### i18n
+- Regenerated `.pot` from all source files (834 → 931 msgid), translated 97 new strings in FR and ES (7 new modules), recompiled `.mo` — 931 translated strings (was 834)
 
 ## [3.4.0] - 2026-02-18
 
