@@ -2,7 +2,7 @@
 
 ## Overview
 
-Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 57 modules across 38 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Product Add-Ons, WC Points & Rewards, WC Inventory, WC Shipping, WC Returns, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (8 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS + TutorLMS), Booking (Amelia + Bookly + JetAppointments + JetBooking + WC Bookings), Projects (WP Project Manager), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP + SureCart), Marketplace (Dokan + WCFM + WC Vendors), B2B/Wholesale (WC B2B), Email Marketing (MailPoet + MC4WP + FluentCRM), Helpdesk (Awesome Support + SupportCandy), HR (WP Job Manager + WP ERP + WP ERP CRM), Affiliates (AffiliateWP), Funnels (FunnelKit), Gamification (GamiPress), Community (BuddyBoss), Knowledge (Knowledge), Generic CPT (JetEngine), and Meta-modules (ACF + JetEngine Meta + WP All Import). Supports WordPress Multisite with per-site company scoping.
+Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 61 modules across 42 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Product Add-Ons, WC Points & Rewards, WC Inventory, WC Shipping, WC Returns, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (8 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS + TutorLMS + LearnPress), Booking (Amelia + Bookly + JetAppointments + JetBooking + WC Bookings), Projects (WP Project Manager), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP + SureCart), Marketplace (Dokan + WCFM + WC Vendors), B2B/Wholesale (WC B2B), Email Marketing (MailPoet + MC4WP + FluentCRM), Helpdesk (Awesome Support + SupportCandy), HR (WP Job Manager + WP ERP + WP ERP CRM), Accounting (WP ERP Accounting), Affiliates (AffiliateWP), Funnels (FunnelKit), Gamification (GamiPress), Community (BuddyBoss), Knowledge (Knowledge), Food Ordering (GloriaFood + WPPizza), Survey & Quiz (Quiz Maker + QSM), Generic CPT (JetEngine), and Meta-modules (ACF + JetEngine Meta + WP All Import). Supports WordPress Multisite with per-site company scoping.
 
 ![WP4ODOO Full Architecture](assets/images/architecture-full.svg)
 
@@ -1974,6 +1974,79 @@ All user inputs are sanitized with:
 - Requires WP All Import; `boot()` guards with `defined('PMXI_VERSION') || class_exists('PMXI_Plugin')`
 
 **Settings:** None (module toggle only)
+
+### WP ERP Accounting — COMPLETE
+
+**Files:** `class-wperp-accounting-module.php` (sync coordinator, uses `WPERP_Accounting_Hooks` trait), `trait-wperp-accounting-hooks.php` (hook callbacks), `class-wperp-accounting-handler.php` (journal entries, chart of accounts, journals CRUD)
+
+**Odoo models:** `account.move` (journal entries), `account.account` (chart of accounts), `account.journal` (journals)
+
+**Key features:**
+- Bidirectional sync for all three entity types
+- Same `WPERP_VERSION` detection as HR and CRM modules — checks `erp_acct_get_dashboard_overview()` for accounting sub-module
+- Custom table access via `$wpdb`: `erp_acct_journals`, `erp_acct_ledger_details`, `erp_acct_chart_of_accounts`
+- Journals stored as WP options (no dedicated WP ERP table)
+- Invoice status mapping: draft→draft, awaiting_payment/paid/overdue→posted, void→cancel
+- Account type mapping: 8 WP ERP types → Odoo account types
+- Pull guards: `pull_journal_entries`, `pull_chart_accounts`, `pull_journals`
+- Dedup: journal entries by `ref`, chart accounts by `code`, journals by `name`
+- Required table check at boot (graceful skip if accounting tables missing)
+
+**Settings:** `sync_journal_entries`, `sync_chart_accounts`, `sync_journals`, `pull_journal_entries`, `pull_chart_accounts`, `pull_journals`
+
+### LearnPress — COMPLETE
+
+**Files:** `class-learnpress-module.php` (extends `LMS_Module_Base`, uses `LearnPress_Hooks` trait), `trait-learnpress-hooks.php` (hook callbacks), `class-learnpress-handler.php` (extends `LMS_Handler_Base`, courses/orders/enrollments)
+
+**Odoo models:** `product.product` (courses), `account.move` (orders/invoices), `sale.order` (enrollments)
+
+**Key features:**
+- Extends `LMS_Module_Base` (same pattern as LearnDash/LifterLMS/TutorLMS)
+- Course pull with translation support (`name → post_title`, `description_sale → post_content`)
+- Orders auto-posted via `Odoo_Accounting_Formatter::auto_post()`
+- Enrollment pipeline: synthetic ID encoding (user_id × 1M + course_id), partner resolution, course→product mapping
+- Handler extends `LMS_Handler_Base`: reuses `build_invoice()` and `build_sale_order()`
+- CPT data access: `lp_course` (courses), `lp_order` (orders)
+- Enrollment data from `learnpress_user_items` table via `$wpdb`
+- Dedup: courses by `name`, orders by `ref`, enrollments empty (unique per push)
+
+**Settings:** `sync_courses`, `sync_orders`, `sync_enrollments`, `auto_post_invoices`, `pull_courses`
+
+### Food Ordering — COMPLETE
+
+**Files:** `class-food-ordering-module.php` (aggregate module, per-plugin conditional boot), `class-food-ordering-handler.php` (POS order formatting), `class-food-order-extractor.php` (strategy-based extraction)
+
+**Odoo models:** `pos.order` (food orders, with `pos.order.line` One2many)
+
+**Key features:**
+- Aggregate module pattern (like Forms): per-plugin detection + setting toggles
+- Push-only (WP → Odoo POS Restaurant)
+- Supported plugins: GloriaFood (`FLAVOR_FLAVOR_VERSION`), WPPizza (`WPPIZZA_VERSION`)
+- Strategy-based extraction: `extract_from_gloriafoood()` (CPT + JSON meta), `extract_from_wppizza()` (option store)
+- POS order formatting with One2many `pos.order.line` tuples (`[0, 0, {...}]`)
+- Partner resolution via `Partner_Service::get_or_create()`
+- Dedup by `pos_reference` (source-prefixed reference ID)
+- Order data stored as WP option before enqueue (ephemeral)
+
+**Settings:** `sync_gloriafoood`, `sync_wppizza`
+
+### Survey & Quiz — COMPLETE
+
+**Files:** `class-survey-quiz-module.php` (aggregate module, per-plugin conditional boot), `class-survey-quiz-handler.php` (survey/response formatting), `class-survey-extractor.php` (strategy-based extraction)
+
+**Odoo models:** `survey.survey` (surveys/quizzes, with `question_and_page_ids` One2many), `survey.user_input` (responses, with `user_input_line_ids` One2many)
+
+**Key features:**
+- Aggregate module pattern (like Forms): per-plugin detection + setting toggles
+- Push-only (WP → Odoo Survey)
+- Supported plugins: Quiz Maker / Ays (`QUIZ_MAKER_VERSION`), Quiz And Survey Master (`QSM_PLUGIN_INSTALLED`)
+- Strategy-based extraction for both surveys and responses
+- Question type mapping: radio→simple_choice, checkbox→multiple_choice, text→text_box, number→numerical_box
+- Survey structure synced before responses (`sync_quiz_structure()`)
+- Response includes scoring data when available
+- Dedup: surveys by `title`, responses empty (each unique)
+
+**Settings:** `sync_ays_quizzes`, `sync_qsm`
 
 ### Partner Service
 

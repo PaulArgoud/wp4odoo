@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.0] - Unreleased
+
+### Added
+- **WP ERP Accounting module** — Completes the WP ERP triptyque (HR + CRM + Accounting). Syncs journal entries → `account.move` (bidirectional), chart of accounts → `account.account` (bidirectional), journals → `account.journal` (bidirectional). Custom table access (`erp_acct_journals`, `erp_acct_ledger_details`, `erp_acct_chart_of_accounts`). Invoice status mapping (draft/awaiting_payment/paid/overdue/void → Odoo states). Hooks: `erp_acct_new_journal`, `erp_acct_new_invoice`, `erp_acct_update_invoice`, `erp_acct_new_bill`, `erp_acct_new_expense`
+- **LearnPress module** — LMS module for LearnPress 4.0+ (100k+ installations). Extends `LMS_Module_Base`. Syncs courses → `product.product` (bidirectional), orders → `account.move` (push, auto-post), enrollments → `sale.order` (push, synthetic ID encoding). Translation support for courses. Hooks: `save_post_lp_course`, `learn-press/order/status-completed`, `learn-press/user/course-enrolled`
+- **Food Ordering module** — Aggregate module for GloriaFood + WPPizza → Odoo POS Restaurant. Push-only, syncs food orders → `pos.order` with `pos.order.line` One2many tuples. Strategy-based extraction via `Food_Order_Extractor`. Per-plugin detection and setting toggles. Hooks: `save_post_flavor_order`, `wppizza_order_complete`
+- **Survey & Quiz module** — Aggregate module for Quiz Maker (Ays) + Quiz And Survey Master → Odoo Survey. Push-only, syncs quizzes → `survey.survey` with `question_and_page_ids` One2many, responses → `survey.user_input` with `user_input_line_ids` One2many. Strategy-based extraction via `Survey_Extractor`. Question type mapping (radio→simple_choice, checkbox→multiple_choice, etc.)
+- **Odoo_Model enum additions** — 6 new cases: `AccountJournal`, `AccountAccount`, `PosOrder`, `PosOrderLine`, `SurveySurvey`, `SurveyUserInput`
+
 ## [3.6.0] - Unreleased
 
 ### Added

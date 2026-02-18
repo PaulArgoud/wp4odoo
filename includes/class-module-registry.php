@@ -171,6 +171,12 @@ class Module_Registry {
 			// CRM (WP ERP) — separate from the core CRM module.
 			[ 'wperp_crm', Modules\WPERP_CRM_Module::class, fn() => defined( 'WPERP_VERSION' ) ],
 
+			// Accounting (WP ERP).
+			[ 'wperp_accounting', Modules\WPERP_Accounting_Module::class, fn() => defined( 'WPERP_VERSION' ) ],
+
+			// LMS.
+			[ 'learnpress', Modules\LearnPress_Module::class, fn() => defined( 'LP_PLUGIN_FILE' ) ],
+
 			// Knowledge — always registered; detection is Odoo-side.
 			[ 'knowledge', Modules\Knowledge_Module::class, null ],
 
@@ -188,6 +194,20 @@ class Module_Registry {
 			if ( null === $detect || $detect() ) {
 				$this->register( $id, new $class( $client_provider, $entity_map, $settings ) );
 			}
+		}
+
+		// Food Ordering — aggregate detection.
+		$food_active = defined( 'FLAVOR_FLAVOR_VERSION' )
+			|| defined( 'WPPIZZA_VERSION' );
+		if ( $food_active ) {
+			$this->register( 'food_ordering', new Modules\Food_Ordering_Module( $client_provider, $entity_map, $settings ) );
+		}
+
+		// Survey & Quiz — aggregate detection.
+		$survey_active = defined( 'QUIZ_MAKER_VERSION' )
+			|| defined( 'QSM_PLUGIN_INSTALLED' );
+		if ( $survey_active ) {
+			$this->register( 'survey_quiz', new Modules\Survey_Quiz_Module( $client_provider, $entity_map, $settings ) );
 		}
 
 		// Forms module — aggregate detection (any of 8 form plugins).

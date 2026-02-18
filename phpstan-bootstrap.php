@@ -1316,5 +1316,44 @@ if ( ! class_exists( 'MC4WP_Form' ) ) {
 	}
 }
 
+// ─── LearnPress stubs ────────────────────────────────────
+
+if ( ! defined( 'LP_PLUGIN_FILE' ) ) {
+	define( 'LP_PLUGIN_FILE', __DIR__ . '/wp4odoo.php' );
+}
+
+if ( ! defined( 'LEARNPRESS_VERSION' ) ) {
+	define( 'LEARNPRESS_VERSION', '4.3.0' );
+}
+
+// ─── Food Ordering stubs ─────────────────────────────────
+
+if ( ! defined( 'FLAVOR_FLAVOR_VERSION' ) ) {
+	define( 'FLAVOR_FLAVOR_VERSION', '2.0.0' );
+}
+
+if ( ! defined( 'WPPIZZA_VERSION' ) ) {
+	define( 'WPPIZZA_VERSION', '3.18.0' );
+}
+
+// ─── Survey & Quiz stubs ─────────────────────────────────
+
+if ( ! defined( 'QUIZ_MAKER_VERSION' ) ) {
+	define( 'QUIZ_MAKER_VERSION', '7.0.0' );
+}
+
+if ( ! defined( 'QSM_PLUGIN_INSTALLED' ) ) {
+	define( 'QSM_PLUGIN_INSTALLED', true );
+}
+
+// ─── WP ERP Accounting stubs ─────────────────────────────
+
+if ( ! function_exists( 'erp_acct_get_dashboard_overview' ) ) {
+	/**
+	 * @return array
+	 */
+	function erp_acct_get_dashboard_overview(): array { return []; }
+}
+
 // WP_CLI\Utils namespace stub loaded from separate file (PHP namespace rules).
 require_once __DIR__ . '/phpstan-wp-cli-stubs.php';

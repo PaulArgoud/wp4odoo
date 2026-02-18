@@ -170,6 +170,10 @@ require_once __DIR__ . '/stubs/wperp-crm-classes.php';
 require_once __DIR__ . '/stubs/wc-inventory-classes.php';
 require_once __DIR__ . '/stubs/wc-shipping-classes.php';
 require_once __DIR__ . '/stubs/wc-returns-classes.php';
+require_once __DIR__ . '/stubs/wperp-accounting-classes.php';
+require_once __DIR__ . '/stubs/learnpress-classes.php';
+require_once __DIR__ . '/stubs/food-ordering-classes.php';
+require_once __DIR__ . '/stubs/survey-quiz-classes.php';
 
 // ─── Composer autoloader ────────────────────────────────
 
