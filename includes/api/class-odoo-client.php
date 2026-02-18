@@ -70,6 +70,20 @@ class Odoo_Client {
 	}
 
 	/**
+	 * Get the configured Odoo company ID.
+	 *
+	 * Returns 0 when no multi-company scoping is active.
+	 * Triggers connection if not yet connected so the value
+	 * is read from credentials.
+	 *
+	 * @return int
+	 */
+	public function get_company_id(): int {
+		$this->ensure_connected();
+		return $this->company_id;
+	}
+
+	/**
 	 * Ensure the transport is connected and authenticated.
 	 *
 	 * @return void

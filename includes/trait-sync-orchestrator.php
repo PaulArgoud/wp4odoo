@@ -50,6 +50,7 @@ trait Sync_Orchestrator {
 			$wp_data                  = ! empty( $payload ) ? $payload : $this->load_wp_data( $entity_type, $wp_id );
 			$wp_data['_wp_entity_id'] = $wp_id;
 			$odoo_values              = $this->map_to_odoo( $entity_type, $wp_data );
+			$odoo_values              = $this->maybe_inject_company_id( $odoo_values );
 
 			if ( empty( $odoo_values ) ) {
 				$this->logger->warning( 'No data to push.', compact( 'entity_type', 'wp_id' ) );
@@ -168,6 +169,7 @@ trait Sync_Orchestrator {
 			$wp_data                  = ! empty( $item['payload'] ) ? $item['payload'] : $this->load_wp_data( $entity_type, $wp_id );
 			$wp_data['_wp_entity_id'] = $wp_id;
 			$odoo_values              = $this->map_to_odoo( $entity_type, $wp_data );
+			$odoo_values              = $this->maybe_inject_company_id( $odoo_values );
 
 			if ( empty( $odoo_values ) ) {
 				$results[ $wp_id ] = Sync_Result::failure( 'No data to push.', Error_Type::Permanent );
@@ -340,5 +342,37 @@ trait Sync_Orchestrator {
 		} finally {
 			$this->clear_importing();
 		}
+	}
+
+	/**
+	 * Inject company_id into Odoo values when multi-company is active.
+	 *
+	 * Some Odoo models (sale.order, account.move, product.template) have
+	 * a company_id field that must be set explicitly on create for proper
+	 * multi-company isolation. The context-level allowed_company_ids
+	 * handles filtering, but record-level company_id ensures the created
+	 * record is assigned to the correct company.
+	 *
+	 * Modules can override this by setting company_id in their map_to_odoo().
+	 *
+	 * @param array $odoo_values The mapped Odoo field values.
+	 * @return array The values with company_id injected if applicable.
+	 */
+	private function maybe_inject_company_id( array $odoo_values ): array {
+		if ( isset( $odoo_values['company_id'] ) ) {
+			return $odoo_values;
+		}
+
+		try {
+			$company_id = $this->client()->get_company_id();
+		} catch ( \Throwable $e ) {
+			return $odoo_values;
+		}
+
+		if ( $company_id > 0 ) {
+			$odoo_values['company_id'] = $company_id;
+		}
+
+		return $odoo_values;
 	}
 }

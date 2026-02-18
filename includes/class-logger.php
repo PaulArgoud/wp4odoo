@@ -245,11 +245,14 @@ class Logger {
 		$cutoff = gmdate( 'Y-m-d H:i:s', time() - ( $retention * DAY_IN_SECONDS ) );
 
 		// Chunk the DELETE to avoid long-running table locks on large sites.
+		// Scoped to current blog so multisite cleanup only removes this site's logs.
+		$blog_id       = (int) get_current_blog_id();
 		$total_deleted = 0;
 		do {
 			$deleted        = (int) $wpdb->query(
 				$wpdb->prepare(
-					"DELETE FROM {$table} WHERE created_at < %s LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+					"DELETE FROM {$table} WHERE blog_id = %d AND created_at < %s LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+					$blog_id,
 					$cutoff,
 					self::CLEANUP_CHUNK_SIZE
 				)

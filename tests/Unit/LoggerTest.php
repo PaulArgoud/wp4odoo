@@ -350,8 +350,8 @@ class LoggerTest extends TestCase {
 
 		$prepare = $this->get_calls( 'prepare' );
 		$this->assertNotEmpty( $prepare );
-		// Should have WHERE created_at < cutoff date.
-		$this->assertStringContainsString( 'WHERE created_at <', $prepare[0]['args'][0] );
+		// Should have WHERE blog_id = %d AND created_at < cutoff date.
+		$this->assertStringContainsString( 'WHERE blog_id = %d AND created_at <', $prepare[0]['args'][0] );
 	}
 
 	public function test_cleanup_uses_limit_in_query(): void {

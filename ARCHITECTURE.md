@@ -190,7 +190,7 @@ WordPress For Odoo/
 │   │   ├── trait-shopwp-hooks.php            # ShopWP: on_product_save via save_post_wps_products
 │   │   ├── class-shopwp-handler.php          # ShopWP: CPT + shopwp_variants table via $wpdb
 │   │   ├── class-shopwp-module.php           # ShopWP: ecommerce exclusive group, products only
-│   │   ├── # ─── HR (WP Job Manager + WP ERP) ──────────
+│   │   ├── # ─── HR & CRM (WP Job Manager + WP ERP + WP ERP CRM) ──────────
 │   │   ├── trait-job-manager-hooks.php       # Job Manager: on_job_save, on_job_expired
 │   │   ├── class-job-manager-handler.php     # Job Manager: job_listing CPT, status mapping, department resolution
 │   │   ├── class-job-manager-module.php      # Job Manager: independent, bidirectional job ↔ hr.job
@@ -1786,6 +1786,23 @@ All user inputs are sanitized with:
 - Leave status mapping via `Status_Mapper::resolve()`: pending→draft, approved→validate, rejected→refuse (filterable: `wp4odoo_wperp_leave_status_map` / `wp4odoo_wperp_leave_reverse_status_map`)
 - Gender mapping: identity (male/female/other)
 - Dedup: employees by `work_email`, departments by `name`
+
+### WP ERP CRM — COMPLETE
+
+**Files:** `class-wperp-crm-module.php` (bidirectional module, extends `Module_Base` directly, uses `WPERP_CRM_Hooks` trait), `trait-wperp-crm-hooks.php` (contact/activity hook callbacks), `class-wperp-crm-handler.php` (custom DB table data load/save, life stage → CRM stage mapping, activity type resolution)
+
+**Entity types → Odoo models:** `lead` → `crm.lead`, `activity` → `mail.activity`
+
+- Detection: `defined('WPERP_VERSION')` — shares plugin detection with WP ERP (HR) but separate module ID (`wperp_crm`)
+- Bidirectional for leads; push-only for activities
+- Custom DB table access via `$wpdb->prepare()` on `erp_peoples` (contacts) and `erp_crm_customer_activities` (activities)
+- **Dependency cascade**: activities require parent lead synced first (via `ensure_entity_synced()`)
+- **Life stage mapping**: subscriber/lead→lead, opportunity→opportunity, customer→won
+- **Activity type resolution**: resolves `mail.activity.type` IDs via `ir.model` lookup (cached via `Schema_Cache`)
+- **Cross-module partner linking**: if a WP ERP contact shares an email with a WordPress user already synced by the `crm` module, the handler resolves the existing `partner_id` from entity_map
+- Dedup: leads by `email_from`
+
+**Settings:** `sync_leads` (bool), `pull_leads` (bool), `sync_activities` (bool)
 
 ### Knowledge (Odoo Enterprise) — COMPLETE
 

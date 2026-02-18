@@ -62,8 +62,12 @@ class CLI {
 		}
 
 		switch_to_blog( $blog_id );
-		// Flush cached credentials so they re-read from the target site.
+		// Flush API credentials cache so they re-read from the target site's options.
 		Odoo_Auth::flush_credentials_cache();
+		// Flush WP object cache to avoid stale data from the previous blog
+		// leaking into Entity_Map_Repository, Settings_Repository, or Logger
+		// (all of which use get_option() / object cache under the hood).
+		wp_cache_flush();
 
 		return true;
 	}

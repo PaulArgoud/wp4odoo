@@ -216,9 +216,9 @@ class Sync_Queue_Repository {
 
 		$table = $this->table();
 
-		// Single query: count per status + last completed timestamp.
+		// Single query: count per status + last completed timestamp, scoped to current blog.
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
-		$rows = $wpdb->get_results( "SELECT status, COUNT(*) as count, MAX( CASE WHEN status = 'completed' THEN processed_at END ) as last_completed FROM {$table} GROUP BY status" );
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT status, COUNT(*) as count, MAX( CASE WHEN status = 'completed' THEN processed_at END ) as last_completed FROM {$table} WHERE blog_id = %d GROUP BY status", $this->blog_id ) );
 
 		$stats = [
 			'pending'    => 0,
@@ -266,12 +266,12 @@ class Sync_Queue_Repository {
 
 		// Average latency: time between created_at and processed_at for recent completed jobs (last 24h).
 		$avg_latency = (float) $wpdb->get_var(
-			"SELECT AVG(TIMESTAMPDIFF(SECOND, created_at, processed_at)) FROM {$table} WHERE status = 'completed' AND processed_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+			$wpdb->prepare( "SELECT AVG(TIMESTAMPDIFF(SECOND, created_at, processed_at)) FROM {$table} WHERE blog_id = %d AND status = 'completed' AND processed_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)", $this->blog_id ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
 		);
 
 		// Success rate: completed / (completed + failed) over last 24h.
 		$totals = $wpdb->get_row(
-			"SELECT COALESCE(SUM(status = 'completed'), 0) as completed, COALESCE(SUM(status = 'failed'), 0) as failed FROM {$table} WHERE processed_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+			$wpdb->prepare( "SELECT COALESCE(SUM(status = 'completed'), 0) as completed, COALESCE(SUM(status = 'failed'), 0) as failed FROM {$table} WHERE blog_id = %d AND processed_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)", $this->blog_id ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
 		);
 
 		$completed_count = (int) ( $totals->completed ?? 0 );
@@ -281,7 +281,7 @@ class Sync_Queue_Repository {
 
 		// Pending depth by module.
 		$module_rows     = $wpdb->get_results(
-			"SELECT module, COUNT(*) as depth FROM {$table} WHERE status = 'pending' GROUP BY module ORDER BY depth DESC" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+			$wpdb->prepare( "SELECT module, COUNT(*) as depth FROM {$table} WHERE blog_id = %d AND status = 'pending' GROUP BY module ORDER BY depth DESC", $this->blog_id ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
 		);
 		$depth_by_module = [];
 		foreach ( $module_rows as $row ) {
@@ -316,7 +316,8 @@ class Sync_Queue_Repository {
 		do {
 			$deleted = (int) $wpdb->query( // phpcs:ignore Generic.Formatting.MultipleStatementAlignment.NotSameWarning
 				$wpdb->prepare(
-					"DELETE FROM {$table} WHERE status IN ('completed', 'failed') AND created_at < %s LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+					"DELETE FROM {$table} WHERE blog_id = %d AND status IN ('completed', 'failed') AND created_at < %s LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+					$this->blog_id,
 					$cutoff,
 					self::CLEANUP_CHUNK_SIZE
 				)
@@ -339,9 +340,10 @@ class Sync_Queue_Repository {
 
 		return (int) $wpdb->query(
 			$wpdb->prepare(
-				"UPDATE {$table} SET status = %s, attempts = %d, error_message = NULL, scheduled_at = NULL WHERE status = %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				"UPDATE {$table} SET status = %s, attempts = %d, error_message = NULL, scheduled_at = NULL WHERE blog_id = %d AND status = %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
 				'pending',
 				0,
+				$this->blog_id,
 				'failed'
 			)
 		);
@@ -387,7 +389,8 @@ class Sync_Queue_Repository {
 		if ( null !== $entity_type ) {
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT * FROM {$table} WHERE module = %s AND entity_type = %s AND status = 'pending' ORDER BY priority ASC, created_at ASC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+					"SELECT * FROM {$table} WHERE blog_id = %d AND module = %s AND entity_type = %s AND status = 'pending' ORDER BY priority ASC, created_at ASC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+					$this->blog_id,
 					$module,
 					$entity_type
 				) . $limit_sql
@@ -398,7 +401,8 @@ class Sync_Queue_Repository {
 
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT * FROM {$table} WHERE module = %s AND status = 'pending' ORDER BY priority ASC, created_at ASC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				"SELECT * FROM {$table} WHERE blog_id = %d AND module = %s AND status = 'pending' ORDER BY priority ASC, created_at ASC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				$this->blog_id,
 				$module
 			) . $limit_sql
 		);
@@ -482,7 +486,8 @@ class Sync_Queue_Repository {
 		// Increment attempts. Jobs under max_attempts → pending (retry).
 		$retried = (int) $wpdb->query(
 			$wpdb->prepare(
-				"UPDATE {$table} SET status = 'pending', attempts = attempts + 1, error_message = 'Recovered from stale processing state.' WHERE status = 'processing' AND processed_at IS NOT NULL AND processed_at < %s AND attempts + 1 < max_attempts", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				"UPDATE {$table} SET status = 'pending', attempts = attempts + 1, error_message = 'Recovered from stale processing state.' WHERE blog_id = %d AND status = 'processing' AND processed_at IS NOT NULL AND processed_at < %s AND attempts + 1 < max_attempts", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				$this->blog_id,
 				$cutoff
 			)
 		);
@@ -490,7 +495,8 @@ class Sync_Queue_Repository {
 		// Jobs at or beyond max_attempts → failed (no more retries).
 		$failed = (int) $wpdb->query(
 			$wpdb->prepare(
-				"UPDATE {$table} SET status = 'failed', attempts = attempts + 1, error_message = 'Max attempts reached after stale processing recovery.' WHERE status = 'processing' AND processed_at IS NOT NULL AND processed_at < %s AND attempts + 1 >= max_attempts", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				"UPDATE {$table} SET status = 'failed', attempts = attempts + 1, error_message = 'Max attempts reached after stale processing recovery.' WHERE blog_id = %d AND status = 'processing' AND processed_at IS NOT NULL AND processed_at < %s AND attempts + 1 >= max_attempts", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				$this->blog_id,
 				$cutoff
 			)
 		);
@@ -574,7 +580,8 @@ class Sync_Queue_Repository {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$count = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$table} WHERE status = %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				"SELECT COUNT(*) FROM {$table} WHERE blog_id = %d AND status = %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+				$this->blog_id,
 				'pending'
 			)
 		);
