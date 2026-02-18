@@ -481,7 +481,18 @@ class Sync_Queue_Repository {
 
 		// Wrap both UPDATEs in a transaction so jobs cannot end up in
 		// an inconsistent state if the process crashes between them.
-		$wpdb->query( 'START TRANSACTION' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+		// Use SAVEPOINT when already inside a transaction (e.g. WordPress
+		// test framework) to avoid an implicit commit of the outer transaction.
+		$wpdb->suppress_errors( true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_suppress_errors
+		$in_tx = $wpdb->get_var( 'SELECT @@in_transaction' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->suppress_errors( false );
+		$use_savepoint = '1' === (string) $in_tx;
+
+		if ( $use_savepoint ) {
+			$wpdb->query( 'SAVEPOINT wp4odoo_recovery' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+		} else {
+			$wpdb->query( 'START TRANSACTION' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+		}
 
 		// Reset stale jobs to pending WITHOUT incrementing attempts.
 		// A stale-processing job was interrupted (crash, timeout), not
@@ -504,7 +515,11 @@ class Sync_Queue_Repository {
 			)
 		);
 
-		$wpdb->query( 'COMMIT' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+		if ( $use_savepoint ) {
+			$wpdb->query( 'RELEASE SAVEPOINT wp4odoo_recovery' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+		} else {
+			$wpdb->query( 'COMMIT' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+		}
 
 		return $retried + $failed;
 	}

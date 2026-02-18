@@ -128,6 +128,13 @@ final class Database_Migration {
 
 		$migrations = self::get_migrations();
 
+		// Check if we're already inside a transaction (e.g. WordPress test
+		// framework) to avoid an implicit commit of the outer transaction.
+		$wpdb->suppress_errors( true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_suppress_errors
+		$in_tx = $wpdb->get_var( 'SELECT @@in_transaction' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->suppress_errors( false );
+		$use_savepoint = '1' === (string) $in_tx;
+
 		foreach ( $migrations as $version => $callback ) {
 			if ( $current >= $version ) {
 				continue;
@@ -138,15 +145,27 @@ final class Database_Migration {
 				// (e.g. first ALTER succeeds, second fails) does not leave
 				// the schema in an inconsistent state. InnoDB DDL in MySQL
 				// 8.0+ is atomic; on older versions the ROLLBACK is best-effort.
-				$wpdb->query( 'START TRANSACTION' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				if ( $use_savepoint ) {
+					$wpdb->query( 'SAVEPOINT wp4odoo_migration' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				} else {
+					$wpdb->query( 'START TRANSACTION' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				}
 
 				$callback();
 
-				$wpdb->query( 'COMMIT' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				if ( $use_savepoint ) {
+					$wpdb->query( 'RELEASE SAVEPOINT wp4odoo_migration' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				} else {
+					$wpdb->query( 'COMMIT' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				}
 				++$applied;
 				update_option( self::OPT_SCHEMA_VERSION, $version );
 			} catch ( \Throwable $e ) {
-				$wpdb->query( 'ROLLBACK' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				if ( $use_savepoint ) {
+					$wpdb->query( 'ROLLBACK TO SAVEPOINT wp4odoo_migration' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				} else {
+					$wpdb->query( 'ROLLBACK' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				}
 				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 					error_log( sprintf( 'WP4Odoo migration %d failed: %s', $version, $e->getMessage() ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug-only logging for migration failures.
 				}

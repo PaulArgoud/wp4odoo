@@ -29,6 +29,8 @@ abstract class Module_Base {
 	use Push_Lock;
 	use Poll_Support;
 	use Sync_Orchestrator;
+	use Hook_Lifecycle;
+	use Translation_Accumulator;
 
 	/**
 	 * Unique module identifier (e.g., 'crm', 'sales', 'woocommerce').
@@ -111,16 +113,6 @@ abstract class Module_Base {
 	private array $mapping_cache = [];
 
 	/**
-	 * Translation buffer for pull operations.
-	 *
-	 * Accumulates (odoo_id → wp_id) pairs during batch pull, keyed by
-	 * Odoo model. Flushed at end of batch via flush_pull_translations().
-	 *
-	 * @var array<string, array<int, int>>
-	 */
-	protected array $translation_buffer = [];
-
-	/**
 	 * Per-module anti-loop flags: tracks which modules are currently importing.
 	 *
 	 * Unlike a single global bool, this allows module A to import without
@@ -147,16 +139,6 @@ abstract class Module_Base {
 	 * @var Queue_Manager|null
 	 */
 	protected ?Queue_Manager $queue_manager = null;
-
-	/**
-	 * Registered WordPress hooks for teardown support.
-	 *
-	 * Each entry is [tag, callback, priority]. Populated by
-	 * register_hook() and consumed by teardown().
-	 *
-	 * @var array<int, array{string, \Closure, int}>
-	 */
-	private array $registered_hooks = [];
 
 	/**
 	 * Closure that returns the Odoo_Client instance (lazy, injected by Module_Registry).
@@ -422,120 +404,6 @@ abstract class Module_Base {
 	}
 
 	// -------------------------------------------------------------------------
-	// Translation accumulator
-	// -------------------------------------------------------------------------
-
-	/**
-	 * Get translatable fields for a given entity type.
-	 *
-	 * Override in subclasses to enable automatic pull translation support.
-	 * Keys are Odoo field names, values are WordPress field names.
-	 * Return empty array to skip translation (default).
-	 *
-	 * @param string $entity_type Entity type.
-	 * @return array<string, string> Odoo field => WP field map.
-	 */
-	protected function get_translatable_fields( string $entity_type ): array {
-		return [];
-	}
-
-	/**
-	 * Maximum entries per model in the translation buffer.
-	 *
-	 * Prevents unbounded memory growth during large pull batches.
-	 * When exceeded, buffer is flushed early before accumulating more.
-	 */
-	private const TRANSLATION_BUFFER_MAX = 5000;
-
-	/**
-	 * Accumulate a pulled record for batch translation at end of batch.
-	 *
-	 * @param string $odoo_model Odoo model name.
-	 * @param int    $odoo_id    Odoo record ID.
-	 * @param int    $wp_id      WordPress entity ID.
-	 * @return void
-	 */
-	protected function accumulate_pull_translation( string $odoo_model, int $odoo_id, int $wp_id ): void {
-		if ( isset( $this->translation_buffer[ $odoo_model ] )
-			&& count( $this->translation_buffer[ $odoo_model ] ) >= self::TRANSLATION_BUFFER_MAX ) {
-			$this->flush_pull_translations();
-		}
-		$this->translation_buffer[ $odoo_model ][ $odoo_id ] = $wp_id;
-	}
-
-	/**
-	 * Flush accumulated pull translations.
-	 *
-	 * Called by Sync_Engine after each batch. For each Odoo model in the
-	 * buffer, fetches translations for all accumulated records and applies
-	 * them to the corresponding WordPress entities via Translation_Service.
-	 *
-	 * @return void
-	 */
-	public function flush_pull_translations(): void {
-		if ( empty( $this->translation_buffer ) ) {
-			return;
-		}
-
-		$ts = $this->translation_service();
-		if ( ! $ts->is_available() ) {
-			$this->translation_buffer = [];
-			return;
-		}
-
-		// Resolve entity type from Odoo model (reverse lookup).
-		$model_to_entity = array_flip( $this->odoo_models );
-
-		foreach ( $this->translation_buffer as $odoo_model => $odoo_wp_map ) {
-			$entity_type = $model_to_entity[ $odoo_model ] ?? '';
-			if ( '' === $entity_type ) {
-				continue;
-			}
-
-			$field_map = $this->get_translatable_fields( $entity_type );
-			if ( empty( $field_map ) ) {
-				continue;
-			}
-
-			$ts->pull_translations_batch(
-				$odoo_model,
-				$odoo_wp_map,
-				array_keys( $field_map ),
-				$field_map,
-				$entity_type,
-				fn( int $wp_id, array $data, string $lang ) => $this->apply_pull_translation( $wp_id, $data, $lang ),
-				[]
-			);
-
-			$this->logger->info(
-				'Flushed pull translations.',
-				[
-					'entity_type' => $entity_type,
-					'count'       => count( $odoo_wp_map ),
-				]
-			);
-		}
-
-		$this->translation_buffer = [];
-	}
-
-	/**
-	 * Apply a translated value to a WordPress entity.
-	 *
-	 * Default implementation updates post fields (post_title, post_content)
-	 * via wp_update_post(). Override for non-post entities (taxonomy terms,
-	 * custom tables, etc.).
-	 *
-	 * @param int                    $wp_id WordPress entity ID.
-	 * @param array<string, string>  $data  WP field => translated value.
-	 * @param string                 $lang  Language code.
-	 * @return void
-	 */
-	protected function apply_pull_translation( int $wp_id, array $data, string $lang ): void {
-		// Default: no-op. Modules override if they have a Translation_Adapter.
-	}
-
-	// -------------------------------------------------------------------------
 	// Queue helpers
 	// -------------------------------------------------------------------------
 
@@ -602,79 +470,6 @@ abstract class Module_Base {
 
 		$settings = $this->get_settings();
 		return ! empty( $settings[ $setting_key ] );
-	}
-
-	// -------------------------------------------------------------------------
-	// Graceful degradation
-	// -------------------------------------------------------------------------
-
-	/**
-	 * Wrap a hook callback in a try/catch for graceful degradation.
-	 *
-	 * Returns a Closure that forwards all arguments to the original callable.
-	 * If the callback throws any \Throwable (fatal error, TypeError, etc.),
-	 * the exception is caught and logged instead of crashing the WordPress
-	 * request. This protects against third-party plugin API changes.
-	 *
-	 * Usage: `add_action( 'third_party_hook', $this->safe_callback( [ $this, 'on_event' ] ) );`
-	 *
-	 * @param callable $callback The original callback to wrap.
-	 * @return \Closure Wrapped callback that never throws.
-	 */
-	protected function safe_callback( callable $callback ): \Closure {
-		return function () use ( $callback ): void {
-			try {
-				$callback( ...func_get_args() );
-			} catch ( \Throwable $e ) {
-				$this->logger->critical(
-					'Hook callback crashed (graceful degradation).',
-					[
-						'module'    => $this->id,
-						'exception' => get_class( $e ),
-						'message'   => $e->getMessage(),
-						'file'      => $e->getFile(),
-						'line'      => $e->getLine(),
-					]
-				);
-			}
-		};
-	}
-
-	/**
-	 * Register a WordPress hook with automatic teardown tracking.
-	 *
-	 * Wraps add_action() and records the hook reference so teardown()
-	 * can remove it later. Uses safe_callback() internally for graceful
-	 * degradation. Prefer this over manual add_action() + safe_callback()
-	 * in new module code.
-	 *
-	 * @param string   $tag           Hook name.
-	 * @param callable $callback      The method to call (e.g. [$this, 'on_event']).
-	 * @param int      $priority      Hook priority (default 10).
-	 * @param int      $accepted_args Number of arguments (default 1).
-	 * @return void
-	 */
-	protected function register_hook( string $tag, callable $callback, int $priority = 10, int $accepted_args = 1 ): void {
-		$wrapped = $this->safe_callback( $callback );
-		add_action( $tag, $wrapped, $priority, $accepted_args );
-		$this->registered_hooks[] = [ $tag, $wrapped, $priority ];
-	}
-
-	/**
-	 * Remove all hooks registered via register_hook().
-	 *
-	 * Called when a module is disabled at runtime (e.g. via admin toggle)
-	 * to stop processing hook callbacks for the remainder of the request.
-	 * Hooks not registered via register_hook() (legacy pattern) are
-	 * unaffected — they rely on should_sync() for short-circuiting.
-	 *
-	 * @return void
-	 */
-	public function teardown(): void {
-		foreach ( $this->registered_hooks as [ $tag, $callback, $priority ] ) {
-			remove_action( $tag, $callback, $priority );
-		}
-		$this->registered_hooks = [];
 	}
 
 	// -------------------------------------------------------------------------

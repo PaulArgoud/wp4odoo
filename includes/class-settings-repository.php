@@ -19,6 +19,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Settings_Repository {
 
+	use Failure_Tracking_Settings;
+	use UI_State_Settings;
+	use Network_Settings;
+
 	/**
 	 * Instance-level cache to avoid repeated get_option() calls.
 	 *
@@ -28,17 +32,11 @@ class Settings_Repository {
 
 	// ── Option key constants ───────────────────────────────
 
-	public const OPT_CONNECTION           = 'wp4odoo_connection';
-	public const OPT_SYNC_SETTINGS        = 'wp4odoo_sync_settings';
-	public const OPT_LOG_SETTINGS         = 'wp4odoo_log_settings';
-	public const OPT_WEBHOOK_TOKEN        = 'wp4odoo_webhook_token';
-	public const OPT_CONSECUTIVE_FAILURES = 'wp4odoo_consecutive_failures';
-	public const OPT_LAST_FAILURE_EMAIL   = 'wp4odoo_last_failure_email';
-	public const OPT_ONBOARDING_DISMISSED = 'wp4odoo_onboarding_dismissed';
-	public const OPT_CHECKLIST_DISMISSED  = 'wp4odoo_checklist_dismissed';
-	public const OPT_CHECKLIST_WEBHOOKS   = 'wp4odoo_checklist_webhooks_confirmed';
-	public const OPT_DB_VERSION           = 'wp4odoo_db_version';
-	public const OPT_LAST_CRON_RUN        = 'wp4odoo_last_cron_run';
+	public const OPT_CONNECTION    = 'wp4odoo_connection';
+	public const OPT_SYNC_SETTINGS = 'wp4odoo_sync_settings';
+	public const OPT_LOG_SETTINGS  = 'wp4odoo_log_settings';
+	public const OPT_WEBHOOK_TOKEN = 'wp4odoo_webhook_token';
+	public const OPT_DB_VERSION    = 'wp4odoo_db_version';
 
 	// ── Default values (single source of truth) ────────────
 
@@ -409,153 +407,6 @@ class Settings_Repository {
 		return update_option( self::OPT_WEBHOOK_TOKEN, API\Odoo_Auth::encrypt( $token ), false );
 	}
 
-	// ── Failure tracking ───────────────────────────────────
-
-	/**
-	 * Get the consecutive failure count.
-	 *
-	 * @return int
-	 */
-	public function get_consecutive_failures(): int {
-		return $this->get_int_option( self::OPT_CONSECUTIVE_FAILURES );
-	}
-
-	/**
-	 * Save the consecutive failure count.
-	 *
-	 * @param int $count Failure count.
-	 * @return bool
-	 */
-	public function save_consecutive_failures( int $count ): bool {
-		return $this->set_int_option( self::OPT_CONSECUTIVE_FAILURES, $count );
-	}
-
-	/**
-	 * Get the last failure email timestamp.
-	 *
-	 * @return int Unix timestamp.
-	 */
-	public function get_last_failure_email(): int {
-		return $this->get_int_option( self::OPT_LAST_FAILURE_EMAIL );
-	}
-
-	/**
-	 * Save the last failure email timestamp.
-	 *
-	 * @param int $timestamp Unix timestamp.
-	 * @return bool
-	 */
-	public function save_last_failure_email( int $timestamp ): bool {
-		return $this->set_int_option( self::OPT_LAST_FAILURE_EMAIL, $timestamp );
-	}
-
-	// ── Onboarding / Checklist ─────────────────────────────
-
-	/**
-	 * Check if onboarding notice has been dismissed.
-	 *
-	 * @return bool
-	 */
-	public function is_onboarding_dismissed(): bool {
-		return $this->get_bool_option( self::OPT_ONBOARDING_DISMISSED );
-	}
-
-	/**
-	 * Dismiss the onboarding notice.
-	 *
-	 * @return bool
-	 */
-	public function dismiss_onboarding(): bool {
-		return $this->set_bool_option( self::OPT_ONBOARDING_DISMISSED, true );
-	}
-
-	/**
-	 * Check if the setup checklist has been dismissed.
-	 *
-	 * @return bool
-	 */
-	public function is_checklist_dismissed(): bool {
-		return $this->get_bool_option( self::OPT_CHECKLIST_DISMISSED );
-	}
-
-	/**
-	 * Dismiss the setup checklist.
-	 *
-	 * @return bool
-	 */
-	public function dismiss_checklist(): bool {
-		return $this->set_bool_option( self::OPT_CHECKLIST_DISMISSED, true );
-	}
-
-	/**
-	 * Check if webhooks have been confirmed.
-	 *
-	 * @return bool
-	 */
-	public function is_webhooks_confirmed(): bool {
-		return $this->get_bool_option( self::OPT_CHECKLIST_WEBHOOKS );
-	}
-
-	/**
-	 * Mark webhooks as confirmed.
-	 *
-	 * @return bool
-	 */
-	public function confirm_webhooks(): bool {
-		return $this->set_bool_option( self::OPT_CHECKLIST_WEBHOOKS, true );
-	}
-
-	// ── Cron health ───────────────────────────────────────
-
-	/**
-	 * Get the last cron run Unix timestamp.
-	 *
-	 * @return int Unix timestamp, or 0 if never run.
-	 */
-	public function get_last_cron_run(): int {
-		return $this->get_int_option( self::OPT_LAST_CRON_RUN );
-	}
-
-	/**
-	 * Record the current time as the last cron run.
-	 *
-	 * @return bool
-	 */
-	public function touch_cron_run(): bool {
-		return update_option( self::OPT_LAST_CRON_RUN, time(), false );
-	}
-
-	/**
-	 * Check whether WP-Cron appears to be running reliably.
-	 *
-	 * Returns a warning message if the cron is stale (hasn't run in
-	 * 3× the configured sync interval), or empty string if healthy.
-	 *
-	 * @return string Warning message, or empty string.
-	 */
-	public function get_cron_warning(): string {
-		$sync     = $this->get_sync_settings();
-		$last_run = $this->get_last_cron_run();
-
-		// No run recorded yet — only warn if plugin has been active long enough.
-		if ( 0 === $last_run ) {
-			return '';
-		}
-
-		$interval = 'wp4odoo_fifteen_minutes' === $sync['sync_interval'] ? 900 : 300;
-		$stale    = time() - $last_run;
-
-		// Warn if more than 3× the expected interval has elapsed.
-		if ( $stale > ( $interval * 3 ) ) {
-			if ( defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON ) {
-				return __( 'WP-Cron is disabled (DISABLE_WP_CRON). Ensure a system cron job calls wp-cron.php regularly, or queue processing will not run.', 'wp4odoo' );
-			}
-			return __( 'WP-Cron has not triggered recently. On low-traffic sites, scheduled sync may be delayed. Consider setting up a system cron job.', 'wp4odoo' );
-		}
-
-		return '';
-	}
-
 	// ── DB version ─────────────────────────────────────────
 
 	/**
@@ -589,137 +440,6 @@ class Settings_Repository {
 				update_option( $key, $value );
 			}
 		}
-	}
-
-	// ── Multisite / Network ───────────────────────────────
-
-	/**
-	 * Network option key for shared connection settings.
-	 */
-	public const OPT_NETWORK_CONNECTION = 'wp4odoo_network_connection';
-
-	/**
-	 * Network option key for site → company_id mapping.
-	 */
-	public const OPT_NETWORK_SITE_COMPANIES = 'wp4odoo_network_site_companies';
-
-	/**
-	 * Get the effective connection settings.
-	 *
-	 * In multisite, falls back to the network-level connection if the
-	 * current site has no local connection configured. Also applies
-	 * the site's company_id from the network mapping.
-	 *
-	 * In single-site, this is equivalent to get_connection().
-	 *
-	 * @return array
-	 */
-	public function get_effective_connection(): array {
-		$local = $this->get_connection();
-
-		if ( ! is_multisite() ) {
-			return $local;
-		}
-
-		// If local site has a configured URL, use the local connection.
-		if ( ! empty( $local['url'] ) ) {
-			// Apply network company_id if local doesn't have one.
-			if ( 0 === (int) $local['company_id'] ) {
-				$local['company_id'] = $this->get_site_company_id();
-			}
-			return $local;
-		}
-
-		// Fall back to network connection.
-		$network = $this->get_network_connection();
-		if ( empty( $network['url'] ) ) {
-			return $local; // No network connection either.
-		}
-
-		$merged = array_merge( self::DEFAULTS_CONNECTION, $network );
-
-		// Apply the site's company_id from the network mapping.
-		$site_company = $this->get_site_company_id();
-		if ( $site_company > 0 ) {
-			$merged['company_id'] = $site_company;
-		}
-
-		return $merged;
-	}
-
-	/**
-	 * Get network-level connection settings.
-	 *
-	 * @return array
-	 */
-	public function get_network_connection(): array {
-		if ( ! is_multisite() ) {
-			return [];
-		}
-
-		$stored = get_site_option( self::OPT_NETWORK_CONNECTION, [] );
-		return is_array( $stored ) ? $stored : [];
-	}
-
-	/**
-	 * Save network-level connection settings.
-	 *
-	 * @param array $data Connection settings.
-	 * @return bool
-	 */
-	public function save_network_connection( array $data ): bool {
-		return update_site_option( self::OPT_NETWORK_CONNECTION, $data );
-	}
-
-	/**
-	 * Get the Odoo company_id assigned to the current site.
-	 *
-	 * @return int Company ID (0 if not assigned).
-	 */
-	public function get_site_company_id(): int {
-		if ( ! is_multisite() ) {
-			$conn = $this->get_connection();
-			return (int) ( $conn['company_id'] ?? 0 );
-		}
-
-		$mapping = get_site_option( self::OPT_NETWORK_SITE_COMPANIES, [] );
-		$blog_id = (string) get_current_blog_id();
-
-		return (int) ( $mapping[ $blog_id ] ?? 0 );
-	}
-
-	/**
-	 * Get the site → company_id mapping for the network.
-	 *
-	 * @return array<int, int> Blog ID → Company ID.
-	 */
-	public function get_network_site_companies(): array {
-		$stored = get_site_option( self::OPT_NETWORK_SITE_COMPANIES, [] );
-		return is_array( $stored ) ? $stored : [];
-	}
-
-	/**
-	 * Save the site → company_id mapping for the network.
-	 *
-	 * @param array<int, int> $mapping Blog ID → Company ID.
-	 * @return bool
-	 */
-	public function save_network_site_companies( array $mapping ): bool {
-		return update_site_option( self::OPT_NETWORK_SITE_COMPANIES, $mapping );
-	}
-
-	/**
-	 * Check whether the current site uses the network connection.
-	 *
-	 * @return bool
-	 */
-	public function is_using_network_connection(): bool {
-		if ( ! is_multisite() ) {
-			return false;
-		}
-
-		$local = $this->get_connection();
-		return empty( $local['url'] ) && ! empty( $this->get_network_connection()['url'] ?? '' );
 	}
 
 	// ── Cache management ─────────────────────────────────

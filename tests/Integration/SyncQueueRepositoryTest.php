@@ -20,6 +20,11 @@ class SyncQueueRepositoryTest extends WP4Odoo_TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		$this->repo = new Sync_Queue_Repository();
+
+		// Ensure test isolation: remove any pending jobs leaked by
+		// previous tests (e.g. if transaction rollback was ineffective).
+		global $wpdb;
+		$wpdb->query( "DELETE FROM {$wpdb->prefix}wp4odoo_sync_queue WHERE status = 'pending'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 	}
 
 	// ─── enqueue ───────────────────────────────────────────

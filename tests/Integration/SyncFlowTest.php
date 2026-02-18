@@ -134,7 +134,8 @@ class SyncFlowTest extends WP4Odoo_TestCase {
 			'wp_id'       => $user_id,
 		] );
 
-		$engine->process_queue();
+		$processed = $engine->process_queue();
+		$this->assertGreaterThan( 0, $processed, 'Queue should have processed at least 1 job.' );
 
 		$odoo_id = $this->entity_map->get_odoo_id( 'crm', 'contact', $user_id );
 		$this->assertSame( 99, $odoo_id, 'Entity map should contain the Odoo ID returned by transport.' );
