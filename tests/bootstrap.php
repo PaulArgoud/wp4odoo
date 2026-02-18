@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'WP4ODOO_PLUGIN_DIR', dirname( __DIR__ ) . '/' );
-define( 'WP4ODOO_VERSION', '3.5.0' );
+define( 'WP4ODOO_VERSION', '3.6.0' );
 
 if ( ! defined( 'DAY_IN_SECONDS' ) ) {
 	define( 'DAY_IN_SECONDS', 86400 );
@@ -167,6 +167,9 @@ require_once __DIR__ . '/stubs/wc-product-addons-classes.php';
 require_once __DIR__ . '/stubs/jetformbuilder-classes.php';
 require_once __DIR__ . '/stubs/jet-booking-classes.php';
 require_once __DIR__ . '/stubs/wperp-crm-classes.php';
+require_once __DIR__ . '/stubs/wc-inventory-classes.php';
+require_once __DIR__ . '/stubs/wc-shipping-classes.php';
+require_once __DIR__ . '/stubs/wc-returns-classes.php';
 
 // ─── Composer autoloader ────────────────────────────────
 

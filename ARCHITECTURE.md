@@ -2,7 +2,7 @@
 
 ## Overview
 
-Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 54 modules across 35 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Product Add-Ons, WC Points & Rewards, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (8 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS + TutorLMS), Booking (Amelia + Bookly + JetAppointments + JetBooking + WC Bookings), Projects (WP Project Manager), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP + SureCart), Marketplace (Dokan + WCFM + WC Vendors), B2B/Wholesale (WC B2B), Email Marketing (MailPoet + MC4WP + FluentCRM), Helpdesk (Awesome Support + SupportCandy), HR (WP Job Manager + WP ERP + WP ERP CRM), Affiliates (AffiliateWP), Funnels (FunnelKit), Gamification (GamiPress), Community (BuddyBoss), Knowledge (Knowledge), Generic CPT (JetEngine), and Meta-modules (ACF + JetEngine Meta + WP All Import). Supports WordPress Multisite with per-site company scoping.
+Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 57 modules across 38 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Product Add-Ons, WC Points & Rewards, WC Inventory, WC Shipping, WC Returns, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (8 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS + TutorLMS), Booking (Amelia + Bookly + JetAppointments + JetBooking + WC Bookings), Projects (WP Project Manager), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP + SureCart), Marketplace (Dokan + WCFM + WC Vendors), B2B/Wholesale (WC B2B), Email Marketing (MailPoet + MC4WP + FluentCRM), Helpdesk (Awesome Support + SupportCandy), HR (WP Job Manager + WP ERP + WP ERP CRM), Affiliates (AffiliateWP), Funnels (FunnelKit), Gamification (GamiPress), Community (BuddyBoss), Knowledge (Knowledge), Generic CPT (JetEngine), and Meta-modules (ACF + JetEngine Meta + WP All Import). Supports WordPress Multisite with per-site company scoping.
 
 ![WP4ODOO Full Architecture](assets/images/architecture-full.svg)
 
@@ -160,6 +160,21 @@ WordPress For Odoo/
 │   │   ├── trait-wc-addons-hooks.php          # WC Add-Ons: save_post_product hook callback
 │   │   ├── class-wc-addons-handler.php        # WC Add-Ons: multi-plugin abstraction (official + ThemeHigh + PPOM), dual-mode formatting
 │   │   ├── class-wc-addons-module.php         # WC Add-Ons: push-only, product add-ons → product.attribute / mrp.bom, cross-module entity_map
+│   │   │
+│   │   ├── # ─── WC Inventory ──────────────────────────────
+│   │   ├── trait-wc-inventory-hooks.php       # WC Inventory: woocommerce_product_set_stock (priority 20), ATUM hook
+│   │   ├── class-wc-inventory-handler.php     # WC Inventory: warehouse/location/movement data access
+│   │   ├── class-wc-inventory-module.php      # WC Inventory: bidi movements, pull-only warehouses/locations
+│   │   │
+│   │   ├── # ─── WC Shipping ───────────────────────────────
+│   │   ├── trait-wc-shipping-hooks.php        # WC Shipping: AST, ShipStation, Sendcloud, Packlink hooks
+│   │   ├── class-wc-shipping-handler.php      # WC Shipping: carrier/tracking/shipment data access
+│   │   ├── class-wc-shipping-module.php       # WC Shipping: bidi tracking, push-only carriers
+│   │   │
+│   │   ├── # ─── WC Returns ────────────────────────────────
+│   │   ├── trait-wc-returns-hooks.php         # WC Returns: refund created, YITH, ReturnGO hooks
+│   │   ├── class-wc-returns-handler.php       # WC Returns: refund/credit note/return picking data access
+│   │   ├── class-wc-returns-module.php        # WC Returns: bidi credit notes, push-only return pickings
 │   │   │
 │   │   ├── # ─── WC Points & Rewards ─────────────────────────
 │   │   ├── trait-wc-points-rewards-hooks.php  # Points: on_points_change (all 3 WC hooks)
@@ -1548,6 +1563,65 @@ All user inputs are sanitized with:
 - Silently skips BOM mode if Odoo MRP module not installed
 
 **Settings:** `sync_addons`, `addon_mode`
+
+### WC Inventory — COMPLETE
+
+**Files:** `class-wc-inventory-module.php` (sync coordinator, uses `WC_Inventory_Hooks` trait), `trait-wc-inventory-hooks.php` (hook callbacks), `class-wc-inventory-handler.php` (warehouse/location/movement data access)
+
+**Odoo models:** `stock.warehouse` (warehouses — pull-only), `stock.location` (locations — pull-only), `stock.move` (movements — bidi)
+
+**Key features:**
+- Bidirectional for stock movements, pull-only for warehouses and locations
+- Requires WooCommerce; `boot()` guards with `class_exists('WooCommerce')`
+- Independent module — coexists with WooCommerce module's stock.quant sync
+- Hooks at priority 20 on `woocommerce_product_set_stock` (after WC module at 10) — creates traced stock.move alongside global quant adjustment
+- Optional ATUM Multi-Inventory support: `atum/stock_central/after_save_data` hook for multi-location stock changes
+- Warehouses and locations saved as WP options for reference
+- Cross-module product resolution via entity_map (product + variant lookups)
+- Movement save applies stock change only when state is `done`
+
+**Settings:** `sync_movements`, `sync_warehouses`, `sync_locations`, `push_adjustments`, `default_warehouse_id`
+
+### WC Shipping — COMPLETE
+
+**Files:** `class-wc-shipping-module.php` (sync coordinator, uses `WC_Shipping_Hooks` trait), `trait-wc-shipping-hooks.php` (hook callbacks), `class-wc-shipping-handler.php` (carrier/tracking/shipment data access)
+
+**Odoo models:** `delivery.carrier` (carriers — push-only), `stock.picking` (shipments — bidi)
+
+**Key features:**
+- Bidirectional tracking sync: push WC tracking to Odoo `stock.picking.carrier_tracking_ref`, pull Odoo tracking back to WC order meta
+- Requires WooCommerce; `boot()` guards with `class_exists('WooCommerce')`
+- Independent module — coexists with WooCommerce module's pull-only shipment tracking
+- Optional ShipStation integration: `woocommerce_shipstation_shipnotify` hook
+- Optional Sendcloud integration: `sendcloud_parcel_status_changed` hook
+- Optional Packlink integration: `packlink_tracking_updated` hook
+- AST plugin support: `wc_shipment_tracking_added` hook for generic tracking push
+- Provider-specific data extraction: `extract_from_shipstation()`, `extract_from_sendcloud()`, `extract_from_packlink()`
+- AST-compatible meta format for tracking items (same format as Shipment_Handler)
+- Carrier dedup by name, shipments updated in-place
+
+**Settings:** `sync_carriers`, `sync_tracking_push`, `sync_tracking_pull`, `auto_validate_picking`, `shipstation_hooks`, `sendcloud_hooks`, `packlink_hooks`
+
+### WC Returns — COMPLETE
+
+**Files:** `class-wc-returns-module.php` (sync coordinator, uses `WC_Returns_Hooks` trait), `trait-wc-returns-hooks.php` (hook callbacks), `class-wc-returns-handler.php` (refund/credit note/return picking data access)
+
+**Odoo models:** `account.move` (refunds as credit notes with `move_type=out_refund` — bidi), `stock.picking` (return pickings — push-only)
+
+**Key features:**
+- Bidirectional for credit notes, push-only for return pickings
+- Requires WooCommerce; `boot()` guards with `class_exists('WooCommerce')`
+- Independent module — coexists with WooCommerce module
+- Push: `woocommerce_refund_created` → credit note (Odoo `out_refund`) + optional return picking
+- Auto-posts credit notes in Odoo via `Odoo_Accounting_Formatter::auto_post()`
+- Pull: Odoo credit notes → WC refunds via `wc_create_refund()`
+- Cross-module entity resolution: original invoice via `reversed_entry_id`, customer via `Partner_Service`
+- Uses `Odoo_Accounting_Formatter::for_credit_note()` for data formatting
+- Optional YITH WooCommerce Return & Warranty: `ywrma_after_approve_request` hook
+- Optional ReturnGO: `returngo_return_created` hook
+- Credit note dedup by `ref` + `move_type=out_refund`
+
+**Settings:** `sync_refunds`, `pull_refunds`, `sync_return_pickings`, `auto_post_refund`, `yith_hooks`, `returngo_hooks`
 
 ### Events Calendar — COMPLETE
 

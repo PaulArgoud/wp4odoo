@@ -5,7 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.5.0] - Unreleased
+## [3.6.0] - Unreleased
+
+### Added
+- **WC Inventory module** — Advanced multi-warehouse stock management with optional ATUM Multi-Inventory integration. Syncs warehouses (`stock.warehouse`, pull-only), stock locations (`stock.location`, pull-only), and stock movements (`stock.move`, bidirectional). Complements the WooCommerce module's global stock.quant sync with individual move tracking. Hooks at priority 20 on `woocommerce_product_set_stock` (after WC module at 10). ATUM detection at runtime for multi-location support
+- **WC Shipping module** — Bidirectional shipment tracking sync with optional ShipStation, Sendcloud, Packlink, and AST integration. Pushes WC tracking data to Odoo `stock.picking` (`carrier_tracking_ref`), pulls Odoo shipment tracking back to WC order meta (AST-compatible format). Optionally syncs WC shipping methods as `delivery.carrier` records. Provider-specific extraction methods for each shipping plugin
+- **WC Returns module** — Full return/refund lifecycle with optional YITH WooCommerce Return & Warranty and ReturnGO integration. Pushes WC refunds as Odoo credit notes (`account.move` with `move_type=out_refund`), pulls credit notes back as WC refunds. Optionally creates return `stock.picking` entries. Auto-posts credit notes via `Odoo_Accounting_Formatter::auto_post()`. Cross-module entity resolution for original invoice (`reversed_entry_id`)
+- **`Odoo_Accounting_Formatter::for_credit_note()`** — New static method for formatting credit note data (`out_refund` account.move). Reuses `build_invoice_lines()` for line items, supports optional `reversed_entry_id` for linking to original invoice. Filterable via `wp4odoo_credit_note_data` hook
+- **Odoo_Model enum additions** — 5 new cases: `StockWarehouse`, `StockLocation`, `StockMove`, `StockQuant`, `StockPickingType`
+
+## [3.5.0] - 2026-02-18
 
 ### Added
 - **WordPress Multisite → Multi-company Odoo** — Full multisite support: each site in a WordPress network syncs with a specific Odoo company (`res.company`). Migration 7 adds `blog_id` column to `wp4odoo_entity_map`, `wp4odoo_sync_queue`, and `wp4odoo_logs` tables. Repository layer (`Entity_Map_Repository`, `Sync_Queue_Repository`, `Logger`) scopes all queries by `blog_id`. `Odoo_Client` injects `allowed_company_ids` into kwargs context when `company_id > 0`. Network activation iterates all sites, `wp_initialize_site` hook provisions new sites. Backward compatible: `DEFAULT 1` ensures single-site installs are unaffected

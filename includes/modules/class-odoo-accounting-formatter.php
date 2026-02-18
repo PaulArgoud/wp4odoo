@@ -205,6 +205,48 @@ final class Odoo_Accounting_Formatter {
 	}
 
 	/**
+	 * Format data for credit note (customer refund).
+	 *
+	 * Creates an account.move with move_type='out_refund', optionally
+	 * linked to the original invoice via reversed_entry_id.
+	 *
+	 * @since 3.6.0
+	 *
+	 * @param int    $partner_id        Odoo partner ID.
+	 * @param float  $amount            Refund amount.
+	 * @param string $date              Date (Y-m-d).
+	 * @param string $ref               Reference (e.g. "WC Refund #123 (Order #456)").
+	 * @param array  $line_items        Line items [{name, quantity, price_unit}, ...].
+	 * @param string $fallback_name     Fallback line name if no items.
+	 * @param int    $reversed_entry_id Original invoice Odoo ID (0 if unknown).
+	 * @return array<string, mixed>
+	 */
+	public static function for_credit_note( int $partner_id, float $amount, string $date, string $ref, array $line_items, string $fallback_name, int $reversed_entry_id = 0 ): array {
+		$data = [
+			'move_type'        => 'out_refund',
+			'partner_id'       => $partner_id,
+			'invoice_date'     => $date,
+			'ref'              => $ref,
+			'invoice_line_ids' => self::build_invoice_lines( $line_items, $fallback_name, $amount ),
+		];
+
+		if ( $reversed_entry_id > 0 ) {
+			$data['reversed_entry_id'] = $reversed_entry_id;
+		}
+
+		/**
+		 * Filter credit note data before sending to Odoo.
+		 *
+		 * @since 3.6.0
+		 *
+		 * @param array  $data       Credit note data.
+		 * @param int    $partner_id Odoo partner ID.
+		 * @param string $ref        Refund reference.
+		 */
+		return apply_filters( 'wp4odoo_credit_note_data', $data, $partner_id, $ref );
+	}
+
+	/**
 	 * Auto-post or auto-validate a record in Odoo.
 	 *
 	 * Centralizes the post/validate logic for all accounting models:

@@ -166,8 +166,23 @@ enum Odoo_Model: string {
 
 	// ─── Inventory ─────────────────────────────────────────
 
+	/** Stock warehouses. @since 3.6.0 */
+	case StockWarehouse = 'stock.warehouse';
+
+	/** Stock locations. @since 3.6.0 */
+	case StockLocation = 'stock.location';
+
+	/** Stock moves. @since 3.6.0 */
+	case StockMove = 'stock.move';
+
+	/** Stock quants (inventory levels). @since 3.6.0 */
+	case StockQuant = 'stock.quant';
+
 	/** Stock pickings (delivery orders). */
 	case StockPicking = 'stock.picking';
+
+	/** Stock picking types. @since 3.6.0 */
+	case StockPickingType = 'stock.picking.type';
 
 	// ─── Knowledge (Enterprise) ────────────────────────────
 

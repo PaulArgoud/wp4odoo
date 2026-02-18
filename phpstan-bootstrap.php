@@ -106,6 +106,9 @@ if ( ! class_exists( 'WC_Order' ) ) {
 		 */
 		public function get_meta( string $key, bool $single = true ) { return ''; }
 		public function get_parent_id(): int { return 0; }
+		public function get_type(): string { return 'shop_order'; }
+		public function get_amount(): string { return '0'; }
+		public function get_reason(): string { return ''; }
 		public function add_order_note( string $note ): int { return 0; }
 		public function save(): int { return 0; }
 	}
@@ -129,6 +132,23 @@ if ( ! class_exists( 'WC_Order' ) ) {
 		public function get_method_id(): string { return ''; }
 		public function get_method_title(): string { return ''; }
 		public function get_total(): string { return '0.00'; }
+	}
+}
+
+if ( ! function_exists( 'wc_create_refund' ) ) {
+	/**
+	 * @param array $args
+	 * @return WC_Order|\WP_Error
+	 */
+	function wc_create_refund( $args = [] ) {
+		return new WC_Order();
+	}
+}
+
+if ( ! class_exists( 'WC_Shipping_Zones' ) ) {
+	class WC_Shipping_Zones {
+		/** @return array */
+		public static function get_zones(): array { return []; }
 	}
 }
 

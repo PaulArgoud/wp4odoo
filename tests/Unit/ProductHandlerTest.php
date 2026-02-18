@@ -21,8 +21,12 @@ namespace WP4Odoo\Modules {
 		}
 		// PricelistHandlerTest and others use the array-based store.
 		if ( isset( $GLOBALS['_wc_products'][ $product_id ] ) ) {
+			$data = $GLOBALS['_wc_products'][ $product_id ];
+			if ( $data instanceof \WC_Product ) {
+				return $data;
+			}
 			$product = new \WC_Product( (int) $product_id );
-			$product->set_data( $GLOBALS['_wc_products'][ $product_id ] );
+			$product->set_data( $data );
 			return $product;
 		}
 		return false;

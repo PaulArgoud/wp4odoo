@@ -124,6 +124,11 @@ class Module_Registry {
 			[ 'wc_bundle_bom', Modules\WC_Bundle_BOM_Module::class, fn() => class_exists( 'WC_Bundles' ) || class_exists( 'WC_Composite_Products' ) ],
 			[ 'wc_addons', Modules\WC_Addons_Module::class, fn() => class_exists( 'WC_Product_Addons' ) || defined( 'THWEPO_VERSION' ) || defined( 'PPOM_VERSION' ) ],
 
+			// WooCommerce extensions — advanced stock/shipping/returns.
+			[ 'wc_inventory', Modules\WC_Inventory_Module::class, fn() => class_exists( 'WooCommerce' ) ],
+			[ 'wc_shipping', Modules\WC_Shipping_Module::class, fn() => class_exists( 'WooCommerce' ) ],
+			[ 'wc_returns', Modules\WC_Returns_Module::class, fn() => class_exists( 'WooCommerce' ) ],
+
 			// Invoicing group.
 			[ 'sprout_invoices', Modules\Sprout_Invoices_Module::class, fn() => class_exists( 'SI_Invoice' ) ],
 			[ 'wp_invoice', Modules\WP_Invoice_Module::class, fn() => class_exists( 'WPI_Invoice' ) ],

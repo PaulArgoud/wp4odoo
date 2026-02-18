@@ -85,8 +85,8 @@ if ( ! class_exists( 'WC_Product' ) ) {
 		public function set_regular_price( string $price ): void { $this->data['regular_price'] = $price; }
 		public function get_sale_price(): string { return $this->data['sale_price'] ?? ''; }
 		public function set_sale_price( $price ): void { $this->data['sale_price'] = (string) $price; }
-		public function get_stock_quantity(): ?int { return $this->data['stock_quantity'] ?? null; }
-		public function set_stock_quantity( ?int $quantity ): void { $this->data['stock_quantity'] = $quantity; }
+		public function get_stock_quantity(): int|float|null { return $this->data['stock_quantity'] ?? null; }
+		public function set_stock_quantity( int|float|null $quantity ): void { $this->data['stock_quantity'] = $quantity; }
 		public function managing_stock(): bool { return $this->data['manage_stock'] ?? true; }
 		public function set_manage_stock( bool $manage ): void { $this->data['manage_stock'] = $manage; }
 		public function get_weight(): string { return $this->data['weight'] ?? ''; }
@@ -211,6 +211,7 @@ if ( ! class_exists( 'WC_Order' ) ) {
 			$this->id = $id;
 		}
 		public function get_id(): int { return $this->id; }
+		public function get_type(): string { return $this->data['type'] ?? 'shop_order'; }
 		public function get_total(): string { return $this->data['total'] ?? '0.00'; }
 		public function get_date_created(): ?\WC_DateTime {
 			return isset( $this->data['date_created'] ) ? new \WC_DateTime( $this->data['date_created'] ) : null;
@@ -220,6 +221,9 @@ if ( ! class_exists( 'WC_Order' ) ) {
 		public function get_billing_email(): string { return $this->data['billing_email'] ?? ''; }
 		public function get_formatted_billing_full_name(): string { return $this->data['billing_name'] ?? ''; }
 		public function get_customer_id(): int { return $this->data['customer_id'] ?? 0; }
+		public function get_parent_id(): int { return $this->data['parent_id'] ?? 0; }
+		public function get_amount(): string { return $this->data['amount'] ?? '0.00'; }
+		public function get_reason(): string { return $this->data['reason'] ?? ''; }
 		/**
 		 * @param string $type Item type: '' for line items, 'tax', 'shipping'.
 		 * @return array
