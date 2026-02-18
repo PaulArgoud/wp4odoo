@@ -36,7 +36,6 @@ class Sales_Module extends Module_Base {
 
 
 	protected string $exclusive_group = 'ecommerce';
-	protected int $exclusive_priority = 10;
 
 	/**
 	 * Sync direction: Sales module only pulls from Odoo.

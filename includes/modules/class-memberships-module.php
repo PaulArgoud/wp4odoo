@@ -30,7 +30,6 @@ class Memberships_Module extends Module_Base {
 	protected const PLUGIN_TESTED_UP_TO = '1.27';
 
 	protected string $exclusive_group = 'memberships';
-	protected int $exclusive_priority = 20;
 
 	/**
 	 * Sync direction: bidirectional (plans ↔, memberships ↔ status updates).

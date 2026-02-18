@@ -45,7 +45,6 @@ class WC_Vendors_Module extends \WP4Odoo\Module_Base {
 	 *
 	 * @var int
 	 */
-	protected int $exclusive_priority = 20;
 
 	/**
 	 * Odoo models by entity type.

@@ -34,10 +34,6 @@ class ACFModuleTest extends TestCase {
 		$this->assertSame( '', $this->module->get_exclusive_group() );
 	}
 
-	public function test_exclusive_priority_is_zero(): void {
-		$this->assertSame( 0, $this->module->get_exclusive_priority() );
-	}
-
 	public function test_sync_direction_is_bidirectional(): void {
 		$this->assertSame( 'bidirectional', $this->module->get_sync_direction() );
 	}

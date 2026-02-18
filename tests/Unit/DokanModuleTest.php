@@ -58,10 +58,6 @@ class DokanModuleTest extends TestCase {
 		$this->assertSame( 'marketplace', $this->module->get_exclusive_group() );
 	}
 
-	public function test_exclusive_priority_is_ten(): void {
-		$this->assertSame( 10, $this->module->get_exclusive_priority() );
-	}
-
 	// ─── Odoo Models ─────────────────────────────────────
 
 	public function test_declares_vendor_model(): void {

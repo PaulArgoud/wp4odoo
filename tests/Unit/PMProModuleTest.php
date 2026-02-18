@@ -29,10 +29,6 @@ class PMProModuleTest extends MembershipModuleTestBase {
 		return 'Paid Memberships Pro';
 	}
 
-	protected function get_exclusive_priority(): int {
-		return 15;
-	}
-
 	protected function get_level_entity(): string {
 		return 'level';
 	}

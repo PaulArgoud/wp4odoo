@@ -554,7 +554,7 @@ WordPress For Odoo/
 │       ├── WPERPModuleTest.php         # 101 tests for WP ERP module
 │       ├── ErrorClassificationTest.php # 19 tests for Error_Classification trait
 │       ├── PushDedupLockTest.php      #   6 tests for Push_Lock advisory lock
-│       ├── DatabaseMigrationTest.php  #   9 tests for Database_Migration (migrations 1–8)
+│       ├── DatabaseMigrationTest.php  #   9 tests for Database_Migration (migrations 1–9)
 │       ├── MultisiteTest.php          #   29 tests for multisite (blog_id scoping, company_id, network fallback)
 │       ├── JetBookingModuleTest.php   # Tests for Jet_Booking_Module
 │       ├── JetBookingHandlerTest.php  # Tests for Jet_Booking_Handler
@@ -997,12 +997,14 @@ Managed via `dbDelta()` in `Database_Migration::create_tables()`. Schema upgrade
 - Processed status index: `(status, processed_at)` — added by migration_4 (health metrics)
 - Cleanup index: `(status, created_at)` — added by migration_5
 - Stale recovery index: `(blog_id, status, processed_at)` — added by migration_8
+- Dedup Odoo index: `(blog_id, module, entity_type, direction, status, odoo_id)` — migration_9 rebuilt with `blog_id` prefix
 - Correlation index: `(correlation_id)` — added by migration_1
 
 **`{prefix}wp4odoo_entity_map`** — WP ↔ Odoo mapping
 - Unique: `(module, entity_type, wp_id, odoo_id)`
 - WP lookup: `(module, entity_type, wp_id)` — migration_5 added `module` prefix
 - Odoo lookup: `(odoo_model, odoo_id)`
+- Poll detection: `(blog_id, module, entity_type, last_polled_at)` — migration_9 rebuilt with `blog_id` prefix
 
 **`{prefix}wp4odoo_logs`** — Structured logs
 - Indexes: `(level, created_at)`, `(module)`, `(correlation_id)` — correlation added by migration_1

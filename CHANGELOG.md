@@ -19,13 +19,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added (Architecture)
 - **Migration 8 — Stale recovery index** — New composite index `idx_stale_recovery (blog_id, status, processed_at)` on `wp4odoo_sync_queue` for efficient stale job recovery queries. Idempotent (checks `SHOW INDEX` before `ALTER`)
+- **Migration 9 — Rebuild indexes with blog_id prefix** — Rebuilds `idx_dedup_odoo` on `wp4odoo_sync_queue` and `idx_poll_detection` on `wp4odoo_entity_map` with `blog_id` as leading column for correct multisite index scoping. Idempotent (checks `SHOW INDEX` before `DROP`)
 - **`Logger::for_channel()` factory** — New static factory method creates Logger instances with a shared `Settings_Repository` (avoids repeated `get_option()` calls when multiple loggers are created in the same request). All 12 direct `new Logger()` callsites migrated to `Logger::for_channel()` (Sync_Engine, Queue_Manager, Module_Base, Webhook_Handler, Partner_Service, Odoo_Client, Odoo_Transport_Base, Odoo_Auth, CLI, Ajax_Monitor_Handlers, Translation_Service)
 - **`Module_Base::register_hook()` / `teardown()`** — New hook lifecycle methods. `register_hook()` wraps `add_action()` with `safe_callback()` and tracks registered hooks. `teardown()` removes all tracked hooks via `remove_action()`. Called automatically when a module is disabled via the admin toggle. Designed for gradual adoption by new modules
 - **Queue_Manager injectable Logger** — Constructor accepts optional `?Logger $logger` parameter. When provided (e.g. by Sync_Engine), queue depth alerts share the caller's Logger and its correlation ID. Falls back to `Logger::for_channel('queue_manager')` when null
 
+### Removed
+- **`exclusive_priority` dead code** — Removed `$exclusive_priority` property and `get_exclusive_priority()` getter from `Module_Base` and 17 module classes. `Module_Registry::register()` never read this value — exclusive groups use first-registered-wins based on registration order, not priority
+
 ### Fixed (Architecture)
 - **Blog-scoped transients** — `Sync_Engine` stale recovery transient (`wp4odoo_last_stale_recovery`) and `Queue_Manager` depth check cooldown now include `get_current_blog_id()` in their transient keys, preventing multisite sites from sharing cooldown state
 - **Webhook token auto-migration** — `Settings_Repository::get_webhook_token()` now auto-encrypts plaintext tokens on first read (backward-compat fallback path). Subsequent reads return the encrypted-then-decrypted value, eliminating the plaintext storage after first access
+- **Multisite index scoping** — `idx_dedup_odoo` and `idx_poll_detection` indexes were missing `blog_id` as leading column, causing full-index scans in multisite installations. Migration 9 rebuilds both with correct `blog_id` prefix
 
 ### Changed
 - **Settings_Repository multisite support** — New methods: `get_effective_connection()` (local → network fallback), `get_network_connection()`, `save_network_connection()`, `get_site_company_id()`, `get_network_site_companies()`, `save_network_site_companies()`, `is_using_network_connection()`. New constants: `OPT_NETWORK_CONNECTION`, `OPT_NETWORK_SITE_COMPANIES`. `company_id` added to `DEFAULTS_CONNECTION`
@@ -34,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Connection tab UI** — Shows "Using network connection" indicator when site inherits from network. New Company ID input field after Timeout
 
 ### Tests
-- 4 226 unit tests (6 472 assertions) — new tests covering multisite blog_id scoping (Entity_Map_Repository, Sync_Queue_Repository), company_id injection (Odoo_Client), credential resolution (Odoo_Auth network fallback), Settings_Repository multisite methods, switch_to_blog stubs, JetBooking module+handler, WP ERP CRM module+handler, JetEngine Meta-Module, JetFormBuilder form extraction, migrations 7–8, webhook token auto-migration
+- 4 188 unit tests (6 437 assertions) — new tests covering multisite blog_id scoping (Entity_Map_Repository, Sync_Queue_Repository), company_id injection (Odoo_Client), credential resolution (Odoo_Auth network fallback), Settings_Repository multisite methods, switch_to_blog stubs, JetBooking module+handler, WP ERP CRM module+handler, JetEngine Meta-Module, JetFormBuilder form extraction, migrations 7–9, webhook token auto-migration
 
 ## [3.4.0] - 2026-02-18
 

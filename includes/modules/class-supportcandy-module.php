@@ -161,7 +161,6 @@ class SupportCandy_Module extends Helpdesk_Module_Base {
 		return defined( 'WPSC_VERSION' ) ? WPSC_VERSION : '';
 	}
 
-	protected int $exclusive_priority = 15;
 
 	// ─── Helpdesk_Module_Base abstracts ─────────────────────
 

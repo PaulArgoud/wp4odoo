@@ -34,7 +34,6 @@ class Ecwid_Module extends Module_Base {
 	protected const PLUGIN_TESTED_UP_TO = '7.0';
 
 	protected string $exclusive_group = 'ecommerce';
-	protected int $exclusive_priority = 5;
 
 	/**
 	 * Sync direction: push-only (WP → Odoo).

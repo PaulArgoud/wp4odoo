@@ -49,10 +49,6 @@ class SureCartModuleTest extends TestCase {
 
 	// ─── Exclusive Group ──────────────────────────────────
 
-	public function test_exclusive_priority_is_eight(): void {
-		$this->assertSame( 8, $this->module->get_exclusive_priority() );
-	}
-
 	public function test_exclusive_group_not_empty(): void {
 		$this->assertNotEmpty( $this->module->get_exclusive_group() );
 	}

@@ -45,7 +45,6 @@ class WCFM_Module extends \WP4Odoo\Module_Base {
 	 *
 	 * @var int
 	 */
-	protected int $exclusive_priority = 15;
 
 	/**
 	 * Odoo models by entity type.

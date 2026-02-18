@@ -35,7 +35,6 @@ class EDD_Module extends Module_Base {
 	protected const PLUGIN_TESTED_UP_TO = '3.6';
 
 	protected string $exclusive_group = 'ecommerce';
-	protected int $exclusive_priority = 20;
 
 	protected array $odoo_models = [
 		'download' => 'product.template',

@@ -45,10 +45,6 @@ class SupportCandyModuleTest extends TestCase {
 		$this->assertSame( 'helpdesk', $this->module->get_exclusive_group() );
 	}
 
-	public function test_exclusive_priority_is_15(): void {
-		$this->assertSame( 15, $this->module->get_exclusive_priority() );
-	}
-
 	public function test_sync_direction_is_bidirectional(): void {
 		$this->assertSame( 'bidirectional', $this->module->get_sync_direction() );
 	}

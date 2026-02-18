@@ -17,8 +17,6 @@ abstract class MembershipModuleTestBase extends TestCase {
 
 	abstract protected function get_module_name(): string;
 
-	abstract protected function get_exclusive_priority(): int;
-
 	abstract protected function get_level_entity(): string;
 
 	abstract protected function get_order_entity(): string;
@@ -47,10 +45,6 @@ abstract class MembershipModuleTestBase extends TestCase {
 
 	public function test_exclusive_group(): void {
 		$this->assertSame( 'memberships', $this->module->get_exclusive_group() );
-	}
-
-	public function test_exclusive_priority(): void {
-		$this->assertSame( $this->get_exclusive_priority(), $this->module->get_exclusive_priority() );
 	}
 
 	public function test_sync_direction_is_wp_to_odoo(): void {

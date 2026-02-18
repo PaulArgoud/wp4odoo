@@ -42,10 +42,6 @@ class SalesModuleTest extends TestCase {
 		$this->assertSame( 'ecommerce', $this->module->get_exclusive_group() );
 	}
 
-	public function test_exclusive_priority(): void {
-		$this->assertSame( 10, $this->module->get_exclusive_priority() );
-	}
-
 	// ─── Odoo Models ───────────────────────────────────────
 
 	public function test_declares_product_model(): void {

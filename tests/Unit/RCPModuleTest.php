@@ -27,10 +27,6 @@ class RCPModuleTest extends MembershipModuleTestBase {
 		return 'Restrict Content Pro';
 	}
 
-	protected function get_exclusive_priority(): int {
-		return 12;
-	}
-
 	protected function get_level_entity(): string {
 		return 'level';
 	}

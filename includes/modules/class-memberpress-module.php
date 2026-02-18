@@ -30,7 +30,6 @@ class MemberPress_Module extends Membership_Module_Base {
 	protected const PLUGIN_MIN_VERSION  = '1.9';
 	protected const PLUGIN_TESTED_UP_TO = '1.11';
 
-	protected int $exclusive_priority = 10;
 
 	/**
 	 * Odoo models by entity type.

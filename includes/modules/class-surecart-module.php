@@ -46,7 +46,6 @@ class SureCart_Module extends Module_Base {
 	 *
 	 * @var int
 	 */
-	protected int $exclusive_priority = 8;
 
 	/**
 	 * Odoo models by entity type.

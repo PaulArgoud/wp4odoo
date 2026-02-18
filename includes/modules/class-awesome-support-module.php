@@ -149,7 +149,6 @@ class Awesome_Support_Module extends Helpdesk_Module_Base {
 		return defined( 'WPAS_VERSION' ) ? WPAS_VERSION : '';
 	}
 
-	protected int $exclusive_priority = 10;
 
 	// ─── Helpdesk_Module_Base abstracts ─────────────────────
 

@@ -125,7 +125,6 @@ abstract class Module_Test_Case extends TestCase {
 	 * @param string      $id        Expected module ID.
 	 * @param string      $name      Expected module name.
 	 * @param string      $group     Expected exclusive group ('' if none).
-	 * @param int         $priority  Expected exclusive priority (0 if none).
 	 * @param string      $direction Expected sync direction.
 	 */
 	protected function assertModuleIdentity(
@@ -133,13 +132,11 @@ abstract class Module_Test_Case extends TestCase {
 		string $id,
 		string $name,
 		string $group = '',
-		int $priority = 0,
 		string $direction = 'bidirectional'
 	): void {
 		$this->assertSame( $id, $module->get_id(), 'Module ID mismatch.' );
 		$this->assertSame( $name, $module->get_name(), 'Module name mismatch.' );
 		$this->assertSame( $group, $module->get_exclusive_group(), 'Exclusive group mismatch.' );
-		$this->assertSame( $priority, $module->get_exclusive_priority(), 'Exclusive priority mismatch.' );
 		$this->assertSame( $direction, $module->get_sync_direction(), 'Sync direction mismatch.' );
 	}
 

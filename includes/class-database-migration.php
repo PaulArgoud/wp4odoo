@@ -61,7 +61,7 @@ final class Database_Migration {
 			KEY idx_status_module (blog_id, status, module, priority, created_at),
 			KEY idx_module_entity (module, entity_type),
 			KEY idx_dedup_wp (blog_id, module, entity_type, direction, status, wp_id),
-			KEY idx_dedup_odoo (module, entity_type, direction, status, odoo_id),
+			KEY idx_dedup_odoo (blog_id, module, entity_type, direction, status, odoo_id),
 			KEY idx_wp_id (wp_id),
 			KEY idx_odoo_id (odoo_id),
 			KEY idx_correlation (correlation_id),
@@ -84,7 +84,7 @@ final class Database_Migration {
 			UNIQUE KEY idx_unique_mapping (blog_id, module, entity_type, wp_id, odoo_id),
 			KEY idx_wp_lookup (blog_id, module, entity_type, wp_id),
 			KEY idx_odoo_lookup (blog_id, module, entity_type, odoo_id),
-			KEY idx_poll_detection (module, entity_type, last_polled_at)
+			KEY idx_poll_detection (blog_id, module, entity_type, last_polled_at)
 		) $charset_collate;
 
 		CREATE TABLE IF NOT EXISTS {$wpdb->prefix}wp4odoo_logs (
@@ -160,6 +160,7 @@ final class Database_Migration {
 			6 => [ self::class, 'migration_6' ],
 			7 => [ self::class, 'migration_7' ],
 			8 => [ self::class, 'migration_8' ],
+			9 => [ self::class, 'migration_9' ],
 		];
 	}
 
@@ -406,6 +407,44 @@ final class Database_Migration {
 		if ( ! in_array( 'idx_stale_recovery', $names, true ) ) {
 			$wpdb->query( "ALTER TABLE {$queue_table} ADD KEY idx_stale_recovery (blog_id, status, processed_at)" );
 		}
+		// phpcs:enable
+	}
+
+	/**
+	 * Migration 9: Rebuild two indexes with blog_id prefix for multisite.
+	 *
+	 * idx_dedup_odoo on sync_queue and idx_poll_detection on entity_map
+	 * were created without blog_id, causing MySQL to scan all blogs when
+	 * queries filter by blog_id. Adds blog_id as the leftmost column.
+	 *
+	 * @return void
+	 */
+	private static function migration_9(): void {
+		global $wpdb;
+
+		$queue_table  = $wpdb->prefix . 'wp4odoo_sync_queue';
+		$entity_table = $wpdb->prefix . 'wp4odoo_entity_map';
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.SchemaChange
+
+		// ── sync_queue: idx_dedup_odoo ──────────────────────
+		$queue_indexes = $wpdb->get_results( "SHOW INDEX FROM {$queue_table}" );
+		$queue_names   = array_column( $queue_indexes, 'Key_name' );
+
+		if ( in_array( 'idx_dedup_odoo', $queue_names, true ) ) {
+			$wpdb->query( "ALTER TABLE {$queue_table} DROP KEY idx_dedup_odoo" );
+		}
+		$wpdb->query( "ALTER TABLE {$queue_table} ADD KEY idx_dedup_odoo (blog_id, module, entity_type, direction, status, odoo_id)" );
+
+		// ── entity_map: idx_poll_detection ──────────────────
+		$entity_indexes = $wpdb->get_results( "SHOW INDEX FROM {$entity_table}" );
+		$entity_names   = array_column( $entity_indexes, 'Key_name' );
+
+		if ( in_array( 'idx_poll_detection', $entity_names, true ) ) {
+			$wpdb->query( "ALTER TABLE {$entity_table} DROP KEY idx_poll_detection" );
+		}
+		$wpdb->query( "ALTER TABLE {$entity_table} ADD KEY idx_poll_detection (blog_id, module, entity_type, last_polled_at)" );
+
 		// phpcs:enable
 	}
 

@@ -34,7 +34,6 @@ class WP_Invoice_Module extends Module_Base {
 	protected const PLUGIN_TESTED_UP_TO = '4.4';
 
 	protected string $exclusive_group = 'invoicing';
-	protected int $exclusive_priority = 5;
 
 	/**
 	 * Sync direction: push-only (WP → Odoo).

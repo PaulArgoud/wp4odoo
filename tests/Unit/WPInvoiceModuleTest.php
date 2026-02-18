@@ -52,10 +52,6 @@ class WPInvoiceModuleTest extends Module_Test_Case {
 		$this->assertSame( 'invoicing', $this->module->get_exclusive_group() );
 	}
 
-	public function test_exclusive_priority(): void {
-		$this->assertSame( 5, $this->module->get_exclusive_priority() );
-	}
-
 	public function test_sync_direction_is_wp_to_odoo(): void {
 		$this->assertSame( 'wp_to_odoo', $this->module->get_sync_direction() );
 	}

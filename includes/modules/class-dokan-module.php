@@ -45,7 +45,6 @@ class Dokan_Module extends \WP4Odoo\Module_Base {
 	 *
 	 * @var int
 	 */
-	protected int $exclusive_priority = 10;
 
 	/**
 	 * Odoo models by entity type.

@@ -34,7 +34,6 @@ class Sprout_Invoices_Module extends Module_Base {
 	protected const PLUGIN_TESTED_UP_TO = '20.5';
 
 	protected string $exclusive_group = 'invoicing';
-	protected int $exclusive_priority = 10;
 
 	/**
 	 * Sync direction: bidirectional.

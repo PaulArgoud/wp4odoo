@@ -35,7 +35,6 @@ class RCP_Module extends Membership_Module_Base {
 	protected const PLUGIN_MIN_VERSION  = '3.4';
 	protected const PLUGIN_TESTED_UP_TO = '3.5';
 
-	protected int $exclusive_priority = 12;
 
 	/**
 	 * Odoo models by entity type.

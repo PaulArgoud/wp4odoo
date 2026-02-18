@@ -29,10 +29,6 @@ class MemberPressModuleTest extends MembershipModuleTestBase {
 		return 'MemberPress';
 	}
 
-	protected function get_exclusive_priority(): int {
-		return 10;
-	}
-
 	protected function get_level_entity(): string {
 		return 'plan';
 	}

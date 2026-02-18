@@ -75,16 +75,6 @@ abstract class Module_Base {
 	protected string $exclusive_group = '';
 
 	/**
-	 * Priority within the exclusive group (higher = takes precedence).
-	 *
-	 * When multiple modules in the same group are enabled, only the one
-	 * with the highest priority is booted.
-	 *
-	 * @var int
-	 */
-	protected int $exclusive_priority = 0;
-
-	/**
 	 * Minimum supported version of the third-party plugin.
 	 *
 	 * When non-empty and the detected plugin version is lower,
@@ -937,15 +927,6 @@ abstract class Module_Base {
 	 */
 	public function get_exclusive_group(): string {
 		return $this->exclusive_group;
-	}
-
-	/**
-	 * Get the priority within the exclusive group.
-	 *
-	 * @return int Priority (higher = takes precedence).
-	 */
-	public function get_exclusive_priority(): int {
-		return $this->exclusive_priority;
 	}
 
 	/**
