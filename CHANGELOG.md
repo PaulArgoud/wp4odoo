@@ -29,6 +29,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sync flow integration tests** — 5 new integration tests (`tests/Integration/SyncFlowTest.php`) covering the full push/pull pipeline: hook → queue → process → Odoo transport → entity_map. Uses `SyncFlowTransport` mock for deterministic transport responses
 - **Per-module circuit breaker** — New `Module_Circuit_Breaker` class isolates failing modules without blocking the entire sync. Dual-level design: existing global `Circuit_Breaker` handles transport failures (Odoo down), new module breaker handles per-module failures (model uninstalled, access rights). Threshold: 5 consecutive batches with ≥80% failure ratio. Recovery delay: 600s (half-open probe). State stored in `wp4odoo_module_cb_states` option. Integrated into `Sync_Engine` (per-module outcome tracking), `Failure_Notifier` (per-module email with cooldown), and health dashboard (open modules display). Auto-cleans stale state older than 2 hours
 - **Entity_Map orphan cleanup** — New `Entity_Map_Repository::cleanup_orphans()` method detects and removes entity_map entries where the WP post no longer exists (LEFT JOIN against `wp_posts`). Excludes user-based modules (BuddyBoss, FluentCRM, etc.). New WP-CLI command: `wp wp4odoo cleanup orphans [--module=<module>] [--dry-run] [--yes]`
+- **Trait extraction refactoring** — 6 new traits extracted from 3 large classes to improve separation of concerns:
+  - `Hook_Lifecycle` (from `Module_Base`): `$registered_hooks`, `safe_callback()`, `register_hook()`, `teardown()`
+  - `Translation_Accumulator` (from `Module_Base`): `$translation_buffer`, `get_translatable_fields()`, `accumulate_pull_translation()`, `flush_pull_translations()`
+  - `Sync_Job_Tracking` (from `Sync_Engine`): `$batch_failures`, `$batch_successes`, `$module_outcomes`, `handle_failure()`, `record_module_outcome()`
+  - `Failure_Tracking_Settings` (from `Settings_Repository`): consecutive failure count and last failure email timestamp
+  - `UI_State_Settings` (from `Settings_Repository`): onboarding/checklist dismissed flags, webhook confirmation, cron health
+  - `Network_Settings` (from `Settings_Repository`): multisite network connection, site → company_id mapping
 
 ### Fixed (Architecture)
 - **LRU cache eviction ratio** — `Entity_Map_Repository::evict_cache()` now keeps 75% of entries during eviction (was 50%). Prevents counter-productive cache thrashing during batch operations where frequent eviction caused redundant DB queries
@@ -45,6 +52,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **DNS timeout for SSRF** — `Admin_Ajax::sanitize_url()` now applies a 5-second `default_socket_timeout` during DNS resolution, preventing malicious hostnames with slow DNS from blocking the PHP thread indefinitely
 - **Module_Registry materialization logging** — `Module_Registry::materialize()` now catches `\Throwable` and logs the error instead of silently swallowing it. The module remains absent (callers handle null), but the failure is visible in logs
 - **Settings cache invalidation** — New `Settings_Repository::flush_cache()` method forces re-read from `wp_options` after external modifications (WP-CLI, concurrent cron, or another process)
+- **Module circuit breaker concurrency** — `Module_Circuit_Breaker::record_module_failure()` now uses advisory lock (`GET_LOCK('wp4odoo_mcb_failure')`) to prevent lost-update races on the shared `wp_options` JSON blob. `is_module_available()` now uses per-module probe mutex (transient + advisory lock double-check) to prevent multiple concurrent probe batches in half-open state. Probe transients cleaned in `record_module_success()` and `reset_module()`
+- **company_id injection logging** — `Sync_Orchestrator::maybe_inject_company_id()` now logs a warning when `get_company_id()` throws, instead of silently swallowing the exception
+- **Locale mapping edge case** — `Translation_Service::wp_to_odoo_locale()` returns `'en_US'` for empty or single-character inputs instead of producing an invalid `'_'` locale
+- **Documents delete result check** — `Documents_Module::delete_wp_data()` simplified `wp_delete_term()` result check to `true === $result` (PHPStan: `is_int()` was unreachable for `bool|WP_Error` return type)
 
 ### Fixed (Documentation)
 - **ARCHITECTURE.md exclusive group priorities** — Replaced ~15 stale `exclusive_priority` references (removed as dead code in v3.5.0) with accurate "first-registered wins" descriptions and actual registration order from `Module_Registry::register_all()`

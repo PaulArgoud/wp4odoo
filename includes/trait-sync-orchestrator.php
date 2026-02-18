@@ -366,6 +366,10 @@ trait Sync_Orchestrator {
 		try {
 			$company_id = $this->client()->get_company_id();
 		} catch ( \Throwable $e ) {
+			$this->logger->warning(
+				'Could not retrieve company_id from Odoo.',
+				[ 'error' => $e->getMessage() ]
+			);
 			return $odoo_values;
 		}
 

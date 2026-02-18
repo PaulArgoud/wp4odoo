@@ -308,6 +308,12 @@ WordPress For Odoo/
 │   ├── trait-error-classification.php # Error_Classification trait: classify RuntimeException → Error_Type (transient vs permanent)
 │   ├── trait-push-lock.php           # Push_Lock trait: MySQL advisory lock around push_to_odoo() create path (TOCTOU prevention)
 │   ├── trait-poll-support.php        # Poll_Support trait: targeted entity_map loading + last_polled_at deletion detection
+│   ├── trait-hook-lifecycle.php      # Hook_Lifecycle trait (from Module_Base): safe_callback(), register_hook(), teardown()
+│   ├── trait-translation-accumulator.php # Translation_Accumulator trait (from Module_Base): translation buffer, flush/apply pull translations
+│   ├── trait-sync-job-tracking.php   # Sync_Job_Tracking trait (from Sync_Engine): batch counters, per-module outcomes, handle_failure()
+│   ├── trait-failure-tracking-settings.php # Failure_Tracking_Settings trait (from Settings_Repository): consecutive failures, last email timestamp
+│   ├── trait-ui-state-settings.php   # UI_State_Settings trait (from Settings_Repository): onboarding, checklist, cron health
+│   ├── trait-network-settings.php    # Network_Settings trait (from Settings_Repository): multisite connection, site → company_id mapping
 │   ├── class-entity-map-repository.php # DB access for wp4odoo_entity_map (batch lookups, LRU cache, orphan cleanup)
 │   ├── class-sync-queue-repository.php # DB access for wp4odoo_sync_queue (atomic dedup via transaction)
 │   ├── class-partner-service.php       # Shared res.partner lookup/creation service (advisory lock dedup)
@@ -691,7 +697,7 @@ Module_Base (abstract)
 - **Gamification**: GamiPress and myCRED are mutually exclusive (both target `loyalty.card` via `Loyalty_Card_Resolver` with `partner_id` + `program_id`). First-registered wins (GamiPress before myCRED in registration order).
 - All other modules are independent and can coexist freely (LMS, Subscriptions, Points & Rewards, Events, Booking, Donations, Forms, WPRM, Crowdfunding, BOM, WC Add-Ons, Jeero Configurator, AffiliateWP, FluentCRM, FunnelKit, BuddyBoss, Knowledge, Documents, WP ERP, WP ERP CRM, WP ERP Accounting, WP Project Manager, JetEngine, JetEngine Meta, ACF, WP All Import, Job Manager, Food Ordering, Survey & Quiz).
 
-**Module_Base provides:**
+**Module_Base provides** (uses traits: `Hook_Lifecycle`, `Translation_Accumulator`, `Sync_Orchestrator`, `Module_Helpers`):
 - Version bounds: `PLUGIN_MIN_VERSION` (blocks boot if too old) and `PLUGIN_TESTED_UP_TO` (warns if newer than tested). Subclasses override `get_plugin_version()` to return the detected plugin version. Patch-level normalization ensures `10.5.0` is within `10.5` range. `Module_Registry` enforces MIN before boot and collects TESTED warnings for the admin notice.
 - Protected properties: `$entity_map` (`Entity_Map_Repository`), `$settings_repo` (`Settings_Repository`) — accessible by subclasses for cross-module lookups (e.g. WP All Import meta-module)
 - Push/Pull orchestration: `push_to_odoo()` returns `Sync_Result` (value object with success, odoo_id, error, Error_Type), `pull_from_odoo()` returns `Sync_Result`
@@ -785,7 +791,7 @@ WP Event               Sync Engine (cron)           Odoo
 - MySQL advisory locking via `GET_LOCK()` / `RELEASE_LOCK()` (prevents parallel execution, return value verified)
 - Exponential backoff on failure (`2^(attempts+1) × 60s`)
 - Circuit breaker (global): pauses processing after 3 consecutive all-fail batches (5-min recovery delay, probe mutex, DB-backed state via `wp_options` survives cache flushes)
-- Circuit breaker (per-module): isolates failing modules without blocking the entire sync — 5 consecutive batches with ≥80% failure ratio opens the module, 600s recovery delay (half-open probe), auto-cleans stale state >2h. Integrated into `Failure_Notifier` (per-module email with cooldown) and health dashboard
+- Circuit breaker (per-module): isolates failing modules without blocking the entire sync — 5 consecutive batches with ≥80% failure ratio opens the module, 600s recovery delay (half-open probe with per-module probe mutex via transient + advisory lock double-check), advisory lock on `record_module_failure()` to prevent lost-update races on the shared `wp_options` JSON blob, auto-cleans stale state >2h. Integrated into `Failure_Notifier` (per-module email with cooldown) and health dashboard
 - Deduplication: updates an existing `pending` job rather than creating a duplicate (atomic via `SELECT … FOR UPDATE`)
 - Configurable batch size (50 items per cron tick by default)
 - Stale job recovery: configurable timeout (60–3600 s, default 600 s via `stale_timeout` sync setting)
@@ -1042,7 +1048,7 @@ Managed via `dbDelta()` in `Database_Migration::create_tables()`. Schema upgrade
 
 ### WordPress Options (`wp_options`)
 
-All option keys, default values, and typed accessors are centralized in `Settings_Repository` (`includes/class-settings-repository.php`). Option key constants (e.g., `Settings_Repository::OPT_CONNECTION`) are used throughout the codebase instead of string literals.
+All option keys, default values, and typed accessors are centralized in `Settings_Repository` (`includes/class-settings-repository.php`). Uses 3 traits for separation of concerns: `Failure_Tracking_Settings` (failure counters), `UI_State_Settings` (onboarding/checklist/cron), `Network_Settings` (multisite). Option key constants (e.g., `Settings_Repository::OPT_CONNECTION`) are used throughout the codebase instead of string literals.
 
 | Key | Constant | Type | Description |
 |-----|----------|------|-------------|
@@ -1057,8 +1063,18 @@ All option keys, default values, and typed accessors are centralized in `Setting
 | `wp4odoo_onboarding_dismissed` | `OPT_ONBOARDING_DISMISSED` | `bool` | Setup notice dismissed |
 | `wp4odoo_checklist_dismissed` | `OPT_CHECKLIST_DISMISSED` | `bool` | Setup checklist dismissed |
 | `wp4odoo_checklist_webhooks_confirmed` | `OPT_CHECKLIST_WEBHOOKS` | `bool` | Webhooks step marked done |
-| `wp4odoo_consecutive_failures` | `OPT_CONSECUTIVE_FAILURES` | `int` | Consecutive batch failure counter |
-| `wp4odoo_last_failure_email` | `OPT_LAST_FAILURE_EMAIL` | `int` | Last failure notification timestamp |
+| `wp4odoo_consecutive_failures` | `OPT_CONSECUTIVE_FAILURES` | `int` | Consecutive batch failure counter (`Failure_Tracking_Settings` trait) |
+| `wp4odoo_last_failure_email` | `OPT_LAST_FAILURE_EMAIL` | `int` | Last failure notification timestamp (`Failure_Tracking_Settings` trait) |
+| `wp4odoo_last_cron_run` | `OPT_LAST_CRON_RUN` | `int` | Last cron run Unix timestamp (`UI_State_Settings` trait) |
+| `wp4odoo_module_cb_states` | `OPT_MODULE_CB_STATES` | `array` | Per-module circuit breaker states (`Module_Circuit_Breaker`) |
+| `wp4odoo_cb_state` | `OPT_CB_STATE` | `array` | Global circuit breaker DB-backed state (`Circuit_Breaker`) |
+
+**Network options** (`wp_sitemeta`, via `get_site_option()` / `update_site_option()` — `Network_Settings` trait):
+
+| Key | Constant | Type | Description |
+|-----|----------|------|-------------|
+| `wp4odoo_network_connection` | `OPT_NETWORK_CONNECTION` | `array` | Network-level shared Odoo connection settings |
+| `wp4odoo_network_site_companies` | `OPT_NETWORK_SITE_COMPANIES` | `array` | Blog ID → Odoo company_id mapping |
 
 ## REST API
 

@@ -426,7 +426,7 @@ class Documents_Module extends Module_Base {
 		if ( 'folder' === $entity_type ) {
 			$result = wp_delete_term( $wp_id, 'document_category' );
 
-			return true === $result || ( is_int( $result ) && $result > 0 );
+			return true === $result;
 		}
 
 		return false;

@@ -52,6 +52,19 @@ class Module_Circuit_Breaker {
 	private const RECOVERY_DELAY = 600;
 
 	/**
+	 * TTL for the per-module probe mutex transient (seconds).
+	 *
+	 * Must exceed RECOVERY_DELAY + typical batch processing time (~60 s)
+	 * to prevent overlapping probes for the same module.
+	 */
+	private const PROBE_TTL = 660;
+
+	/**
+	 * Transient key prefix for per-module half-open probe mutexes.
+	 */
+	private const KEY_MODULE_PROBE_PREFIX = 'wp4odoo_mcb_probe_';
+
+	/**
 	 * wp_options key for persisted module circuit breaker states.
 	 */
 	public const OPT_MODULE_CB_STATES = 'wp4odoo_module_cb_states';
@@ -126,7 +139,7 @@ class Module_Circuit_Breaker {
 		}
 
 		if ( ( time() - $opened_at ) >= self::RECOVERY_DELAY ) {
-			return true; // Half-open: allow a probe batch.
+			return $this->try_acquire_module_probe( $module );
 		}
 
 		return false;
@@ -194,11 +207,62 @@ class Module_Circuit_Breaker {
 
 		unset( $states[ $module ] );
 		$this->save_states( $states );
+		delete_transient( self::KEY_MODULE_PROBE_PREFIX . $module );
 
 		$this->logger->info(
 			'Module circuit breaker reset.',
 			[ 'module' => $module ]
 		);
+	}
+
+	/**
+	 * Atomically acquire the per-module probe mutex.
+	 *
+	 * Uses a MySQL advisory lock to prevent TOCTOU races where
+	 * multiple processes see the probe transient as empty and all
+	 * start probe batches for the same module simultaneously.
+	 * Mirrors the proven pattern from Circuit_Breaker::try_acquire_probe().
+	 *
+	 * @param string $module Module identifier.
+	 * @return bool True if this process acquired the probe slot.
+	 */
+	private function try_acquire_module_probe( string $module ): bool {
+		$key = self::KEY_MODULE_PROBE_PREFIX . $module;
+
+		// Fast path: if probe transient is already set, skip the lock.
+		if ( false !== get_transient( $key ) ) {
+			return false;
+		}
+
+		global $wpdb;
+
+		$lock_name = 'wp4odoo_mcb_probe_' . $module;
+
+		// Non-blocking advisory lock (timeout = 0).
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$locked = $wpdb->get_var(
+			$wpdb->prepare( 'SELECT GET_LOCK( %s, %d )', $lock_name, 0 )
+		);
+
+		if ( '1' !== (string) $locked ) {
+			return false;
+		}
+
+		try {
+			// Double-check under lock: another process may have set the
+			// transient between our fast-path check and lock acquisition.
+			if ( false !== get_transient( $key ) ) { // @phpstan-ignore notIdentical.alwaysFalse
+				return false;
+			}
+
+			set_transient( $key, 1, self::PROBE_TTL );
+			return true;
+		} finally {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->get_var(
+				$wpdb->prepare( 'SELECT RELEASE_LOCK( %s )', $lock_name )
+			);
+		}
 	}
 
 	/**
@@ -222,6 +286,8 @@ class Module_Circuit_Breaker {
 		$this->save_states( $states );
 
 		if ( $was_open ) {
+			delete_transient( self::KEY_MODULE_PROBE_PREFIX . $module );
+
 			$this->logger->info(
 				'Module circuit breaker closed: module recovered.',
 				[ 'module' => $module ]
@@ -239,35 +305,58 @@ class Module_Circuit_Breaker {
 	 * @return void
 	 */
 	private function record_module_failure( string $module ): void {
-		$states = $this->load_states();
+		global $wpdb;
 
-		if ( ! isset( $states[ $module ] ) ) {
-			$states[ $module ] = [
-				'failures'  => 0,
-				'opened_at' => 0,
-			];
-		}
+		// Advisory lock prevents concurrent workers from losing increments
+		// (read-increment-write race on the shared wp_options JSON blob).
+		// Mirrors the proven pattern from Circuit_Breaker::record_failure().
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$locked = $wpdb->get_var(
+			$wpdb->prepare( 'SELECT GET_LOCK( %s, %d )', 'wp4odoo_mcb_failure', 0 )
+		);
 
-		++$states[ $module ]['failures'];
+		// If lock not acquired, proceed without atomicity — a lost increment
+		// is acceptable (worst case: module circuit opens one batch later).
+		try {
+			// Re-read from DB under lock to prevent lost updates.
+			$this->states = null;
+			$states       = $this->load_states();
 
-		if ( $states[ $module ]['failures'] >= self::FAILURE_THRESHOLD && 0 === (int) $states[ $module ]['opened_at'] ) {
-			$states[ $module ]['opened_at'] = time();
+			if ( ! isset( $states[ $module ] ) ) {
+				$states[ $module ] = [
+					'failures'  => 0,
+					'opened_at' => 0,
+				];
+			}
 
-			$this->logger->warning(
-				'Module circuit breaker opened: module has too many failures.',
-				[
-					'module'               => $module,
-					'consecutive_failures' => $states[ $module ]['failures'],
-					'recovery_delay'       => self::RECOVERY_DELAY,
-				]
-			);
+			++$states[ $module ]['failures'];
 
-			if ( null !== $this->failure_notifier ) {
-				$this->failure_notifier->notify_module_circuit_breaker_open( $module, $states[ $module ]['failures'] );
+			if ( $states[ $module ]['failures'] >= self::FAILURE_THRESHOLD && 0 === (int) $states[ $module ]['opened_at'] ) {
+				$states[ $module ]['opened_at'] = time();
+
+				$this->logger->warning(
+					'Module circuit breaker opened: module has too many failures.',
+					[
+						'module'               => $module,
+						'consecutive_failures' => $states[ $module ]['failures'],
+						'recovery_delay'       => self::RECOVERY_DELAY,
+					]
+				);
+
+				if ( null !== $this->failure_notifier ) {
+					$this->failure_notifier->notify_module_circuit_breaker_open( $module, $states[ $module ]['failures'] );
+				}
+			}
+
+			$this->save_states( $states );
+		} finally {
+			if ( '1' === (string) $locked ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+				$wpdb->get_var(
+					$wpdb->prepare( 'SELECT RELEASE_LOCK( %s )', 'wp4odoo_mcb_failure' )
+				);
 			}
 		}
-
-		$this->save_states( $states );
 	}
 
 	/**

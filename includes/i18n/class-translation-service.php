@@ -274,6 +274,10 @@ class Translation_Service {
 	public function wp_to_odoo_locale( string $wp_lang ): string {
 		$wp_lang = strtolower( substr( $wp_lang, 0, 2 ) );
 
+		if ( strlen( $wp_lang ) < 2 ) {
+			return 'en_US';
+		}
+
 		$locale = self::LOCALE_MAP[ $wp_lang ] ?? ( $wp_lang . '_' . strtoupper( $wp_lang ) );
 
 		/**
