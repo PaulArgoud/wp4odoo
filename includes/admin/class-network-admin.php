@@ -5,6 +5,7 @@ namespace WP4Odoo\Admin;
 
 use WP4Odoo\API\Odoo_Auth;
 use WP4Odoo\Settings_Repository;
+use WP4Odoo\Settings_Validator;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -91,8 +92,15 @@ class Network_Admin {
 		}
 
 		// Save shared connection.
+		$url = esc_url_raw( wp_unslash( $_POST['wp4odoo_network_url'] ?? '' ) );
+
+		// SSRF protection: reject private/internal IP addresses.
+		if ( '' !== $url && ! Settings_Validator::is_safe_url( $url ) ) {
+			$url = '';
+		}
+
 		$connection = [
-			'url'      => esc_url_raw( wp_unslash( $_POST['wp4odoo_network_url'] ?? '' ) ),
+			'url'      => $url,
 			'database' => sanitize_text_field( wp_unslash( $_POST['wp4odoo_network_database'] ?? '' ) ),
 			'username' => sanitize_text_field( wp_unslash( $_POST['wp4odoo_network_username'] ?? '' ) ),
 			'protocol' => in_array( $_POST['wp4odoo_network_protocol'] ?? '', [ 'jsonrpc', 'xmlrpc' ], true )

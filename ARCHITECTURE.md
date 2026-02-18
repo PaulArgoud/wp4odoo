@@ -554,7 +554,7 @@ WordPress For Odoo/
 │       ├── WPERPModuleTest.php         # 101 tests for WP ERP module
 │       ├── ErrorClassificationTest.php # 19 tests for Error_Classification trait
 │       ├── PushDedupLockTest.php      #   6 tests for Push_Lock advisory lock
-│       ├── DatabaseMigrationTest.php  #   9 tests for Database_Migration (migrations 1–9)
+│       ├── DatabaseMigrationTest.php  #   9 tests for Database_Migration (migrations 1–10)
 │       ├── MultisiteTest.php          #   29 tests for multisite (blog_id scoping, company_id, network fallback)
 │       ├── JetBookingModuleTest.php   # Tests for Jet_Booking_Module
 │       ├── JetBookingHandlerTest.php  # Tests for Jet_Booking_Handler
@@ -1008,6 +1008,7 @@ Managed via `dbDelta()` in `Database_Migration::create_tables()`. Schema upgrade
 
 **`{prefix}wp4odoo_logs`** — Structured logs
 - Indexes: `(level, created_at)`, `(module)`, `(correlation_id)` — correlation added by migration_1
+- Blog cleanup index: `(blog_id, created_at)` — added by migration_10 for efficient multisite log cleanup
 - `context` field stores JSON contextual data (truncated to 4KB)
 
 ### WordPress Options (`wp_options`)

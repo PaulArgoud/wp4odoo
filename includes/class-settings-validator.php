@@ -54,4 +54,40 @@ class Settings_Validator {
 		}
 		return $value;
 	}
+
+	/**
+	 * Check if a URL is safe (not pointing to private/internal networks).
+	 *
+	 * Rejects localhost, private IPv4/IPv6, link-local, and metadata
+	 * service addresses to prevent SSRF attacks.
+	 *
+	 * @param string $url The URL to validate.
+	 * @return bool True if the URL is safe.
+	 */
+	public static function is_safe_url( string $url ): bool {
+		$host = wp_parse_url( $url, PHP_URL_HOST );
+		if ( empty( $host ) ) {
+			return false;
+		}
+
+		$lower_host = strtolower( $host );
+		if ( in_array( $lower_host, [ 'localhost', '127.0.0.1', '::1', '0.0.0.0' ], true ) ) {
+			return false;
+		}
+
+		if ( str_ends_with( $lower_host, '.local' ) || str_ends_with( $lower_host, '.internal' ) ) {
+			return false;
+		}
+
+		$ip = gethostbyname( $host );
+		if ( $ip === $host ) {
+			return false;
+		}
+
+		return false !== filter_var(
+			$ip,
+			FILTER_VALIDATE_IP,
+			FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+		);
+	}
 }

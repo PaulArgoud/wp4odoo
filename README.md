@@ -54,7 +54,7 @@ All hosting types expose the standard Odoo external API used by the plugin. No c
 
 ## Installation
 
-1. Download or clone this repository into `wp-content/plugins/wordpress-for-odoo/`
+1. Download or clone this repository into `wp-content/plugins/wp4odoo/`
 2. Activate the plugin from the WordPress admin
 3. Go to **Odoo Connector** in the admin menu
 4. Enter your Odoo credentials (URL, database, username, API key) in the **Connection** tab

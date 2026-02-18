@@ -99,7 +99,8 @@ final class Database_Migration {
 			PRIMARY KEY (id),
 			KEY idx_level_date (level, created_at),
 			KEY idx_module (module),
-			KEY idx_correlation (correlation_id)
+			KEY idx_correlation (correlation_id),
+			KEY idx_blog_cleanup (blog_id, created_at)
 		) $charset_collate;";
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -152,15 +153,16 @@ final class Database_Migration {
 	 */
 	private static function get_migrations(): array {
 		return [
-			1 => [ self::class, 'migration_1' ],
-			2 => [ self::class, 'migration_2' ],
-			3 => [ self::class, 'migration_3' ],
-			4 => [ self::class, 'migration_4' ],
-			5 => [ self::class, 'migration_5' ],
-			6 => [ self::class, 'migration_6' ],
-			7 => [ self::class, 'migration_7' ],
-			8 => [ self::class, 'migration_8' ],
-			9 => [ self::class, 'migration_9' ],
+			1  => [ self::class, 'migration_1' ],
+			2  => [ self::class, 'migration_2' ],
+			3  => [ self::class, 'migration_3' ],
+			4  => [ self::class, 'migration_4' ],
+			5  => [ self::class, 'migration_5' ],
+			6  => [ self::class, 'migration_6' ],
+			7  => [ self::class, 'migration_7' ],
+			8  => [ self::class, 'migration_8' ],
+			9  => [ self::class, 'migration_9' ],
+			10 => [ self::class, 'migration_10' ],
 		];
 	}
 
@@ -444,6 +446,45 @@ final class Database_Migration {
 			$wpdb->query( "ALTER TABLE {$entity_table} DROP KEY idx_poll_detection" );
 		}
 		$wpdb->query( "ALTER TABLE {$entity_table} ADD KEY idx_poll_detection (blog_id, module, entity_type, last_polled_at)" );
+
+		// phpcs:enable
+	}
+
+	/**
+	 * Migration 10: Add cleanup index on logs table + drop obsolete idx_dedup_composite.
+	 *
+	 * wp4odoo_logs cleanup queries filter by blog_id + created_at but no
+	 * existing index covers this, causing full table scans in multisite.
+	 *
+	 * idx_dedup_composite (module, entity_type, direction, status) was added
+	 * by migration 3 but became redundant after migration 7 added blog_id
+	 * to idx_dedup_wp and idx_dedup_odoo. Only upgraded installs have it.
+	 *
+	 * @return void
+	 */
+	private static function migration_10(): void {
+		global $wpdb;
+
+		$logs_table  = $wpdb->prefix . 'wp4odoo_logs';
+		$queue_table = $wpdb->prefix . 'wp4odoo_sync_queue';
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.SchemaChange
+
+		// ── logs: add blog_id cleanup index ────────────────
+		$log_indexes = $wpdb->get_results( "SHOW INDEX FROM {$logs_table}" );
+		$log_names   = array_column( $log_indexes, 'Key_name' );
+
+		if ( ! in_array( 'idx_blog_cleanup', $log_names, true ) ) {
+			$wpdb->query( "ALTER TABLE {$logs_table} ADD KEY idx_blog_cleanup (blog_id, created_at)" );
+		}
+
+		// ── sync_queue: drop obsolete idx_dedup_composite ──
+		$queue_indexes = $wpdb->get_results( "SHOW INDEX FROM {$queue_table}" );
+		$queue_names   = array_column( $queue_indexes, 'Key_name' );
+
+		if ( in_array( 'idx_dedup_composite', $queue_names, true ) ) {
+			$wpdb->query( "ALTER TABLE {$queue_table} DROP KEY idx_dedup_composite" );
+		}
 
 		// phpcs:enable
 	}

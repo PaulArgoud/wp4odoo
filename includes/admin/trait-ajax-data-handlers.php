@@ -3,6 +3,8 @@ declare( strict_types=1 );
 
 namespace WP4Odoo\Admin;
 
+use WP4Odoo\Logger;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -86,9 +88,10 @@ trait Ajax_Data_Handlers {
 
 			wp_send_json_success( [ 'items' => $records ] );
 		} catch ( \Throwable $e ) {
+			Logger::for_channel( 'admin' )->error( __( 'Failed to fetch Odoo taxes.', 'wp4odoo' ), [ 'error' => $e->getMessage() ] );
 			wp_send_json_error(
 				[
-					'message' => __( 'Failed to fetch Odoo taxes.', 'wp4odoo' ) . ' ' . $e->getMessage(),
+					'message' => __( 'Failed to fetch Odoo taxes.', 'wp4odoo' ),
 				]
 			);
 		}
@@ -117,9 +120,10 @@ trait Ajax_Data_Handlers {
 
 			wp_send_json_success( [ 'items' => $records ] );
 		} catch ( \Throwable $e ) {
+			Logger::for_channel( 'admin' )->error( __( 'Failed to fetch Odoo carriers.', 'wp4odoo' ), [ 'error' => $e->getMessage() ] );
 			wp_send_json_error(
 				[
-					'message' => __( 'Failed to fetch Odoo carriers.', 'wp4odoo' ) . ' ' . $e->getMessage(),
+					'message' => __( 'Failed to fetch Odoo carriers.', 'wp4odoo' ),
 				]
 			);
 		}

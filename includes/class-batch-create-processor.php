@@ -187,7 +187,7 @@ class Batch_Create_Processor {
 			if ( ! empty( $job->payload ) ) {
 				$decoded = json_decode( $job->payload, true );
 				if ( null === $decoded && JSON_ERROR_NONE !== json_last_error() ) {
-					( $this->failure_handler )( $job, sprintf( 'Invalid JSON payload in batch job #%d.', (int) $job->id ), Error_Type::Permanent, null );
+					( $this->failure_handler )( $job, sprintf( 'Invalid JSON payload in batch job #%d.', (int) $job->id ), Error_Type::Transient, null );
 					++$failures;
 					$batched_job_ids[ (int) $job->id ] = true;
 					continue;

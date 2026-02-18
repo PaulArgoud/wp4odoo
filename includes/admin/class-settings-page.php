@@ -272,51 +272,14 @@ class Settings_Page {
 	/**
 	 * Check if a URL is safe (not pointing to private/internal networks).
 	 *
-	 * Rejects localhost, private IPv4/IPv6, link-local, and metadata
-	 * service addresses to prevent SSRF attacks.
+	 * Delegates to Settings_Validator::is_safe_url() for reuse across
+	 * Settings_Page and Network_Admin.
 	 *
 	 * @param string $url The URL to validate.
 	 * @return bool True if the URL is safe.
 	 */
 	private static function is_safe_url( string $url ): bool {
-		$host = wp_parse_url( $url, PHP_URL_HOST );
-		if ( empty( $host ) ) {
-			return false;
-		}
-
-		// Reject obvious localhost variants.
-		$lower_host = strtolower( $host );
-		if ( in_array( $lower_host, [ 'localhost', '127.0.0.1', '::1', '0.0.0.0' ], true ) ) {
-			return false;
-		}
-
-		// Reject .local and .internal TLDs.
-		if ( str_ends_with( $lower_host, '.local' ) || str_ends_with( $lower_host, '.internal' ) ) {
-			return false;
-		}
-
-		// Resolve the hostname and check the IP.
-		$ip = gethostbyname( $host );
-		if ( $ip === $host ) {
-			// gethostbyname returns the input on failure — reject to prevent SSRF bypass.
-			return false;
-		}
-
-		return ! self::is_private_ip( $ip );
-	}
-
-	/**
-	 * Check if an IP address belongs to a private or reserved range.
-	 *
-	 * @param string $ip IP address to check.
-	 * @return bool True if the IP is private/reserved.
-	 */
-	private static function is_private_ip( string $ip ): bool {
-		return false === filter_var(
-			$ip,
-			FILTER_VALIDATE_IP,
-			FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
-		);
+		return \WP4Odoo\Settings_Validator::is_safe_url( $url );
 	}
 
 	// ─── Sync tab ─────────────────────────────────────────────
