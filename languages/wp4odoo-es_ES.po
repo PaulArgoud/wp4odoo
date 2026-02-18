@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WordPress For Odoo 2.0.0\n"
 "Report-Msgid-Bugs-To: support@avalia.io\n"
-"POT-Creation-Date: 2026-02-18 11:47+0100\n"
+"POT-Creation-Date: 2026-02-18 16:20+0100\n"
 "PO-Revision-Date: 2026-02-15 12:00+0100\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
@@ -366,87 +366,95 @@ msgstr ""
 msgid "Use the following Python code template:"
 msgstr "Utilice la siguiente plantilla de código Python:"
 
-#: admin/views/tab-health.php:27
+#: admin/views/tab-health.php:29
 msgid "Degraded"
 msgstr "Degradado"
 
-#: admin/views/tab-health.php:28
+#: admin/views/tab-health.php:30
 msgid "Healthy"
 msgstr "Operativo"
 
-#: admin/views/tab-health.php:31 includes/admin/class-settings-page.php:48
+#: admin/views/tab-health.php:33 includes/admin/class-settings-page.php:48
 msgid "Health"
 msgstr "Salud"
 
-#: admin/views/tab-health.php:36
+#: admin/views/tab-health.php:38
 msgid "System Status"
 msgstr "Estado del sistema"
 
-#: admin/views/tab-health.php:44
+#: admin/views/tab-health.php:46
 msgid "Active modules"
 msgstr "Módulos activos"
 
-#: admin/views/tab-health.php:48 admin/views/tab-health.php:167
+#: admin/views/tab-health.php:50 admin/views/tab-health.php:197
 #: admin/views/tab-queue.php:23 admin/views/tab-queue.php:35
 #: includes/admin/class-admin.php:121
 msgid "Pending"
 msgstr "Pendiente"
 
-#: admin/views/tab-health.php:57
+#: admin/views/tab-health.php:59
 msgid "Average latency"
 msgstr "Latencia media"
 
-#: admin/views/tab-health.php:61
+#: admin/views/tab-health.php:63
 msgid "Success rate"
 msgstr "Tasa de éxito"
 
-#: admin/views/tab-health.php:70
+#: admin/views/tab-health.php:72
 msgid "Circuit Breaker"
 msgstr "Disyuntor"
 
-#: admin/views/tab-health.php:74
+#: admin/views/tab-health.php:76
 msgid "Open"
 msgstr "Abierto"
 
-#: admin/views/tab-health.php:80
+#: admin/views/tab-health.php:82 admin/views/tab-health.php:109
 #, php-format
 msgid "%1$d failures — opened %2$s"
 msgstr "%1$d fallos — abierto el %2$s"
 
-#: admin/views/tab-health.php:88
+#: admin/views/tab-health.php:90
 msgid "Closed"
 msgstr "Cerrado"
 
-#: admin/views/tab-health.php:96
+#: admin/views/tab-health.php:98
+msgid "Module breakers"
+msgstr "Disyuntores por módulo"
+
+#: admin/views/tab-health.php:118
+msgid "All closed"
+msgstr "Todos cerrados"
+
+#: admin/views/tab-health.php:126
 msgid "Next cron run"
 msgstr "Próxima ejecución cron"
 
-#: admin/views/tab-health.php:104
+#: admin/views/tab-health.php:134
 #, php-format
 msgid "in %s"
 msgstr "en %s"
 
-#: admin/views/tab-health.php:108
+#: admin/views/tab-health.php:138
 msgid "overdue"
 msgstr "atrasado"
 
-#: admin/views/tab-health.php:113
+#: admin/views/tab-health.php:143
 msgid "Not scheduled"
 msgstr "No programado"
 
-#: admin/views/tab-health.php:122
+#: admin/views/tab-health.php:152
 msgid "Cron status"
 msgstr "Estado del cron"
 
-#: admin/views/tab-health.php:133
+#: admin/views/tab-health.php:163
 msgid "Compatibility warnings"
 msgstr "Avisos de compatibilidad"
 
-#: admin/views/tab-health.php:162
+#: admin/views/tab-health.php:192
 msgid "Queue Depth by Module"
 msgstr "Profundidad de la cola por módulo"
 
-#: admin/views/tab-health.php:166 admin/views/tab-logs.php:96
+#: admin/views/tab-health.php:196 admin/views/tab-logs.php:96
 #: admin/views/tab-queue.php:82
 msgid "Module"
 msgstr "Módulo"
@@ -1419,7 +1427,7 @@ msgstr "Verificadas: %d correspondencia(s)"
 msgid "Orphaned: %d"
 msgstr "Huérfanos: %d"
 
-#: includes/class-cli.php:402
+#: includes/class-cli.php:402 includes/class-cli.php:498
 #, php-format
 msgid "%d orphaned mapping(s) removed."
 msgstr "%d correspondencia(s) huérfana(s) eliminada(s)."
@@ -1432,7 +1440,43 @@ msgstr "Ejecute con --fix para eliminar las correspondencias huérfanas."
 msgid "No orphans found."
 msgstr "No se encontraron huérfanos."
 
-#: includes/class-cli.php:430
+#: includes/class-cli.php:451
+#, php-format
+msgid "Unknown subcommand: %s. Usage: wp wp4odoo cleanup orphans"
+msgstr "Subcomando desconocido: %s. Uso: wp wp4odoo cleanup orphans"
+
+#: includes/class-cli.php:460
+msgid "This will permanently remove orphaned entity map entries. Continue?"
+msgstr "Esto eliminará permanentemente las entradas huérfanas de la tabla de correspondencias. ¿Continuar?"
+
+#: includes/class-cli.php:469
+#, php-format
+msgid "Scanning for orphaned mappings (%s, dry-run)..."
+msgstr "Buscando correspondencias huérfanas (%s, simulación)…"
+
+#: includes/class-cli.php:469 includes/class-cli.php:472
+msgid "all modules"
+msgstr "todos los módulos"
+
+#: includes/class-cli.php:472
+#, php-format
+msgid "Cleaning up orphaned mappings (%s)..."
+msgstr "Limpiando correspondencias huérfanas (%s)…"
+
+#: includes/class-cli.php:478
+msgid "No orphaned mappings found."
+msgstr "No se encontraron correspondencias huérfanas."
+
+#: includes/class-cli.php:481
+#, php-format
+msgid "Found %d orphaned mapping(s):"
+msgstr "%d correspondencia(s) huérfana(s) encontrada(s):"
+
+#: includes/class-cli.php:495
+msgid "Run without --dry-run to remove orphaned mappings."
+msgstr "Ejecute sin --dry-run para eliminar las correspondencias huérfanas."
+
+#: includes/class-cli.php:527
 #, php-format
 msgid "Unknown subcommand: %s. Available: list, enable, disable"
 msgstr "Subcomando desconocido: %s. Disponibles: list, enable, disable"
@@ -1455,12 +1499,32 @@ msgstr ""
 "\n"
 "Consulte el panel de salud en %2$s"
 
-#: includes/class-failure-notifier.php:165
+#: includes/class-failure-notifier.php:173
+#, php-format
+msgid "[WP4Odoo] Module circuit breaker opened: %s"
+msgstr "[WP4Odoo] Disyuntor de módulo activado: %s"
+
+#: includes/class-failure-notifier.php:179
+#, php-format
+msgid ""
+"The WP4Odoo per-module circuit breaker has opened for module \"%1$s\" after "
+"%2$d consecutive high-failure batches. Jobs for this module will be skipped "
+"until it recovers.\n"
+"\n"
+"Check the health dashboard at %3$s"
+msgstr ""
+"El disyuntor por módulo de WP4Odoo se ha activado para el módulo « %1$s » tras "
+"%2$d lotes consecutivos con fallos. Las tareas de este módulo se omitirán "
+"hasta que se recupere.\n"
+"\n"
+"Consulte el panel de salud en %3$s"
+
+#: includes/class-failure-notifier.php:227
 #, php-format
 msgid "[WP4Odoo] %d consecutive sync failures"
 msgstr "[WP4Odoo] %d fallos de sincronización consecutivos"
 
-#: includes/class-failure-notifier.php:171
+#: includes/class-failure-notifier.php:233
 #, php-format
 msgid ""
 "The WordPress For Odoo sync queue has encountered %1$d consecutive "
@@ -1478,7 +1542,7 @@ msgstr ""
 msgid "Entity type \"%1$s\" is not registered in module \"%2$s\"."
 msgstr "El tipo de entidad «%1$s» no está registrado en el módulo «%2$s»."
 
-#: includes/class-module-registry.php:268
+#: includes/class-module-registry.php:315
 #, php-format
 msgid "%1$s requires the following modules to be active: %2$s."
 msgstr "%1$s requiere que los siguientes módulos estén activos: %2$s."
@@ -1505,17 +1569,17 @@ msgstr ""
 "sincronización programada puede retrasarse. Considere configurar una tarea "
 "cron del sistema."
 
-#: includes/class-sync-engine.php:341
+#: includes/class-sync-engine.php:366
 #, php-format
 msgid "Module \"%s\" not found or not registered."
 msgstr "Módulo «%s» no encontrado o no registrado."
 
-#: includes/class-sync-engine.php:354
+#: includes/class-sync-engine.php:379
 #, php-format
 msgid "Invalid JSON payload in job #%d."
 msgstr "Payload JSON no válido en el trabajo #%d."
 
-#: includes/class-sync-engine.php:392
+#: includes/class-sync-engine.php:417
 #, php-format
 msgid "Invalid sync direction \"%1$s\" in job #%2$d."
 msgstr "Dirección de sincronización no válida «%1$s» en el trabajo #%2$d."
@@ -1945,8 +2009,8 @@ msgstr "Tamaño máximo de archivo (MB)"
 #: includes/modules/class-documents-module.php:174
 msgid "Maximum file size in MB for document sync. Default: 10 MB."
 msgstr ""
-"Tamaño máximo de archivo en MB para la sincronización de documentos. "
-"Por defecto: 10 MB."
+"Tamaño máximo de archivo en MB para la sincronización de documentos. Por "
+"defecto: 10 MB."
 
 #: includes/modules/class-dokan-handler.php:174
 #: includes/modules/class-wc-vendors-handler.php:173
@@ -2228,8 +2292,7 @@ msgstr "Enviar los pedidos de WPPizza a Odoo POS."
 #: includes/modules/class-food-ordering-module.php:201
 msgid "At least one food ordering plugin must be installed and activated."
 msgstr ""
-"Al menos un plugin de pedidos de comida debe estar instalado y "
-"activado."
+"Al menos un plugin de pedidos de comida debe estar instalado y activado."
 
 #: includes/modules/class-food-ordering-module.php:215
 #: includes/modules/class-forms-module.php:484
@@ -2397,17 +2460,17 @@ msgstr "ID del pipeline Odoo"
 msgid "The Odoo CRM team (pipeline) ID to assign stages to."
 msgstr "El ID del equipo CRM de Odoo (pipeline) al que asignar las etapas."
 
-#: includes/modules/class-gamipress-module.php:110
+#: includes/modules/class-gamipress-module.php:113
 msgid "GamiPress module enabled but GamiPress is not active."
 msgstr "Módulo GamiPress activado pero GamiPress no está activo."
 
-#: includes/modules/class-gamipress-module.php:153
-#: includes/modules/class-mycred-module.php:141
+#: includes/modules/class-gamipress-module.php:156
+#: includes/modules/class-mycred-module.php:144
 #: includes/modules/class-wc-points-rewards-module.php:140
 msgid "Sync point balances"
 msgstr "Sincronizar saldos de puntos"
 
-#: includes/modules/class-gamipress-module.php:155
+#: includes/modules/class-gamipress-module.php:158
 msgid ""
 "Push GamiPress point balances to Odoo loyalty cards. Only balances are "
 "synced — earning history stays in WordPress."
@@ -2416,43 +2479,43 @@ msgstr ""
 "Odoo. Solo se sincronizan los saldos — el historial de obtención permanece "
 "en WordPress."
 
-#: includes/modules/class-gamipress-module.php:158
-#: includes/modules/class-mycred-module.php:146
+#: includes/modules/class-gamipress-module.php:161
+#: includes/modules/class-mycred-module.php:149
 msgid "Pull point updates from Odoo"
 msgstr "Importar actualizaciones de puntos desde Odoo"
 
-#: includes/modules/class-gamipress-module.php:160
+#: includes/modules/class-gamipress-module.php:163
 msgid "Pull loyalty card point changes from Odoo back to GamiPress."
 msgstr ""
 "Importar los cambios de puntos de las tarjetas de fidelidad desde Odoo a "
 "GamiPress."
 
-#: includes/modules/class-gamipress-module.php:163
+#: includes/modules/class-gamipress-module.php:166
 msgid "Sync achievement types"
 msgstr "Sincronizar tipos de logros"
 
-#: includes/modules/class-gamipress-module.php:165
+#: includes/modules/class-gamipress-module.php:168
 msgid "Push GamiPress achievement types to Odoo as service products."
 msgstr ""
 "Enviar los tipos de logros de GamiPress a Odoo como productos de servicio."
 
-#: includes/modules/class-gamipress-module.php:168
+#: includes/modules/class-gamipress-module.php:171
 msgid "Sync rank types"
 msgstr "Sincronizar tipos de rangos"
 
-#: includes/modules/class-gamipress-module.php:170
+#: includes/modules/class-gamipress-module.php:173
 msgid "Push GamiPress rank types to Odoo as service products."
 msgstr ""
 "Enviar los tipos de rangos de GamiPress a Odoo como productos de servicio."
 
-#: includes/modules/class-gamipress-module.php:173
-#: includes/modules/class-mycred-module.php:156
+#: includes/modules/class-gamipress-module.php:176
+#: includes/modules/class-mycred-module.php:159
 #: includes/modules/class-wc-points-rewards-module.php:150
 msgid "Odoo Loyalty Program ID"
 msgstr "ID del programa de fidelidad de Odoo"
 
-#: includes/modules/class-gamipress-module.php:175
-#: includes/modules/class-mycred-module.php:158
+#: includes/modules/class-gamipress-module.php:178
+#: includes/modules/class-mycred-module.php:161
 msgid ""
 "The ID of the Odoo loyalty program to sync points with. Create a Loyalty "
 "program in Odoo first, then enter its ID here."
@@ -2460,8 +2523,8 @@ msgstr ""
 "El ID del programa de fidelidad de Odoo con el que sincronizar los puntos. "
 "Cree primero un programa de fidelidad en Odoo y luego ingrese su ID aquí."
 
-#: includes/modules/class-gamipress-module.php:279
-#: includes/modules/class-mycred-module.php:260
+#: includes/modules/class-gamipress-module.php:282
+#: includes/modules/class-mycred-module.php:263
 #: includes/modules/class-wc-points-rewards-module.php:292
 msgid "Odoo Loyalty Program ID not configured."
 msgstr "ID del programa de fidelidad de Odoo no configurado."
@@ -2520,8 +2583,8 @@ msgid ""
 "Jeero Configurator module enabled but Jeero Product Configurator is not "
 "active."
 msgstr ""
-"Módulo Jeero Configurator activado pero Jeero Product Configurator no "
-"está activo."
+"Módulo Jeero Configurator activado pero Jeero Product Configurator no está "
+"activo."
 
 #: includes/modules/class-jeero-configurator-module.php:139
 msgid "Sync configurable products as BOMs"
@@ -2531,8 +2594,8 @@ msgstr "Sincronizar productos configurables como listas de materiales"
 msgid ""
 "Push Jeero configurable products to Odoo as Manufacturing BOMs (mrp.bom)."
 msgstr ""
-"Enviar los productos configurables Jeero a Odoo como listas de "
-"materiales de fabricación (mrp.bom)."
+"Enviar los productos configurables Jeero a Odoo como listas de materiales de "
+"fabricación (mrp.bom)."
 
 #: includes/modules/class-jeero-configurator-module.php:144
 #: includes/modules/class-wc-bundle-bom-module.php:146
@@ -3033,34 +3096,31 @@ msgstr ""
 msgid "Odoo sync"
 msgstr "Sincronización Odoo"
 
-#: includes/modules/class-mycred-module.php:104
+#: includes/modules/class-mycred-module.php:107
 msgid "myCRED module enabled but myCRED is not active."
 msgstr "Módulo myCRED activado pero myCRED no está activo."
 
-#: includes/modules/class-mycred-module.php:143
+#: includes/modules/class-mycred-module.php:146
 msgid ""
 "Push myCRED point balances to Odoo loyalty cards. Only balances are synced — "
 "transaction log stays in WordPress."
 msgstr ""
-"Enviar los saldos de puntos myCRED a las tarjetas de fidelidad Odoo. "
-"Solo se sincronizan los saldos — el registro de transacciones "
-"permanece en WordPress."
-
-#: includes/modules/class-mycred-module.php:148
-msgid "Pull loyalty card point changes from Odoo back to myCRED."
-msgstr ""
-"Importar los cambios de puntos de las tarjetas de fidelidad Odoo a "
-"myCRED."
+"Enviar los saldos de puntos myCRED a las tarjetas de fidelidad Odoo. Solo se "
+"sincronizan los saldos — el registro de transacciones permanece en WordPress."
 
 #: includes/modules/class-mycred-module.php:151
+msgid "Pull loyalty card point changes from Odoo back to myCRED."
+msgstr ""
+"Importar los cambios de puntos de las tarjetas de fidelidad Odoo a myCRED."
+
+#: includes/modules/class-mycred-module.php:154
 msgid "Sync badge types"
 msgstr "Sincronizar tipos de insignias"
 
-#: includes/modules/class-mycred-module.php:153
+#: includes/modules/class-mycred-module.php:156
 msgid "Push myCRED badge types to Odoo as service products."
 msgstr ""
-"Enviar los tipos de insignias myCRED a Odoo como productos de "
-"servicio."
+"Enviar los tipos de insignias myCRED a Odoo como productos de servicio."
 
 #: includes/modules/class-pmpro-handler.php:120
 msgid "PMPro membership"
@@ -3586,8 +3646,7 @@ msgstr "Enviar ajustes de stock"
 #: includes/modules/class-wc-inventory-module.php:177
 msgid "Push WooCommerce stock changes to Odoo as stock movements."
 msgstr ""
-"Enviar los cambios de stock de WooCommerce a Odoo como movimientos de "
-"stock."
+"Enviar los cambios de stock de WooCommerce a Odoo como movimientos de stock."
 
 #: includes/modules/class-wc-inventory-module.php:180
 msgid "Default warehouse ID"
@@ -3596,8 +3655,7 @@ msgstr "ID del almacén por defecto"
 #: includes/modules/class-wc-inventory-module.php:182
 msgid "Odoo warehouse ID for stock movements (0 for auto-detect)."
 msgstr ""
-"ID del almacén Odoo para movimientos de stock (0 para detección "
-"automática)."
+"ID del almacén Odoo para movimientos de stock (0 para detección automática)."
 
 #: includes/modules/class-wc-points-rewards-module.php:106
 msgid ""
@@ -3686,8 +3744,7 @@ msgstr "Importar notas de crédito"
 #: includes/modules/class-wc-returns-module.php:176
 msgid "Pull credit notes from Odoo and create WooCommerce refunds."
 msgstr ""
-"Importar notas de crédito desde Odoo y crear reembolsos en "
-"WooCommerce."
+"Importar notas de crédito desde Odoo y crear reembolsos en WooCommerce."
 
 #: includes/modules/class-wc-returns-module.php:179
 msgid "Sync return pickings"
@@ -3704,8 +3761,7 @@ msgstr "Validar automáticamente las notas de crédito"
 #: includes/modules/class-wc-returns-module.php:186
 msgid "Automatically confirm credit notes in Odoo after creation."
 msgstr ""
-"Validar automáticamente las notas de crédito en Odoo después de su "
-"creación."
+"Validar automáticamente las notas de crédito en Odoo después de su creación."
 
 #: includes/modules/class-wc-returns-module.php:189
 msgid "YITH Return hooks"
@@ -3715,8 +3771,8 @@ msgstr "Hooks YITH Return"
 msgid ""
 "Hook into YITH WooCommerce Return & Warranty for enhanced return workflows."
 msgstr ""
-"Integrarse con YITH WooCommerce Return & Warranty para flujos de "
-"devolución mejorados."
+"Integrarse con YITH WooCommerce Return & Warranty para flujos de devolución "
+"mejorados."
 
 #: includes/modules/class-wc-returns-module.php:194
 msgid "ReturnGO hooks"
@@ -3725,8 +3781,7 @@ msgstr "Hooks ReturnGO"
 #: includes/modules/class-wc-returns-module.php:196
 msgid "Hook into ReturnGO for automated return processing."
 msgstr ""
-"Integrarse con ReturnGO para el procesamiento automatizado de "
-"devoluciones."
+"Integrarse con ReturnGO para el procesamiento automatizado de devoluciones."
 
 #: includes/modules/class-wc-shipping-module.php:114
 msgid "WC Shipping module enabled but WooCommerce is not active."
@@ -3747,8 +3802,7 @@ msgstr "Enviar seguimiento a Odoo"
 #: includes/modules/class-wc-shipping-module.php:173
 msgid "Push tracking numbers from WooCommerce to Odoo stock pickings."
 msgstr ""
-"Enviar los números de seguimiento de WooCommerce a los albaranes de "
-"Odoo."
+"Enviar los números de seguimiento de WooCommerce a los albaranes de Odoo."
 
 #: includes/modules/class-wc-shipping-module.php:176
 msgid "Pull tracking from Odoo"
@@ -3757,8 +3811,8 @@ msgstr "Importar seguimiento desde Odoo"
 #: includes/modules/class-wc-shipping-module.php:178
 msgid "Pull tracking numbers from Odoo to WooCommerce order meta."
 msgstr ""
-"Importar los números de seguimiento de Odoo a los metadatos de pedido "
-"de WooCommerce."
+"Importar los números de seguimiento de Odoo a los metadatos de pedido de "
+"WooCommerce."
 
 #: includes/modules/class-wc-shipping-module.php:181
 msgid "Auto-validate pickings"
@@ -3767,8 +3821,7 @@ msgstr "Validar automáticamente los albaranes"
 #: includes/modules/class-wc-shipping-module.php:183
 msgid "Automatically validate Odoo stock pickings when tracking is pushed."
 msgstr ""
-"Validar automáticamente los albaranes de Odoo al enviar el "
-"seguimiento."
+"Validar automáticamente los albaranes de Odoo al enviar el seguimiento."
 
 #: includes/modules/class-wc-shipping-module.php:186
 msgid "ShipStation hooks"
@@ -3785,8 +3838,7 @@ msgstr "Hooks Sendcloud"
 #: includes/modules/class-wc-shipping-module.php:193
 msgid "Hook into Sendcloud for parcel status updates."
 msgstr ""
-"Integrarse con Sendcloud para actualizaciones del estado de los "
-"paquetes."
+"Integrarse con Sendcloud para actualizaciones del estado de los paquetes."
 
 #: includes/modules/class-wc-shipping-module.php:196
 msgid "Packlink hooks"

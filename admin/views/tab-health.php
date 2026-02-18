@@ -9,6 +9,7 @@
  * @var array  $version_warnings Version warnings from Module_Registry.
  * @var string $cron_warning     Cron warning message (empty if healthy).
  * @var int    $next_cron        Next scheduled cron run timestamp (0 if unscheduled).
+ * @var array  $open_modules     Per-module circuit breaker open states (module_id => {failures, opened_at}).
  *
  * @package WP4Odoo
  */
@@ -19,7 +20,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Determine overall system status.
 $is_cb_open    = ! empty( $cb_state['opened_at'] );
-$has_warnings  = ! empty( $cron_warning ) || ! empty( $version_warnings ) || $is_cb_open;
+$has_module_cb = ! empty( $open_modules );
+$has_warnings  = ! empty( $cron_warning ) || ! empty( $version_warnings ) || $is_cb_open || $has_module_cb;
 $success_rate  = $health_metrics['success_rate'] ?? 100.0;
 $is_degraded   = $has_warnings || $success_rate < 90.0;
 $status_class  = $is_degraded ? 'wp4odoo-health-degraded' : 'wp4odoo-health-ok';
@@ -86,6 +88,34 @@ $warning_count = count( $version_warnings );
 				<?php else : ?>
 					<span class="wp4odoo-badge wp4odoo-badge-completed">
 						<?php esc_html_e( 'Closed', 'wp4odoo' ); ?>
+					</span>
+				<?php endif; ?>
+			</td>
+		</tr>
+
+		<!-- Module Circuit Breakers -->
+		<tr>
+			<th scope="row"><?php esc_html_e( 'Module breakers', 'wp4odoo' ); ?></th>
+			<td>
+				<?php if ( $has_module_cb ) : ?>
+					<?php foreach ( $open_modules as $mod_id => $mod_state ) : ?>
+						<span class="wp4odoo-badge wp4odoo-badge-warning">
+							<?php echo esc_html( $mod_id ); ?>
+						</span>
+						<span class="description">
+							<?php
+							printf(
+								/* translators: 1: failure count, 2: datetime */
+								esc_html__( '%1$d failures — opened %2$s', 'wp4odoo' ),
+								(int) ( $mod_state['failures'] ?? 0 ),
+								esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $mod_state['opened_at'] ) )
+							);
+							?>
+						</span><br>
+					<?php endforeach; ?>
+				<?php else : ?>
+					<span class="wp4odoo-badge wp4odoo-badge-completed">
+						<?php esc_html_e( 'All closed', 'wp4odoo' ); ?>
 					</span>
 				<?php endif; ?>
 			</td>

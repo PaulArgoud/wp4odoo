@@ -386,6 +386,98 @@ class EntityMapRepositoryTest extends TestCase {
 		$this->assertSame( 99, $result );
 	}
 
+	// ─── cleanup_orphans() ──────────────────────────────────
+
+	public function test_cleanup_orphans_returns_zero_when_no_orphans(): void {
+		$this->wpdb->get_results_return = [];
+
+		$result = $this->repo->cleanup_orphans();
+
+		$this->assertSame( 0, $result['found'] );
+		$this->assertSame( 0, $result['removed'] );
+		$this->assertSame( [], $result['details'] );
+	}
+
+	public function test_cleanup_orphans_finds_orphaned_mappings(): void {
+		$this->wpdb->get_results_return = [
+			(object) [ 'id' => '1', 'module' => 'crm', 'entity_type' => 'contact', 'wp_id' => '99', 'odoo_id' => '100' ],
+			(object) [ 'id' => '2', 'module' => 'crm', 'entity_type' => 'contact', 'wp_id' => '88', 'odoo_id' => '200' ],
+		];
+
+		$result = $this->repo->cleanup_orphans( null, true );
+
+		$this->assertSame( 2, $result['found'] );
+		$this->assertSame( 0, $result['removed'] );
+		$this->assertSame( [ 'crm:contact' => 2 ], $result['details'] );
+	}
+
+	public function test_cleanup_orphans_deletes_when_not_dry_run(): void {
+		$this->wpdb->get_results_return = [
+			(object) [ 'id' => '5', 'module' => 'woocommerce', 'entity_type' => 'product', 'wp_id' => '42', 'odoo_id' => '300' ],
+		];
+		$this->wpdb->query_return = 1;
+
+		$result = $this->repo->cleanup_orphans( null, false );
+
+		$this->assertSame( 1, $result['found'] );
+		$this->assertSame( 1, $result['removed'] );
+
+		// Verify DELETE query was issued.
+		$query_calls = $this->get_calls( 'query' );
+		$delete_call = array_filter( $query_calls, fn( $c ) => str_contains( $c['args'][0], 'DELETE FROM' ) );
+		$this->assertNotEmpty( $delete_call );
+	}
+
+	public function test_cleanup_orphans_respects_module_filter(): void {
+		$this->wpdb->get_results_return = [];
+
+		$this->repo->cleanup_orphans( 'crm', true );
+
+		$prepare = $this->get_calls( 'prepare' );
+		$this->assertNotEmpty( $prepare );
+		$sql = $prepare[0]['args'][0];
+		$this->assertStringContainsString( 'module = %s', $sql );
+	}
+
+	public function test_cleanup_orphans_excludes_user_based_modules(): void {
+		$this->wpdb->get_results_return = [];
+
+		$this->repo->cleanup_orphans( null, true );
+
+		$prepare = $this->get_calls( 'prepare' );
+		$this->assertNotEmpty( $prepare );
+		$sql = $prepare[0]['args'][0];
+		$this->assertStringContainsString( 'module NOT IN', $sql );
+	}
+
+	public function test_cleanup_orphans_joins_against_posts_table(): void {
+		$this->wpdb->get_results_return = [];
+
+		$this->repo->cleanup_orphans( null, true );
+
+		$prepare = $this->get_calls( 'prepare' );
+		$this->assertNotEmpty( $prepare );
+		$sql = $prepare[0]['args'][0];
+		$this->assertStringContainsString( 'LEFT JOIN wp_posts', $sql );
+		$this->assertStringContainsString( 'p.ID IS NULL', $sql );
+	}
+
+	public function test_cleanup_orphans_groups_details_by_module_and_entity_type(): void {
+		$this->wpdb->get_results_return = [
+			(object) [ 'id' => '1', 'module' => 'crm', 'entity_type' => 'contact', 'wp_id' => '10', 'odoo_id' => '100' ],
+			(object) [ 'id' => '2', 'module' => 'crm', 'entity_type' => 'contact', 'wp_id' => '11', 'odoo_id' => '101' ],
+			(object) [ 'id' => '3', 'module' => 'woocommerce', 'entity_type' => 'product', 'wp_id' => '20', 'odoo_id' => '200' ],
+		];
+
+		$result = $this->repo->cleanup_orphans( null, true );
+
+		$this->assertSame( 3, $result['found'] );
+		$this->assertSame(
+			[ 'crm:contact' => 2, 'woocommerce:product' => 1 ],
+			$result['details']
+		);
+	}
+
 	// ─── Helpers ───────────────────────────────────────────
 
 	private function get_last_call( string $method ): ?array {

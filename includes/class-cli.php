@@ -408,6 +408,103 @@ class CLI {
 	}
 
 	/**
+	 * Clean up orphaned entity map entries.
+	 *
+	 * Removes entity_map rows where the WordPress post no longer exists.
+	 * This can happen when delete sync jobs fail permanently, leaving
+	 * stale mappings that will never be resolved.
+	 *
+	 * User-based modules (BuddyBoss, FluentCRM, etc.) are automatically
+	 * excluded since their wp_id references the users table, not posts.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--module=<module>]
+	 * : Only clean up a specific module (e.g. crm, woocommerce).
+	 *
+	 * [--dry-run]
+	 * : List orphans without deleting them.
+	 *
+	 * [--yes]
+	 * : Skip confirmation prompt.
+	 *
+	 * [--blog_id=<id>]
+	 * : Target a specific site in multisite (switches blog context).
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp wp4odoo cleanup orphans --dry-run
+	 *     wp wp4odoo cleanup orphans --module=crm
+	 *     wp wp4odoo cleanup orphans --yes
+	 *     wp wp4odoo cleanup orphans --blog_id=3
+	 *
+	 * @subcommand cleanup
+	 * @when after_wp_load
+	 *
+	 * @since 3.6.0
+	 */
+	public function cleanup( array $args, array $assoc_args = [] ): void {
+		$sub = $args[0] ?? 'orphans';
+
+		if ( 'orphans' !== $sub ) {
+			/* translators: %s: subcommand name */
+			\WP_CLI::error( sprintf( __( 'Unknown subcommand: %s. Usage: wp wp4odoo cleanup orphans', 'wp4odoo' ), $sub ) );
+		}
+
+		$switched = $this->maybe_switch_blog( $assoc_args );
+		$dry_run  = isset( $assoc_args['dry-run'] );
+		$module   = isset( $assoc_args['module'] ) ? sanitize_key( $assoc_args['module'] ) : null;
+
+		if ( ! $dry_run ) {
+			\WP_CLI::confirm(
+				__( 'This will permanently remove orphaned entity map entries. Continue?', 'wp4odoo' ),
+				$assoc_args
+			);
+		}
+
+		$entity_map = new Entity_Map_Repository();
+
+		if ( $dry_run ) {
+			/* translators: %s: module name or "all modules" */
+			\WP_CLI::line( sprintf( __( 'Scanning for orphaned mappings (%s, dry-run)...', 'wp4odoo' ), $module ?? __( 'all modules', 'wp4odoo' ) ) );
+		} else {
+			/* translators: %s: module name or "all modules" */
+			\WP_CLI::line( sprintf( __( 'Cleaning up orphaned mappings (%s)...', 'wp4odoo' ), $module ?? __( 'all modules', 'wp4odoo' ) ) );
+		}
+
+		$result = $entity_map->cleanup_orphans( $module, $dry_run );
+
+		if ( 0 === $result['found'] ) {
+			\WP_CLI::success( __( 'No orphaned mappings found.', 'wp4odoo' ) );
+		} else {
+			/* translators: %d: number of orphaned mappings found */
+			\WP_CLI::line( sprintf( __( 'Found %d orphaned mapping(s):', 'wp4odoo' ), $result['found'] ) );
+
+			$rows = [];
+			foreach ( $result['details'] as $key => $count ) {
+				[ $mod, $type ] = explode( ':', $key, 2 );
+				$rows[]         = [
+					'module'      => $mod,
+					'entity_type' => $type,
+					'orphans'     => $count,
+				];
+			}
+			\WP_CLI\Utils\format_items( 'table', $rows, [ 'module', 'entity_type', 'orphans' ] );
+
+			if ( $dry_run ) {
+				\WP_CLI::warning( __( 'Run without --dry-run to remove orphaned mappings.', 'wp4odoo' ) );
+			} else {
+				/* translators: %d: number of orphaned mappings removed */
+				\WP_CLI::success( sprintf( __( '%d orphaned mapping(s) removed.', 'wp4odoo' ), $result['removed'] ) );
+			}
+		}
+
+		if ( $switched ) {
+			restore_current_blog();
+		}
+	}
+
+	/**
 	 * Manage modules.
 	 *
 	 * ## EXAMPLES

@@ -190,10 +190,10 @@ WordPress For Odoo/
 │   │   ├── # ─── Invoicing (Sprout Invoices + WP-Invoice) ──
 │   │   ├── trait-sprout-invoices-hooks.php   # SI: hook callbacks (invoice save, payment)
 │   │   ├── class-sprout-invoices-handler.php # SI: invoice/payment data load, status mapping, One2many lines
-│   │   ├── class-sprout-invoices-module.php  # SI: invoicing exclusive group (priority 10), partner chain resolution
+│   │   ├── class-sprout-invoices-module.php  # SI: invoicing exclusive group (first-registered), partner chain resolution
 │   │   ├── trait-wp-invoice-hooks.php        # WPI: hook callbacks (invoice save, payment success)
 │   │   ├── class-wp-invoice-handler.php      # WPI: invoice data load from WPI_Invoice, One2many lines
-│   │   ├── class-wp-invoice-module.php       # WPI: invoicing exclusive group (priority 5)
+│   │   ├── class-wp-invoice-module.php       # WPI: invoicing exclusive group (second in registration order)
 │   │   │
 │   │   ├── # ─── E-Commerce (Crowdfunding + Ecwid + ShopWP) ─
 │   │   ├── trait-crowdfunding-hooks.php      # Crowdfunding: on_campaign_save (filters by wpneo_* meta)
@@ -682,10 +682,10 @@ Module_Base (abstract)
 ```
 
 **Mutual exclusivity rules:**
-- **Commerce**: WooCommerce, EDD, Sales, Ecwid, and ShopWP are mutually exclusive (all share `sale.order` / `product.product` for commerce). Priority: WC > EDD > Sales = Ecwid = ShopWP.
-- **Memberships**: WC Memberships, MemberPress, PMPro, and RCP are mutually exclusive (all target `membership.membership_line`). Priority (highest number wins): WC Memberships (20) > PMPro (15) > RCP (12) > MemberPress (10).
-- **Invoicing**: Sprout Invoices and WP-Invoice are mutually exclusive (both target `account.move` for invoicing). Priority: Sprout Invoices (10) > WP-Invoice (5).
-- **Helpdesk**: Awesome Support and SupportCandy are mutually exclusive (both target `helpdesk.ticket` / `project.task`). Priority: SupportCandy (15) > Awesome Support (10).
+- **Commerce**: WooCommerce, EDD, Sales, SureCart, Ecwid, and ShopWP are mutually exclusive (all share `sale.order` / `product.product` for commerce). First-registered wins — registration order: WooCommerce → EDD → Sales → SureCart → Ecwid → ShopWP.
+- **Memberships**: WC Memberships, MemberPress, PMPro, and RCP are mutually exclusive (all target `membership.membership_line`). First-registered wins — registration order: WC Memberships → MemberPress → PMPro → RCP.
+- **Invoicing**: Sprout Invoices and WP-Invoice are mutually exclusive (both target `account.move` for invoicing). First-registered wins — registration order: Sprout Invoices → WP-Invoice.
+- **Helpdesk**: Awesome Support and SupportCandy are mutually exclusive (both target `helpdesk.ticket` / `project.task`). First-registered wins — registration order: Awesome Support → SupportCandy.
 - **Gamification**: GamiPress and myCRED are mutually exclusive (both target `loyalty.card` via `Loyalty_Card_Resolver` with `partner_id` + `program_id`). First-registered wins (GamiPress before myCRED in registration order).
 - All other modules are independent and can coexist freely (LMS, Subscriptions, Points & Rewards, Events, Booking, Donations, Forms, WPRM, Crowdfunding, BOM, WC Add-Ons, Jeero Configurator, AffiliateWP, FluentCRM, FunnelKit, BuddyBoss, Knowledge, Documents, WP ERP, WP ERP CRM, WP ERP Accounting, WP Project Manager, JetEngine, JetEngine Meta, ACF, WP All Import, Job Manager, Food Ordering, Survey & Quiz).
 
@@ -945,17 +945,17 @@ Shared abstract base `Helpdesk_Module_Base` extends `Module_Base`, providing dua
 
 **Pull flow:** Read ticket from Odoo → extract `stage_id` Many2one name → keyword heuristic ("close"/"done"/"resolved"/"solved"/"cancel"/"fermé"/"terminé"/"résolu" → closed, else → open) → update WP ticket status. Only status updates pulled (no create/delete from Odoo). Filterable via `wp4odoo_helpdesk_reverse_stage_map`.
 
-**Exclusive group:** `helpdesk` — SupportCandy (priority 15) wins over Awesome Support (priority 10).
+**Exclusive group:** `helpdesk` — first-registered wins (Awesome Support before SupportCandy in registration order).
 
 | Class / Trait | Role |
 |-------|------|
 | `Helpdesk_Module_Base` | Abstract base: dual-model detection, stage resolution, keyword-based status mapping, shared push/pull logic |
 | `Awesome_Support_Hooks` (trait) | Hook callbacks: `wpas_open_ticket_after`, `wpas_after_close_ticket`, `wpas_after_reopen_ticket` |
 | `Awesome_Support_Handler` | CPT-based ticket data load (post meta), status save via `wpas_update_ticket_status()`, priority mapping |
-| `Awesome_Support_Module` | Extends `Helpdesk_Module_Base`: detection `WPAS_VERSION`, exclusive priority 10, 4 settings |
+| `Awesome_Support_Module` | Extends `Helpdesk_Module_Base`: detection `WPAS_VERSION`, `helpdesk` exclusive group (first in registration order), 4 settings |
 | `SupportCandy_Hooks` (trait) | Hook callbacks: `wpsc_create_new_ticket`, `wpsc_change_ticket_status` |
 | `SupportCandy_Handler` | Custom table data access via `$wpdb` (`wpsc_ticket`, `wpsc_ticketmeta`), priority mapping |
-| `SupportCandy_Module` | Extends `Helpdesk_Module_Base`: detection `WPSC_VERSION`, exclusive priority 15, 4 settings |
+| `SupportCandy_Module` | Extends `Helpdesk_Module_Base`: detection `WPSC_VERSION`, `helpdesk` exclusive group (second in registration order), 4 settings |
 
 ### 12. Translation Infrastructure (i18n)
 
@@ -1266,7 +1266,7 @@ All user inputs are sanitized with:
 **Key features:**
 - Push-only (WP → Odoo) — recurring subscriptions → recurring accounting entries
 - Requires MemberPress; `boot()` guards with `defined('MEPR_VERSION')`
-- Mutually exclusive with WC Memberships module
+- Mutually exclusive with WC Memberships, PMPro, and RCP (`memberships` group, first-registered wins)
 - Level auto-sync via `Membership_Module_Base::ensure_entity_synced()`: pushes plan before dependent entity
 - Invoice auto-posting via `Membership_Module_Base`: completed transactions optionally auto-posted via Odoo `action_post`
 - Uses `Partner_Service` for WP user → Odoo partner resolution
@@ -1433,7 +1433,7 @@ All user inputs are sanitized with:
 **Key features:**
 - Push-only (WP → Odoo) — membership levels, payment orders, user memberships
 - Requires Paid Memberships Pro; `boot()` guards with `defined('PMPRO_VERSION')`
-- Mutually exclusive with MemberPress, RCP, and WC Memberships (`memberships` group, priority 15)
+- Mutually exclusive with MemberPress, RCP, and WC Memberships (`memberships` group, first-registered wins)
 - Data access via PMPro custom tables (`pmpro_membership_levels`, `pmpro_membership_orders`, `pmpro_memberships_users`) — no CPTs
 - Level auto-sync via `Membership_Module_Base::ensure_entity_synced()`: pushes level before dependent order/membership
 - Invoice auto-posting via `Membership_Module_Base`: completed orders optionally auto-posted via `action_post`
@@ -1452,7 +1452,7 @@ All user inputs are sanitized with:
 **Key features:**
 - Push-only (WP → Odoo) — membership levels, completed payments, user memberships
 - Requires Restrict Content Pro v3.0+; `boot()` guards with `function_exists('rcp_get_membership')`
-- Mutually exclusive with MemberPress, PMPro, and WC Memberships (`memberships` group, priority 12)
+- Mutually exclusive with MemberPress, PMPro, and WC Memberships (`memberships` group, first-registered wins)
 - Level auto-sync via `Membership_Module_Base::ensure_entity_synced()`: pushes level before dependent payment/membership
 - Invoice auto-posting via `Membership_Module_Base`: completed payments optionally auto-posted via `action_post`
 - Payments pre-formatted as Odoo invoices with `invoice_line_ids` One2many tuples
@@ -1684,7 +1684,7 @@ All user inputs are sanitized with:
 **Key features:**
 - Push-only (WP → Odoo) — invoices and payments
 - Requires Sprout Invoices; `boot()` guards with `class_exists('SI_Invoice')`
-- Exclusive group `invoicing` (priority 10) — mutually exclusive with WP-Invoice
+- Exclusive group `invoicing` (first in registration order) — mutually exclusive with WP-Invoice
 - SI status mapping: temp/publish→draft, complete→posted, write-off→cancel
 - Auto-posting: completed invoices automatically posted via `action_post`
 - Invoice auto-sync: `ensure_entity_synced()` pushes invoice before dependent payment
@@ -1702,7 +1702,7 @@ All user inputs are sanitized with:
 **Key features:**
 - Push-only (WP → Odoo) — invoices
 - Requires WP-Invoice; `boot()` guards with `class_exists('WPI_Invoice')`
-- Exclusive group `invoicing` (priority 5) — mutually exclusive with Sprout Invoices
+- Exclusive group `invoicing` (second in registration order) — mutually exclusive with Sprout Invoices
 - WPI status mapping: active→draft, paid→posted, pending→draft
 - Auto-posting: paid invoices automatically posted via `action_post`
 - Partner resolution from invoice `user_data` (user_id → WP user, fallback to email)
@@ -1735,7 +1735,7 @@ All user inputs are sanitized with:
 **Key features:**
 - Push-only (WP → Odoo) via **WP-Cron polling** (Ecwid data lives on cloud servers)
 - Requires Ecwid; `boot()` guards with `defined('ECWID_PLUGIN_DIR')`
-- Exclusive group `ecommerce` (priority 5) — mutually exclusive with WC, EDD, Sales, ShopWP
+- Exclusive group `ecommerce` (first-registered wins) — mutually exclusive with WC, EDD, Sales, ShopWP
 - SHA-256 hash-based change detection (same pattern as Bookly)
 - REST API access via `wp_remote_get` to `app.ecwid.com/api/v3/{store_id}/{endpoint}`
 - Partner resolution for orders via `Partner_Service::get_or_create()` (email from order)
@@ -1752,7 +1752,7 @@ All user inputs are sanitized with:
 **Key features:**
 - Push-only (WP → Odoo) — products only (orders stay on Shopify)
 - Requires ShopWP; `boot()` guards with `defined('SHOPWP_PLUGIN_DIR')`
-- Exclusive group `ecommerce` (priority 5) — mutually exclusive with WC, EDD, Sales, Ecwid
+- Exclusive group `ecommerce` (first-registered wins) — mutually exclusive with WC, EDD, Sales, Ecwid
 - Data from `wps_products` CPT (name, description) + `shopwp_variants` custom table (price, SKU via `$wpdb`)
 - Hook: `save_post_wps_products` (fired by ShopWP during Shopify sync)
 

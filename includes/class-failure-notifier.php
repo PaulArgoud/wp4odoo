@@ -144,6 +144,68 @@ class Failure_Notifier {
 	}
 
 	/**
+	 * Send a notification when a module circuit breaker opens.
+	 *
+	 * Uses a per-module cooldown key (wp4odoo_last_module_cb_email_{module})
+	 * so module circuit breaker alerts don't interfere with global breaker
+	 * or regular failure emails.
+	 *
+	 * @param string $module        Module identifier.
+	 * @param int    $failure_count Number of consecutive failures for this module.
+	 * @return void
+	 *
+	 * @since 3.6.0
+	 */
+	public function notify_module_circuit_breaker_open( string $module, int $failure_count ): void {
+		$option_key = 'wp4odoo_last_module_cb_email_' . sanitize_key( $module );
+		$last_email = (int) get_option( $option_key, 0 );
+		if ( ( time() - $last_email ) < $this->settings->get_failure_cooldown() ) {
+			return;
+		}
+
+		$admin_email = get_option( 'admin_email' );
+		if ( empty( $admin_email ) ) {
+			return;
+		}
+
+		$subject = sprintf(
+			/* translators: %s: module identifier */
+			__( '[WP4Odoo] Module circuit breaker opened: %s', 'wp4odoo' ),
+			$module
+		);
+
+		$message = sprintf(
+			/* translators: 1: module identifier, 2: failure count, 3: health admin URL */
+			__( "The WP4Odoo per-module circuit breaker has opened for module \"%1\$s\" after %2\$d consecutive high-failure batches. Jobs for this module will be skipped until it recovers.\n\nCheck the health dashboard at %3\$s", 'wp4odoo' ),
+			$module,
+			$failure_count,
+			admin_url( 'admin.php?page=wp4odoo&tab=health' )
+		);
+
+		update_option( $option_key, time(), false );
+
+		if ( ! wp_mail( $admin_email, $subject, $message ) ) {
+			$this->logger->error(
+				'Failed to send module circuit breaker notification email.',
+				[
+					'module' => $module,
+					'email'  => $admin_email,
+				]
+			);
+			return;
+		}
+
+		$this->logger->warning(
+			'Module circuit breaker notification sent to admin.',
+			[
+				'module'         => $module,
+				'batch_failures' => $failure_count,
+				'email'          => $admin_email,
+			]
+		);
+	}
+
+	/**
 	 * Send a notification email if the cooldown has elapsed.
 	 *
 	 * @param int $consecutive Number of consecutive failures.

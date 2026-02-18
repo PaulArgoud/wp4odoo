@@ -27,6 +27,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy loading `Module_Registry`** — Disabled modules are no longer instantiated at boot. `register_all()` stores disabled module class names in a `$deferred` map; `get()` materializes on demand, `all()` materializes everything (for admin UI). Reduces memory footprint on sites with many detected but disabled modules
 - **Module health manifest** — New `tests/module-health-manifest.php` declares all third-party symbols (classes, functions, constants) per module. `ModuleHealthManifestTest` validates that stubs match the manifest and that the manifest covers all registered modules. 196 data-driven tests catch stub drift when upstream plugins evolve
 - **Sync flow integration tests** — 5 new integration tests (`tests/Integration/SyncFlowTest.php`) covering the full push/pull pipeline: hook → queue → process → Odoo transport → entity_map. Uses `SyncFlowTransport` mock for deterministic transport responses
+- **Per-module circuit breaker** — New `Module_Circuit_Breaker` class isolates failing modules without blocking the entire sync. Dual-level design: existing global `Circuit_Breaker` handles transport failures (Odoo down), new module breaker handles per-module failures (model uninstalled, access rights). Threshold: 5 consecutive batches with ≥80% failure ratio. Recovery delay: 600s (half-open probe). State stored in `wp4odoo_module_cb_states` option. Integrated into `Sync_Engine` (per-module outcome tracking), `Failure_Notifier` (per-module email with cooldown), and health dashboard (open modules display). Auto-cleans stale state older than 2 hours
+- **Entity_Map orphan cleanup** — New `Entity_Map_Repository::cleanup_orphans()` method detects and removes entity_map entries where the WP post no longer exists (LEFT JOIN against `wp_posts`). Excludes user-based modules (BuddyBoss, FluentCRM, etc.). New WP-CLI command: `wp wp4odoo cleanup orphans [--module=<module>] [--dry-run] [--yes]`
+
+### Fixed (Documentation)
+- **ARCHITECTURE.md exclusive group priorities** — Replaced ~15 stale `exclusive_priority` references (removed as dead code in v3.5.0) with accurate "first-registered wins" descriptions and actual registration order from `Module_Registry::register_all()`
+
+### Tests
+- 5 013 unit tests (7 623 assertions) — new tests covering `Module_Circuit_Breaker` (20 tests: state transitions, module isolation, recovery delay, stale cleanup, ratio-based detection, state persistence), `Entity_Map_Repository::cleanup_orphans()` (6 tests: orphan detection, dry-run, module filter, user-based module exclusion)
+
+### i18n
+- Regenerated `.pot` from all source files (931 → 944 msgid), translated 12 new strings in FR and ES (module circuit breaker, orphan cleanup CLI), recompiled `.mo` — 944 translated strings (was 931)
 
 ## [3.5.0] - 2026-02-18
 

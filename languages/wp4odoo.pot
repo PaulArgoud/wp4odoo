@@ -1,14 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR Avalia
-# This file is distributed under the same license as the wp4odoo package.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the WordPress For Odoo package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: wp4odoo\n"
+"Project-Id-Version: WordPress For Odoo 3.6.0\n"
 "Report-Msgid-Bugs-To: support@avalia.io\n"
-"POT-Creation-Date: 2026-02-18 11:47+0100\n"
+"POT-Creation-Date: 2026-02-18 16:20+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -334,87 +334,95 @@ msgstr ""
 msgid "Use the following Python code template:"
 msgstr ""
 
-#: admin/views/tab-health.php:27
+#: admin/views/tab-health.php:29
 msgid "Degraded"
 msgstr ""
 
-#: admin/views/tab-health.php:28
+#: admin/views/tab-health.php:30
 msgid "Healthy"
 msgstr ""
 
-#: admin/views/tab-health.php:31 includes/admin/class-settings-page.php:48
+#: admin/views/tab-health.php:33 includes/admin/class-settings-page.php:48
 msgid "Health"
 msgstr ""
 
-#: admin/views/tab-health.php:36
+#: admin/views/tab-health.php:38
 msgid "System Status"
 msgstr ""
 
-#: admin/views/tab-health.php:44
+#: admin/views/tab-health.php:46
 msgid "Active modules"
 msgstr ""
 
-#: admin/views/tab-health.php:48 admin/views/tab-health.php:167
+#: admin/views/tab-health.php:50 admin/views/tab-health.php:197
 #: admin/views/tab-queue.php:23 admin/views/tab-queue.php:35
 #: includes/admin/class-admin.php:121
 msgid "Pending"
 msgstr ""
 
-#: admin/views/tab-health.php:57
+#: admin/views/tab-health.php:59
 msgid "Average latency"
 msgstr ""
 
-#: admin/views/tab-health.php:61
+#: admin/views/tab-health.php:63
 msgid "Success rate"
 msgstr ""
 
-#: admin/views/tab-health.php:70
+#: admin/views/tab-health.php:72
 msgid "Circuit Breaker"
 msgstr ""
 
-#: admin/views/tab-health.php:74
+#: admin/views/tab-health.php:76
 msgid "Open"
 msgstr ""
 
-#: admin/views/tab-health.php:80
+#: admin/views/tab-health.php:82 admin/views/tab-health.php:109
 #, php-format
 msgid "%1$d failures — opened %2$s"
 msgstr ""
 
-#: admin/views/tab-health.php:88
+#: admin/views/tab-health.php:90
 msgid "Closed"
 msgstr ""
 
-#: admin/views/tab-health.php:96
+#: admin/views/tab-health.php:98
+msgid "Module breakers"
+msgstr ""
+
+#: admin/views/tab-health.php:118
+msgid "All closed"
+msgstr ""
+
+#: admin/views/tab-health.php:126
 msgid "Next cron run"
 msgstr ""
 
-#: admin/views/tab-health.php:104
+#: admin/views/tab-health.php:134
 #, php-format
 msgid "in %s"
 msgstr ""
 
-#: admin/views/tab-health.php:108
+#: admin/views/tab-health.php:138
 msgid "overdue"
 msgstr ""
 
-#: admin/views/tab-health.php:113
+#: admin/views/tab-health.php:143
 msgid "Not scheduled"
 msgstr ""
 
-#: admin/views/tab-health.php:122
+#: admin/views/tab-health.php:152
 msgid "Cron status"
 msgstr ""
 
-#: admin/views/tab-health.php:133
+#: admin/views/tab-health.php:163
 msgid "Compatibility warnings"
 msgstr ""
 
-#: admin/views/tab-health.php:162
+#: admin/views/tab-health.php:192
 msgid "Queue Depth by Module"
 msgstr ""
 
-#: admin/views/tab-health.php:166 admin/views/tab-logs.php:96
+#: admin/views/tab-health.php:196 admin/views/tab-logs.php:96
 #: admin/views/tab-queue.php:82
 msgid "Module"
 msgstr ""
@@ -1350,7 +1358,7 @@ msgstr ""
 msgid "Orphaned: %d"
 msgstr ""
 
-#: includes/class-cli.php:402
+#: includes/class-cli.php:402 includes/class-cli.php:498
 #, php-format
 msgid "%d orphaned mapping(s) removed."
 msgstr ""
@@ -1363,7 +1371,43 @@ msgstr ""
 msgid "No orphans found."
 msgstr ""
 
-#: includes/class-cli.php:430
+#: includes/class-cli.php:451
+#, php-format
+msgid "Unknown subcommand: %s. Usage: wp wp4odoo cleanup orphans"
+msgstr ""
+
+#: includes/class-cli.php:460
+msgid "This will permanently remove orphaned entity map entries. Continue?"
+msgstr ""
+
+#: includes/class-cli.php:469
+#, php-format
+msgid "Scanning for orphaned mappings (%s, dry-run)..."
+msgstr ""
+
+#: includes/class-cli.php:469 includes/class-cli.php:472
+msgid "all modules"
+msgstr ""
+
+#: includes/class-cli.php:472
+#, php-format
+msgid "Cleaning up orphaned mappings (%s)..."
+msgstr ""
+
+#: includes/class-cli.php:478
+msgid "No orphaned mappings found."
+msgstr ""
+
+#: includes/class-cli.php:481
+#, php-format
+msgid "Found %d orphaned mapping(s):"
+msgstr ""
+
+#: includes/class-cli.php:495
+msgid "Run without --dry-run to remove orphaned mappings."
+msgstr ""
+
+#: includes/class-cli.php:527
 #, php-format
 msgid "Unknown subcommand: %s. Available: list, enable, disable"
 msgstr ""
@@ -1381,12 +1425,27 @@ msgid ""
 "Check the health dashboard at %2$s"
 msgstr ""
 
-#: includes/class-failure-notifier.php:165
+#: includes/class-failure-notifier.php:173
+#, php-format
+msgid "[WP4Odoo] Module circuit breaker opened: %s"
+msgstr ""
+
+#: includes/class-failure-notifier.php:179
+#, php-format
+msgid ""
+"The WP4Odoo per-module circuit breaker has opened for module \"%1$s\" after "
+"%2$d consecutive high-failure batches. Jobs for this module will be skipped "
+"until it recovers.\n"
+"\n"
+"Check the health dashboard at %3$s"
+msgstr ""
+
+#: includes/class-failure-notifier.php:227
 #, php-format
 msgid "[WP4Odoo] %d consecutive sync failures"
 msgstr ""
 
-#: includes/class-failure-notifier.php:171
+#: includes/class-failure-notifier.php:233
 #, php-format
 msgid ""
 "The WordPress For Odoo sync queue has encountered %1$d consecutive "
@@ -1400,7 +1459,7 @@ msgstr ""
 msgid "Entity type \"%1$s\" is not registered in module \"%2$s\"."
 msgstr ""
 
-#: includes/class-module-registry.php:268
+#: includes/class-module-registry.php:315
 #, php-format
 msgid "%1$s requires the following modules to be active: %2$s."
 msgstr ""
@@ -1421,17 +1480,17 @@ msgid ""
 "be delayed. Consider setting up a system cron job."
 msgstr ""
 
-#: includes/class-sync-engine.php:341
+#: includes/class-sync-engine.php:366
 #, php-format
 msgid "Module \"%s\" not found or not registered."
 msgstr ""
 
-#: includes/class-sync-engine.php:354
+#: includes/class-sync-engine.php:379
 #, php-format
 msgid "Invalid JSON payload in job #%d."
 msgstr ""
 
-#: includes/class-sync-engine.php:392
+#: includes/class-sync-engine.php:417
 #, php-format
 msgid "Invalid sync direction \"%1$s\" in job #%2$d."
 msgstr ""
@@ -2280,62 +2339,62 @@ msgstr ""
 msgid "The Odoo CRM team (pipeline) ID to assign stages to."
 msgstr ""
 
-#: includes/modules/class-gamipress-module.php:110
+#: includes/modules/class-gamipress-module.php:113
 msgid "GamiPress module enabled but GamiPress is not active."
 msgstr ""
 
-#: includes/modules/class-gamipress-module.php:153
-#: includes/modules/class-mycred-module.php:141
+#: includes/modules/class-gamipress-module.php:156
+#: includes/modules/class-mycred-module.php:144
 #: includes/modules/class-wc-points-rewards-module.php:140
 msgid "Sync point balances"
 msgstr ""
 
-#: includes/modules/class-gamipress-module.php:155
+#: includes/modules/class-gamipress-module.php:158
 msgid ""
 "Push GamiPress point balances to Odoo loyalty cards. Only balances are "
 "synced — earning history stays in WordPress."
 msgstr ""
 
-#: includes/modules/class-gamipress-module.php:158
-#: includes/modules/class-mycred-module.php:146
+#: includes/modules/class-gamipress-module.php:161
+#: includes/modules/class-mycred-module.php:149
 msgid "Pull point updates from Odoo"
 msgstr ""
 
-#: includes/modules/class-gamipress-module.php:160
+#: includes/modules/class-gamipress-module.php:163
 msgid "Pull loyalty card point changes from Odoo back to GamiPress."
 msgstr ""
 
-#: includes/modules/class-gamipress-module.php:163
+#: includes/modules/class-gamipress-module.php:166
 msgid "Sync achievement types"
 msgstr ""
 
-#: includes/modules/class-gamipress-module.php:165
+#: includes/modules/class-gamipress-module.php:168
 msgid "Push GamiPress achievement types to Odoo as service products."
 msgstr ""
 
-#: includes/modules/class-gamipress-module.php:168
+#: includes/modules/class-gamipress-module.php:171
 msgid "Sync rank types"
 msgstr ""
 
-#: includes/modules/class-gamipress-module.php:170
+#: includes/modules/class-gamipress-module.php:173
 msgid "Push GamiPress rank types to Odoo as service products."
 msgstr ""
 
-#: includes/modules/class-gamipress-module.php:173
-#: includes/modules/class-mycred-module.php:156
+#: includes/modules/class-gamipress-module.php:176
+#: includes/modules/class-mycred-module.php:159
 #: includes/modules/class-wc-points-rewards-module.php:150
 msgid "Odoo Loyalty Program ID"
 msgstr ""
 
-#: includes/modules/class-gamipress-module.php:175
-#: includes/modules/class-mycred-module.php:158
+#: includes/modules/class-gamipress-module.php:178
+#: includes/modules/class-mycred-module.php:161
 msgid ""
 "The ID of the Odoo loyalty program to sync points with. Create a Loyalty "
 "program in Odoo first, then enter its ID here."
 msgstr ""
 
-#: includes/modules/class-gamipress-module.php:279
-#: includes/modules/class-mycred-module.php:260
+#: includes/modules/class-gamipress-module.php:282
+#: includes/modules/class-mycred-module.php:263
 #: includes/modules/class-wc-points-rewards-module.php:292
 msgid "Odoo Loyalty Program ID not configured."
 msgstr ""
@@ -2878,25 +2937,25 @@ msgstr ""
 msgid "Odoo sync"
 msgstr ""
 
-#: includes/modules/class-mycred-module.php:104
+#: includes/modules/class-mycred-module.php:107
 msgid "myCRED module enabled but myCRED is not active."
 msgstr ""
 
-#: includes/modules/class-mycred-module.php:143
+#: includes/modules/class-mycred-module.php:146
 msgid ""
 "Push myCRED point balances to Odoo loyalty cards. Only balances are synced — "
 "transaction log stays in WordPress."
 msgstr ""
 
-#: includes/modules/class-mycred-module.php:148
+#: includes/modules/class-mycred-module.php:151
 msgid "Pull loyalty card point changes from Odoo back to myCRED."
 msgstr ""
 
-#: includes/modules/class-mycred-module.php:151
+#: includes/modules/class-mycred-module.php:154
 msgid "Sync badge types"
 msgstr ""
 
-#: includes/modules/class-mycred-module.php:153
+#: includes/modules/class-mycred-module.php:156
 msgid "Push myCRED badge types to Odoo as service products."
 msgstr ""
 

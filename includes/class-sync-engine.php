@@ -122,6 +122,23 @@ class Sync_Engine {
 	private ?Batch_Create_Processor $batch_processor = null;
 
 	/**
+	 * Per-module circuit breaker for isolating module-specific failures.
+	 *
+	 * @var Module_Circuit_Breaker
+	 */
+	private Module_Circuit_Breaker $module_breaker;
+
+	/**
+	 * Per-module outcome tracking for the current batch run.
+	 *
+	 * Keyed by module ID, each entry tracks successes and failures
+	 * to feed the module circuit breaker after the batch completes.
+	 *
+	 * @var array<string, array{successes: int, failures: int}>
+	 */
+	private array $module_outcomes = [];
+
+	/**
 	 * Memory usage threshold (fraction of PHP memory_limit).
 	 *
 	 * When usage exceeds this ratio, batch processing stops to prevent OOM.
@@ -152,6 +169,8 @@ class Sync_Engine {
 		$this->failure_notifier = new Failure_Notifier( $this->logger, $settings );
 		$this->circuit_breaker  = new Circuit_Breaker( $this->logger );
 		$this->circuit_breaker->set_failure_notifier( $this->failure_notifier );
+		$this->module_breaker = new Module_Circuit_Breaker( $this->logger );
+		$this->module_breaker->set_failure_notifier( $this->failure_notifier );
 	}
 
 	/**
@@ -247,6 +266,7 @@ class Sync_Engine {
 
 			$this->batch_failures  = 0;
 			$this->batch_successes = 0;
+			$this->module_outcomes = [];
 
 			$iteration       = 0;
 			$touched_modules = [];
@@ -304,6 +324,11 @@ class Sync_Engine {
 			// Update circuit breaker based on batch outcome (ratio-based).
 			if ( $this->batch_successes > 0 || $this->batch_failures > 0 ) {
 				$this->circuit_breaker->record_batch( $this->batch_successes, $this->batch_failures );
+			}
+
+			// Update per-module circuit breakers.
+			foreach ( $this->module_outcomes as $mod_id => $outcome ) {
+				$this->module_breaker->record_module_batch( $mod_id, $outcome['successes'], $outcome['failures'] );
 			}
 		} finally {
 			$this->release_lock( $lock_name );
@@ -465,6 +490,11 @@ class Sync_Engine {
 				continue;
 			}
 
+			// Skip jobs whose module circuit breaker is open.
+			if ( ! $this->module_breaker->is_module_available( $job->module ) ) {
+				continue;
+			}
+
 			if ( ( microtime( true ) - $start_time ) >= self::BATCH_TIME_LIMIT ) {
 				$this->logger->info(
 					'Batch time limit reached, deferring remaining jobs.',
@@ -516,9 +546,11 @@ class Sync_Engine {
 					);
 					++$processed;
 					++$this->batch_successes;
+					$this->record_module_outcome( $job->module, true );
 				} else {
 					$this->handle_failure( $job, $result->get_message(), $result->get_error_type(), $result->get_entity_id() );
 					++$this->batch_failures;
+					$this->record_module_outcome( $job->module, false );
 				}
 
 				/**
@@ -537,6 +569,7 @@ class Sync_Engine {
 			} catch ( \Throwable $e ) {
 				$this->handle_failure( $job, $e->getMessage() );
 				++$this->batch_failures;
+				$this->record_module_outcome( $job->module, false );
 
 				// If memory is exhausted after the error, stop the batch
 				// to prevent cascading OOM failures on subsequent jobs.
@@ -730,5 +763,27 @@ class Sync_Engine {
 
 		$this->lock->release();
 		$this->lock = null;
+	}
+
+	/**
+	 * Record a job outcome for per-module circuit breaker tracking.
+	 *
+	 * @param string $module  Module identifier.
+	 * @param bool   $success True if the job succeeded.
+	 * @return void
+	 */
+	private function record_module_outcome( string $module, bool $success ): void {
+		if ( ! isset( $this->module_outcomes[ $module ] ) ) {
+			$this->module_outcomes[ $module ] = [
+				'successes' => 0,
+				'failures'  => 0,
+			];
+		}
+
+		if ( $success ) {
+			++$this->module_outcomes[ $module ]['successes'];
+		} else {
+			++$this->module_outcomes[ $module ]['failures'];
+		}
 	}
 }

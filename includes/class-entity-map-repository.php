@@ -564,6 +564,105 @@ class Entity_Map_Repository {
 	}
 
 	/**
+	 * Remove orphaned entity map entries where the WordPress post no longer exists.
+	 *
+	 * Targets post-based entity types: entries whose wp_id does not match
+	 * any row in {$wpdb->posts}. Useful for cleaning up mappings left behind
+	 * when delete sync jobs fail permanently.
+	 *
+	 * User-based modules (e.g. BuddyBoss profiles) are excluded because
+	 * their wp_id references the users table, not the posts table.
+	 *
+	 * @param string|null $module      Optional module filter. Null = all modules.
+	 * @param bool        $dry_run     If true, count orphans without deleting.
+	 * @param string[]    $exclude_modules Module IDs to skip (e.g. user-based modules).
+	 * @return array{found: int, removed: int, details: array<string, int>}
+	 *
+	 * @since 3.6.0
+	 */
+	public function cleanup_orphans( ?string $module = null, bool $dry_run = false, array $exclude_modules = [] ): array {
+		global $wpdb;
+
+		$table  = $wpdb->prefix . 'wp4odoo_entity_map';
+		$result = [
+			'found'   => 0,
+			'removed' => 0,
+			'details' => [],
+		];
+
+		// Default exclusions: modules whose wp_id references users, not posts.
+		$user_based = [ 'buddyboss', 'wperp', 'wperp_crm', 'wperp_accounting', 'fluentcrm', 'mailpoet', 'mc4wp', 'gamipress', 'mycred', 'wc_points_rewards', 'affiliatewp' ];
+		$exclude    = array_unique( array_merge( $user_based, $exclude_modules ) );
+
+		// Build WHERE clause.
+		$where = [ 'blog_id = %d' ];
+		$args  = [ $this->blog_id ];
+
+		if ( null !== $module ) {
+			$where[] = 'module = %s';
+			$args[]  = $module;
+		}
+
+		$placeholders = implode( ',', array_fill( 0, count( $exclude ), '%s' ) );
+		$where[]      = "module NOT IN ({$placeholders})";
+		$args         = array_merge( $args, $exclude );
+
+		$where_sql = implode( ' AND ', $where );
+
+		// Find orphans: entity_map wp_id not in posts table.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table, $where_sql from safe sources (prefix + parameterized).
+		$sql = "SELECT em.id, em.module, em.entity_type, em.wp_id, em.odoo_id
+			FROM {$table} em
+			LEFT JOIN {$wpdb->posts} p ON em.wp_id = p.ID
+			WHERE {$where_sql} AND p.ID IS NULL
+			LIMIT %d";
+
+		$args[] = self::POLL_LIMIT;
+
+		$orphans = $wpdb->get_results(
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic WHERE clause; all values parameterized.
+			$wpdb->prepare( $sql, $args )
+		);
+
+		if ( empty( $orphans ) ) {
+			return $result;
+		}
+
+		$result['found'] = count( $orphans );
+
+		// Count per module.
+		foreach ( $orphans as $row ) {
+			$key                       = $row->module . ':' . $row->entity_type;
+			$result['details'][ $key ] = ( $result['details'][ $key ] ?? 0 ) + 1;
+		}
+
+		if ( $dry_run ) {
+			return $result;
+		}
+
+		// Delete orphans in batches.
+		foreach ( array_chunk( $orphans, self::BATCH_CHUNK_SIZE ) as $chunk ) {
+			$ids          = array_map( fn( $row ) => (int) $row->id, $chunk );
+			$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table and $placeholders safe (prefix + array_fill).
+			$delete_sql = "DELETE FROM {$table} WHERE id IN ({$placeholders})";
+
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic placeholders for batch delete.
+			$deleted = $wpdb->query( $wpdb->prepare( $delete_sql, $ids ) );
+
+			if ( false !== $deleted ) {
+				$result['removed'] += $deleted;
+			}
+		}
+
+		// Flush cache since we may have removed entries that are cached.
+		$this->flush_cache();
+
+		return $result;
+	}
+
+	/**
 	 * Flush the per-request lookup cache.
 	 *
 	 * Useful for testing or after bulk operations.

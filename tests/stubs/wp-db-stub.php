@@ -17,6 +17,7 @@ if ( ! defined( 'ARRAY_A' ) ) {
 class WP_DB_Stub {
 
 	public string $prefix = 'wp_';
+	public string $posts = 'wp_posts';
 	public int $insert_id = 0;
 
 	/** @var \Throwable|null Optional exception to throw from insert(). */

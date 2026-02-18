@@ -413,6 +413,9 @@ class Settings_Page {
 		$cron_warning = $settings->get_cron_warning();
 		$next_cron    = wp_next_scheduled( 'wp4odoo_scheduled_sync' );
 
+		$module_cb    = new \WP4Odoo\Module_Circuit_Breaker( \WP4Odoo\Logger::for_channel( 'health', $settings ) );
+		$open_modules = $module_cb->get_open_modules();
+
 		include WP4ODOO_PLUGIN_DIR . 'admin/views/tab-health.php';
 	}
 }

@@ -71,11 +71,14 @@ if ( ! $table_check ) {
 			KEY idx_status_module (blog_id, status, module, priority, created_at),
 			KEY idx_module_entity (module, entity_type),
 			KEY idx_dedup_wp (blog_id, module, entity_type, direction, status, wp_id),
-			KEY idx_dedup_odoo (module, entity_type, direction, status, odoo_id),
+			KEY idx_dedup_odoo (blog_id, module, entity_type, direction, status, odoo_id),
 			KEY idx_wp_id (wp_id),
 			KEY idx_odoo_id (odoo_id),
 			KEY idx_correlation (correlation_id),
-			KEY idx_status_created (status, created_at)
+			KEY idx_status_created (status, created_at),
+			KEY idx_status_attempts (status, attempts),
+			KEY idx_processed_status (status, processed_at),
+			KEY idx_stale_recovery (blog_id, status, processed_at)
 		) $charset_collate"
 	);
 
@@ -96,7 +99,7 @@ if ( ! $table_check ) {
 			UNIQUE KEY idx_unique_mapping (blog_id, module, entity_type, wp_id, odoo_id),
 			KEY idx_wp_lookup (blog_id, module, entity_type, wp_id),
 			KEY idx_odoo_lookup (blog_id, module, entity_type, odoo_id),
-			KEY idx_poll_detection (module, entity_type, last_polled_at)
+			KEY idx_poll_detection (blog_id, module, entity_type, last_polled_at)
 		) $charset_collate"
 	);
 
@@ -113,12 +116,15 @@ if ( ! $table_check ) {
 			PRIMARY KEY (id),
 			KEY idx_level_date (level, created_at),
 			KEY idx_module (module),
-			KEY idx_correlation (correlation_id)
+			KEY idx_correlation (correlation_id),
+			KEY idx_blog_cleanup (blog_id, created_at)
 		) $charset_collate"
 	);
 
-	// Run migrations on raw-SQL tables (e.g. migration_7 for blog_id is already in schema above,
-	// but this ensures schema_version is set correctly for future migrations).
+	// Reset schema_version — the failed dbDelta path let migrations "succeed"
+	// against non-existent tables, advancing schema_version to 10 without
+	// actually applying anything. Reset so migrations run correctly now.
+	delete_option( \WP4Odoo\Database_Migration::OPT_SCHEMA_VERSION );
 	\WP4Odoo\Database_Migration::run_migrations();
 }
 
