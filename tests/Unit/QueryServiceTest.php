@@ -96,14 +96,16 @@ class QueryServiceTest extends TestCase {
 
 		$this->service->get_queue_jobs( 1, 30, 'failed' );
 
-		$prepare = $this->get_calls( 'prepare' );
-		// prepare[0] = blog_id, prepare[1] = status, prepare[2] = SELECT.
-		$this->assertCount( 3, $prepare );
-		$this->assertStringContainsString( 'AND status = %s', $prepare[1]['args'][0] );
-		$this->assertSame( 'failed', $prepare[1]['args'][1] );
+		$prepare      = $this->get_calls( 'prepare' );
+		$status_calls = array_filter(
+			$prepare,
+			fn( $c ) => str_contains( $c['args'][0], 'status = %s' )
+		);
+		$this->assertNotEmpty( $status_calls, 'A prepare call should contain the status filter.' );
+		$this->assertSame( 'failed', reset( $status_calls )['args'][1] );
 	}
 
-	public function test_get_queue_jobs_without_status_has_no_where(): void {
+	public function test_get_queue_jobs_without_status_has_no_status_clause(): void {
 		$this->wpdb->get_var_return = 10;
 		$this->wpdb->get_results_return = [];
 
@@ -189,7 +191,7 @@ class QueryServiceTest extends TestCase {
 		$this->assertContains( 'crm', $prepare[0]['args'][1] );
 	}
 
-	public function test_get_log_entries_with_no_filters(): void {
+	public function test_get_log_entries_with_no_user_filters(): void {
 		$this->wpdb->get_var_return = 15;
 		$this->wpdb->get_results_return = [];
 

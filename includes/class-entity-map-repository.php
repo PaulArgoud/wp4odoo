@@ -703,7 +703,9 @@ class Entity_Map_Repository {
 			return;
 		}
 
-		// Keep the most recent 75% of entries (evict oldest 25%).
+		// Evict the oldest ~25% of entries. Each entity mapping creates 2 cache
+		// keys (wp→odoo + odoo→wp), so this evicts ~625 mappings when
+		// MAX_CACHE_SIZE is 5000 (i.e., 1250 entries / 2 keys per mapping).
 		$kept = array_slice( $this->cache, (int) ( self::MAX_CACHE_SIZE / 4 ), null, true );
 
 		// Remove orphaned entries whose bidirectional partner was evicted.
