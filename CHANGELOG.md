@@ -7,17 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.7.0] - Unreleased
 
+### Added
+- **Forms module: Elementor Pro, Divi & Bricks support** — Extends the existing Forms module with 3 new form plugin integrations. Hooks: `elementor_pro/forms/new_record`, `et_pb_contact_form_submit`, `bricks/form/custom_action`. Field extraction via `Form_Field_Extractor` normalizer. 3 new setting toggles
+- **Food Ordering module: RestroPress support** — Extends the existing Food Ordering module with RestroPress integration. Hooks: `restropress_complete_purchase`. Extraction via `Food_Order_Extractor::extract_from_restropress()`. New `sync_restropress` setting toggle
+- **Fluent Support module** — New helpdesk module extending `Helpdesk_Module_Base`. Syncs tickets → `helpdesk.ticket` (Enterprise) with `project.task` fallback (Community). Hooks: `fluent_support/ticket_created`, `fluent_support/ticket_updated`, `fluent_support/response_added`. Configurable Helpdesk Team ID and Project ID
+- **Sensei LMS module** — New LMS module extending `LMS_Module_Base`. Syncs courses → `product.product` (bidirectional), orders → `account.move` (push, auto-post), enrollments → `sale.order` (push, synthetic ID encoding). Hooks: `save_post_course`, `sensei_course_status_updated`, `woocommerce_order_status_changed` (filtered for Sensei orders). Version bounds: Sensei 4.0–4.24
+- **Ultimate Member module** — New user profile module. Syncs profiles → `res.partner` (bidirectional), roles → `res.partner.category` (push-only). Custom field enrichment (phone, company, country, city). Hooks: `um_after_user_updated`, `um_registration_complete`, `um_delete_user`, `um_member_role_upgrade`, `um_member_role_downgrade`. Version bounds: UM 2.6–2.9
+- **WC Rental module** — New WooCommerce extension module. Syncs rental orders → `sale.order` with Odoo Rental fields (`is_rental`, `pickup_date`, `return_date`). Generic approach: configurable meta keys for rental product detection and date extraction. Requires WooCommerce module. Hook: `woocommerce_order_status_changed` (priority 20, after WC module)
+- **Field Service module** — New bidirectional CPT module. Syncs field service tasks between `wp4odoo_fs_task` CPT and Odoo `field_service.task` (Enterprise). Admin-visible CPT under WP4Odoo menu. Status mapping (draft↔New, publish↔In Progress, private↔Done). Meta fields: planned date, deadline, priority. Dedup by task name
+- **Odoo_Model enum: FieldServiceTask** — New `field_service.task` case for Field Service module
+- **WC_Order_Item::get_meta()** — Added `get_meta()` method to WC_Order_Item stubs (PHPStan + PHPUnit) for order item meta access
+- **`Schema_Cache::flush_all()`** — New method that deletes both in-memory and persistent (transient) caches in one query. Fires `wp4odoo_schema_cache_flushed` action after cleanup for third-party extensibility
+- **WP-CLI `cache flush` command** — `wp wp4odoo cache flush` clears the Odoo schema cache (memory + transients) on demand
+- **`wp4odoo_retry_delay` filter** — Retry delay in `Sync_Job_Tracking::handle_failure()` is now filterable. Clamped to `[0, MAX_RETRY_DELAY]` for safety
+
 ### Fixed (Architecture)
 - **Exponential backoff cap** — `Sync_Job_Tracking::calculate_retry_delay()` now caps retry delay at 3600s (`MAX_RETRY_DELAY`). Without a cap, high attempt counts produced delays exceeding practical bounds
 - **Stale recovery loop prevention** — `Sync_Queue_Repository::recover_stale_processing()` now increments `attempts` when recovering stale jobs. Prevents infinite recovery loops where a job that consistently crashes is recovered and reprocessed indefinitely without progressing toward `max_attempts` (reverses 3.6.0 "no-increment" behavior — a job that repeatedly stalls IS progressing toward failure)
 - **SQL injection hardening** — `Sync_Queue_Repository::enqueue()` and `cleanup()` now use `$wpdb->prepare()` for `status IN (...)` clauses (was safe hardcoded values, but inconsistent with the fully-prepared pattern used elsewhere)
 - **Atomic stale recovery guard** — `Sync_Engine::process_queue()` now uses `wp_cache_add()` for the stale recovery mutex (was non-atomic `get_transient()`/`set_transient()` — two concurrent crons could both pass the check)
 - **Multisite settings cache scoping** — `Settings_Repository` internal cache is now keyed by `blog_id`. On multisite, `switch_to_blog()` previously returned cached settings from the originating site
-
-### Added
-- **`Schema_Cache::flush_all()`** — New method that deletes both in-memory and persistent (transient) caches in one query. Fires `wp4odoo_schema_cache_flushed` action after cleanup for third-party extensibility
-- **WP-CLI `cache flush` command** — `wp wp4odoo cache flush` clears the Odoo schema cache (memory + transients) on demand
-- **`wp4odoo_retry_delay` filter** — Retry delay in `Sync_Job_Tracking::handle_failure()` is now filterable. Clamped to `[0, MAX_RETRY_DELAY]` for safety
 
 ### Fixed (Multisite)
 - **Credential cache flush on `switch_blog`** — `wp4odoo.php` now hooks `switch_blog` to call `Odoo_Auth::flush_credentials_cache()`, preventing stale credentials from site A leaking into site B when using `switch_to_blog()`

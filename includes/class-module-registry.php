@@ -160,6 +160,7 @@ class Module_Registry {
 			[ 'wc_inventory', Modules\WC_Inventory_Module::class, fn() => class_exists( 'WooCommerce' ) ],
 			[ 'wc_shipping', Modules\WC_Shipping_Module::class, fn() => class_exists( 'WooCommerce' ) ],
 			[ 'wc_returns', Modules\WC_Returns_Module::class, fn() => class_exists( 'WooCommerce' ) ],
+			[ 'wc_rental', Modules\WC_Rental_Module::class, fn() => class_exists( 'WooCommerce' ) ],
 
 			// Invoicing group.
 			[ 'sprout_invoices', Modules\Sprout_Invoices_Module::class, fn() => class_exists( 'SI_Invoice' ) ],
@@ -179,6 +180,7 @@ class Module_Registry {
 			// Helpdesk group.
 			[ 'awesome_support', Modules\Awesome_Support_Module::class, fn() => defined( 'WPAS_VERSION' ) ],
 			[ 'supportcandy', Modules\SupportCandy_Module::class, fn() => defined( 'WPSC_VERSION' ) ],
+			[ 'fluent_support', Modules\Fluent_Support_Module::class, fn() => defined( 'FLUENT_SUPPORT_VERSION' ) ],
 
 			// Affiliate.
 			[ 'affiliatewp', Modules\AffiliateWP_Module::class, fn() => function_exists( 'affiliate_wp' ) ],
@@ -197,6 +199,7 @@ class Module_Registry {
 
 			// Community.
 			[ 'buddyboss', Modules\BuddyBoss_Module::class, fn() => defined( 'BP_VERSION' ) ],
+			[ 'ultimate_member', Modules\Ultimate_Member_Module::class, fn() => class_exists( 'UM' ) ],
 
 			// HR.
 			[ 'wperp', Modules\WPERP_Module::class, fn() => defined( 'WPERP_VERSION' ) ],
@@ -209,6 +212,10 @@ class Module_Registry {
 
 			// LMS.
 			[ 'learnpress', Modules\LearnPress_Module::class, fn() => defined( 'LP_PLUGIN_FILE' ) ],
+			[ 'sensei', Modules\Sensei_Module::class, fn() => defined( 'SENSEI_LMS_VERSION' ) ],
+
+			// Field Service — always registered; detection is Odoo-side (Enterprise).
+			[ 'field_service', Modules\Field_Service_Module::class, null ],
 
 			// Knowledge — always registered; detection is Odoo-side.
 			[ 'knowledge', Modules\Knowledge_Module::class, null ],
@@ -238,7 +245,8 @@ class Module_Registry {
 
 		// Food Ordering — aggregate detection.
 		$food_active = defined( 'FLAVOR_FLAVOR_VERSION' )
-			|| defined( 'WPPIZZA_VERSION' );
+			|| defined( 'WPPIZZA_VERSION' )
+			|| defined( 'RP_VERSION' );
 		if ( $food_active ) {
 			if ( $this->settings->is_module_enabled( 'food_ordering' ) ) {
 				$this->register( 'food_ordering', new Modules\Food_Ordering_Module( $client_provider, $entity_map, $settings ) );
@@ -258,7 +266,7 @@ class Module_Registry {
 			}
 		}
 
-		// Forms module — aggregate detection (any of 8 form plugins).
+		// Forms module — aggregate detection (any of 11 form plugins).
 		$forms_active = class_exists( 'GFAPI' )
 			|| function_exists( 'wpforms' )
 			|| defined( 'WPCF7_VERSION' )
@@ -266,7 +274,10 @@ class Module_Registry {
 			|| class_exists( 'FrmAppHelper' )
 			|| class_exists( 'Ninja_Forms' )
 			|| defined( 'FORMINATOR_VERSION' )
-			|| defined( 'JET_FORM_BUILDER_VERSION' );
+			|| defined( 'JET_FORM_BUILDER_VERSION' )
+			|| defined( 'ELEMENTOR_PRO_VERSION' )
+			|| function_exists( 'et_setup_theme' )
+			|| defined( 'BRICKS_VERSION' );
 		if ( $forms_active ) {
 			if ( $this->settings->is_module_enabled( 'forms' ) ) {
 				$this->register( 'forms', new Modules\Forms_Module( $client_provider, $entity_map, $settings ) );

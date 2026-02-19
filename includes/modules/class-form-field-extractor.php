@@ -113,6 +113,9 @@ class Form_Field_Extractor {
 		$this->strategies['ninja_forms']    = $this->ninja_forms_strategy();
 		$this->strategies['forminator']     = $this->forminator_strategy();
 		$this->strategies['jetformbuilder'] = $this->jetformbuilder_strategy();
+		$this->strategies['elementor']      = $this->elementor_strategy();
+		$this->strategies['divi']           = $this->divi_strategy();
+		$this->strategies['bricks']         = $this->bricks_strategy();
 	}
 
 	private function gravity_forms_strategy(): \Closure {
@@ -339,6 +342,71 @@ class Form_Field_Extractor {
 				$type  = $this->infer_type_from_key( $lower );
 
 				$this->assign_field( $data, $type, $name, $value );
+			}
+
+			return $this->finalise( $data, $form_title );
+		};
+	}
+
+	/**
+	 * @since 3.7.0
+	 */
+	private function elementor_strategy(): \Closure {
+		return function ( array $fields, string $form_title ): array {
+			return $this->extract_normalised(
+				$fields,
+				sprintf(
+					/* translators: %s: form title */
+					__( 'Elementor: %s', 'wp4odoo' ),
+					$form_title ?: __( 'Unknown Form', 'wp4odoo' )
+				),
+				$form_title
+			);
+		};
+	}
+
+	/**
+	 * @since 3.7.0
+	 */
+	private function divi_strategy(): \Closure {
+		return function ( array $fields, string $form_title ): array {
+			return $this->extract_normalised(
+				$fields,
+				sprintf(
+					/* translators: %s: form title */
+					__( 'Divi: %s', 'wp4odoo' ),
+					$form_title ?: __( 'Unknown Form', 'wp4odoo' )
+				),
+				$form_title
+			);
+		};
+	}
+
+	/**
+	 * @since 3.7.0
+	 */
+	private function bricks_strategy(): \Closure {
+		return function ( array $fields, string $form_title ): array {
+			$data = $this->empty_lead(
+				sprintf(
+					/* translators: %s: form title */
+					__( 'Bricks: %s', 'wp4odoo' ),
+					$form_title ?: __( 'Unknown Form', 'wp4odoo' )
+				)
+			);
+
+			foreach ( $fields as $field ) {
+				$label = $field['label'] ?? '';
+				$value = trim( (string) ( $field['value'] ?? '' ) );
+
+				if ( '' === $value ) {
+					continue;
+				}
+
+				$lower = mb_strtolower( $label );
+				$type  = $this->infer_type_from_key( $lower );
+
+				$this->assign_field( $data, $type, $label, $value );
 			}
 
 			return $this->finalise( $data, $form_title );

@@ -266,6 +266,7 @@ if ( ! class_exists( 'WC_Order' ) ) {
 		public function get_total(): string { return $this->data['total'] ?? '0.00'; }
 		public function get_tax_class(): string { return $this->data['tax_class'] ?? ''; }
 		public function get_product_id(): int { return (int) ( $this->data['product_id'] ?? 0 ); }
+		public function get_meta( string $key, bool $single = true ): string { return (string) ( $this->data[ $key ] ?? '' ); }
 	}
 
 	/**

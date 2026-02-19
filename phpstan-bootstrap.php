@@ -119,6 +119,8 @@ if ( ! class_exists( 'WC_Order' ) ) {
 		public function get_total(): string { return '0.00'; }
 		public function get_tax_class(): string { return ''; }
 		public function get_product_id(): int { return 0; }
+		/** @return mixed */
+		public function get_meta( string $key, bool $single = true ) { return ''; }
 	}
 
 	class WC_Order_Item_Tax {

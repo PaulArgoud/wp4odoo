@@ -147,6 +147,12 @@ return [
 		'constants' => [ 'LP_PLUGIN_FILE', 'LEARNPRESS_VERSION' ],
 	],
 
+	'sensei'           => [
+		'classes'   => [],
+		'functions' => [],
+		'constants' => [ 'SENSEI_LMS_VERSION' ],
+	],
+
 	// ─── WooCommerce Extensions ──────────────────────────
 
 	'wc_subscriptions'  => [
@@ -299,6 +305,12 @@ return [
 		'constants' => [ 'WPSC_VERSION' ],
 	],
 
+	'fluent_support'    => [
+		'classes'   => [],
+		'functions' => [],
+		'constants' => [ 'FLUENT_SUPPORT_VERSION' ],
+	],
+
 	// ─── Affiliate ───────────────────────────────────────
 
 	'affiliatewp'       => [
@@ -355,6 +367,12 @@ return [
 		'classes'   => [],
 		'functions' => [ 'buddypress', 'bp_get_profile_field_data', 'xprofile_set_field_data', 'groups_get_group', 'groups_get_user_groups' ],
 		'constants' => [ 'BP_VERSION' ],
+	],
+
+	'ultimate_member'   => [
+		'classes'   => [ 'UM' ],
+		'functions' => [],
+		'constants' => [ 'UM_VERSION' ],
 	],
 
 	// ─── HR / ERP ────────────────────────────────────────
@@ -424,7 +442,7 @@ return [
 	'food_ordering'     => [
 		'classes'   => [],
 		'functions' => [],
-		'constants' => [ 'FLAVOR_FLAVOR_VERSION', 'WPPIZZA_VERSION' ],
+		'constants' => [ 'FLAVOR_FLAVOR_VERSION', 'WPPIZZA_VERSION', 'RP_VERSION' ],
 	],
 
 	// ─── Survey & Quiz ───────────────────────────────────
@@ -439,8 +457,24 @@ return [
 
 	'forms'             => [
 		'classes'   => [ 'GFAPI', 'GF_Field', 'WPCF7_ContactForm', 'WPCF7_Submission', 'WPCF7_FormTag', 'FrmAppHelper', 'FrmField', 'FrmEntryMeta', 'FrmForm', 'Ninja_Forms' ],
-		'functions' => [ 'wpforms' ],
-		'constants' => [ 'WPCF7_VERSION', 'FLUENTFORM', 'FORMINATOR_VERSION', 'JET_FORM_BUILDER_VERSION' ],
+		'functions' => [ 'wpforms', 'et_setup_theme' ],
+		'constants' => [ 'WPCF7_VERSION', 'FLUENTFORM', 'FORMINATOR_VERSION', 'JET_FORM_BUILDER_VERSION', 'ELEMENTOR_PRO_VERSION', 'BRICKS_VERSION' ],
+	],
+
+	// ─── WC Rental ──────────────────────────────────────
+
+	'wc_rental'         => [
+		'classes'   => [ 'WooCommerce' ],
+		'functions' => [],
+		'constants' => [],
+	],
+
+	// ─── Field Service ──────────────────────────────────
+
+	'field_service'     => [
+		'classes'   => [],
+		'functions' => [],
+		'constants' => [],
 	],
 
 	// ─── CRM (core) ─────────────────────────────────────

@@ -85,6 +85,27 @@ class Form_Handler {
 	}
 
 	/**
+	 * @since 3.7.0
+	 */
+	public function extract_from_elementor( array $fields, string $form_title ): array {
+		return $this->extractor->extract( 'elementor', $fields, $form_title );
+	}
+
+	/**
+	 * @since 3.7.0
+	 */
+	public function extract_from_divi( array $fields, string $form_title ): array {
+		return $this->extractor->extract( 'divi', $fields, $form_title );
+	}
+
+	/**
+	 * @since 3.7.0
+	 */
+	public function extract_from_bricks( array $fields, string $form_title ): array {
+		return $this->extractor->extract( 'bricks', $fields, $form_title );
+	}
+
+	/**
 	 * @since 2.0.0
 	 */
 	public function is_company_label( string $label ): bool {

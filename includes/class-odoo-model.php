@@ -214,6 +214,11 @@ enum Odoo_Model: string {
 	/** Document folders. @since 3.6.0 */
 	case DocumentsFolder = 'documents.folder';
 
+	// ─── Field Service (Enterprise) ────────────────────────
+
+	/** Field service tasks (Odoo Enterprise). @since 3.7.0 */
+	case FieldServiceTask = 'field_service.task';
+
 	// ─── Knowledge (Enterprise) ────────────────────────────
 
 	/** Knowledge articles (Odoo Enterprise 16+). */

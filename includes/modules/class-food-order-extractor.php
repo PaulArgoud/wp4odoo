@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - amount_total:  float
  * - note:          string (special instructions)
  * - lines:         array of {name, qty, price_unit}
- * - source:        string ('gloriafoood' | 'wppizza')
+ * - source:        string ('gloriafoood' | 'wppizza' | 'restropress')
  *
  * @package WP4Odoo
  * @since   3.6.0
@@ -143,6 +143,66 @@ class Food_Order_Extractor {
 			'note'          => (string) ( $order['notes'] ?? '' ),
 			'lines'         => $lines,
 			'source'        => 'wppizza',
+		];
+	}
+
+	/**
+	 * Extract order data from a RestroPress payment.
+	 *
+	 * RestroPress stores orders in a CPT `rpress_payment` with meta
+	 * `_rpress_payment_meta` containing cart details and customer info.
+	 *
+	 * @param int $payment_id RestroPress payment ID.
+	 * @return array<string, mixed> Normalized order data, or empty.
+	 *
+	 * @since 3.7.0
+	 */
+	public function extract_from_restropress( int $payment_id ): array {
+		$post = get_post( $payment_id );
+		if ( ! $post || 'rpress_payment' !== $post->post_type ) {
+			$this->logger->warning( 'RestroPress payment not found.', [ 'payment_id' => $payment_id ] );
+			return [];
+		}
+
+		$meta = get_post_meta( $payment_id, '_rpress_payment_meta', true );
+		if ( ! is_array( $meta ) || empty( $meta ) ) {
+			$this->logger->warning( 'RestroPress payment meta empty.', [ 'payment_id' => $payment_id ] );
+			return [];
+		}
+
+		$cart  = $meta['cart_details'] ?? [];
+		$email = (string) ( $meta['email'] ?? '' );
+		$name  = trim( ( $meta['user_info']['first_name'] ?? '' ) . ' ' . ( $meta['user_info']['last_name'] ?? '' ) );
+
+		$lines = [];
+		$total = 0.0;
+		foreach ( $cart as $item ) {
+			$item_name = $item['name'] ?? '';
+			$qty       = (int) ( $item['quantity'] ?? 1 );
+			$price     = (float) ( $item['item_price'] ?? 0.0 );
+
+			if ( '' === $item_name || $qty <= 0 ) {
+				continue;
+			}
+
+			$lines[] = [
+				'name'       => $item_name,
+				'qty'        => $qty,
+				'price_unit' => $price,
+			];
+			$total += $qty * $price;
+		}
+
+		$amount = (float) ( get_post_meta( $payment_id, '_rpress_payment_total', true ) ?: $total );
+
+		return [
+			'partner_name'  => $name,
+			'partner_email' => $email,
+			'date_order'    => $post->post_date_gmt ?: gmdate( 'Y-m-d H:i:s' ),
+			'amount_total'  => $amount,
+			'note'          => (string) ( $meta['notes'] ?? '' ),
+			'lines'         => $lines,
+			'source'        => 'restropress',
 		];
 	}
 }

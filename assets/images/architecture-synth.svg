@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 790" font-family="'SF Mono','Fira Code','JetBrains Mono',monospace">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 880" font-family="'SF Mono','Fira Code','JetBrains Mono',monospace">
   <defs>
     <linearGradient id="wpBg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#1a1a2e"/><stop offset="100%" stop-color="#16213e"/>
@@ -31,10 +31,10 @@
   </defs>
 
   <!-- Background -->
-  <rect width="1100" height="790" rx="12" fill="#0d1117"/>
+  <rect width="1100" height="880" rx="12" fill="#0d1117"/>
 
   <!-- WordPress container -->
-  <rect x="30" y="20" width="1040" height="590" rx="10" fill="url(#wpBg)" stroke="#30363d" stroke-width="1.5" filter="url(#s)"/>
+  <rect x="30" y="20" width="1040" height="680" rx="10" fill="url(#wpBg)" stroke="#30363d" stroke-width="1.5" filter="url(#s)"/>
   <text x="550" y="48" text-anchor="middle" fill="#58a6ff" font-size="15" font-weight="700" letter-spacing="3">WORDPRESS</text>
 
   <!-- Legend -->
@@ -46,20 +46,20 @@
   <text x="925" y="46" fill="#8b949e" font-size="9">Odoo &#8594; WP</text>
 
   <!-- Module count -->
-  <text x="60" y="64" fill="#484f58" font-size="9" font-weight="600" letter-spacing="1">40 MODULES IN 12 DOMAINS</text>
+  <text x="60" y="64" fill="#484f58" font-size="9" font-weight="600" letter-spacing="1">69 MODULES IN 17 DOMAINS</text>
 
   <!-- ═══ ROW 1: 3 category cards (310px wide) ═══ -->
 
-  <!-- E-Commerce (8) -->
+  <!-- E-Commerce & WC (15) -->
   <rect x="60" y="72" width="310" height="78" rx="7" fill="url(#bidir)" filter="url(#s)"/>
-  <text x="215" y="94" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">E-Commerce (8)</text>
-  <text x="215" y="112" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">WC &#8596; &#183; WC Subs &#8596; &#183; WC BOM &#8594; &#183; WC Points &#8596;</text>
-  <text x="215" y="126" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">EDD &#8596; &#183; Ecwid &#8594; &#183; ShopWP &#8594; &#183; Crowdfunding &#8594;</text>
+  <text x="215" y="94" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">E-Commerce &amp; WC (15)</text>
+  <text x="215" y="112" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">WC &#8596; &#183; Subs &#8596; &#183; BOM &#8594; &#183; Points &#8596; &#183; Add-Ons &#8594;</text>
+  <text x="215" y="126" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">Inventory &#183; Shipping &#183; Returns &#183; B2B &#183; Rental &#183; EDD &#183; SureCart</text>
 
   <!-- CRM & Forms (2) -->
   <rect x="385" y="72" width="310" height="78" rx="7" fill="url(#bidir)" filter="url(#s)"/>
   <text x="540" y="94" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">CRM &amp; Forms (2)</text>
-  <text x="540" y="118" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">CRM &#8596; &#183; Forms (7 plugins) &#8594;</text>
+  <text x="540" y="118" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">CRM &#8596; &#183; Forms (11 plugins) &#8594;</text>
 
   <!-- Invoicing & Sales (3) -->
   <rect x="710" y="72" width="310" height="78" rx="7" fill="url(#bidir)" filter="url(#s)"/>
@@ -81,109 +81,136 @@
   <text x="420" y="210" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">GiveWP &#183; Charitable</text>
   <text x="420" y="224" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">WP Simple Pay</text>
 
-  <!-- LMS & Content (3) -->
+  <!-- LMS (5) -->
   <rect x="550" y="170" width="230" height="78" rx="7" fill="url(#bidir)" filter="url(#s)"/>
-  <text x="665" y="192" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">LMS &amp; Content (4)</text>
-  <text x="665" y="210" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">LearnDash &#8596; &#183; LifterLMS &#8596;</text>
-  <text x="665" y="224" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">TutorLMS &#8596; &#183; WP Recipe Maker &#8594;</text>
+  <text x="665" y="192" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">LMS (5)</text>
+  <text x="665" y="210" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">LearnDash &#183; LifterLMS &#183; TutorLMS &#8596;</text>
+  <text x="665" y="224" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">LearnPress &#183; Sensei &#8596;</text>
 
-  <!-- Booking & Events (4) -->
+  <!-- Booking & Events (6) -->
   <rect x="795" y="170" width="230" height="78" rx="7" fill="url(#bidir)" filter="url(#s)"/>
-  <text x="910" y="192" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Booking &amp; Events (4)</text>
-  <text x="910" y="210" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">Amelia &#8596; &#183; Bookly &#8596;</text>
-  <text x="910" y="224" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">WC Bookings &#8596; &#183; Events Calendar &#8596;</text>
+  <text x="910" y="192" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Booking &amp; Events (6)</text>
+  <text x="910" y="210" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">Amelia &#183; Bookly &#183; WC Bookings &#8596;</text>
+  <text x="910" y="224" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">JetAppt &#183; JetBook &#183; Events Cal &#8596;</text>
 
   <!-- ═══ ROW 3: 5 category cards (186px wide) ═══ -->
 
-  <!-- Helpdesk (2) -->
+  <!-- Helpdesk (3) -->
   <rect x="60" y="268" width="186" height="78" rx="7" fill="url(#bidir)" filter="url(#s)"/>
-  <text x="153" y="290" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">Helpdesk (2)</text>
-  <text x="153" y="314" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8">AS &#8596; &#183; SupportCandy &#8596;</text>
+  <text x="153" y="290" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">Helpdesk (3)</text>
+  <text x="153" y="308" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8">AS &#8596; &#183; SupportCandy &#8596;</text>
+  <text x="153" y="322" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8">Fluent Support &#8596;</text>
 
-  <!-- HR (2) -->
+  <!-- HR & ERP (4) -->
   <rect x="260" y="268" width="186" height="78" rx="7" fill="url(#bidir)" filter="url(#s)"/>
-  <text x="353" y="290" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">HR (2)</text>
-  <text x="353" y="314" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8">Job Manager &#8596; &#183; WP ERP &#8596;</text>
+  <text x="353" y="290" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">HR &amp; ERP (4)</text>
+  <text x="353" y="308" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8">Job Manager &#183; WP ERP &#8596;</text>
+  <text x="353" y="322" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8">ERP CRM &#183; ERP Accounting &#8596;</text>
 
-  <!-- Marketing (3) -->
+  <!-- Marketing (5) -->
   <rect x="460" y="268" width="186" height="78" rx="7" fill="url(#bidir)" filter="url(#s)"/>
-  <text x="553" y="290" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">Marketing (3)</text>
+  <text x="553" y="290" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">Marketing (5)</text>
   <text x="553" y="308" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8">AffiliateWP &#8594; &#183; FluentCRM &#8596;</text>
-  <text x="553" y="322" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8">FunnelKit &#8596;</text>
+  <text x="553" y="322" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8">FunnelKit &#183; MailPoet &#183; MC4WP &#8596;</text>
 
-  <!-- Community (3) -->
+  <!-- Marketplace (3) -->
   <rect x="660" y="268" width="186" height="78" rx="7" fill="url(#bidir)" filter="url(#s)"/>
-  <text x="753" y="290" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">Community (3)</text>
-  <text x="753" y="308" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8">GamiPress &#8596; &#183; BuddyBoss &#8596;</text>
-  <text x="753" y="322" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8">Knowledge &#8596;</text>
+  <text x="753" y="290" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">Marketplace (3)</text>
+  <text x="753" y="308" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8">Dokan &#183; WCFM &#183; WC Vendors &#8596;</text>
 
-  <!-- Cross-Module (2) -->
+  <!-- Community (4) -->
   <rect x="860" y="268" width="186" height="78" rx="7" fill="url(#bidir)" filter="url(#s)"/>
-  <text x="953" y="290" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">Cross-Module (2)</text>
-  <text x="953" y="314" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8">ACF &#8596; &#183; WP All Import &#8594;</text>
+  <text x="953" y="290" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">Community (4)</text>
+  <text x="953" y="308" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8">GamiPress &#183; myCRED &#8596;</text>
+  <text x="953" y="322" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8">BuddyBoss &#183; Ultimate Member &#8596;</text>
+
+  <!-- ═══ ROW 4: 4 category cards (230px wide) ═══ -->
+
+  <!-- Enterprise (3) -->
+  <rect x="60" y="366" width="230" height="78" rx="7" fill="url(#bidir)" filter="url(#s)"/>
+  <text x="175" y="388" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Enterprise (3)</text>
+  <text x="175" y="406" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">Knowledge &#183; Documents &#8596;</text>
+  <text x="175" y="420" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">Field Service &#8596;</text>
+
+  <!-- Specialty (4) — push -->
+  <rect x="305" y="366" width="230" height="78" rx="7" fill="url(#push)" filter="url(#s)"/>
+  <text x="420" y="388" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Specialty (4)</text>
+  <text x="420" y="406" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">Food Ordering &#183; Survey &amp; Quiz &#8594;</text>
+  <text x="420" y="420" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">Jeero &#183; WP Recipe Maker &#8594;</text>
+
+  <!-- Projects & Generic (2) -->
+  <rect x="550" y="366" width="230" height="78" rx="7" fill="url(#bidir)" filter="url(#s)"/>
+  <text x="665" y="388" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Projects &amp; Generic (2)</text>
+  <text x="665" y="412" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">WP Project Manager &#8596; &#183; JetEngine &#8594;</text>
+
+  <!-- Meta-Modules (3) -->
+  <rect x="795" y="366" width="230" height="78" rx="7" fill="url(#bidir)" filter="url(#s)"/>
+  <text x="910" y="388" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Meta-Modules (3)</text>
+  <text x="910" y="406" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">ACF &#8596; &#183; JetEngine Meta &#8596;</text>
+  <text x="910" y="420" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8.5">WP All Import &#8594;</text>
 
   <!-- ═══ Connector to infrastructure ═══ -->
-  <line x1="550" y1="354" x2="550" y2="370" stroke="#484f58" stroke-width="2"/>
-  <polygon points="550,375 545,367 555,367" fill="#484f58"/>
+  <line x1="550" y1="452" x2="550" y2="468" stroke="#484f58" stroke-width="2"/>
+  <polygon points="550,473 545,465 555,465" fill="#484f58"/>
 
   <!-- ═══ CORE INFRASTRUCTURE ═══ -->
-  <rect x="60" y="380" width="980" height="155" rx="8" fill="rgba(255,255,255,0.03)" stroke="#30363d" stroke-width="1" stroke-dasharray="4,4"/>
-  <text x="1020" y="395" text-anchor="end" fill="#484f58" font-size="9" font-weight="600" letter-spacing="1">CORE</text>
+  <rect x="60" y="478" width="980" height="155" rx="8" fill="rgba(255,255,255,0.03)" stroke="#30363d" stroke-width="1" stroke-dasharray="4,4"/>
+  <text x="1020" y="493" text-anchor="end" fill="#484f58" font-size="9" font-weight="600" letter-spacing="1">CORE</text>
 
   <!-- Infra row 1 -->
-  <rect x="80" y="400" width="200" height="44" rx="6" fill="url(#infra)" filter="url(#s)"/>
-  <text x="180" y="419" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">Sync Engine</text>
-  <text x="180" y="433" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="9">WP-Cron &#183; batch &#183; retry</text>
+  <rect x="80" y="498" width="200" height="44" rx="6" fill="url(#infra)" filter="url(#s)"/>
+  <text x="180" y="517" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">Sync Engine</text>
+  <text x="180" y="531" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="9">WP-Cron &#183; batch &#183; retry</text>
 
-  <rect x="310" y="400" width="200" height="44" rx="6" fill="url(#infra)" filter="url(#s)"/>
-  <text x="410" y="419" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">Queue Manager</text>
-  <text x="410" y="433" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="9">enqueue &#183; dedup</text>
+  <rect x="310" y="498" width="200" height="44" rx="6" fill="url(#infra)" filter="url(#s)"/>
+  <text x="410" y="517" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">Queue Manager</text>
+  <text x="410" y="531" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="9">enqueue &#183; dedup</text>
 
-  <rect x="540" y="400" width="200" height="44" rx="6" fill="url(#infra)" filter="url(#s)"/>
-  <text x="640" y="419" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">Partner Service</text>
-  <text x="640" y="433" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="9">res.partner</text>
+  <rect x="540" y="498" width="200" height="44" rx="6" fill="url(#infra)" filter="url(#s)"/>
+  <text x="640" y="517" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">Partner Service</text>
+  <text x="640" y="531" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="9">res.partner</text>
 
-  <rect x="770" y="400" width="200" height="44" rx="6" fill="url(#infra)" filter="url(#s)"/>
-  <text x="870" y="419" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">Entity Map</text>
-  <text x="870" y="433" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="9">WP &#8596; Odoo IDs</text>
+  <rect x="770" y="498" width="200" height="44" rx="6" fill="url(#infra)" filter="url(#s)"/>
+  <text x="870" y="517" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">Entity Map</text>
+  <text x="870" y="531" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="9">WP &#8596; Odoo IDs</text>
 
   <!-- Infra row 2 -->
-  <rect x="150" y="456" width="200" height="44" rx="6" fill="url(#infra)" filter="url(#s)"/>
-  <text x="250" y="475" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">Field Mapper</text>
-  <text x="250" y="489" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="9">data transform</text>
+  <rect x="150" y="554" width="200" height="44" rx="6" fill="url(#infra)" filter="url(#s)"/>
+  <text x="250" y="573" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">Field Mapper</text>
+  <text x="250" y="587" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="9">data transform</text>
 
-  <rect x="450" y="456" width="200" height="44" rx="6" fill="url(#infra)" filter="url(#s)"/>
-  <text x="550" y="475" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">Webhook Handler</text>
-  <text x="550" y="489" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="9">REST API &#183; rate limit</text>
+  <rect x="450" y="554" width="200" height="44" rx="6" fill="url(#infra)" filter="url(#s)"/>
+  <text x="550" y="573" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">Webhook Handler</text>
+  <text x="550" y="587" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="9">REST API &#183; rate limit</text>
 
-  <rect x="750" y="456" width="200" height="44" rx="6" fill="url(#infra)" filter="url(#s)"/>
-  <text x="850" y="475" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">Logger</text>
-  <text x="850" y="489" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="9">DB-backed &#183; levels</text>
+  <rect x="750" y="554" width="200" height="44" rx="6" fill="url(#infra)" filter="url(#s)"/>
+  <text x="850" y="573" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700">Logger</text>
+  <text x="850" y="587" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="9">DB-backed &#183; levels</text>
 
   <!-- Lines to Odoo Client -->
-  <line x1="250" y1="500" x2="380" y2="516" stroke="#e6edf3" stroke-width="1" opacity="0.2"/>
-  <line x1="550" y1="500" x2="550" y2="516" stroke="#e6edf3" stroke-width="1" opacity="0.2"/>
-  <line x1="850" y1="500" x2="720" y2="516" stroke="#e6edf3" stroke-width="1" opacity="0.2"/>
+  <line x1="250" y1="598" x2="380" y2="614" stroke="#e6edf3" stroke-width="1" opacity="0.2"/>
+  <line x1="550" y1="598" x2="550" y2="614" stroke="#e6edf3" stroke-width="1" opacity="0.2"/>
+  <line x1="850" y1="598" x2="720" y2="614" stroke="#e6edf3" stroke-width="1" opacity="0.2"/>
 
   <!-- Odoo Client -->
-  <rect x="250" y="520" width="600" height="55" rx="8" fill="url(#client)" filter="url(#s)"/>
-  <text x="550" y="538" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Odoo Client</text>
+  <rect x="250" y="618" width="600" height="55" rx="8" fill="url(#client)" filter="url(#s)"/>
+  <text x="550" y="636" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Odoo Client</text>
 
-  <rect x="290" y="546" width="130" height="22" rx="4" fill="rgba(0,0,0,0.25)"/>
-  <text x="355" y="561" text-anchor="middle" fill="rgba(255,255,255,0.85)" font-size="9" font-weight="600">JSON-RPC (17+)</text>
+  <rect x="290" y="644" width="130" height="22" rx="4" fill="rgba(0,0,0,0.25)"/>
+  <text x="355" y="659" text-anchor="middle" fill="rgba(255,255,255,0.85)" font-size="9" font-weight="600">JSON-RPC (17+)</text>
 
-  <rect x="455" y="546" width="130" height="22" rx="4" fill="rgba(0,0,0,0.25)"/>
-  <text x="520" y="561" text-anchor="middle" fill="rgba(255,255,255,0.85)" font-size="9" font-weight="600">XML-RPC (14+)</text>
+  <rect x="455" y="644" width="130" height="22" rx="4" fill="rgba(0,0,0,0.25)"/>
+  <text x="520" y="659" text-anchor="middle" fill="rgba(255,255,255,0.85)" font-size="9" font-weight="600">XML-RPC (14+)</text>
 
-  <rect x="620" y="546" width="150" height="22" rx="4" fill="rgba(0,0,0,0.15)"/>
-  <text x="695" y="561" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="9">Retryable_Http</text>
+  <rect x="620" y="644" width="150" height="22" rx="4" fill="rgba(0,0,0,0.15)"/>
+  <text x="695" y="659" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="9">Retryable_Http</text>
 
   <!-- HTTPS line -->
-  <line x1="550" y1="612" x2="550" y2="700" stroke="#e67e22" stroke-width="2.5" stroke-dasharray="6,4" filter="url(#g)"/>
-  <text x="575" y="662" fill="#e67e22" font-size="10" font-weight="600" letter-spacing="1">HTTPS</text>
+  <line x1="550" y1="710" x2="550" y2="800" stroke="#e67e22" stroke-width="2.5" stroke-dasharray="6,4" filter="url(#g)"/>
+  <text x="575" y="762" fill="#e67e22" font-size="10" font-weight="600" letter-spacing="1">HTTPS</text>
 
   <!-- Odoo ERP -->
-  <rect x="400" y="710" width="300" height="55" rx="10" fill="url(#odooBg)" filter="url(#s)"/>
-  <text x="550" y="734" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">Odoo ERP</text>
-  <text x="550" y="752" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="10">v14+</text>
+  <rect x="400" y="808" width="300" height="55" rx="10" fill="url(#odooBg)" filter="url(#s)"/>
+  <text x="550" y="832" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">Odoo ERP</text>
+  <text x="550" y="850" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="10">v14+</text>
 </svg>

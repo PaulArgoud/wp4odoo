@@ -93,9 +93,24 @@ class FormsModuleTest extends TestCase {
 		$this->assertTrue( $settings['sync_jetformbuilder'] );
 	}
 
-	public function test_default_settings_has_exactly_eight_keys(): void {
+	public function test_default_sync_elementor_forms_is_true(): void {
 		$settings = $this->module->get_default_settings();
-		$this->assertCount( 8, $settings );
+		$this->assertTrue( $settings['sync_elementor_forms'] );
+	}
+
+	public function test_default_sync_divi_forms_is_true(): void {
+		$settings = $this->module->get_default_settings();
+		$this->assertTrue( $settings['sync_divi_forms'] );
+	}
+
+	public function test_default_sync_bricks_forms_is_true(): void {
+		$settings = $this->module->get_default_settings();
+		$this->assertTrue( $settings['sync_bricks_forms'] );
+	}
+
+	public function test_default_settings_has_exactly_eleven_keys(): void {
+		$settings = $this->module->get_default_settings();
+		$this->assertCount( 11, $settings );
 	}
 
 	// ─── Settings Fields ───────────────────────────────────
@@ -148,9 +163,27 @@ class FormsModuleTest extends TestCase {
 		$this->assertSame( 'checkbox', $fields['sync_jetformbuilder']['type'] );
 	}
 
-	public function test_settings_fields_has_exactly_eight_keys(): void {
+	public function test_settings_fields_exposes_sync_elementor_forms(): void {
 		$fields = $this->module->get_settings_fields();
-		$this->assertCount( 8, $fields );
+		$this->assertArrayHasKey( 'sync_elementor_forms', $fields );
+		$this->assertSame( 'checkbox', $fields['sync_elementor_forms']['type'] );
+	}
+
+	public function test_settings_fields_exposes_sync_divi_forms(): void {
+		$fields = $this->module->get_settings_fields();
+		$this->assertArrayHasKey( 'sync_divi_forms', $fields );
+		$this->assertSame( 'checkbox', $fields['sync_divi_forms']['type'] );
+	}
+
+	public function test_settings_fields_exposes_sync_bricks_forms(): void {
+		$fields = $this->module->get_settings_fields();
+		$this->assertArrayHasKey( 'sync_bricks_forms', $fields );
+		$this->assertSame( 'checkbox', $fields['sync_bricks_forms']['type'] );
+	}
+
+	public function test_settings_fields_has_exactly_eleven_keys(): void {
+		$fields = $this->module->get_settings_fields();
+		$this->assertCount( 11, $fields );
 	}
 
 	// ─── Field Mappings ────────────────────────────────────

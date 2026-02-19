@@ -3,7 +3,7 @@
  * Form plugin stubs for PHPUnit tests.
  *
  * Covers: Gravity Forms, WPForms, Contact Form 7, Fluent Forms,
- * Formidable Forms, Ninja Forms, Forminator.
+ * Formidable Forms, Ninja Forms, Forminator, Elementor Pro, Divi, Bricks.
  *
  * @package WP4Odoo\Tests
  */
@@ -282,4 +282,25 @@ if ( ! class_exists( 'Ninja_Forms' ) ) {
 
 if ( ! defined( 'FORMINATOR_VERSION' ) ) {
 	define( 'FORMINATOR_VERSION', '1.34.0' );
+}
+
+// ── Elementor Pro ───────────────────────────────────────
+
+if ( ! defined( 'ELEMENTOR_PRO_VERSION' ) ) {
+	define( 'ELEMENTOR_PRO_VERSION', '3.21.0' );
+}
+
+// ── Divi ────────────────────────────────────────────────
+
+if ( ! function_exists( 'et_setup_theme' ) ) {
+	/**
+	 * Divi theme setup stub (detection only).
+	 */
+	function et_setup_theme(): void {}
+}
+
+// ── Bricks ──────────────────────────────────────────────
+
+if ( ! defined( 'BRICKS_VERSION' ) ) {
+	define( 'BRICKS_VERSION', '1.11.0' );
 }

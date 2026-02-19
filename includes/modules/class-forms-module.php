@@ -18,7 +18,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * and enqueues a push job to Odoo's crm.lead model.
  *
  * Supported: Gravity Forms, WPForms, Contact Form 7, Fluent Forms,
- * Formidable Forms, Ninja Forms, Forminator, JetFormBuilder.
+ * Formidable Forms, Ninja Forms, Forminator, JetFormBuilder,
+ * Elementor Pro, Divi, Bricks.
  *
  * @package WP4Odoo
  * @since   2.0.0
@@ -126,6 +127,21 @@ class Forms_Module extends Module_Base {
 		// JetFormBuilder hook.
 		if ( ! empty( $settings['sync_jetformbuilder'] ) && defined( 'JET_FORM_BUILDER_VERSION' ) ) {
 			add_action( 'jet-form-builder/form-handler/after-send', $this->safe_callback( [ $this, 'on_jetformbuilder_submitted' ] ), 10, 2 );
+		}
+
+		// Elementor Pro hook.
+		if ( ! empty( $settings['sync_elementor_forms'] ) && defined( 'ELEMENTOR_PRO_VERSION' ) ) {
+			add_action( 'elementor_pro/forms/new_record', $this->safe_callback( [ $this, 'on_elementor_form_submitted' ] ), 10, 2 );
+		}
+
+		// Divi hook (filter — pass through original value).
+		if ( ! empty( $settings['sync_divi_forms'] ) && function_exists( 'et_setup_theme' ) ) {
+			add_filter( 'et_pb_contact_form_submit', $this->safe_callback( [ $this, 'on_divi_form_submitted' ] ), 10, 2 );
+		}
+
+		// Bricks hook.
+		if ( ! empty( $settings['sync_bricks_forms'] ) && defined( 'BRICKS_VERSION' ) ) {
+			add_action( 'bricks/form/custom_action', $this->safe_callback( [ $this, 'on_bricks_form_submitted' ] ), 10, 1 );
 		}
 	}
 
@@ -370,6 +386,114 @@ class Forms_Module extends Module_Base {
 		$this->process_lead( $lead_data, 'jetformbuilder', [ 'form_data' => $form_data ] );
 	}
 
+	/**
+	 * Handle Elementor Pro form submission.
+	 *
+	 * @param object $record  Elementor Form_Record.
+	 * @param object $handler Elementor Ajax_Handler.
+	 * @return void
+	 */
+	public function on_elementor_form_submitted( $record, $handler ): void {
+		if ( $this->is_importing() ) {
+			return;
+		}
+
+		$raw_fields  = $record->get( 'fields' );
+		$form_name   = $record->get_form_settings( 'form_name' ) ?? '';
+		$fields      = [];
+
+		foreach ( $raw_fields as $id => $field ) {
+			$value = trim( (string) ( $field['value'] ?? '' ) );
+			if ( '' === $value ) {
+				continue;
+			}
+			$fields[] = [
+				'type'  => $field['type'] ?? 'text',
+				'label' => $field['title'] ?? $id,
+				'value' => $value,
+			];
+		}
+
+		$lead_data = $this->form_handler->extract_from_elementor( $fields, $form_name );
+		$this->process_lead( $lead_data, 'elementor', [ 'fields' => $raw_fields ] );
+	}
+
+	/**
+	 * Handle Divi contact form submission (filter — must return first arg).
+	 *
+	 * @param mixed $et_contact_error Original error state (pass through).
+	 * @param array $contact_form_info Form data including fields.
+	 * @return mixed Unmodified $et_contact_error.
+	 */
+	public function on_divi_form_submitted( $et_contact_error, $contact_form_info ) {
+		if ( $this->is_importing() ) {
+			return $et_contact_error;
+		}
+
+		// Only process successful submissions (no errors).
+		if ( ! empty( $et_contact_error ) ) {
+			return $et_contact_error;
+		}
+
+		$fields     = [];
+		$form_title = $contact_form_info['title'] ?? '';
+
+		foreach ( $contact_form_info as $key => $value ) {
+			if ( ! is_string( $value ) || in_array( $key, [ 'title', 'contact_form_id' ], true ) ) {
+				continue;
+			}
+			$value = trim( $value );
+			if ( '' === $value ) {
+				continue;
+			}
+			$fields[] = [
+				'type'  => 'text',
+				'label' => $key,
+				'value' => $value,
+			];
+		}
+
+		$lead_data = $this->form_handler->extract_from_divi( $fields, $form_title );
+		$this->process_lead( $lead_data, 'divi', [ 'form_info' => $contact_form_info ] );
+
+		return $et_contact_error;
+	}
+
+	/**
+	 * Handle Bricks form submission.
+	 *
+	 * @param object $form Bricks Form object.
+	 * @return void
+	 */
+	public function on_bricks_form_submitted( $form ): void {
+		if ( $this->is_importing() ) {
+			return;
+		}
+
+		$form_settings = $form->get_settings() ?? [];
+		$form_fields   = $form->get_fields() ?? [];
+		$form_title    = $form_settings['formName'] ?? '';
+
+		$fields = [];
+		foreach ( $form_fields as $id => $value ) {
+			if ( is_array( $value ) ) {
+				$value = implode( ' ', array_filter( array_map( 'trim', $value ) ) );
+			}
+			$value = trim( (string) $value );
+			if ( '' === $value ) {
+				continue;
+			}
+			$fields[] = [
+				'type'  => 'text',
+				'label' => $id,
+				'value' => $value,
+			];
+		}
+
+		$lead_data = $this->form_handler->extract_from_bricks( $fields, $form_title );
+		$this->process_lead( $lead_data, 'bricks', [ 'form_fields' => $form_fields ] );
+	}
+
 	// ─── Settings ────────────────────────────────────────────
 
 	/**
@@ -386,7 +510,10 @@ class Forms_Module extends Module_Base {
 			'sync_formidable'     => true,
 			'sync_ninja_forms'    => true,
 			'sync_forminator'     => true,
-			'sync_jetformbuilder' => true,
+			'sync_jetformbuilder'  => true,
+			'sync_elementor_forms' => true,
+			'sync_divi_forms'      => true,
+			'sync_bricks_forms'    => true,
 		];
 	}
 
@@ -432,10 +559,25 @@ class Forms_Module extends Module_Base {
 				'type'        => 'checkbox',
 				'description' => __( 'Create Odoo leads from Forminator submissions.', 'wp4odoo' ),
 			],
-			'sync_jetformbuilder' => [
+			'sync_jetformbuilder'  => [
 				'label'       => __( 'Sync JetFormBuilder', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Create Odoo leads from JetFormBuilder submissions.', 'wp4odoo' ),
+			],
+			'sync_elementor_forms' => [
+				'label'       => __( 'Sync Elementor Pro Forms', 'wp4odoo' ),
+				'type'        => 'checkbox',
+				'description' => __( 'Create Odoo leads from Elementor Pro form submissions.', 'wp4odoo' ),
+			],
+			'sync_divi_forms'      => [
+				'label'       => __( 'Sync Divi Forms', 'wp4odoo' ),
+				'type'        => 'checkbox',
+				'description' => __( 'Create Odoo leads from Divi Contact Form submissions.', 'wp4odoo' ),
+			],
+			'sync_bricks_forms'    => [
+				'label'       => __( 'Sync Bricks Forms', 'wp4odoo' ),
+				'type'        => 'checkbox',
+				'description' => __( 'Create Odoo leads from Bricks form submissions.', 'wp4odoo' ),
 			],
 		];
 	}
@@ -457,6 +599,9 @@ class Forms_Module extends Module_Base {
 			'Ninja Forms'      => class_exists( 'Ninja_Forms' ),
 			'Forminator'       => defined( 'FORMINATOR_VERSION' ),
 			'JetFormBuilder'   => defined( 'JET_FORM_BUILDER_VERSION' ),
+			'Elementor Pro'    => defined( 'ELEMENTOR_PRO_VERSION' ),
+			'Divi'             => function_exists( 'et_setup_theme' ),
+			'Bricks'           => defined( 'BRICKS_VERSION' ),
 		];
 
 		$active = array_filter( $plugins );
@@ -568,7 +713,7 @@ class Forms_Module extends Module_Base {
 	/**
 	 * Filter and enqueue extracted lead data.
 	 *
-	 * Shared by all 8 hook callbacks to avoid duplication.
+	 * Shared by all 11 hook callbacks to avoid duplication.
 	 *
 	 * @param array  $lead_data   Extracted lead data (may be empty).
 	 * @param string $source_type Source identifier for the filter.

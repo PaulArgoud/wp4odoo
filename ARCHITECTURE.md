@@ -2,7 +2,7 @@
 
 ## Overview
 
-Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 64 modules across 45 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Product Add-Ons, WC Points & Rewards, WC Inventory, WC Shipping, WC Returns, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (8 plugins), WP Recipe Maker, LMS (LearnDash + LifterLMS + TutorLMS + LearnPress), Booking (Amelia + Bookly + JetAppointments + JetBooking + WC Bookings), Projects (WP Project Manager), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP + SureCart), Marketplace (Dokan + WCFM + WC Vendors), B2B/Wholesale (WC B2B), Email Marketing (MailPoet + MC4WP + FluentCRM), Helpdesk (Awesome Support + SupportCandy), HR (WP Job Manager + WP ERP + WP ERP CRM), Accounting (WP ERP Accounting), Affiliates (AffiliateWP), Funnels (FunnelKit), Gamification (GamiPress + myCRED), Community (BuddyBoss), Knowledge (Knowledge), Documents (WP Document Revisions + WP Download Manager), Food Ordering (GloriaFood + WPPizza), Survey & Quiz (Quiz Maker + QSM), Product Configurator (Jeero), Generic CPT (JetEngine), and Meta-modules (ACF + JetEngine Meta + WP All Import). Supports WordPress Multisite with per-site company scoping.
+Modular WordPress plugin providing bidirectional synchronization between WordPress/WooCommerce and Odoo ERP (v14+). The plugin covers 69 modules across 49 domains: CRM, Sales & Invoicing, WooCommerce, WooCommerce Subscriptions, WC Bundle BOM, WC Product Add-Ons, WC Points & Rewards, WC Inventory, WC Shipping, WC Returns, WC Rental, Easy Digital Downloads, Memberships (WC Memberships + MemberPress + PMPro + RCP), Donations (GiveWP + WP Charitable + WP Simple Pay), Forms (11 plugins: Gravity Forms + WPForms + CF7 + Fluent Forms + Formidable + Ninja Forms + Forminator + JetFormBuilder + Elementor Pro + Divi + Bricks), WP Recipe Maker, LMS (LearnDash + LifterLMS + TutorLMS + LearnPress + Sensei LMS), Booking (Amelia + Bookly + JetAppointments + JetBooking + WC Bookings), Projects (WP Project Manager), Events (The Events Calendar + Event Tickets), Invoicing (Sprout Invoices + WP-Invoice), E-Commerce (WP Crowdfunding + Ecwid + ShopWP + SureCart), Marketplace (Dokan + WCFM + WC Vendors), B2B/Wholesale (WC B2B), Email Marketing (MailPoet + MC4WP + FluentCRM), Helpdesk (Awesome Support + SupportCandy + Fluent Support), HR (WP Job Manager + WP ERP + WP ERP CRM), Accounting (WP ERP Accounting), Affiliates (AffiliateWP), Funnels (FunnelKit), Gamification (GamiPress + myCRED), Community (BuddyBoss + Ultimate Member), Field Service, Knowledge (Knowledge), Documents (WP Document Revisions + WP Download Manager), Food Ordering (GloriaFood + WPPizza + RestroPress), Survey & Quiz (Quiz Maker + QSM), Product Configurator (Jeero), Generic CPT (JetEngine), and Meta-modules (ACF + JetEngine Meta + WP All Import). Supports WordPress Multisite with per-site company scoping.
 
 ![WP4ODOO Full Architecture](assets/images/architecture-full.svg)
 
@@ -417,7 +417,22 @@ WordPress For Odoo/
 │   │   ├── jetengine-classes.php       # JET_ENGINE_VERSION, Jet_Engine
 │   │   ├── wp-project-manager-classes.php # CPM_VERSION, WeDevs PM classes
 │   │   ├── wc-product-addons-classes.php  # WC_PRODUCT_ADDONS_VERSION, WC_Product_Addons, THWEPO_VERSION, PPOM_VERSION
-│   │   └── i18n-classes.php            # WPML + Polylang stubs (constants, classes, functions)
+│   │   ├── i18n-classes.php            # WPML + Polylang stubs (constants, classes, functions)
+│   │   ├── wperp-accounting-classes.php # WP ERP Accounting stubs
+│   │   ├── learnpress-classes.php      # LEARNPRESS_VERSION, LP stubs
+│   │   ├── food-ordering-classes.php   # GloriaFood, WPPizza, RestroPress stubs
+│   │   ├── survey-quiz-classes.php     # Quiz Maker, QSM stubs
+│   │   ├── mycred-classes.php          # myCRED stubs
+│   │   ├── jeero-classes.php           # Jeero Configurator stubs
+│   │   ├── documents-classes.php       # WP Document Revisions, WPDM stubs
+│   │   ├── wc-inventory-classes.php    # ATUM stubs
+│   │   ├── wc-shipping-classes.php     # ShipStation, Sendcloud, Packlink, AST stubs
+│   │   ├── wc-returns-classes.php      # YITH Returns, ReturnGO stubs
+│   │   ├── fluent-support-classes.php  # FLUENT_SUPPORT_VERSION, FluentSupport model stubs
+│   │   ├── sensei-classes.php          # SENSEI_LMS_VERSION, Sensei_Main stubs
+│   │   ├── ultimate-member-classes.php # UM class, UM_VERSION stubs
+│   │   ├── wc-rental-classes.php       # WC Rental stubs (minimal)
+│   │   └── field-service-classes.php   # Field Service stubs (no WP plugin dependency)
 │   ├── helpers/
 │   │   └── MockTransport.php            #   Shared mock Transport for API tests
 │   ├── Integration/                       #   wp-env integration tests (real WordPress + MySQL)
@@ -1360,19 +1375,19 @@ All user inputs are sanitized with:
 
 ### Forms — COMPLETE
 
-**Files:** `class-forms-module.php` (push sync coordinator, hook callbacks inline), `class-form-handler.php` (field extraction from 7 form plugins via `extract_normalised()` pipeline with auto-detection)
+**Files:** `class-forms-module.php` (push sync coordinator, hook callbacks inline), `class-form-handler.php` (field extraction delegation), `class-form-field-extractor.php` (field extraction from 11 form plugins via `extract_normalised()` pipeline with auto-detection)
 
 **Odoo models:** `crm.lead`
 
 **Key features:**
 - Push-only (WP → Odoo) — form submissions → Odoo CRM leads
-- Requires at least one form plugin: Gravity Forms (`class_exists('GFAPI')`) or WPForms (`function_exists('wpforms')`)
+- Requires at least one form plugin: Gravity Forms, WPForms, CF7, Fluent Forms, Formidable, Ninja Forms, Forminator, JetFormBuilder, Elementor Pro, Divi, or Bricks
 - Field auto-detection: GF name sub-fields, email as name fallback
 - Multilingual label matching for company detection (EN/FR/ES)
 - Reuses `Lead_Manager` for CPT persistence (shared with CRM module)
 - Filterable via `apply_filters('wp4odoo_form_lead_data', ...)`
 
-**Settings:** `sync_gravity_forms`, `sync_wpforms`
+**Settings:** `sync_gravity_forms`, `sync_wpforms`, `sync_cf7`, `sync_fluent_forms`, `sync_formidable`, `sync_ninja_forms`, `sync_forminator`, `sync_jetformbuilder`, `sync_elementor_forms`, `sync_divi_forms`, `sync_bricks_forms`
 
 ### Amelia Booking — COMPLETE
 
@@ -2113,14 +2128,14 @@ All user inputs are sanitized with:
 **Key features:**
 - Aggregate module pattern (like Forms): per-plugin detection + setting toggles
 - Push-only (WP → Odoo POS Restaurant)
-- Supported plugins: GloriaFood (`FLAVOR_FLAVOR_VERSION`), WPPizza (`WPPIZZA_VERSION`)
-- Strategy-based extraction: `extract_from_gloriafoood()` (CPT + JSON meta), `extract_from_wppizza()` (option store)
+- Supported plugins: GloriaFood (`FLAVOR_FLAVOR_VERSION`), WPPizza (`WPPIZZA_VERSION`), RestroPress (`RP_VERSION`)
+- Strategy-based extraction: `extract_from_gloriafoood()` (CPT + JSON meta), `extract_from_wppizza()` (option store), `extract_from_restropress()` (CPT + payment meta)
 - POS order formatting with One2many `pos.order.line` tuples (`[0, 0, {...}]`)
 - Partner resolution via `Partner_Service::get_or_create()`
 - Dedup by `pos_reference` (source-prefixed reference ID)
 - Order data stored as WP option before enqueue (ephemeral)
 
-**Settings:** `sync_gloriafoood`, `sync_wppizza`
+**Settings:** `sync_gloriafoood`, `sync_wppizza`, `sync_restropress`
 
 ### Survey & Quiz — COMPLETE
 
@@ -2139,6 +2154,91 @@ All user inputs are sanitized with:
 - Dedup: surveys by `title`, responses empty (each unique)
 
 **Settings:** `sync_ays_quizzes`, `sync_qsm`
+
+### Fluent Support — COMPLETE
+
+**Files:** `class-fluent-support-module.php` (extends `Helpdesk_Module_Base`), `class-fluent-support-handler.php` (ticket load/save via Fluent Support model API), `trait-fluent-support-hooks.php` (ticket create/update/response hooks)
+
+**Odoo models:** `helpdesk.ticket` (Enterprise) with `project.task` fallback (Community)
+
+**Key features:**
+- Dual-model helpdesk pattern inherited from `Helpdesk_Module_Base`
+- Bidirectional sync: push tickets on create/update/response, pull ticket status
+- Hooks: `fluent_support/ticket_created`, `fluent_support/ticket_updated`, `fluent_support/response_added`
+- Configurable Helpdesk Team ID (`helpdesk_team_id`) and Project ID (`project_id`)
+- Exclusive group: `helpdesk` (conflicts with Awesome Support, SupportCandy)
+- Detection: `FLUENT_SUPPORT_VERSION`
+
+**Settings:** `sync_tickets`, `pull_tickets`, `helpdesk_team_id`, `project_id`
+
+### Sensei LMS — COMPLETE
+
+**Files:** `class-sensei-module.php` (extends `LMS_Module_Base`), `class-sensei-handler.php` (course/enrollment/order load/save), `trait-sensei-hooks.php` (course save, enrollment, order hooks)
+
+**Odoo models:** `product.product` (courses), `account.move` (orders, auto-post), `sale.order` (enrollments, synthetic ID)
+
+**Key features:**
+- LMS pattern inherited from `LMS_Module_Base` (course, order, enrollment entities)
+- Bidirectional courses, push-only orders and enrollments
+- Enrollment synthetic ID: `user_id × 1_000_000 + course_id`
+- Auto-post invoices on push
+- Hooks: `save_post_course`, `sensei_course_status_updated`, `woocommerce_order_status_changed` (Sensei-filtered)
+- Version bounds: Sensei 4.0–4.24
+- Detection: `SENSEI_LMS_VERSION`
+
+**Settings:** `sync_courses`, `pull_courses`, `sync_orders`, `sync_enrollments`
+
+### Ultimate Member — COMPLETE
+
+**Files:** `class-ultimate-member-module.php` (extends `Module_Base`), `class-ultimate-member-handler.php` (profile/role load/save via UM API), `trait-ultimate-member-hooks.php` (registration, update, delete, role change hooks)
+
+**Odoo models:** `res.partner` (profiles, bidirectional), `res.partner.category` (roles, push-only)
+
+**Key features:**
+- Bidirectional profile sync (similar to BuddyBoss pattern)
+- Custom field enrichment: phone, company, country, city via `um_user()` API
+- Role changes synced as `res.partner.category` tags
+- Archive-on-delete (partner archived, not deleted)
+- Hooks: `um_after_user_updated`, `um_registration_complete`, `um_delete_user`, `um_member_role_upgrade`, `um_member_role_downgrade`
+- Version bounds: UM 2.6–2.9
+- Detection: `class_exists('UM')`
+
+**Settings:** `sync_profiles`, `pull_profiles`, `sync_roles`
+
+### WC Rental — COMPLETE
+
+**Files:** `class-wc-rental-module.php` (extends `Module_Base`, requires WooCommerce module), `class-wc-rental-handler.php` (rental detection, Odoo Rental field formatting), `trait-wc-rental-hooks.php` (WC order status hook at priority 20)
+
+**Odoo models:** `sale.order` (with Odoo Rental fields: `is_rental`, `pickup_date`, `return_date`)
+
+**Key features:**
+- Generic rental approach: configurable meta keys for product detection and dates
+- Cross-module entity resolution: WooCommerce product → Odoo `product.product` via `entity_map->get_odoo_id()`
+- Hook: `woocommerce_order_status_changed` (priority 20, after WooCommerce module at 10)
+- Only processes orders containing at least one rental product
+- Required modules: `['woocommerce']`
+- Detection: WooCommerce active + `rental_meta_key` setting configured
+
+**Settings:** `sync_rentals`, `rental_meta_key`, `rental_start_meta`, `rental_return_meta`
+
+### Field Service — COMPLETE
+
+**Files:** `class-field-service-module.php` (extends `Module_Base`, registers CPT), `class-field-service-handler.php` (task load/save/parse, status mapping), `trait-field-service-hooks.php` (CPT save/delete hooks)
+
+**Odoo models:** `field_service.task` (Odoo Enterprise Field Service)
+
+**Key features:**
+- Bidirectional CPT module (similar to Knowledge pattern)
+- Custom post type: `wp4odoo_fs_task` — registered in `boot()` via `add_action('init')`
+- Admin-visible CPT under WP4Odoo menu
+- Status mapping: draft↔New, publish↔In Progress, private↔Done, trash↔Cancelled
+- Meta fields: `_fs_planned_date`, `_fs_date_deadline`, `_fs_priority`, `_fs_stage`, `_fs_partner_user_id`
+- Odoo-side detection via `has_odoo_model(Odoo_Model::FieldServiceTask)`
+- Dedup by task name
+- Partner resolution from `_fs_partner_user_id` post meta
+- Hooks: `save_post_wp4odoo_fs_task`, `before_delete_post` (filtered on CPT)
+
+**Settings:** `sync_tasks`, `pull_tasks`
 
 ### Partner Service
 

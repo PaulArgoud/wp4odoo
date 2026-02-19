@@ -82,8 +82,9 @@ class FoodOrderingModuleTest extends Module_Test_Case {
 
 	public function test_default_settings(): void {
 		$this->assertDefaultSettings( $this->module, [
-			'sync_gloriafoood' => true,
-			'sync_wppizza'     => true,
+			'sync_gloriafoood'  => true,
+			'sync_wppizza'      => true,
+			'sync_restropress'  => true,
 		] );
 	}
 
@@ -95,8 +96,12 @@ class FoodOrderingModuleTest extends Module_Test_Case {
 		$this->assertTrue( $this->module->get_default_settings()['sync_wppizza'] );
 	}
 
+	public function test_default_settings_has_sync_restropress(): void {
+		$this->assertTrue( $this->module->get_default_settings()['sync_restropress'] );
+	}
+
 	public function test_default_settings_count(): void {
-		$this->assertCount( 2, $this->module->get_default_settings() );
+		$this->assertCount( 3, $this->module->get_default_settings() );
 	}
 
 	// ─── Settings Fields ────────────────────────────────────
@@ -105,6 +110,7 @@ class FoodOrderingModuleTest extends Module_Test_Case {
 		$this->assertSettingsFieldsAreCheckboxes( $this->module, [
 			'sync_gloriafoood',
 			'sync_wppizza',
+			'sync_restropress',
 		] );
 	}
 
@@ -118,8 +124,13 @@ class FoodOrderingModuleTest extends Module_Test_Case {
 		$this->assertSame( 'checkbox', $fields['sync_wppizza']['type'] );
 	}
 
+	public function test_settings_fields_has_sync_restropress(): void {
+		$fields = $this->module->get_settings_fields();
+		$this->assertSame( 'checkbox', $fields['sync_restropress']['type'] );
+	}
+
 	public function test_settings_fields_count(): void {
-		$this->assertCount( 2, $this->module->get_settings_fields() );
+		$this->assertCount( 3, $this->module->get_settings_fields() );
 	}
 
 	// ─── Dependency Status ──────────────────────────────────

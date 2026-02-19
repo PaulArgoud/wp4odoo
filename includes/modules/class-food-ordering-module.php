@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * via Food_Order_Extractor, resolves/creates the customer partner,
  * and enqueues a push job to Odoo's pos.order model.
  *
- * Supported: GloriaFood, WPPizza.
+ * Supported: GloriaFood, WPPizza, RestroPress.
  *
  * @package WP4Odoo
  * @since   3.6.0
@@ -104,6 +104,11 @@ class Food_Ordering_Module extends Module_Base {
 		if ( ! empty( $settings['sync_wppizza'] ) && defined( 'WPPIZZA_VERSION' ) ) {
 			add_action( 'wppizza_order_complete', $this->safe_callback( [ $this, 'on_wppizza_order' ] ), 10, 1 );
 		}
+
+		// RestroPress hook.
+		if ( ! empty( $settings['sync_restropress'] ) && defined( 'RP_VERSION' ) ) {
+			add_action( 'restropress_complete_purchase', $this->safe_callback( [ $this, 'on_restropress_order' ] ), 10, 1 );
+		}
 	}
 
 	// ─── Hook Callbacks ──────────────────────────────────────
@@ -143,6 +148,23 @@ class Food_Ordering_Module extends Module_Base {
 		$this->process_order( $order_data );
 	}
 
+	/**
+	 * Handle RestroPress order completion.
+	 *
+	 * @param int $payment_id RestroPress payment ID.
+	 * @return void
+	 *
+	 * @since 3.7.0
+	 */
+	public function on_restropress_order( int $payment_id ): void {
+		if ( $this->is_importing() || $payment_id <= 0 ) {
+			return;
+		}
+
+		$order_data = $this->extractor->extract_from_restropress( $payment_id );
+		$this->process_order( $order_data );
+	}
+
 	// ─── Settings ────────────────────────────────────────────
 
 	/**
@@ -152,8 +174,9 @@ class Food_Ordering_Module extends Module_Base {
 	 */
 	public function get_default_settings(): array {
 		return [
-			'sync_gloriafoood' => true,
-			'sync_wppizza'     => true,
+			'sync_gloriafoood'  => true,
+			'sync_wppizza'      => true,
+			'sync_restropress'  => true,
 		];
 	}
 
@@ -169,10 +192,15 @@ class Food_Ordering_Module extends Module_Base {
 				'type'        => 'checkbox',
 				'description' => __( 'Push GloriaFood orders to Odoo POS.', 'wp4odoo' ),
 			],
-			'sync_wppizza'     => [
+			'sync_wppizza'      => [
 				'label'       => __( 'Sync WPPizza orders', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Push WPPizza orders to Odoo POS.', 'wp4odoo' ),
+			],
+			'sync_restropress'  => [
+				'label'       => __( 'Sync RestroPress orders', 'wp4odoo' ),
+				'type'        => 'checkbox',
+				'description' => __( 'Push RestroPress orders to Odoo POS.', 'wp4odoo' ),
 			],
 		];
 	}
@@ -186,8 +214,9 @@ class Food_Ordering_Module extends Module_Base {
 	 */
 	public function get_dependency_status(): array {
 		$plugins = [
-			'GloriaFood' => defined( 'FLAVOR_FLAVOR_VERSION' ),
-			'WPPizza'    => defined( 'WPPIZZA_VERSION' ),
+			'GloriaFood'  => defined( 'FLAVOR_FLAVOR_VERSION' ),
+			'WPPizza'     => defined( 'WPPIZZA_VERSION' ),
+			'RestroPress' => defined( 'RP_VERSION' ),
 		];
 
 		$active = array_filter( $plugins );

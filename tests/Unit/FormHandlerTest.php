@@ -680,6 +680,267 @@ class FormHandlerTest extends TestCase {
 		$this->assertSame( 'Forminator: Forminator Form', $data['source'] );
 	}
 
+	// ─── Elementor Pro extraction ───────────────────────────────
+
+	public function test_elementor_extracts_email(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'ella@example.com' ],
+			[ 'type' => 'name', 'label' => 'Name', 'value' => 'Ella' ],
+		];
+
+		$data = $this->handler->extract_from_elementor( $fields, 'Contact' );
+
+		$this->assertSame( 'ella@example.com', $data['email'] );
+	}
+
+	public function test_elementor_extracts_name(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'ella@example.com' ],
+			[ 'type' => 'name', 'label' => 'Name', 'value' => 'Ella Martin' ],
+		];
+
+		$data = $this->handler->extract_from_elementor( $fields, 'Contact' );
+
+		$this->assertSame( 'Ella Martin', $data['name'] );
+	}
+
+	public function test_elementor_extracts_phone(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'ella@example.com' ],
+			[ 'type' => 'phone', 'label' => 'Phone', 'value' => '+33612345' ],
+		];
+
+		$data = $this->handler->extract_from_elementor( $fields, 'Contact' );
+
+		$this->assertSame( '+33612345', $data['phone'] );
+	}
+
+	public function test_elementor_extracts_description(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'ella@example.com' ],
+			[ 'type' => 'textarea', 'label' => 'Message', 'value' => 'I have a question.' ],
+		];
+
+		$data = $this->handler->extract_from_elementor( $fields, 'Contact' );
+
+		$this->assertSame( 'I have a question.', $data['description'] );
+	}
+
+	public function test_elementor_extracts_company_by_label(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'ella@example.com' ],
+			[ 'type' => 'text', 'label' => 'Company', 'value' => 'ElementorCo' ],
+		];
+
+		$data = $this->handler->extract_from_elementor( $fields, 'Contact' );
+
+		$this->assertSame( 'ElementorCo', $data['company'] );
+	}
+
+	public function test_elementor_returns_empty_when_no_email(): void {
+		$fields = [
+			[ 'type' => 'name', 'label' => 'Name', 'value' => 'Ella' ],
+		];
+
+		$data = $this->handler->extract_from_elementor( $fields, 'Contact' );
+
+		$this->assertSame( [], $data );
+	}
+
+	public function test_elementor_uses_email_as_name_fallback(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'ella@example.com' ],
+		];
+
+		$data = $this->handler->extract_from_elementor( $fields, 'Contact' );
+
+		$this->assertSame( 'ella@example.com', $data['name'] );
+	}
+
+	public function test_elementor_sets_correct_source(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'ella@example.com' ],
+		];
+
+		$data = $this->handler->extract_from_elementor( $fields, 'My Elementor Form' );
+
+		$this->assertSame( 'Elementor: My Elementor Form', $data['source'] );
+	}
+
+	// ─── Divi extraction ────────────────────────────────────────
+
+	public function test_divi_extracts_email(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'dave@example.com' ],
+			[ 'type' => 'name', 'label' => 'Name', 'value' => 'Dave' ],
+		];
+
+		$data = $this->handler->extract_from_divi( $fields, 'Contact' );
+
+		$this->assertSame( 'dave@example.com', $data['email'] );
+	}
+
+	public function test_divi_extracts_name(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'dave@example.com' ],
+			[ 'type' => 'name', 'label' => 'Name', 'value' => 'Dave Ross' ],
+		];
+
+		$data = $this->handler->extract_from_divi( $fields, 'Contact' );
+
+		$this->assertSame( 'Dave Ross', $data['name'] );
+	}
+
+	public function test_divi_extracts_phone(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'dave@example.com' ],
+			[ 'type' => 'phone', 'label' => 'Phone', 'value' => '+1555999' ],
+		];
+
+		$data = $this->handler->extract_from_divi( $fields, 'Contact' );
+
+		$this->assertSame( '+1555999', $data['phone'] );
+	}
+
+	public function test_divi_extracts_description(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'dave@example.com' ],
+			[ 'type' => 'textarea', 'label' => 'Message', 'value' => 'Interested in your services.' ],
+		];
+
+		$data = $this->handler->extract_from_divi( $fields, 'Contact' );
+
+		$this->assertSame( 'Interested in your services.', $data['description'] );
+	}
+
+	public function test_divi_extracts_company_by_label(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'dave@example.com' ],
+			[ 'type' => 'text', 'label' => 'Company', 'value' => 'DiviCo' ],
+		];
+
+		$data = $this->handler->extract_from_divi( $fields, 'Contact' );
+
+		$this->assertSame( 'DiviCo', $data['company'] );
+	}
+
+	public function test_divi_returns_empty_when_no_email(): void {
+		$fields = [
+			[ 'type' => 'name', 'label' => 'Name', 'value' => 'Dave' ],
+		];
+
+		$data = $this->handler->extract_from_divi( $fields, 'Contact' );
+
+		$this->assertSame( [], $data );
+	}
+
+	public function test_divi_uses_email_as_name_fallback(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'dave@example.com' ],
+		];
+
+		$data = $this->handler->extract_from_divi( $fields, 'Contact' );
+
+		$this->assertSame( 'dave@example.com', $data['name'] );
+	}
+
+	public function test_divi_sets_correct_source(): void {
+		$fields = [
+			[ 'type' => 'email', 'label' => 'Email', 'value' => 'dave@example.com' ],
+		];
+
+		$data = $this->handler->extract_from_divi( $fields, 'My Divi Form' );
+
+		$this->assertSame( 'Divi: My Divi Form', $data['source'] );
+	}
+
+	// ─── Bricks extraction ──────────────────────────────────────
+
+	public function test_bricks_extracts_email_by_label(): void {
+		$fields = [
+			[ 'label' => 'Email', 'value' => 'bea@example.com' ],
+			[ 'label' => 'Name', 'value' => 'Bea' ],
+		];
+
+		$data = $this->handler->extract_from_bricks( $fields, 'Contact' );
+
+		$this->assertSame( 'bea@example.com', $data['email'] );
+	}
+
+	public function test_bricks_extracts_name_by_label(): void {
+		$fields = [
+			[ 'label' => 'Email', 'value' => 'bea@example.com' ],
+			[ 'label' => 'Your Name', 'value' => 'Bea Stone' ],
+		];
+
+		$data = $this->handler->extract_from_bricks( $fields, 'Contact' );
+
+		$this->assertSame( 'Bea Stone', $data['name'] );
+	}
+
+	public function test_bricks_extracts_phone_by_label(): void {
+		$fields = [
+			[ 'label' => 'Email', 'value' => 'bea@example.com' ],
+			[ 'label' => 'Phone', 'value' => '+44777888' ],
+		];
+
+		$data = $this->handler->extract_from_bricks( $fields, 'Contact' );
+
+		$this->assertSame( '+44777888', $data['phone'] );
+	}
+
+	public function test_bricks_extracts_description_by_label(): void {
+		$fields = [
+			[ 'label' => 'Email', 'value' => 'bea@example.com' ],
+			[ 'label' => 'Message', 'value' => 'Need a quote.' ],
+		];
+
+		$data = $this->handler->extract_from_bricks( $fields, 'Contact' );
+
+		$this->assertSame( 'Need a quote.', $data['description'] );
+	}
+
+	public function test_bricks_extracts_company_by_label(): void {
+		$fields = [
+			[ 'label' => 'Email', 'value' => 'bea@example.com' ],
+			[ 'label' => 'Company', 'value' => 'BricksCo' ],
+		];
+
+		$data = $this->handler->extract_from_bricks( $fields, 'Contact' );
+
+		$this->assertSame( 'BricksCo', $data['company'] );
+	}
+
+	public function test_bricks_returns_empty_when_no_email(): void {
+		$fields = [
+			[ 'label' => 'Name', 'value' => 'Bea' ],
+		];
+
+		$data = $this->handler->extract_from_bricks( $fields, 'Contact' );
+
+		$this->assertSame( [], $data );
+	}
+
+	public function test_bricks_uses_email_as_name_fallback(): void {
+		$fields = [
+			[ 'label' => 'Email', 'value' => 'bea@example.com' ],
+		];
+
+		$data = $this->handler->extract_from_bricks( $fields, 'Contact' );
+
+		$this->assertSame( 'bea@example.com', $data['name'] );
+	}
+
+	public function test_bricks_sets_correct_source(): void {
+		$fields = [
+			[ 'label' => 'Email', 'value' => 'bea@example.com' ],
+		];
+
+		$data = $this->handler->extract_from_bricks( $fields, 'My Bricks Form' );
+
+		$this->assertSame( 'Bricks: My Bricks Form', $data['source'] );
+	}
+
 	// ─── Label detection ─────────────────────────────────────
 
 	public function test_is_company_label_matches_english(): void {
