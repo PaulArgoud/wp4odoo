@@ -6,7 +6,7 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: WP4Odoo 3.7.0\n"
+"Project-Id-Version: WP4Odoo 3.8.0\n"
 "Report-Msgid-Bugs-To: support@avalia.io\n"
 "POT-Creation-Date: 2026-02-19 02:29+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"

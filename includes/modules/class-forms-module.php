@@ -398,9 +398,9 @@ class Forms_Module extends Module_Base {
 			return;
 		}
 
-		$raw_fields  = $record->get( 'fields' );
-		$form_name   = $record->get_form_settings( 'form_name' ) ?? '';
-		$fields      = [];
+		$raw_fields = $record->get( 'fields' );
+		$form_name  = $record->get_form_settings( 'form_name' ) ?? '';
+		$fields     = [];
 
 		foreach ( $raw_fields as $id => $field ) {
 			$value = trim( (string) ( $field['value'] ?? '' ) );
@@ -503,13 +503,13 @@ class Forms_Module extends Module_Base {
 	 */
 	public function get_default_settings(): array {
 		return [
-			'sync_gravity_forms'  => true,
-			'sync_wpforms'        => true,
-			'sync_cf7'            => true,
-			'sync_fluent_forms'   => true,
-			'sync_formidable'     => true,
-			'sync_ninja_forms'    => true,
-			'sync_forminator'     => true,
+			'sync_gravity_forms'   => true,
+			'sync_wpforms'         => true,
+			'sync_cf7'             => true,
+			'sync_fluent_forms'    => true,
+			'sync_formidable'      => true,
+			'sync_ninja_forms'     => true,
+			'sync_forminator'      => true,
 			'sync_jetformbuilder'  => true,
 			'sync_elementor_forms' => true,
 			'sync_divi_forms'      => true,
@@ -524,37 +524,37 @@ class Forms_Module extends Module_Base {
 	 */
 	public function get_settings_fields(): array {
 		return [
-			'sync_gravity_forms'  => [
+			'sync_gravity_forms'   => [
 				'label'       => __( 'Sync Gravity Forms', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Create Odoo leads from Gravity Forms submissions.', 'wp4odoo' ),
 			],
-			'sync_wpforms'        => [
+			'sync_wpforms'         => [
 				'label'       => __( 'Sync WPForms', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Create Odoo leads from WPForms submissions.', 'wp4odoo' ),
 			],
-			'sync_cf7'            => [
+			'sync_cf7'             => [
 				'label'       => __( 'Sync Contact Form 7', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Create Odoo leads from Contact Form 7 submissions.', 'wp4odoo' ),
 			],
-			'sync_fluent_forms'   => [
+			'sync_fluent_forms'    => [
 				'label'       => __( 'Sync Fluent Forms', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Create Odoo leads from Fluent Forms submissions.', 'wp4odoo' ),
 			],
-			'sync_formidable'     => [
+			'sync_formidable'      => [
 				'label'       => __( 'Sync Formidable Forms', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Create Odoo leads from Formidable Forms submissions.', 'wp4odoo' ),
 			],
-			'sync_ninja_forms'    => [
+			'sync_ninja_forms'     => [
 				'label'       => __( 'Sync Ninja Forms', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Create Odoo leads from Ninja Forms submissions.', 'wp4odoo' ),
 			],
-			'sync_forminator'     => [
+			'sync_forminator'      => [
 				'label'       => __( 'Sync Forminator', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Create Odoo leads from Forminator submissions.', 'wp4odoo' ),

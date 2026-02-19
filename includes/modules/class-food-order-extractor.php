@@ -190,7 +190,7 @@ class Food_Order_Extractor {
 				'qty'        => $qty,
 				'price_unit' => $price,
 			];
-			$total += $qty * $price;
+			$total  += $qty * $price;
 		}
 
 		$amount = (float) ( get_post_meta( $payment_id, '_rpress_payment_total', true ) ?: $total );

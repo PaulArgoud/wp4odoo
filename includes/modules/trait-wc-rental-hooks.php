@@ -47,7 +47,7 @@ trait WC_Rental_Hooks {
 			return;
 		}
 
-		$settings       = $this->get_settings();
+		$settings        = $this->get_settings();
 		$rental_meta_key = $settings['rental_meta_key'] ?? '_rental';
 
 		if ( ! $this->handler->order_has_rental_items( $order_id, $rental_meta_key ) ) {

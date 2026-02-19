@@ -113,7 +113,7 @@ class Field_Service_Handler {
 			$data['date_deadline'] = (string) $deadline;
 		}
 
-		$priority = get_post_meta( $post_id, self::META_KEYS['priority'], true );
+		$priority         = get_post_meta( $post_id, self::META_KEYS['priority'], true );
 		$data['priority'] = '' !== $priority ? (string) $priority : '0';
 
 		// Stage name will be resolved to stage_id via search by Odoo.

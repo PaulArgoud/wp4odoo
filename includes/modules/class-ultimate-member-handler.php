@@ -99,8 +99,8 @@ class Ultimate_Member_Handler {
 		foreach ( $roles as $slug => $label ) {
 			if ( absint( crc32( $slug ) ) === $role_id ) {
 				return [
-					'slug'  => $slug,
-					'name'  => $label,
+					'slug' => $slug,
+					'name' => $label,
 				];
 			}
 		}

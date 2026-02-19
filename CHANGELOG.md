@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.7.0] - Unreleased
+## [3.8.0] - Unreleased
+
+## [3.7.0] - 2026-02-19
 
 ### Added
 - **Forms module: Elementor Pro, Divi & Bricks support** — Extends the existing Forms module with 3 new form plugin integrations. Hooks: `elementor_pro/forms/new_record`, `et_pb_contact_form_submit`, `bricks/form/custom_action`. Field extraction via `Form_Field_Extractor` normalizer. 3 new setting toggles

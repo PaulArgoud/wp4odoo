@@ -52,14 +52,14 @@ class Field_Service_Module extends Module_Base {
 	 */
 	protected array $default_mappings = [
 		'task' => [
-			'name'            => 'name',
-			'partner_id'      => 'partner_id',
-			'project_id'      => 'project_id',
+			'name'               => 'name',
+			'partner_id'         => 'partner_id',
+			'project_id'         => 'project_id',
 			'planned_date_begin' => 'planned_date_begin',
-			'date_deadline'   => 'date_deadline',
-			'stage_id'        => 'stage_id',
-			'priority'        => 'priority',
-			'description'     => 'description',
+			'date_deadline'      => 'date_deadline',
+			'stage_id'           => 'stage_id',
+			'priority'           => 'priority',
+			'description'        => 'description',
 		],
 	];
 
@@ -146,8 +146,8 @@ class Field_Service_Module extends Module_Base {
 	 */
 	public function get_default_settings(): array {
 		return [
-			'sync_tasks'  => true,
-			'pull_tasks'  => true,
+			'sync_tasks' => true,
+			'pull_tasks' => true,
 		];
 	}
 
@@ -158,12 +158,12 @@ class Field_Service_Module extends Module_Base {
 	 */
 	public function get_settings_fields(): array {
 		return [
-			'sync_tasks'  => [
+			'sync_tasks' => [
 				'label'       => __( 'Sync tasks', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Push WordPress field service tasks to Odoo.', 'wp4odoo' ),
 			],
-			'pull_tasks'  => [
+			'pull_tasks' => [
 				'label'       => __( 'Pull tasks from Odoo', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Pull Odoo field service tasks back to WordPress.', 'wp4odoo' ),

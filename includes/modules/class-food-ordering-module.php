@@ -174,9 +174,9 @@ class Food_Ordering_Module extends Module_Base {
 	 */
 	public function get_default_settings(): array {
 		return [
-			'sync_gloriafoood'  => true,
-			'sync_wppizza'      => true,
-			'sync_restropress'  => true,
+			'sync_gloriafoood' => true,
+			'sync_wppizza'     => true,
+			'sync_restropress' => true,
 		];
 	}
 
@@ -192,12 +192,12 @@ class Food_Ordering_Module extends Module_Base {
 				'type'        => 'checkbox',
 				'description' => __( 'Push GloriaFood orders to Odoo POS.', 'wp4odoo' ),
 			],
-			'sync_wppizza'      => [
+			'sync_wppizza'     => [
 				'label'       => __( 'Sync WPPizza orders', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Push WPPizza orders to Odoo POS.', 'wp4odoo' ),
 			],
-			'sync_restropress'  => [
+			'sync_restropress' => [
 				'label'       => __( 'Sync RestroPress orders', 'wp4odoo' ),
 				'type'        => 'checkbox',
 				'description' => __( 'Push RestroPress orders to Odoo POS.', 'wp4odoo' ),
