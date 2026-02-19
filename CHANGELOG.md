@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.9.0] - Unreleased
+## [3.9.5] - Unreleased
+
+## [3.9.0] - 2026-02-19
 
 ### Fixed (Architecture)
 - **`safe_callback()` preserves filter chain** — `Hook_Lifecycle::safe_callback()` now returns the callback's result (was void). On crash, returns `$args[0]` so filter chains are not broken by a crashed callback
