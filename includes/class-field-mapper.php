@@ -25,7 +25,8 @@ class Field_Mapper {
 	 */
 	public static function many2one_to_id( mixed $value ): ?int {
 		if ( is_array( $value ) && count( $value ) >= 2 ) {
-			return (int) $value[0];
+			$id = (int) $value[0];
+			return $id > 0 ? $id : null;
 		}
 
 		if ( is_int( $value ) && $value > 0 ) {
@@ -73,7 +74,12 @@ class Field_Mapper {
 			return '';
 		}
 
-		$dt = \DateTime::createFromFormat( 'Y-m-d H:i:s', $odoo_date, new \DateTimeZone( 'UTC' ) );
+		// Try formats in order: with microseconds, standard datetime, date-only.
+		$dt = \DateTime::createFromFormat( 'Y-m-d H:i:s.u', $odoo_date, new \DateTimeZone( 'UTC' ) );
+
+		if ( false === $dt ) {
+			$dt = \DateTime::createFromFormat( 'Y-m-d H:i:s', $odoo_date, new \DateTimeZone( 'UTC' ) );
+		}
 
 		if ( false === $dt ) {
 			$dt = \DateTime::createFromFormat( 'Y-m-d', $odoo_date, new \DateTimeZone( 'UTC' ) );

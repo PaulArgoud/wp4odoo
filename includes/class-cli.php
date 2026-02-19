@@ -204,57 +204,57 @@ class CLI {
 	 */
 	public function sync( array $args, array $assoc_args = [] ): void {
 		$switched = $this->maybe_switch_blog( $assoc_args );
-		$sub      = $args[0] ?? 'run';
 
-		if ( 'run' !== $sub ) {
+		try {
+			$sub = $args[0] ?? 'run';
+
+			if ( 'run' !== $sub ) {
+				/* translators: %s: subcommand name */
+				\WP_CLI::error( sprintf( __( 'Unknown subcommand: %s. Usage: wp wp4odoo sync run', 'wp4odoo' ), $sub ) );
+			}
+
+			$dry_run = isset( $assoc_args['dry-run'] );
+
+			\WP_CLI::warning(
+				__( 'Back up your WordPress and Odoo databases before running sync operations.', 'wp4odoo' )
+			);
+
+			if ( ! $dry_run ) {
+				\WP_CLI::confirm(
+					__( 'Process the sync queue now?', 'wp4odoo' ),
+					$assoc_args
+				);
+			}
+
+			if ( $dry_run ) {
+				\WP_CLI::line( __( 'Processing sync queue (dry-run mode)...', 'wp4odoo' ) );
+			} else {
+				\WP_CLI::line( __( 'Processing sync queue...', 'wp4odoo' ) );
+			}
+
+			$engine = new Sync_Engine(
+				fn( string $id ) => \WP4Odoo_Plugin::instance()->get_module( $id ),
+				new Sync_Queue_Repository(),
+				\WP4Odoo_Plugin::instance()->settings()
+			);
+
+			if ( $dry_run ) {
+				$engine->set_dry_run( true );
+			}
+
+			$processed = $engine->process_queue();
+
+			if ( $dry_run ) {
+				/* translators: %d: number of jobs */
+				\WP_CLI::success( sprintf( __( '%d job(s) would be processed (dry-run).', 'wp4odoo' ), $processed ) );
+			} else {
+				/* translators: %d: number of jobs */
+				\WP_CLI::success( sprintf( __( '%d job(s) processed.', 'wp4odoo' ), $processed ) );
+			}
+		} finally {
 			if ( $switched ) {
 				restore_current_blog();
 			}
-			/* translators: %s: subcommand name */
-			\WP_CLI::error( sprintf( __( 'Unknown subcommand: %s. Usage: wp wp4odoo sync run', 'wp4odoo' ), $sub ) );
-		}
-
-		$dry_run = isset( $assoc_args['dry-run'] );
-
-		\WP_CLI::warning(
-			__( 'Back up your WordPress and Odoo databases before running sync operations.', 'wp4odoo' )
-		);
-
-		if ( ! $dry_run ) {
-			\WP_CLI::confirm(
-				__( 'Process the sync queue now?', 'wp4odoo' ),
-				$assoc_args
-			);
-		}
-
-		if ( $dry_run ) {
-			\WP_CLI::line( __( 'Processing sync queue (dry-run mode)...', 'wp4odoo' ) );
-		} else {
-			\WP_CLI::line( __( 'Processing sync queue...', 'wp4odoo' ) );
-		}
-
-		$engine = new Sync_Engine(
-			fn( string $id ) => \WP4Odoo_Plugin::instance()->get_module( $id ),
-			new Sync_Queue_Repository(),
-			\WP4Odoo_Plugin::instance()->settings()
-		);
-
-		if ( $dry_run ) {
-			$engine->set_dry_run( true );
-		}
-
-		$processed = $engine->process_queue();
-
-		if ( $switched ) {
-			restore_current_blog();
-		}
-
-		if ( $dry_run ) {
-			/* translators: %d: number of jobs */
-			\WP_CLI::success( sprintf( __( '%d job(s) would be processed (dry-run).', 'wp4odoo' ), $processed ) );
-		} else {
-			/* translators: %d: number of jobs */
-			\WP_CLI::success( sprintf( __( '%d job(s) processed.', 'wp4odoo' ), $processed ) );
 		}
 	}
 
@@ -319,91 +319,94 @@ class CLI {
 	 * @when after_wp_load
 	 */
 	public function reconcile( array $args, array $assoc_args = [] ): void {
-		$switched    = $this->maybe_switch_blog( $assoc_args );
-		$module_id   = $args[0] ?? '';
-		$entity_type = $args[1] ?? '';
+		$switched = $this->maybe_switch_blog( $assoc_args );
 
-		if ( empty( $module_id ) || empty( $entity_type ) ) {
-			\WP_CLI::error( __( 'Usage: wp wp4odoo reconcile <module> <entity_type> [--fix]', 'wp4odoo' ) );
-		}
+		try {
+			$module_id   = $args[0] ?? '';
+			$entity_type = $args[1] ?? '';
 
-		$module = \WP4Odoo_Plugin::instance()->get_module( $module_id );
+			if ( empty( $module_id ) || empty( $entity_type ) ) {
+				\WP_CLI::error( __( 'Usage: wp wp4odoo reconcile <module> <entity_type> [--fix]', 'wp4odoo' ) );
+			}
 
-		if ( null === $module ) {
-			/* translators: %s: module identifier */
-			\WP_CLI::error( sprintf( __( 'Module "%s" not found.', 'wp4odoo' ), $module_id ) );
-		}
+			$module = \WP4Odoo_Plugin::instance()->get_module( $module_id );
 
-		$odoo_models = $module->get_odoo_models();
+			if ( null === $module ) {
+				/* translators: %s: module identifier */
+				\WP_CLI::error( sprintf( __( 'Module "%s" not found.', 'wp4odoo' ), $module_id ) );
+			}
 
-		if ( ! isset( $odoo_models[ $entity_type ] ) ) {
-			\WP_CLI::error(
+			$odoo_models = $module->get_odoo_models();
+
+			if ( ! isset( $odoo_models[ $entity_type ] ) ) {
+				\WP_CLI::error(
+					sprintf(
+						/* translators: 1: entity type, 2: module identifier, 3: available entity types */
+						__( 'Entity type "%1$s" not found in module "%2$s". Available: %3$s', 'wp4odoo' ),
+						$entity_type,
+						$module_id,
+						implode( ', ', array_keys( $odoo_models ) )
+					)
+				);
+			}
+
+			$fix = isset( $assoc_args['fix'] );
+
+			if ( $fix && ! isset( $assoc_args['yes'] ) ) {
+				\WP_CLI::confirm(
+					__( 'This will permanently remove orphaned entity mappings. Continue?', 'wp4odoo' )
+				);
+			}
+
+			\WP_CLI::line(
 				sprintf(
-					/* translators: 1: entity type, 2: module identifier, 3: available entity types */
-					__( 'Entity type "%1$s" not found in module "%2$s". Available: %3$s', 'wp4odoo' ),
-					$entity_type,
+					/* translators: 1: module identifier, 2: entity type, 3: Odoo model name, 4: fix mode indicator */
+					__( 'Reconciling %1$s/%2$s against Odoo model %3$s%4$s...', 'wp4odoo' ),
 					$module_id,
-					implode( ', ', array_keys( $odoo_models ) )
+					$entity_type,
+					$odoo_models[ $entity_type ],
+					$fix ? ' (fix mode)' : ''
 				)
 			);
-		}
 
-		$fix = isset( $assoc_args['fix'] );
-
-		if ( $fix && ! isset( $assoc_args['yes'] ) ) {
-			\WP_CLI::confirm(
-				__( 'This will permanently remove orphaned entity mappings. Continue?', 'wp4odoo' )
+			$settings   = \WP4Odoo_Plugin::instance()->settings();
+			$logger     = Logger::for_channel( 'reconcile', $settings );
+			$reconciler = new Reconciler(
+				new Entity_Map_Repository(),
+				fn() => $module->get_client(),
+				$logger
 			);
-		}
 
-		\WP_CLI::line(
-			sprintf(
-				/* translators: 1: module identifier, 2: entity type, 3: Odoo model name, 4: fix mode indicator */
-				__( 'Reconciling %1$s/%2$s against Odoo model %3$s%4$s...', 'wp4odoo' ),
-				$module_id,
-				$entity_type,
-				$odoo_models[ $entity_type ],
-				$fix ? ' (fix mode)' : ''
-			)
-		);
+			$result = $reconciler->reconcile( $module_id, $entity_type, $odoo_models[ $entity_type ], $fix );
 
-		$settings   = \WP4Odoo_Plugin::instance()->settings();
-		$logger     = Logger::for_channel( 'reconcile', $settings );
-		$reconciler = new Reconciler(
-			new Entity_Map_Repository(),
-			fn() => $module->get_client(),
-			$logger
-		);
+			/* translators: %d: number of mappings checked */
+			\WP_CLI::line( sprintf( __( 'Checked: %d mapping(s)', 'wp4odoo' ), $result['checked'] ) );
+			/* translators: %d: number of orphaned mappings */
+			\WP_CLI::line( sprintf( __( 'Orphaned: %d', 'wp4odoo' ), count( $result['orphaned'] ) ) );
 
-		$result = $reconciler->reconcile( $module_id, $entity_type, $odoo_models[ $entity_type ], $fix );
-
-		/* translators: %d: number of mappings checked */
-		\WP_CLI::line( sprintf( __( 'Checked: %d mapping(s)', 'wp4odoo' ), $result['checked'] ) );
-		/* translators: %d: number of orphaned mappings */
-		\WP_CLI::line( sprintf( __( 'Orphaned: %d', 'wp4odoo' ), count( $result['orphaned'] ) ) );
-
-		if ( ! empty( $result['orphaned'] ) ) {
-			$rows = [];
-			foreach ( $result['orphaned'] as $orphan ) {
-				$rows[] = [
-					'wp_id'   => $orphan['wp_id'],
-					'odoo_id' => $orphan['odoo_id'],
-				];
+			if ( ! empty( $result['orphaned'] ) ) {
+				$rows = [];
+				foreach ( $result['orphaned'] as $orphan ) {
+					$rows[] = [
+						'wp_id'   => $orphan['wp_id'],
+						'odoo_id' => $orphan['odoo_id'],
+					];
+				}
+				\WP_CLI\Utils\format_items( 'table', $rows, [ 'wp_id', 'odoo_id' ] );
 			}
-			\WP_CLI\Utils\format_items( 'table', $rows, [ 'wp_id', 'odoo_id' ] );
-		}
 
-		if ( $switched ) {
-			restore_current_blog();
-		}
-
-		if ( $fix ) {
-			/* translators: %d: number of orphaned mappings removed */
-			\WP_CLI::success( sprintf( __( '%d orphaned mapping(s) removed.', 'wp4odoo' ), $result['fixed'] ) );
-		} elseif ( ! empty( $result['orphaned'] ) ) {
-			\WP_CLI::warning( __( 'Run with --fix to remove orphaned mappings.', 'wp4odoo' ) );
-		} else {
-			\WP_CLI::success( __( 'No orphans found.', 'wp4odoo' ) );
+			if ( $fix ) {
+				/* translators: %d: number of orphaned mappings removed */
+				\WP_CLI::success( sprintf( __( '%d orphaned mapping(s) removed.', 'wp4odoo' ), $result['fixed'] ) );
+			} elseif ( ! empty( $result['orphaned'] ) ) {
+				\WP_CLI::warning( __( 'Run with --fix to remove orphaned mappings.', 'wp4odoo' ) );
+			} else {
+				\WP_CLI::success( __( 'No orphans found.', 'wp4odoo' ) );
+			}
+		} finally {
+			if ( $switched ) {
+				restore_current_blog();
+			}
 		}
 	}
 
@@ -452,55 +455,58 @@ class CLI {
 		}
 
 		$switched = $this->maybe_switch_blog( $assoc_args );
-		$dry_run  = isset( $assoc_args['dry-run'] );
-		$module   = isset( $assoc_args['module'] ) ? sanitize_key( $assoc_args['module'] ) : null;
 
-		if ( ! $dry_run ) {
-			\WP_CLI::confirm(
-				__( 'This will permanently remove orphaned entity map entries. Continue?', 'wp4odoo' ),
-				$assoc_args
-			);
-		}
+		try {
+			$dry_run = isset( $assoc_args['dry-run'] );
+			$module  = isset( $assoc_args['module'] ) ? sanitize_key( $assoc_args['module'] ) : null;
 
-		$entity_map = new Entity_Map_Repository();
-
-		if ( $dry_run ) {
-			/* translators: %s: module name or "all modules" */
-			\WP_CLI::line( sprintf( __( 'Scanning for orphaned mappings (%s, dry-run)...', 'wp4odoo' ), $module ?? __( 'all modules', 'wp4odoo' ) ) );
-		} else {
-			/* translators: %s: module name or "all modules" */
-			\WP_CLI::line( sprintf( __( 'Cleaning up orphaned mappings (%s)...', 'wp4odoo' ), $module ?? __( 'all modules', 'wp4odoo' ) ) );
-		}
-
-		$result = $entity_map->cleanup_orphans( $module, $dry_run );
-
-		if ( 0 === $result['found'] ) {
-			\WP_CLI::success( __( 'No orphaned mappings found.', 'wp4odoo' ) );
-		} else {
-			/* translators: %d: number of orphaned mappings found */
-			\WP_CLI::line( sprintf( __( 'Found %d orphaned mapping(s):', 'wp4odoo' ), $result['found'] ) );
-
-			$rows = [];
-			foreach ( $result['details'] as $key => $count ) {
-				[ $mod, $type ] = explode( ':', $key, 2 );
-				$rows[]         = [
-					'module'      => $mod,
-					'entity_type' => $type,
-					'orphans'     => $count,
-				];
+			if ( ! $dry_run ) {
+				\WP_CLI::confirm(
+					__( 'This will permanently remove orphaned entity map entries. Continue?', 'wp4odoo' ),
+					$assoc_args
+				);
 			}
-			\WP_CLI\Utils\format_items( 'table', $rows, [ 'module', 'entity_type', 'orphans' ] );
+
+			$entity_map = new Entity_Map_Repository();
 
 			if ( $dry_run ) {
-				\WP_CLI::warning( __( 'Run without --dry-run to remove orphaned mappings.', 'wp4odoo' ) );
+				/* translators: %s: module name or "all modules" */
+				\WP_CLI::line( sprintf( __( 'Scanning for orphaned mappings (%s, dry-run)...', 'wp4odoo' ), $module ?? __( 'all modules', 'wp4odoo' ) ) );
 			} else {
-				/* translators: %d: number of orphaned mappings removed */
-				\WP_CLI::success( sprintf( __( '%d orphaned mapping(s) removed.', 'wp4odoo' ), $result['removed'] ) );
+				/* translators: %s: module name or "all modules" */
+				\WP_CLI::line( sprintf( __( 'Cleaning up orphaned mappings (%s)...', 'wp4odoo' ), $module ?? __( 'all modules', 'wp4odoo' ) ) );
 			}
-		}
 
-		if ( $switched ) {
-			restore_current_blog();
+			$result = $entity_map->cleanup_orphans( $module, $dry_run );
+
+			if ( 0 === $result['found'] ) {
+				\WP_CLI::success( __( 'No orphaned mappings found.', 'wp4odoo' ) );
+			} else {
+				/* translators: %d: number of orphaned mappings found */
+				\WP_CLI::line( sprintf( __( 'Found %d orphaned mapping(s):', 'wp4odoo' ), $result['found'] ) );
+
+				$rows = [];
+				foreach ( $result['details'] as $key => $count ) {
+					[ $mod, $type ] = explode( ':', $key, 2 );
+					$rows[]         = [
+						'module'      => $mod,
+						'entity_type' => $type,
+						'orphans'     => $count,
+					];
+				}
+				\WP_CLI\Utils\format_items( 'table', $rows, [ 'module', 'entity_type', 'orphans' ] );
+
+				if ( $dry_run ) {
+					\WP_CLI::warning( __( 'Run without --dry-run to remove orphaned mappings.', 'wp4odoo' ) );
+				} else {
+					/* translators: %d: number of orphaned mappings removed */
+					\WP_CLI::success( sprintf( __( '%d orphaned mapping(s) removed.', 'wp4odoo' ), $result['removed'] ) );
+				}
+			}
+		} finally {
+			if ( $switched ) {
+				restore_current_blog();
+			}
 		}
 	}
 
@@ -533,8 +539,9 @@ class CLI {
 	 */
 	private function cache_flush(): void {
 		$deleted = Schema_Cache::flush_all();
+		I18n\Translation_Service::flush_caches();
 		/* translators: %d: number of transients deleted */
-		\WP_CLI::success( sprintf( __( 'Schema cache flushed (%d transient(s) deleted).', 'wp4odoo' ), $deleted ) );
+		\WP_CLI::success( sprintf( __( 'All caches flushed (%d schema transient(s) deleted).', 'wp4odoo' ), $deleted ) );
 	}
 
 	/**

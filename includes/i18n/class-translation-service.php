@@ -622,6 +622,22 @@ class Translation_Service {
 	}
 
 	/**
+	 * Flush persistent translation caches (transients).
+	 *
+	 * Removes the ir.translation probe and active-languages transients.
+	 * Called by `wp wp4odoo cache flush` to ensure a full cache reset
+	 * covers translation metadata alongside schema caches.
+	 *
+	 * @since 3.9.0
+	 *
+	 * @return void
+	 */
+	public static function flush_caches(): void {
+		delete_transient( self::TRANSIENT_IR_TRANSLATION );
+		delete_transient( self::TRANSIENT_ODOO_LANGS );
+	}
+
+	/**
 	 * Get the Odoo client instance.
 	 *
 	 * @return Odoo_Client

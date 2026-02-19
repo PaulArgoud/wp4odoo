@@ -59,6 +59,10 @@ class Advisory_Lock {
 	 * @return bool True if lock acquired.
 	 */
 	public function acquire(): bool {
+		if ( $this->held ) {
+			return true;
+		}
+
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -108,5 +112,19 @@ class Advisory_Lock {
 	 */
 	public function get_name(): string {
 		return $this->name;
+	}
+
+	/**
+	 * Destructor — release the lock if still held.
+	 *
+	 * Safety net for code paths where release() is not called explicitly
+	 * (e.g. an early return or uncaught exception outside a finally block).
+	 *
+	 * @since 3.9.0
+	 */
+	public function __destruct() {
+		if ( $this->held ) {
+			$this->release();
+		}
 	}
 }

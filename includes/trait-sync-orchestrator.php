@@ -349,11 +349,22 @@ trait Sync_Orchestrator {
 	 *
 	 * Avoids repeated calls to client()->get_company_id() during batch
 	 * processing (200 jobs = 200 redundant calls without caching).
-	 * Reset to null on switch_to_blog() via clear_importing().
+	 * Auto-invalidated when the blog context changes (multisite).
 	 *
 	 * @var int|null Null = not yet resolved, 0 = no multi-company, >0 = company ID.
 	 */
 	private ?int $cached_company_id = null;
+
+	/**
+	 * Blog ID at the time $cached_company_id was resolved.
+	 *
+	 * Detects blog context switches in multisite so the cached
+	 * company_id is automatically invalidated.
+	 *
+	 * @since 3.9.0
+	 * @var int
+	 */
+	private int $cached_company_blog_id = 0;
 
 	/**
 	 * Inject company_id into Odoo values when multi-company is active.
@@ -386,7 +397,9 @@ trait Sync_Orchestrator {
 			return $odoo_values;
 		}
 
-		if ( null === $this->cached_company_id ) {
+		$current_blog_id = (int) get_current_blog_id();
+		if ( null === $this->cached_company_id || $this->cached_company_blog_id !== $current_blog_id ) {
+			$this->cached_company_blog_id = $current_blog_id;
 			try {
 				$this->cached_company_id = $this->client()->get_company_id();
 			} catch ( \Throwable $e ) {

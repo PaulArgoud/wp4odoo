@@ -47,9 +47,9 @@ trait Hook_Lifecycle {
 	 * @return \Closure Wrapped callback that never throws.
 	 */
 	protected function safe_callback( callable $callback ): \Closure {
-		return function () use ( $callback ): void {
+		return function () use ( $callback ) {
 			try {
-				$callback( ...func_get_args() );
+				return $callback( ...func_get_args() );
 			} catch ( \Throwable $e ) {
 				$this->logger->critical(
 					'Hook callback crashed (graceful degradation).',
@@ -61,6 +61,11 @@ trait Hook_Lifecycle {
 						'line'      => $e->getLine(),
 					]
 				);
+
+				// For filters: return the first argument unmodified so the
+				// filter chain is not broken by a crashed callback.
+				$args = func_get_args();
+				return $args[0] ?? null;
 			}
 		};
 	}

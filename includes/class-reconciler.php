@@ -92,9 +92,14 @@ class Reconciler {
 
 		// Batch-check existence in Odoo.
 		$existing_ids = [];
+		$batch_size   = (int) apply_filters( 'wp4odoo_reconcile_batch_size', self::BATCH_SIZE );
+		if ( $batch_size <= 0 ) {
+			$batch_size = self::BATCH_SIZE;
+		}
+
 		try {
 			$client = ( $this->client_fn )();
-			foreach ( array_chunk( array_keys( $odoo_ids ), self::BATCH_SIZE ) as $chunk ) {
+			foreach ( array_chunk( array_keys( $odoo_ids ), $batch_size ) as $chunk ) {
 				$found = $client->search(
 					$odoo_model,
 					[ [ 'id', 'in', $chunk ] ]

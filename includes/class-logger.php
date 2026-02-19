@@ -214,6 +214,14 @@ class Logger {
 
 		// Guard: $wpdb may be unavailable during late PHP shutdown.
 		if ( ! isset( $wpdb ) || ! is_object( $wpdb ) ) {
+			// Fallback: write critical entries to PHP error_log so they
+			// are not silently discarded when the DB is unreachable.
+			foreach ( self::$write_buffer as $entry ) {
+				if ( 'critical' === $entry['level'] || 'error' === $entry['level'] ) {
+					// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+					error_log( sprintf( '[WP4Odoo] %s: %s', strtoupper( $entry['level'] ), $entry['message'] ) );
+				}
+			}
 			self::$write_buffer = [];
 			return;
 		}

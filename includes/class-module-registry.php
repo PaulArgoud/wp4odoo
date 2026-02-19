@@ -471,6 +471,16 @@ class Module_Registry {
 			// without attempting re-instantiation.
 			$this->failed[ $id ] = true;
 
+			$this->version_warnings[ $id ][] = [
+				'type'    => 'error',
+				'message' => sprintf(
+					/* translators: 1: module class name, 2: error message */
+					__( 'Module failed to load (%1$s): %2$s', 'wp4odoo' ),
+					$class,
+					$e->getMessage()
+				),
+			];
+
 			$logger = Logger::for_channel( 'core' );
 			$logger->error(
 				'Failed to instantiate deferred module.',
