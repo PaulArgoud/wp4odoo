@@ -204,8 +204,6 @@ class Sync_Queue_Repository {
 			$wpdb->query( 'COMMIT' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		}
 
-		$this->invalidate_stats_cache();
-
 		return $new_id;
 	}
 

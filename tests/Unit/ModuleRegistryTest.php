@@ -318,6 +318,22 @@ class ModuleRegistryTest extends TestCase {
 		$this->assertSame( [ 'woocommerce' ], $module->get_required_modules() );
 	}
 
+	// ─── Exclusive Group Warning ─────────────────────────
+
+	public function test_exclusive_group_generates_warning_for_blocked_module(): void {
+		$GLOBALS['_wp_options']['wp4odoo_module_woocommerce_enabled'] = true;
+		$GLOBALS['_wp_options']['wp4odoo_module_sales_enabled']       = true;
+
+		$this->registry->register( 'woocommerce', $this->make_wc() );
+		$this->registry->register( 'sales', $this->make_sales() );
+
+		$warnings = $this->registry->get_version_warnings();
+		$this->assertArrayHasKey( 'sales', $warnings );
+		$this->assertStringContainsString( 'woocommerce', $warnings['sales'][0]['message'] );
+		$this->assertStringContainsString( 'ecommerce', $warnings['sales'][0]['message'] );
+		$this->assertSame( 'warning', $warnings['sales'][0]['type'] );
+	}
+
 	// ─── Gamification Exclusive Group ────────────────────
 
 	public function test_gamification_group_blocks_second_module(): void {

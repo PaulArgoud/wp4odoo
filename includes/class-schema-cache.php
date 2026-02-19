@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Odoo model schema cache.
  *
  * Caches `fields_get()` results per Odoo model in memory and
- * WordPress transients (24 h). Used by Module_Base to validate
+ * WordPress transients (4 h). Used by Module_Base to validate
  * field mappings at push time and warn about missing fields.
  *
  * @package WP4Odoo
@@ -27,11 +27,15 @@ class Schema_Cache {
 	private const TRANSIENT_PREFIX = 'wp4odoo_schema_';
 
 	/**
-	 * Cache time-to-live in seconds (24 hours).
+	 * Cache time-to-live in seconds (4 hours).
+	 *
+	 * Shorter than a full day to pick up Odoo schema changes (new fields,
+	 * renamed models) within a reasonable window. The cost of one extra
+	 * `fields_get()` per model per 4 h is negligible.
 	 *
 	 * @var int
 	 */
-	private const CACHE_TTL = DAY_IN_SECONDS;
+	private const CACHE_TTL = 4 * HOUR_IN_SECONDS;
 
 	/**
 	 * In-memory cache to avoid repeated transient reads.

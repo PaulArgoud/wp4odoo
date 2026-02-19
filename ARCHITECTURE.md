@@ -344,7 +344,7 @@ WordPress For Odoo/
 │   ├── trait-error-classification.php # Error_Classification trait: classify RuntimeException → Error_Type (transient vs permanent)
 │   ├── trait-push-lock.php           # Push_Lock trait: MySQL advisory lock around push_to_odoo() create path (TOCTOU prevention)
 │   ├── trait-poll-support.php        # Poll_Support trait: targeted entity_map loading + last_polled_at deletion detection
-│   ├── trait-hook-lifecycle.php      # Hook_Lifecycle trait (from Module_Base): safe_callback(), register_hook(), teardown()
+│   ├── trait-hook-lifecycle.php      # Hook_Lifecycle trait (from Module_Base): safe_callback() + crash counter, register_hook(), teardown()
 │   ├── trait-translation-accumulator.php # Translation_Accumulator trait (from Module_Base): translation buffer, flush/apply pull translations
 │   ├── trait-sync-job-tracking.php   # Sync_Job_Tracking trait (from Sync_Engine): batch counters, per-module outcomes, handle_failure(), wp4odoo_retry_delay filter
 │   ├── trait-failure-tracking-settings.php # Failure_Tracking_Settings trait (from Settings_Repository): consecutive failures, last email timestamp
@@ -400,7 +400,7 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # 5406 unit tests (8129 assertions) + 45 integration tests (wp-env)
+├── tests/                             # 5410 unit tests (8139 assertions) + 45 integration tests (wp-env)
 │   ├── bootstrap.php                 #   Unit test bootstrap: constants, stub loading, plugin class requires
 │   ├── bootstrap-integration.php     #   Integration test bootstrap: loads WP test framework (wp-env)
 │   ├── stubs/
@@ -591,7 +591,7 @@ WordPress For Odoo/
 │       ├── ModuleCircuitBreakerTest.php # Tests for Module_Circuit_Breaker (20 tests: state transitions, isolation, recovery)
 │       ├── ModuleRegistryTest.php       # Tests for Module_Registry
 │       ├── ModuleBaseHelpersTest.php    #   18 tests for should_sync(), poll_entity_changes(), push_entity()
-│       ├── SafeCallbackTest.php         # Tests for safe_callback() graceful degradation
+│       ├── SafeCallbackTest.php         # Tests for safe_callback() graceful degradation + crash counter
 │       ├── VersionBoundsTest.php        # Tests for PLUGIN_MIN_VERSION / PLUGIN_TESTED_UP_TO
 │       ├── DedupDomainTest.php          # Tests for get_dedup_domain() idempotent creates
 │       ├── SessionErrorTest.php         # Tests for Odoo_Client session error recovery
@@ -784,14 +784,14 @@ Module_Base (abstract)
 - Helpers: `is_importing()` (anti-loop guard, per-module static `$importing_request_local` array keyed by module ID — name reflects process-local limitation), `mark_importing()`, `clear_importing()` (try/finally in pull), `resolve_many2one_field()` (Many2one → scalar), `delete_wp_post()` (safe post deletion), `log_unsupported_entity()` (centralized warning), `partner_service()` (lazy `Partner_Service` factory), `resolve_partner_from_user()` (WP user → Odoo partner via Partner_Service), `resolve_partner_from_email()` (email → Odoo partner via Partner_Service), `check_dependency()` (version bounds + table existence via `get_required_tables()` + cron polling notice via `uses_cron_polling()`), `client()`, `auto_post_invoice(): bool` (setting check + mapping lookup + `action_post`, returns success/failure), `ensure_entity_synced()` (mapping check + auto-push if missing), `encode_synthetic_id()` / `decode_synthetic_id()` (static, with overflow guard — used by LMS modules for enrollment IDs)
 - Push helpers: `enqueue_push()` (mapping lookup + injectable Queue_Manager via `$this->queue()`), `handle_cpt_save()` (anti-loop + revision/autosave + post_type + settings guards → enqueue_push; used by 12 hooks traits)
 - Guard helpers: `should_sync(string $setting_key)` (consolidated `is_importing()` + settings check — used in ~40 hook callbacks), `poll_entity_changes(string $entity_type, array $items, string $id_field)` (SHA-256 hash-based diff against entity map — detects creates/updates/deletes, used by Bookly and Ecwid cron polling)
-- Graceful degradation: `safe_callback()` wraps hook callbacks in try/catch(`\Throwable`), logging crashes instead of crashing the WordPress request. All ~87 third-party hook registrations use this wrapper
+- Graceful degradation: `safe_callback()` wraps hook callbacks in try/catch(`\Throwable`), logging crashes and incrementing a static crash counter instead of crashing the WordPress request. `get_crash_count()` exposes the count for the health dashboard. All ~87 third-party hook registrations use this wrapper
 - Hook lifecycle: `register_hook($hook, $callback, $priority, $args)` wraps `add_action()` with `safe_callback()` and tracks registered hooks. `teardown()` removes all tracked hooks via `remove_action()`, called when a module is disabled via admin toggle
 - Subclass hooks: `boot()`, `load_wp_data()`, `save_wp_data()`, `delete_wp_data()`
 
 **Module lifecycle:**
 1. `Module_Registry::register_all()` is called on the `init` hook
 2. Modules instantiated and registered via `register($id, $module)`
-3. If module is enabled (via `Settings_Repository::is_module_enabled()`) → `$module->boot()` is called
+3. If module is enabled (via `Settings_Repository::is_module_enabled()`) → sequential checks: dependency status → required modules → exclusive group → deprecation → `$module->boot()`. Blocked modules generate a `version_warnings` entry visible in admin
 4. `boot()` registers module-specific WordPress hooks
 
 **Third-party extension:**
@@ -873,7 +873,7 @@ WP Event               Sync Engine (cron)           Odoo
 - Configurable batch size (50 items per cron tick by default)
 - Stale job recovery: configurable timeout (60–3600 s, default 600 s via `stale_timeout` sync setting)
 - Memory safety: batch processing stops when PHP memory usage exceeds 80% of `memory_limit`
-- Transient-cached stats: `get_stats()` and `get_health_metrics()` use 5-minute transient cache to avoid repeated COUNT queries on admin pages
+- Transient-cached stats: `get_stats()` and `get_health_metrics()` use 5-minute transient cache to avoid repeated COUNT queries on admin pages. Cache invalidated once after batch processing (not per-enqueue) to avoid transient thrashing
 - Migration rollback: `run_migrations()` stops on first failure and preserves the schema version, preventing partial upgrades
 
 ### 4. Interchangeable Transport (Strategy Pattern)

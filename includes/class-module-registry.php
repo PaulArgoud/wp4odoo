@@ -338,6 +338,17 @@ class Module_Registry {
 		// Exclusive group check: skip boot if any module in the group is already booted.
 		$group = $module->get_exclusive_group();
 		if ( '' !== $group && $this->has_booted_in_group( $group ) ) {
+			$active_id                       = $this->get_active_in_group( $group );
+			$this->version_warnings[ $id ][] = [
+				'type'    => 'warning',
+				'message' => sprintf(
+					/* translators: 1: blocked module name, 2: active module ID, 3: exclusive group name */
+					__( '%1$s was not started because "%2$s" is already active in the "%3$s" group. Only one module per group can run at a time.', 'wp4odoo' ),
+					$module->get_name(),
+					$active_id,
+					$group
+				),
+			];
 			return;
 		}
 

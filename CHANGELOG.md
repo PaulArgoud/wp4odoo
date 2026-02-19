@@ -32,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Network-wide deactivation cron cleanup** — `deactivate()` now iterates over all sites via `get_sites()` when network-deactivated, preventing orphaned cron hooks on subsites (mirrors existing `activate()` pattern)
 
 ### Changed (Core)
+- **Schema cache TTL reduced to 4 hours** — `Schema_Cache::CACHE_TTL` changed from `DAY_IN_SECONDS` (24 h) to `4 * HOUR_IN_SECONDS`. Odoo schema changes (new fields, renamed models) are now picked up within 4 hours instead of 24
+- **Stats cache invalidation moved to batch level** — Removed per-`enqueue()` call to `invalidate_stats_cache()` (was causing transient thrashing on high-throughput sites). Stats cache is now only invalidated after batch processing completes in `Sync_Engine::run_with_lock()`, where it was already called
+- **Exclusive group admin warning** — `Module_Registry::register()` now records a `version_warnings` entry when a module is blocked by an exclusive group, identifying the active module and group name (e.g. "Sales was not started because woocommerce is already active in the ecommerce group")
+- **`safe_callback()` crash counter** — `Hook_Lifecycle` now tracks a static `$crash_count` incremented on each caught `\Throwable`. Exposed via `get_crash_count()` for the health dashboard, making silent graceful degradation events visible to administrators
 - **`Schema_Cache::flush()` in test teardown** — `Module_Test_Case::reset_static_caches()` now calls `Schema_Cache::flush()` to prevent cross-test schema cache leakage
 - **`Partner_Service` static reset in test teardown** — New `Partner_Helpers::reset_partner_service()` method, called from `Module_Test_Case::reset_static_caches()` to prevent cross-test partner service leakage
 

@@ -73,6 +73,7 @@ class SafeCallbackTest extends TestCase {
 
 	protected function setUp(): void {
 		$this->module = new SafeCallbackTestModule();
+		SafeCallbackTestModule::reset_crash_count();
 	}
 
 	// ─── Argument forwarding ──────────────────────────────
@@ -190,5 +191,43 @@ class SafeCallbackTest extends TestCase {
 		$cb();
 
 		$this->assertEmpty( $this->module->get_log_calls() );
+	}
+
+	// ─── Crash counter ───────────────────────────────────
+
+	public function test_crash_count_increments_on_exception(): void {
+		$cb = $this->module->wrap( function (): void {
+			throw new \RuntimeException( 'Crash' );
+		} );
+
+		$this->assertSame( 0, SafeCallbackTestModule::get_crash_count() );
+
+		$cb();
+		$this->assertSame( 1, SafeCallbackTestModule::get_crash_count() );
+
+		$cb();
+		$this->assertSame( 2, SafeCallbackTestModule::get_crash_count() );
+	}
+
+	public function test_crash_count_does_not_increment_without_exception(): void {
+		$cb = $this->module->wrap( function (): void {
+			// No throw.
+		} );
+
+		$cb();
+
+		$this->assertSame( 0, SafeCallbackTestModule::get_crash_count() );
+	}
+
+	public function test_crash_count_resets(): void {
+		$cb = $this->module->wrap( function (): void {
+			throw new \RuntimeException( 'Crash' );
+		} );
+
+		$cb();
+		$this->assertSame( 1, SafeCallbackTestModule::get_crash_count() );
+
+		SafeCallbackTestModule::reset_crash_count();
+		$this->assertSame( 0, SafeCallbackTestModule::get_crash_count() );
 	}
 }

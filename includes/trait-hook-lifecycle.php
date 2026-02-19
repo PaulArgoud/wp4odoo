@@ -34,6 +34,16 @@ trait Hook_Lifecycle {
 	private array $registered_hooks = [];
 
 	/**
+	 * Count of hook callback crashes caught by safe_callback().
+	 *
+	 * Static so it accumulates across all modules within a single
+	 * request. Exposed via get_crash_count() for the health dashboard.
+	 *
+	 * @var int
+	 */
+	private static int $crash_count = 0;
+
+	/**
 	 * Wrap a hook callback in a try/catch for graceful degradation.
 	 *
 	 * Returns a Closure that forwards all arguments to the original callable.
@@ -51,6 +61,8 @@ trait Hook_Lifecycle {
 			try {
 				return $callback( ...func_get_args() );
 			} catch ( \Throwable $e ) {
+				++self::$crash_count;
+
 				$this->logger->critical(
 					'Hook callback crashed (graceful degradation).',
 					[
@@ -105,5 +117,26 @@ trait Hook_Lifecycle {
 			remove_action( $tag, $callback, $priority );
 		}
 		$this->registered_hooks = [];
+	}
+
+	/**
+	 * Get the number of hook callback crashes caught during this request.
+	 *
+	 * Exposed for the health dashboard so silent degradation events
+	 * are visible to administrators.
+	 *
+	 * @return int
+	 */
+	public static function get_crash_count(): int {
+		return self::$crash_count;
+	}
+
+	/**
+	 * Reset the crash counter (used by tests).
+	 *
+	 * @return void
+	 */
+	public static function reset_crash_count(): void {
+		self::$crash_count = 0;
 	}
 }
