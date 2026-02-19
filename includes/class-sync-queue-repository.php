@@ -69,7 +69,8 @@ class Sync_Queue_Repository {
 	 *     @type int|null $odoo_id     Odoo entity ID.
 	 *     @type string   $action      'create', 'update', or 'delete'.
 	 *     @type array    $payload     Data payload.
-	 *     @type int      $priority    Priority (1-10, lower = higher priority).
+	 *     @type int      $priority      Priority (1-10, lower = higher priority).
+	 *     @type int      $max_attempts  Maximum retry attempts (default: DB column default of 3).
 	 * }
 	 * @param bool $in_transaction Whether the caller is already inside a DB transaction.
 	 * @return int|false The job ID, or false on failure.
@@ -179,6 +180,9 @@ class Sync_Queue_Repository {
 		}
 		if ( null !== $scheduled_at ) {
 			$insert_data['scheduled_at'] = $scheduled_at;
+		}
+		if ( isset( $args['max_attempts'] ) ) {
+			$insert_data['max_attempts'] = absint( $args['max_attempts'] );
 		}
 
 		$wpdb->insert( $table, $insert_data );
