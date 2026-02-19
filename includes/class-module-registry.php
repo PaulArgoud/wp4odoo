@@ -257,6 +257,25 @@ class Module_Registry {
 			[ 'acf', Modules\ACF_Module::class, fn() => class_exists( 'ACF' ) || defined( 'ACF_MAJOR_VERSION' ) ],
 			[ 'jetengine_meta', Modules\JetEngine_Meta_Module::class, fn() => defined( 'JET_ENGINE_VERSION' ) || class_exists( 'Jet_Engine' ) ],
 			[ 'wpai', Modules\WP_All_Import_Module::class, fn() => defined( 'PMXI_VERSION' ) || class_exists( 'PMXI_Plugin' ) ],
+
+			// Aggregate modules — compound detection (any of N plugins).
+			[ 'food_ordering', Modules\Food_Ordering_Module::class, fn() => defined( 'FLAVOR_FLAVOR_VERSION' ) || defined( 'WPPIZZA_VERSION' ) || defined( 'RP_VERSION' ) ],
+			[ 'survey_quiz', Modules\Survey_Quiz_Module::class, fn() => defined( 'QUIZ_MAKER_VERSION' ) || defined( 'QSM_PLUGIN_INSTALLED' ) ],
+			[
+				'forms',
+				Modules\Forms_Module::class,
+				fn() => class_exists( 'GFAPI' )
+					|| function_exists( 'wpforms' )
+					|| defined( 'WPCF7_VERSION' )
+					|| defined( 'FLUENTFORM' )
+					|| class_exists( 'FrmAppHelper' )
+					|| class_exists( 'Ninja_Forms' )
+					|| defined( 'FORMINATOR_VERSION' )
+					|| defined( 'JET_FORM_BUILDER_VERSION' )
+					|| defined( 'ELEMENTOR_PRO_VERSION' )
+					|| function_exists( 'et_setup_theme' )
+					|| defined( 'BRICKS_VERSION' ),
+			],
 		];
 		// phpcs:enable
 
@@ -267,49 +286,6 @@ class Module_Registry {
 				} else {
 					$this->deferred[ $id ] = $class;
 				}
-			}
-		}
-
-		// Food Ordering — aggregate detection.
-		$food_active = defined( 'FLAVOR_FLAVOR_VERSION' )
-			|| defined( 'WPPIZZA_VERSION' )
-			|| defined( 'RP_VERSION' );
-		if ( $food_active ) {
-			if ( $this->settings->is_module_enabled( 'food_ordering' ) ) {
-				$this->register( 'food_ordering', new Modules\Food_Ordering_Module( $client_provider, $entity_map, $settings ) );
-			} else {
-				$this->deferred['food_ordering'] = Modules\Food_Ordering_Module::class;
-			}
-		}
-
-		// Survey & Quiz — aggregate detection.
-		$survey_active = defined( 'QUIZ_MAKER_VERSION' )
-			|| defined( 'QSM_PLUGIN_INSTALLED' );
-		if ( $survey_active ) {
-			if ( $this->settings->is_module_enabled( 'survey_quiz' ) ) {
-				$this->register( 'survey_quiz', new Modules\Survey_Quiz_Module( $client_provider, $entity_map, $settings ) );
-			} else {
-				$this->deferred['survey_quiz'] = Modules\Survey_Quiz_Module::class;
-			}
-		}
-
-		// Forms module — aggregate detection (any of 11 form plugins).
-		$forms_active = class_exists( 'GFAPI' )
-			|| function_exists( 'wpforms' )
-			|| defined( 'WPCF7_VERSION' )
-			|| defined( 'FLUENTFORM' )
-			|| class_exists( 'FrmAppHelper' )
-			|| class_exists( 'Ninja_Forms' )
-			|| defined( 'FORMINATOR_VERSION' )
-			|| defined( 'JET_FORM_BUILDER_VERSION' )
-			|| defined( 'ELEMENTOR_PRO_VERSION' )
-			|| function_exists( 'et_setup_theme' )
-			|| defined( 'BRICKS_VERSION' );
-		if ( $forms_active ) {
-			if ( $this->settings->is_module_enabled( 'forms' ) ) {
-				$this->register( 'forms', new Modules\Forms_Module( $client_provider, $entity_map, $settings ) );
-			} else {
-				$this->deferred['forms'] = Modules\Forms_Module::class;
 			}
 		}
 

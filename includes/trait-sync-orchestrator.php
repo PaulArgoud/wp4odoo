@@ -345,6 +345,17 @@ trait Sync_Orchestrator {
 	}
 
 	/**
+	 * Cached company ID for the current request.
+	 *
+	 * Avoids repeated calls to client()->get_company_id() during batch
+	 * processing (200 jobs = 200 redundant calls without caching).
+	 * Reset to null on switch_to_blog() via clear_importing().
+	 *
+	 * @var int|null Null = not yet resolved, 0 = no multi-company, >0 = company ID.
+	 */
+	private ?int $cached_company_id = null;
+
+	/**
 	 * Inject company_id into Odoo values when multi-company is active.
 	 *
 	 * Some Odoo models (sale.order, account.move, product.template) have
@@ -358,17 +369,6 @@ trait Sync_Orchestrator {
 	 * @param array $odoo_values The mapped Odoo field values.
 	 * @return array The values with company_id injected if applicable.
 	 */
-	/**
-	 * Cached company ID for the current request.
-	 *
-	 * Avoids repeated calls to client()->get_company_id() during batch
-	 * processing (200 jobs = 200 redundant calls without caching).
-	 * Reset to null on switch_to_blog() via clear_importing().
-	 *
-	 * @var int|null Null = not yet resolved, 0 = no multi-company, >0 = company ID.
-	 */
-	private ?int $cached_company_id = null;
-
 	private function maybe_inject_company_id( array $odoo_values ): array {
 		if ( isset( $odoo_values['company_id'] ) ) {
 			return $odoo_values;
