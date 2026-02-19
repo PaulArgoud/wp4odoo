@@ -511,7 +511,7 @@ class Sync_Queue_Repository {
 		try {
 			$retried = (int) $wpdb->query(
 				$wpdb->prepare(
-					"UPDATE {$table} SET status = 'pending', attempts = attempts + 1, error_message = 'Recovered from stale processing state.' WHERE blog_id = %d AND status = %s AND processed_at IS NOT NULL AND processed_at < %s AND attempts < max_attempts", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
+					"UPDATE {$table} SET status = 'pending', processed_at = NULL, attempts = attempts + 1, error_message = 'Recovered from stale processing state.' WHERE blog_id = %d AND status = %s AND processed_at IS NOT NULL AND processed_at < %s AND attempts < max_attempts", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, safe.
 					$this->blog_id,
 					'processing',
 					$cutoff
