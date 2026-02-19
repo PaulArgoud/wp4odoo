@@ -67,7 +67,7 @@ class Survey_Extractor {
 		$questions    = [];
 
 		if ( '' !== $question_ids ) {
-			$ids            = array_map( 'intval', explode( ',', $question_ids ) );
+			$ids            = array_map( intval( ... ), explode( ',', $question_ids ) );
 			$question_table = $wpdb->prefix . 'ays_questions';
 			$placeholders   = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
 
@@ -250,7 +250,7 @@ class Survey_Extractor {
 
 		$decoded = json_decode( $answers_raw, true );
 		if ( is_array( $decoded ) ) {
-			return array_values( array_map( 'strval', $decoded ) );
+			return array_values( array_map( strval( ... ), $decoded ) );
 		}
 
 		return [];

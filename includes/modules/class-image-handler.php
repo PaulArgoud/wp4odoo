@@ -458,7 +458,7 @@ class Image_Handler {
 			return [];
 		}
 
-		$attachment_ids = array_filter( array_map( 'intval', explode( ',', $gallery_meta ) ) );
+		$attachment_ids = array_filter( array_map( intval( ... ), explode( ',', $gallery_meta ) ) );
 		$tuples         = [];
 
 		foreach ( $attachment_ids as $attachment_id ) {

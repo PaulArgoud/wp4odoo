@@ -176,7 +176,7 @@ class Entity_Map_Repository {
 		}
 
 		// Deduplicate input IDs.
-		$odoo_ids = array_values( array_unique( array_map( 'intval', $odoo_ids ) ) );
+		$odoo_ids = array_values( array_unique( array_map( intval( ... ), $odoo_ids ) ) );
 
 		// Collect cache hits before querying DB.
 		$map      = [];
@@ -203,7 +203,7 @@ class Entity_Map_Repository {
 
 		foreach ( array_chunk( $uncached, self::BATCH_CHUNK_SIZE ) as $chunk ) {
 			$placeholders = implode( ',', array_fill( 0, count( $chunk ), '%d' ) );
-			$prepare_args = array_merge( [ $this->blog_id, $module, $entity_type ], array_map( 'intval', $chunk ) );
+			$prepare_args = array_merge( [ $this->blog_id, $module, $entity_type ], array_map( intval( ... ), $chunk ) );
 
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table and $placeholders are safe (prefix + array_fill).
 			$sql = "SELECT odoo_id, wp_id FROM {$table} WHERE blog_id = %d AND module = %s AND entity_type = %s AND odoo_id IN ({$placeholders})";
@@ -245,7 +245,7 @@ class Entity_Map_Repository {
 		}
 
 		// Deduplicate input IDs.
-		$wp_ids = array_values( array_unique( array_map( 'intval', $wp_ids ) ) );
+		$wp_ids = array_values( array_unique( array_map( intval( ... ), $wp_ids ) ) );
 
 		// Collect cache hits before querying DB.
 		$map      = [];
@@ -272,7 +272,7 @@ class Entity_Map_Repository {
 
 		foreach ( array_chunk( $uncached, self::BATCH_CHUNK_SIZE ) as $chunk ) {
 			$placeholders = implode( ',', array_fill( 0, count( $chunk ), '%d' ) );
-			$prepare_args = array_merge( [ $this->blog_id, $module, $entity_type ], array_map( 'intval', $chunk ) );
+			$prepare_args = array_merge( [ $this->blog_id, $module, $entity_type ], array_map( intval( ... ), $chunk ) );
 
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table and $placeholders safe (prefix + array_fill).
 			$sql = "SELECT wp_id, odoo_id FROM {$table} WHERE blog_id = %d AND module = %s AND entity_type = %s AND wp_id IN ({$placeholders})";
@@ -460,7 +460,7 @@ class Entity_Map_Repository {
 
 		$table  = $wpdb->prefix . 'wp4odoo_entity_map';
 		$map    = [];
-		$wp_ids = array_values( array_unique( array_map( 'intval', $wp_ids ) ) );
+		$wp_ids = array_values( array_unique( array_map( intval( ... ), $wp_ids ) ) );
 
 		foreach ( array_chunk( $wp_ids, self::BATCH_CHUNK_SIZE ) as $chunk ) {
 			$placeholders = implode( ',', array_fill( 0, count( $chunk ), '%d' ) );
@@ -510,7 +510,7 @@ class Entity_Map_Repository {
 
 		foreach ( array_chunk( $wp_ids, self::BATCH_CHUNK_SIZE ) as $chunk ) {
 			$placeholders = implode( ',', array_fill( 0, count( $chunk ), '%d' ) );
-			$prepare_args = array_merge( [ $timestamp, $this->blog_id, $module, $entity_type ], array_map( 'intval', $chunk ) );
+			$prepare_args = array_merge( [ $timestamp, $this->blog_id, $module, $entity_type ], array_map( intval( ... ), $chunk ) );
 
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table and $placeholders safe (prefix + array_fill).
 			$sql = "UPDATE {$table} SET last_polled_at = %s WHERE blog_id = %d AND module = %s AND entity_type = %s AND wp_id IN ({$placeholders})";

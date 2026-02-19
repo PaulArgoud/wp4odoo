@@ -123,7 +123,7 @@ class GamiPress_Handler {
 		}
 
 		$post_type = get_post_type( $achievement_id );
-		if ( ! is_string( $post_type ) || false === strpos( $post_type, 'achievement' ) ) {
+		if ( ! is_string( $post_type ) || ! str_contains( $post_type, 'achievement' ) ) {
 			$this->logger->warning(
 				'GamiPress: post is not an achievement type.',
 				[
@@ -164,7 +164,7 @@ class GamiPress_Handler {
 		}
 
 		$post_type = get_post_type( $rank_id );
-		if ( ! is_string( $post_type ) || false === strpos( $post_type, 'rank' ) ) {
+		if ( ! is_string( $post_type ) || ! str_contains( $post_type, 'rank' ) ) {
 			$this->logger->warning(
 				'GamiPress: post is not a rank type.',
 				[

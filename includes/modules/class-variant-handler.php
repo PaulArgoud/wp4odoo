@@ -343,7 +343,7 @@ class Variant_Handler {
 			}
 		}
 
-		$all_value_ids = array_unique( array_map( 'intval', $all_value_ids ) );
+		$all_value_ids = array_unique( array_map( intval( ... ), $all_value_ids ) );
 
 		if ( empty( $all_value_ids ) ) {
 			return [];

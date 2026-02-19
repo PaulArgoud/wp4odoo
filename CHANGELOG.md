@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.7.0] - Unreleased
 
+### Fixed (Architecture)
+- **Exponential backoff cap** — `Sync_Job_Tracking::calculate_retry_delay()` now caps retry delay at 3600s (`MAX_RETRY_DELAY`). Without a cap, high attempt counts produced delays exceeding practical bounds
+- **Stale recovery loop prevention** — `Sync_Queue_Repository::recover_stale_processing()` now increments `attempts` when recovering stale jobs. Prevents infinite recovery loops where a job that consistently crashes is recovered and reprocessed indefinitely without progressing toward `max_attempts` (reverses 3.6.0 "no-increment" behavior — a job that repeatedly stalls IS progressing toward failure)
+- **SQL injection hardening** — `Sync_Queue_Repository::enqueue()` and `cleanup()` now use `$wpdb->prepare()` for `status IN (...)` clauses (was safe hardcoded values, but inconsistent with the fully-prepared pattern used elsewhere)
+- **Atomic stale recovery guard** — `Sync_Engine::process_queue()` now uses `wp_cache_add()` for the stale recovery mutex (was non-atomic `get_transient()`/`set_transient()` — two concurrent crons could both pass the check)
+- **Multisite settings cache scoping** — `Settings_Repository` internal cache is now keyed by `blog_id`. On multisite, `switch_to_blog()` previously returned cached settings from the originating site
+
+### Changed
+- **PHP 8.1+ first-class callable syntax** — Replaced 17 string-based callables (`'intval'`, `'strval'`) with first-class callable syntax (`intval( ... )`, `strval( ... )`) across 9 files. Better IDE support, type-safe, catches typos at parse time
+- **PHP 8.0+ `str_contains()`** — Replaced 2 `strpos() !== false` patterns with `str_contains()` in `GamiPress_Handler`
+
+### CI
+- **Composer audit** — Added `composer audit --no-dev` step to GitHub Actions CI pipeline to detect known vulnerabilities in dependencies
+
+### Tests
+- Updated `SyncQueueRepositoryTest` — 2 tests adapted: stale recovery now asserts `attempts` increment, cleanup test matches prepared `IN (%s, %s)` pattern
+- Removed duplicate `documents-classes.php` stub require in `tests/bootstrap.php`
+
 ## [3.6.0] - 2026-02-19
 
 ### Added

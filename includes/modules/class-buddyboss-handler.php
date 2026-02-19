@@ -117,7 +117,7 @@ class BuddyBoss_Handler {
 	 */
 	public function get_user_group_ids( int $user_id ): array {
 		$result = groups_get_user_groups( $user_id );
-		return array_map( 'intval', $result['groups'] );
+		return array_map( intval( ... ), $result['groups'] );
 	}
 
 	// ─── Save methods (pull) ─────────────────────────────────

@@ -77,7 +77,7 @@ class FluentCRM_Handler {
 			'first_name' => $row['first_name'] ?? '',
 			'last_name'  => $row['last_name'] ?? '',
 			'status'     => $row['status'] ?? 'subscribed',
-			'list_ids'   => array_map( 'intval', $list_ids ),
+			'list_ids'   => array_map( intval( ... ), $list_ids ),
 		];
 	}
 

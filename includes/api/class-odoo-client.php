@@ -258,7 +258,7 @@ class Odoo_Client {
 
 		$result = $this->call( $model, 'create', [ array_values( $values_list ) ] );
 
-		return is_array( $result ) ? array_map( 'intval', $result ) : [ (int) $result ];
+		return is_array( $result ) ? array_map( intval( ... ), $result ) : [ (int) $result ];
 	}
 
 	/**

@@ -207,7 +207,7 @@ class Field_Mapper {
 			return [];
 		}
 
-		return array_map( 'intval', $value );
+		return array_map( intval( ... ), $value );
 	}
 
 	/**
@@ -217,7 +217,7 @@ class Field_Mapper {
 	 * @return array The Odoo command array.
 	 */
 	public static function ids_to_many2many( array $ids ): array {
-		return [ [ 6, 0, array_map( 'intval', $ids ) ] ];
+		return [ [ 6, 0, array_map( intval( ... ), $ids ) ] ];
 	}
 
 	/**

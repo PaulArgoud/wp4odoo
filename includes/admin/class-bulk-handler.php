@@ -83,7 +83,7 @@ final class Bulk_Handler {
 				break;
 			}
 
-			$odoo_ids = array_map( 'intval', $odoo_ids );
+			$odoo_ids = array_map( intval( ... ), $odoo_ids );
 			$fetched  = count( $odoo_ids );
 			$map      = $this->entity_map->get_wp_ids_batch( 'woocommerce', 'product', $odoo_ids );
 
@@ -159,7 +159,7 @@ final class Bulk_Handler {
 				break;
 			}
 
-			$product_ids = array_map( 'intval', $product_ids );
+			$product_ids = array_map( intval( ... ), $product_ids );
 			$fetched     = count( $product_ids );
 			$map         = $this->entity_map->get_odoo_ids_batch( 'woocommerce', 'product', $product_ids );
 
