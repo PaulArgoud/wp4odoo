@@ -83,7 +83,13 @@ class Contact_Refiner {
 			try {
 				$country = $this->client()->search( 'res.country', [ [ 'code', '=', $code ] ], 0, 1 );
 			} catch ( \RuntimeException $e ) {
-				$this->logger->warning( 'Country code lookup failed.', [ 'code' => $code, 'error' => $e->getMessage() ] );
+				$this->logger->warning(
+					'Country code lookup failed.',
+					[
+						'code'  => $code,
+						'error' => $e->getMessage(),
+					]
+				);
 				$country = [];
 			}
 			$odoo_values['country_id'] = ! empty( $country ) ? (int) $country[0] : false;
@@ -99,7 +105,13 @@ class Contact_Refiner {
 						1
 					);
 				} catch ( \RuntimeException $e ) {
-					$this->logger->warning( 'State lookup failed.', [ 'state' => $state_name, 'error' => $e->getMessage() ] );
+					$this->logger->warning(
+						'State lookup failed.',
+						[
+							'state' => $state_name,
+							'error' => $e->getMessage(),
+						]
+					);
 					$state = [];
 				}
 				$odoo_values['state_id'] = ! empty( $state ) ? (int) $state[0] : false;
@@ -170,7 +182,15 @@ class Contact_Refiner {
 		try {
 			$records = $this->client()->read( $model, [ $id ], [ $field ] );
 		} catch ( \RuntimeException $e ) {
-			$this->logger->warning( 'Many2one field resolution failed.', [ 'model' => $model, 'field' => $field, 'id' => $id, 'error' => $e->getMessage() ] );
+			$this->logger->warning(
+				'Many2one field resolution failed.',
+				[
+					'model' => $model,
+					'field' => $field,
+					'id'    => $id,
+					'error' => $e->getMessage(),
+				]
+			);
 			return null;
 		}
 

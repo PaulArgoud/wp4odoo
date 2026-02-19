@@ -531,7 +531,7 @@ class EntityMapRepositoryTest extends TestCase {
 		// Entry near the eviction boundary: if the wp→odoo key was kept
 		// but the odoo→wp partner was evicted, the orphan cleanup should
 		// have removed both.
-		$mid_entry = 650;  // Should be in the evicted 25%.
+		$mid_entry = 300;  // Should be in the evicted 25% (entries 1–625 are evicted).
 		$this->wpdb->get_var_return = null;
 		$this->repo->get_odoo_id( 'crm', 'contact', $mid_entry );
 

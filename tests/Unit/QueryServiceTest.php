@@ -70,9 +70,10 @@ class QueryServiceTest extends TestCase {
 
 		$prepare = $this->get_calls( 'prepare' );
 		$this->assertNotEmpty( $prepare );
-		// Prepare args: [query, per_page, offset]
-		$this->assertSame( 30, $prepare[0]['args'][1] );
-		$this->assertSame( 0, $prepare[0]['args'][2] );
+		// prepare[0] = blog_id WHERE, prepare[1] = SELECT with LIMIT/OFFSET.
+		$last = end( $prepare );
+		$this->assertSame( 30, $last['args'][1] );
+		$this->assertSame( 0, $last['args'][2] );
 	}
 
 	public function test_get_queue_jobs_page_2_offset_is_per_page(): void {
@@ -83,9 +84,10 @@ class QueryServiceTest extends TestCase {
 
 		$prepare = $this->get_calls( 'prepare' );
 		$this->assertNotEmpty( $prepare );
-		// Offset should be (2-1) * 30 = 30
-		$this->assertSame( 30, $prepare[0]['args'][1] );
-		$this->assertSame( 30, $prepare[0]['args'][2] );
+		// Last prepare = SELECT with LIMIT/OFFSET. Offset should be (2-1) * 30 = 30.
+		$last = end( $prepare );
+		$this->assertSame( 30, $last['args'][1] );
+		$this->assertSame( 30, $last['args'][2] );
 	}
 
 	public function test_get_queue_jobs_with_status_filter_adds_where(): void {
@@ -95,12 +97,10 @@ class QueryServiceTest extends TestCase {
 		$this->service->get_queue_jobs( 1, 30, 'failed' );
 
 		$prepare = $this->get_calls( 'prepare' );
-		$this->assertCount( 2, $prepare );
-		// First prepare call is for WHERE status = %s
-		$this->assertStringContainsString( 'WHERE status = %s', $prepare[0]['args'][0] );
-		$this->assertSame( 'failed', $prepare[0]['args'][1] );
-		// Second prepare call is for SELECT with WHERE
-		$this->assertStringContainsString( 'WHERE status = %s', $prepare[1]['args'][0] );
+		// prepare[0] = blog_id, prepare[1] = status, prepare[2] = SELECT.
+		$this->assertCount( 3, $prepare );
+		$this->assertStringContainsString( 'AND status = %s', $prepare[1]['args'][0] );
+		$this->assertSame( 'failed', $prepare[1]['args'][1] );
 	}
 
 	public function test_get_queue_jobs_without_status_has_no_where(): void {
@@ -112,8 +112,9 @@ class QueryServiceTest extends TestCase {
 		$get_var = $this->get_calls( 'get_var' );
 		$this->assertNotEmpty( $get_var );
 		$query = $get_var[0]['args'][0];
-		// Query should not contain WHERE clause
-		$this->assertStringNotContainsString( 'WHERE', $query );
+		// Query should have blog_id WHERE but no status filter.
+		$this->assertStringContainsString( 'WHERE', $query );
+		$this->assertStringNotContainsString( 'status', $query );
 	}
 
 	// ─── get_log_entries() ─────────────────────────────────
@@ -194,11 +195,14 @@ class QueryServiceTest extends TestCase {
 
 		$this->service->get_log_entries( [], 1, 50 );
 
-		$get_var = $this->get_calls( 'get_var' );
-		$this->assertNotEmpty( $get_var );
-		$query = $get_var[0]['args'][0];
-		// Query should not contain WHERE clause
-		$this->assertStringNotContainsString( 'WHERE', $query );
+		$prepare = $this->get_calls( 'prepare' );
+		$this->assertNotEmpty( $prepare );
+		$query = $prepare[0]['args'][0];
+		// Query should have blog_id WHERE but no filter-specific clauses.
+		$this->assertStringContainsString( 'WHERE', $query );
+		$this->assertStringNotContainsString( 'level', $query );
+		$this->assertStringNotContainsString( 'module', $query );
+		$this->assertStringNotContainsString( 'created_at', $query );
 	}
 
 	public function test_get_log_entries_pages_calculation_with_zero_total(): void {
