@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **CI integration tests flaky** — Added retry with backoff (3 attempts, 15/30/45s) to `wp-env start` step to handle Docker Hub 429 rate limiting
 - **CI badge not displaying** — Fixed repository name in badge URL (`wordpress-for-odoo` → `wp4odoo`) in README
+- **Codecov token passing** — Moved `CODECOV_TOKEN` from `env` to `with.token` input, matching `codecov-action@v4` requirements
 
 ## [3.9.1] - 2026-02-23
 
