@@ -119,7 +119,7 @@ class Settings_Repository {
 	/**
 	 * Get connection settings merged with defaults.
 	 *
-	 * @return array
+	 * @return array<string, mixed>
 	 */
 	public function get_connection(): array {
 		$this->register_invalidation_hooks();
@@ -184,7 +184,7 @@ class Settings_Repository {
 	/**
 	 * Get sync settings merged with defaults.
 	 *
-	 * @return array
+	 * @return array<string, mixed>
 	 */
 	public function get_sync_settings(): array {
 		$this->register_invalidation_hooks();
@@ -286,7 +286,7 @@ class Settings_Repository {
 	/**
 	 * Get log settings merged with defaults.
 	 *
-	 * @return array
+	 * @return array<string, mixed>
 	 */
 	public function get_log_settings(): array {
 		$this->register_invalidation_hooks();
@@ -402,7 +402,7 @@ class Settings_Repository {
 	 * per request on sites with many modules.
 	 *
 	 * @param string $id Module identifier.
-	 * @return array
+	 * @return array<string, mixed>
 	 */
 	public function get_module_settings( string $id ): array {
 		$blog_id   = (int) get_current_blog_id();
@@ -436,7 +436,7 @@ class Settings_Repository {
 	 * Get a module's custom field mappings.
 	 *
 	 * @param string $id Module identifier.
-	 * @return array
+	 * @return array<string, mixed>
 	 */
 	public function get_module_mappings( string $id ): array {
 		$stored = get_option( 'wp4odoo_module_' . $id . '_mappings', [] );
@@ -558,7 +558,7 @@ class Settings_Repository {
 	/**
 	 * Get connection defaults.
 	 *
-	 * @return array
+	 * @return array<string, mixed>
 	 */
 	public static function connection_defaults(): array {
 		return self::DEFAULTS_CONNECTION;
@@ -567,7 +567,7 @@ class Settings_Repository {
 	/**
 	 * Get sync defaults.
 	 *
-	 * @return array
+	 * @return array<string, mixed>
 	 */
 	public static function sync_defaults(): array {
 		return self::DEFAULTS_SYNC;
@@ -576,7 +576,7 @@ class Settings_Repository {
 	/**
 	 * Get log defaults.
 	 *
-	 * @return array
+	 * @return array<string, mixed>
 	 */
 	public static function log_defaults(): array {
 		return self::DEFAULTS_LOG;

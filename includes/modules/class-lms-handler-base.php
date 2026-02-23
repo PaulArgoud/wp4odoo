@@ -37,6 +37,54 @@ abstract class LMS_Handler_Base {
 	}
 
 	/**
+	 * Get the WordPress post type for courses.
+	 *
+	 * @return string Post type slug (e.g. 'sfwd-courses', 'course').
+	 */
+	abstract protected function get_course_post_type(): string;
+
+	/**
+	 * Get the course price from plugin-specific storage.
+	 *
+	 * @param int $course_id Course post ID.
+	 * @return float Course price.
+	 */
+	abstract protected function get_course_price( int $course_id ): float;
+
+	/**
+	 * Get the LMS display label for log messages.
+	 *
+	 * @return string Label (e.g. 'LearnDash', 'Sensei').
+	 */
+	abstract protected function get_lms_label(): string;
+
+	// ─── Load course (template method) ───────────────────
+
+	/**
+	 * Load a course as an Odoo service product.
+	 *
+	 * Template method: validates post type via get_course_post_type(),
+	 * loads price via get_course_price(), logs via get_lms_label().
+	 *
+	 * @param int $course_id Course post ID.
+	 * @return array<string, mixed> Course data for field mapping, or empty if not found.
+	 */
+	public function load_course( int $course_id ): array {
+		$post = get_post( $course_id );
+		if ( ! $post || $this->get_course_post_type() !== $post->post_type ) {
+			$this->logger->warning( $this->get_lms_label() . ' course not found.', [ 'course_id' => $course_id ] );
+			return [];
+		}
+
+		return [
+			'title'       => $post->post_title,
+			'description' => wp_strip_all_tags( $post->post_content ),
+			'list_price'  => $this->get_course_price( $course_id ),
+			'type'        => 'service',
+		];
+	}
+
+	/**
 	 * Build an Odoo account.move (invoice) from LMS data.
 	 *
 	 * Shared logic for LearnDash transactions and LifterLMS orders:

@@ -5,6 +5,25 @@ namespace WP4Odoo\Tests\Unit;
 
 use WP4Odoo\Tests\Module_Test_Case;
 use WP4Odoo\Modules\LMS_Module_Base;
+use WP4Odoo\Modules\LMS_Handler_Base;
+
+/**
+ * Minimal LMS handler stub for LMS_Module_Base tests.
+ */
+class LMSModuleBaseTestHandler extends LMS_Handler_Base {
+
+	protected function get_course_post_type(): string {
+		return 'test-course';
+	}
+
+	protected function get_course_price( int $course_id ): float {
+		return 0.0;
+	}
+
+	protected function get_lms_label(): string {
+		return 'TestLMS';
+	}
+}
 
 /**
  * Concrete stub to test the abstract LMS_Module_Base.
@@ -13,6 +32,10 @@ use WP4Odoo\Modules\LMS_Module_Base;
  * via a public proxy for unit testing.
  */
 class LMSModuleBaseTestModule extends LMS_Module_Base {
+
+	protected function get_lms_handler(): LMS_Handler_Base {
+		return new LMSModuleBaseTestHandler( $this->logger );
+	}
 
 	public function __construct() {
 		parent::__construct(

@@ -97,6 +97,13 @@ class TutorLMS_Module extends LMS_Module_Base {
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_lms_handler(): LMS_Handler_Base {
+		return $this->handler;
+	}
+
+	/**
 	 * Boot the module: register TutorLMS hooks.
 	 *
 	 * @return void
@@ -395,22 +402,6 @@ class TutorLMS_Module extends LMS_Module_Base {
 		$data['order_id'] = $order_id;
 
 		return $this->handler->format_invoice( $data, $product_odoo_id, $partner_id, $auto_post );
-	}
-
-	/**
-	 * Load and resolve an enrollment with Odoo references.
-	 *
-	 * Delegates to LMS_Module_Base::load_enrollment_from_synthetic().
-	 *
-	 * @param int $synthetic_id Synthetic enrollment ID (user_id * 1M + course_id).
-	 * @return array<string, mixed>
-	 */
-	private function load_enrollment_data( int $synthetic_id ): array {
-		return $this->load_enrollment_from_synthetic(
-			$synthetic_id,
-			[ $this->handler, 'load_enrollment' ],
-			[ $this->handler, 'format_sale_order' ]
-		);
 	}
 
 	// ─── Product sync ──────────────────────────────────────

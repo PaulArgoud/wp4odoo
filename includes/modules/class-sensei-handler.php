@@ -21,29 +21,25 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Sensei_Handler extends LMS_Handler_Base {
 
-	// ─── Load course ───────────────────────────────────────
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_course_post_type(): string {
+		return 'course';
+	}
 
 	/**
-	 * Load a Sensei course.
-	 *
-	 * @param int $course_id Course post ID (CPT course).
-	 * @return array<string, mixed> Course data, or empty if not found.
+	 * {@inheritDoc}
 	 */
-	public function load_course( int $course_id ): array {
-		$post = get_post( $course_id );
-		if ( ! $post || 'course' !== $post->post_type ) {
-			$this->logger->warning( 'Sensei course not found.', [ 'course_id' => $course_id ] );
-			return [];
-		}
+	protected function get_course_price( int $course_id ): float {
+		return (float) get_post_meta( $course_id, '_course_price', true );
+	}
 
-		$price = (float) get_post_meta( $course_id, '_course_price', true );
-
-		return [
-			'title'       => $post->post_title,
-			'description' => wp_strip_all_tags( $post->post_content ),
-			'list_price'  => $price,
-			'type'        => 'service',
-		];
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_lms_label(): string {
+		return 'Sensei';
 	}
 
 	// ─── Load order ────────────────────────────────────────

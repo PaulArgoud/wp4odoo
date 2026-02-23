@@ -210,7 +210,7 @@ abstract class Module_Base {
 	/**
 	 * Get default settings for this module.
 	 *
-	 * @return array
+	 * @return array<string, mixed>
 	 */
 	abstract public function get_default_settings(): array;
 
@@ -365,7 +365,7 @@ abstract class Module_Base {
 	 *
 	 * @param string $entity_type Entity type.
 	 * @param int    $wp_id       WordPress ID.
-	 * @return array
+	 * @return array<string, mixed>
 	 */
 	protected function load_wp_data( string $entity_type, int $wp_id ): array {
 		return [];
@@ -636,7 +636,7 @@ abstract class Module_Base {
 	/**
 	 * Get module settings from wp_options.
 	 *
-	 * @return array
+	 * @return array<string, mixed>
 	 */
 	public function get_settings(): array {
 		return array_merge(

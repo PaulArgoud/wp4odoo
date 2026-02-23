@@ -216,7 +216,7 @@ Integration tests require Docker.
 WP4Odoo is free and open source. If it saves you time or money, consider throwing a few bucks my way — it keeps the lights on and the commits flowing.
 
 [![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-♥-ea4aaa?logo=github)](https://github.com/sponsors/PaulArgoud)
-[![Bitcoin](https://img.shields.io/badge/Bitcoin-₿-FF9900?logo=bitcoin&logoColor=white)](bitcoin:bc1qyytnc6xzhfgem7anh939aqmq6n5zzyshawwr0m)
+[![Bitcoin](https://img.shields.io/badge/Bitcoin-₿-FF9900?logo=bitcoin&logoColor=white)](https://mempool.space/address/bc1qyytnc6xzhfgem7anh939aqmq6n5zzyshawwr0m)
 [![PayPal](https://img.shields.io/badge/PayPal-💸-0070BA?logo=paypal)](https://paypal.me/paulargoud)
 
 ## License

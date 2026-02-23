@@ -23,29 +23,26 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class LearnDash_Handler extends LMS_Handler_Base {
 
-	// ─── Load course ───────────────────────────────────────
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_course_post_type(): string {
+		return 'sfwd-courses';
+	}
 
 	/**
-	 * Load a LearnDash course.
-	 *
-	 * @param int $course_id Course post ID (CPT sfwd-courses).
-	 * @return array<string, mixed> Course data for field mapping, or empty if not found.
+	 * {@inheritDoc}
 	 */
-	public function load_course( int $course_id ): array {
-		$post = get_post( $course_id );
-		if ( ! $post || 'sfwd-courses' !== $post->post_type ) {
-			$this->logger->warning( 'LearnDash course not found.', [ 'course_id' => $course_id ] );
-			return [];
-		}
-
+	protected function get_course_price( int $course_id ): float {
 		$price_data = learndash_get_course_price( $course_id );
+		return (float) $price_data['price'];
+	}
 
-		return [
-			'title'       => $post->post_title,
-			'description' => wp_strip_all_tags( $post->post_content ),
-			'list_price'  => (float) $price_data['price'],
-			'type'        => 'service',
-		];
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_lms_label(): string {
+		return 'LearnDash';
 	}
 
 	// ─── Load group ────────────────────────────────────────

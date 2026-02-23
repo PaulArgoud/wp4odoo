@@ -102,6 +102,13 @@ class Sensei_Module extends LMS_Module_Base {
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	protected function get_lms_handler(): LMS_Handler_Base {
+		return $this->handler;
+	}
+
+	/**
 	 * Boot the module: register Sensei hooks.
 	 *
 	 * @return void
@@ -354,20 +361,6 @@ class Sensei_Module extends LMS_Module_Base {
 		$auto_post = ! empty( $settings['auto_post_invoices'] );
 
 		return $this->handler->format_invoice( $data, $product_odoo_id, $partner_id, $auto_post );
-	}
-
-	/**
-	 * Load and resolve an enrollment with Odoo references.
-	 *
-	 * @param int $synthetic_id Synthetic enrollment ID (user_id * 1M + course_id).
-	 * @return array<string, mixed>
-	 */
-	private function load_enrollment_data( int $synthetic_id ): array {
-		return $this->load_enrollment_from_synthetic(
-			$synthetic_id,
-			[ $this->handler, 'load_enrollment' ],
-			[ $this->handler, 'format_sale_order' ]
-		);
 	}
 
 	// ─── Product sync ──────────────────────────────────────

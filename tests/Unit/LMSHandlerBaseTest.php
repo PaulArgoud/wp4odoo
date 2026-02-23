@@ -12,6 +12,18 @@ use PHPUnit\Framework\TestCase;
  */
 class ConcreteLMSHandler extends LMS_Handler_Base {
 
+	protected function get_course_post_type(): string {
+		return 'test-course';
+	}
+
+	protected function get_course_price( int $course_id ): float {
+		return (float) get_post_meta( $course_id, '_test_price', true );
+	}
+
+	protected function get_lms_label(): string {
+		return 'TestLMS';
+	}
+
 	/**
 	 * Expose the protected logger for assertions.
 	 *

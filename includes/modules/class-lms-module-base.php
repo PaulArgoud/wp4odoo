@@ -23,6 +23,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 abstract class LMS_Module_Base extends Module_Base {
 
 	/**
+	 * Get the LMS handler instance.
+	 *
+	 * @return LMS_Handler_Base
+	 */
+	abstract protected function get_lms_handler(): LMS_Handler_Base;
+
+	/**
+	 * Load enrollment data for a synthetic enrollment ID.
+	 *
+	 * Delegates to the shared enrollment pipeline in
+	 * load_enrollment_from_synthetic() using the handler's
+	 * load_enrollment and format_sale_order methods.
+	 *
+	 * @param int $synthetic_id Synthetic enrollment ID.
+	 * @return array<string, mixed> Formatted sale order data, or empty on failure.
+	 */
+	protected function load_enrollment_data( int $synthetic_id ): array {
+		$handler = $this->get_lms_handler();
+		return $this->load_enrollment_from_synthetic(
+			$synthetic_id,
+			[ $handler, 'load_enrollment' ],
+			[ $handler, 'format_sale_order' ]
+		);
+	}
+
+	/**
 	 * Load and resolve an enrollment with Odoo references.
 	 *
 	 * Decodes the synthetic ID (user_id × 1M + course_id), loads
