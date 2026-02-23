@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.9.2] - Unreleased
 
+### Fixed
+- **CI integration tests flaky** — Added retry with backoff (3 attempts, 15/30/45s) to `wp-env start` step to handle Docker Hub 429 rate limiting
+
 ## [3.9.1] - 2026-02-23
 
 ### Fixed

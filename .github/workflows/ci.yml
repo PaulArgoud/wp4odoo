@@ -84,7 +84,12 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: Start wp-env
-        run: npx wp-env start
+        run: |
+          for i in 1 2 3; do
+            npx wp-env start && break
+            echo "Attempt $i failed (likely rate-limited), retrying in $((i * 15))s…"
+            sleep $((i * 15))
+          done
 
       - name: Run integration tests
         run: npm run test:integration
