@@ -2,14 +2,11 @@
 /**
  * WP Crowdfunding (Themeum) stubs for unit tests.
  *
- * Defines the detection function used by the module.
+ * Defines the detection constant used by the module.
  *
  * @package WP4Odoo\Tests
  */
 
-if ( ! function_exists( 'wpneo_crowdfunding_init' ) ) {
-	/**
-	 * Stub for WP Crowdfunding init function (detection hook).
-	 */
-	function wpneo_crowdfunding_init(): void {}
+if ( ! defined( 'WPCF_VERSION' ) ) {
+	define( 'WPCF_VERSION', '2.1.17' );
 }

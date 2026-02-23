@@ -159,9 +159,9 @@ class CrowdfundingModuleTest extends Module_Test_Case {
 			'description' => '',
 		];
 		$GLOBALS['_wp_post_meta'][100] = [
-			'_wpneo_funding_goal'           => '',
-			'_wpneo_funding_end_date'       => '',
-			'_wpneo_funding_minimum_amount' => '',
+			'_nf_funding_goal'           => '',
+			'_nf_duration_end'       => '',
+			'wpneo_funding_minimum_price' => '',
 		];
 
 		$data = $this->handler->load_campaign( 100 );
@@ -172,7 +172,7 @@ class CrowdfundingModuleTest extends Module_Test_Case {
 	// ─── Handler: is_crowdfunding ───────────────────────────
 
 	public function test_handler_is_crowdfunding_true(): void {
-		$GLOBALS['_wp_post_meta'][100] = [ '_wpneo_funding_goal' => '5000' ];
+		$GLOBALS['_wp_post_meta'][100] = [ '_nf_funding_goal' => '5000' ];
 
 		$this->assertTrue( $this->handler->is_crowdfunding( 100 ) );
 	}
@@ -217,9 +217,9 @@ class CrowdfundingModuleTest extends Module_Test_Case {
 			'description' => 'Help us plant trees.',
 		];
 		$GLOBALS['_wp_post_meta'][ $product_id ] = [
-			'_wpneo_funding_goal'           => '10000',
-			'_wpneo_funding_end_date'       => '2025-12-31',
-			'_wpneo_funding_minimum_amount' => '10',
+			'_nf_funding_goal'           => '10000',
+			'_nf_duration_end'       => '2025-12-31',
+			'wpneo_funding_minimum_price' => '10',
 		];
 	}
 }

@@ -56,9 +56,9 @@ class CrowdfundingHandlerTest extends Module_Test_Case {
 	 */
 	private function set_crowdfunding_meta( int $id, float $goal = 5000.0, string $end_date = '2026-12-31', float $min_amount = 10.0 ): void {
 		$GLOBALS['_wp_post_meta'][ $id ] = [
-			'_wpneo_funding_goal'           => (string) $goal,
-			'_wpneo_funding_end_date'       => $end_date,
-			'_wpneo_funding_minimum_amount' => (string) $min_amount,
+			'_nf_funding_goal'           => (string) $goal,
+			'_nf_duration_end'       => $end_date,
+			'wpneo_funding_minimum_price' => (string) $min_amount,
 		];
 	}
 
@@ -141,7 +141,7 @@ class CrowdfundingHandlerTest extends Module_Test_Case {
 
 	public function test_is_crowdfunding_true_when_goal_set(): void {
 		$GLOBALS['_wp_post_meta'][10] = [
-			'_wpneo_funding_goal' => '5000',
+			'_nf_funding_goal' => '5000',
 		];
 
 		$this->assertTrue( $this->handler->is_crowdfunding( 10 ) );
@@ -153,7 +153,7 @@ class CrowdfundingHandlerTest extends Module_Test_Case {
 
 	public function test_is_crowdfunding_false_when_goal_empty(): void {
 		$GLOBALS['_wp_post_meta'][10] = [
-			'_wpneo_funding_goal' => '',
+			'_nf_funding_goal' => '',
 		];
 
 		$this->assertFalse( $this->handler->is_crowdfunding( 10 ) );
@@ -161,7 +161,7 @@ class CrowdfundingHandlerTest extends Module_Test_Case {
 
 	public function test_is_crowdfunding_true_when_goal_zero_string(): void {
 		$GLOBALS['_wp_post_meta'][10] = [
-			'_wpneo_funding_goal' => '0',
+			'_nf_funding_goal' => '0',
 		];
 
 		$this->assertTrue( $this->handler->is_crowdfunding( 10 ) );

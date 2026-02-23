@@ -4,7 +4,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: WP4Odoo 3.9.5\n"
+"Project-Id-Version: WP4Odoo 3.9.1\n"
 "Report-Msgid-Bugs-To: paul@argoud.net\n"
 "POT-Creation-Date: 2026-02-19 21:04+0100\n"
 "PO-Revision-Date: 2026-02-15 12:00+0100\n"

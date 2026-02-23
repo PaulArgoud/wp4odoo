@@ -285,8 +285,8 @@ return [
 
 	'crowdfunding'      => [
 		'classes'   => [],
-		'functions' => [ 'wpneo_crowdfunding_init' ],
-		'constants' => [],
+		'functions' => [],
+		'constants' => [ 'WPCF_VERSION' ],
 	],
 
 	// ─── Marketplace ─────────────────────────────────────

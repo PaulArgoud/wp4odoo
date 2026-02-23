@@ -214,8 +214,8 @@ WordPress For Odoo/
 │   │   ├── class-surecart-module.php        # SureCart: ecommerce exclusive group, bidirectional products/orders/subscriptions
 │   │   │
 │   │   ├── # ─── E-Commerce (Crowdfunding + Ecwid + ShopWP) ─
-│   │   ├── trait-crowdfunding-hooks.php      # Crowdfunding: on_campaign_save (filters by wpneo_* meta)
-│   │   ├── class-crowdfunding-handler.php    # Crowdfunding: WC product + wpneo_* meta, funding description
+│   │   ├── trait-crowdfunding-hooks.php      # Crowdfunding: on_campaign_save (filters by _nf_* meta)
+│   │   ├── class-crowdfunding-handler.php    # Crowdfunding: WC product + _nf_* meta, funding description
 │   │   ├── class-crowdfunding-module.php     # Crowdfunding: independent (coexists with WC), single entity
 │   │   ├── trait-ecwid-cron-hooks.php        # Ecwid: WP-Cron polling, SHA-256 hash-based change detection
 │   │   ├── class-ecwid-handler.php           # Ecwid: REST API fetch, product/order data transformation
@@ -431,7 +431,7 @@ WordPress For Odoo/
 │   │   ├── wc-bookings-classes.php     # WC_Booking, WC_Product_Booking
 │   │   ├── sprout-invoices-classes.php  # SI_Post_Type, SI_Invoice, SI_Payment
 │   │   ├── wp-invoice-classes.php       # WPI_Invoice
-│   │   ├── crowdfunding-classes.php     # wpneo_crowdfunding_init()
+│   │   ├── crowdfunding-classes.php     # WPCF_VERSION constant
 │   │   ├── ecwid-classes.php            # ECWID_PLUGIN_DIR constant
 │   │   ├── shopwp-classes.php           # SHOPWP_PLUGIN_DIR constant
 │   │   ├── job-manager-classes.php     # WP_Job_Manager stubs
@@ -1881,9 +1881,9 @@ All user inputs are sanitized with:
 
 **Key features:**
 - Push-only (WP → Odoo) — campaigns only (pledges are WC orders handled by WC module)
-- Requires WP Crowdfunding; `boot()` guards with `function_exists('wpneo_crowdfunding_init')`
+- Requires WP Crowdfunding; `boot()` guards with `defined('WPCF_VERSION')`
 - Independent module (no exclusive group) — coexists with WooCommerce
-- Crowdfunding detection via `_wpneo_funding_goal` meta key
+- Crowdfunding detection via `_nf_funding_goal` meta key
 - Funding goal as `list_price`, structured description with funding info (goal, end date, min pledge)
 - Hook: `save_post_product` filtered by crowdfunding meta
 

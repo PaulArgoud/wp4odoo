@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * WP Crowdfunding Module — push crowdfunding campaigns to Odoo.
  *
- * Syncs Themeum WP Crowdfunding campaigns (WC products with wpneo_* meta)
+ * Syncs Themeum WP Crowdfunding campaigns (WC products with _nf_* meta)
  * as Odoo service products (product.product). Push-only (WP → Odoo).
  *
  * Campaigns are WooCommerce products with additional crowdfunding metadata
@@ -30,8 +30,8 @@ class Crowdfunding_Module extends Module_Base {
 
 	use Crowdfunding_Hooks;
 
-	protected const PLUGIN_MIN_VERSION  = '4.0';
-	protected const PLUGIN_TESTED_UP_TO = '4.1';
+	protected const PLUGIN_MIN_VERSION  = '2.1';
+	protected const PLUGIN_TESTED_UP_TO = '2.1';
 
 	/**
 	 * Sync direction: push-only (WP → Odoo).
@@ -90,7 +90,7 @@ class Crowdfunding_Module extends Module_Base {
 	 * @return void
 	 */
 	public function boot(): void {
-		if ( ! function_exists( 'wpneo_crowdfunding_init' ) ) {
+		if ( ! defined( 'WPCF_VERSION' ) ) {
 			$this->logger->warning( __( 'WP Crowdfunding module enabled but WP Crowdfunding is not active.', 'wp4odoo' ) );
 			return;
 		}
@@ -134,14 +134,14 @@ class Crowdfunding_Module extends Module_Base {
 	 * @return array{available: bool, notices: array<array{type: string, message: string}>}
 	 */
 	public function get_dependency_status(): array {
-		return $this->check_dependency( function_exists( 'wpneo_crowdfunding_init' ), 'WP Crowdfunding' );
+		return $this->check_dependency( defined( 'WPCF_VERSION' ), 'WP Crowdfunding' );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	protected function get_plugin_version(): string {
-		return defined( 'STARTER_VERSION' ) ? STARTER_VERSION : '';
+		return defined( 'WPCF_VERSION' ) ? WPCF_VERSION : '';
 	}
 
 	/**

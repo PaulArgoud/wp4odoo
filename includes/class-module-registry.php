@@ -197,7 +197,7 @@ class Module_Registry {
 			[ 'surecart', Modules\SureCart_Module::class, fn() => defined( 'SURECART_VERSION' ) ],
 			[ 'ecwid', Modules\Ecwid_Module::class, fn() => defined( 'ECWID_PLUGIN_DIR' ) ],
 			[ 'shopwp', Modules\ShopWP_Module::class, fn() => defined( 'SHOPWP_PLUGIN_DIR' ) ],
-			[ 'crowdfunding', Modules\Crowdfunding_Module::class, fn() => function_exists( 'wpneo_crowdfunding_init' ) ],
+			[ 'crowdfunding', Modules\Crowdfunding_Module::class, fn() => defined( 'WPCF_VERSION' ) ],
 
 			// Marketplace group.
 			[ 'dokan', Modules\Dokan_Module::class, fn() => defined( 'DOKAN_PLUGIN_VERSION' ) ],

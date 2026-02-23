@@ -622,8 +622,8 @@ if ( ! class_exists( 'WPI_Invoice' ) ) {
 
 // ─── WP Crowdfunding stubs ──────────────────────────────
 
-if ( ! function_exists( 'wpneo_crowdfunding_init' ) ) {
-	function wpneo_crowdfunding_init(): void {}
+if ( ! defined( 'WPCF_VERSION' ) ) {
+	define( 'WPCF_VERSION', '2.1.17' );
 }
 
 // ─── Ecwid stubs ────────────────────────────────────────

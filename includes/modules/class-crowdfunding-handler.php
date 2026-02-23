@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * WP Crowdfunding Handler — data access for crowdfunding campaigns.
  *
- * Loads WC product data + crowdfunding meta (wpneo_*) and formats it
+ * Loads WC product data + crowdfunding meta (_nf_*) and formats it
  * for Odoo product.product (service type).
  *
  * Called by Crowdfunding_Module via its load_wp_data dispatch.
@@ -56,9 +56,9 @@ class Crowdfunding_Handler {
 			return [];
 		}
 
-		$funding_goal = (float) get_post_meta( $product_id, '_wpneo_funding_goal', true );
-		$end_date     = (string) get_post_meta( $product_id, '_wpneo_funding_end_date', true );
-		$min_amount   = (float) get_post_meta( $product_id, '_wpneo_funding_minimum_amount', true );
+		$funding_goal = (float) get_post_meta( $product_id, '_nf_funding_goal', true );
+		$end_date     = (string) get_post_meta( $product_id, '_nf_duration_end', true );
+		$min_amount   = (float) get_post_meta( $product_id, 'wpneo_funding_minimum_price', true );
 
 		return [
 			'campaign_name' => $product->get_name(),
@@ -73,13 +73,13 @@ class Crowdfunding_Handler {
 	/**
 	 * Check if a product is a crowdfunding campaign.
 	 *
-	 * Detects by the presence of the _wpneo_funding_goal meta key.
+	 * Detects by the presence of the _nf_funding_goal meta key.
 	 *
 	 * @param int $product_id WC product ID.
 	 * @return bool
 	 */
 	public function is_crowdfunding( int $product_id ): bool {
-		$goal = get_post_meta( $product_id, '_wpneo_funding_goal', true );
+		$goal = get_post_meta( $product_id, '_nf_funding_goal', true );
 		return '' !== $goal && false !== $goal;
 	}
 
