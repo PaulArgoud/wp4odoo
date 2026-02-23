@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.9.1] - Unreleased
+## [3.9.2] - Unreleased
+
+## [3.9.1] - 2026-02-23
 
 ### Fixed
 - **WP Crowdfunding compatibility** — Updated module detection from `wpneo_crowdfunding_init()` function to `WPCF_VERSION` constant, meta keys from `_wpneo_*` to `_nf_*` prefix, and version constant from `STARTER_VERSION` to `WPCF_VERSION`, matching WP Crowdfunding 2.x API surface
