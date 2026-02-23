@@ -1,6 +1,6 @@
 # WP4Odoo — WordPress For Odoo
 
-[![CI](https://github.com/PaulArgoud/wordpress-for-odoo/actions/workflows/ci.yml/badge.svg)](https://github.com/PaulArgoud/wordpress-for-odoo/actions/workflows/ci.yml)
+[![CI](https://github.com/PaulArgoud/wp4odoo/actions/workflows/ci.yml/badge.svg)](https://github.com/PaulArgoud/wp4odoo/actions/workflows/ci.yml)
 ![PHP 8.2+](https://img.shields.io/badge/PHP-8.2%2B-8892BF?logo=php&logoColor=white)
 ![MySQL 8.0+](https://img.shields.io/badge/MySQL-8.0%2B-4479A1?logo=mysql&logoColor=white)
 ![MariaDB 10.5+](https://img.shields.io/badge/MariaDB-10.5%2B-003545?logo=mariadb&logoColor=white)
