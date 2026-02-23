@@ -342,7 +342,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **WC Bookings silent push failure** — Entity type `'product'` was not declared in WC_Bookings_Module's `$odoo_models` (only `'service'` and `'booking'`), causing every booking product push to silently fail. Changed to `'service'`
-- **Exclusive group mismatch** — WooCommerce, Sales, and EDD modules used `'commerce'` as their exclusive group while CLAUDE.md and ARCHITECTURE.md documented `'ecommerce'`. Unified to `'ecommerce'`
+- **Exclusive group mismatch** — WooCommerce, Sales, and EDD modules used `'commerce'` as their exclusive group while ARCHITECTURE.md documented `'ecommerce'`. Unified to `'ecommerce'`
 - **Batch creates double failure** — `Sync_Engine::process_batch_creates()` added jobs to `$claimed_jobs` before JSON validation, causing `handle_failure()` to be called twice (once for invalid JSON, once for batch error). Moved append after validation
 - **SSRF bypass via DNS failure** — `is_safe_url()` returned `true` when `gethostbyname()` failed (returns the input on DNS failure), allowing URLs with unresolvable hostnames to bypass SSRF protection. Now returns `false`
 - **Queue health metrics cache leak** — `invalidate_stats_cache()` cleared `wp4odoo_queue_stats` but not `wp4odoo_queue_health`, leaving stale health metrics
