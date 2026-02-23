@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **WP Crowdfunding compatibility** — Updated module detection from `wpneo_crowdfunding_init()` function to `WPCF_VERSION` constant, meta keys from `_wpneo_*` to `_nf_*` prefix, and version constant from `STARTER_VERSION` to `WPCF_VERSION`, matching WP Crowdfunding 2.x API surface
+- **Unescaped admin outputs** — Fixed 4 unescaped outputs in admin views (`tab-health.php`, `tab-modules.php`, `partial-checklist.php`)
+- **PHPDoc non-generic arrays** — Fixed 5 `@return array` → `@return array<string, mixed>` in EDD/WC handler methods
 
 ### Changed
 - **Marketplace base classes** — Extracted shared logic from Dokan, WCFM, and WC Vendors into `Marketplace_Module_Base` and `Marketplace_Handler_Base`, eliminating ~477 lines of duplicated code across 6 module/handler files
@@ -16,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **LMS module shared enrollment** — Moved identical `load_enrollment_data()` from 5 LMS modules into `LMS_Module_Base` via `get_lms_handler()` abstract (~35 lines)
 - **Test stub consolidation** — Consolidated 14 single-constant stub files into `constants-only.php` and removed 4 empty stubs, reducing `bootstrap.php` requires from 68 to 50
 - **PHPDoc generics** — Added `array<string, mixed>` return types to 11 methods in `Module_Base` and `Settings_Repository`
+- **Events handler base class** — Extracted shared `format_event()`, `parse_event_from_odoo()`, and `format_attendance()` from 3 event handlers into `Events_Handler_Base` abstract base
+- **Booking handler base extended** — `Jet_Booking_Handler` and `Jet_Appointments_Handler` now extend `Booking_Handler_Base` (previously standalone), bringing handler base coverage to 5 booking handlers
+- **Events test base** — New `EventsModuleTestBase` abstract test base for 3 event module tests (18 shared tests)
+- **Booking test base** — New `BookingModuleTestBase` abstract test base for 6 booking module tests (16 shared tests)
+- **WC handler cleanup** — Removed unused `$client_fn` property from `WC_Shipping_Handler` and `WC_Inventory_Handler`
 
 ## [3.9.0] - 2026-02-19
 

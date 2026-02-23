@@ -111,7 +111,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<?php endif; ?>
 
 			<?php if ( ! empty( $settings_fields ) ) : ?>
-				<div class="wp4odoo-module-settings" style="<?php echo $enabled ? '' : 'display:none;'; ?>">
+				<div class="wp4odoo-module-settings" style="<?php echo esc_attr( $enabled ? '' : 'display:none;' ); ?>">
 					<hr />
 					<table class="form-table wp4odoo-module-settings-table">
 						<?php foreach ( $settings_fields as $field_key => $field ) : ?>

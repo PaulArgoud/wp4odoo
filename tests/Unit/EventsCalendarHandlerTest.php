@@ -396,7 +396,7 @@ class EventsCalendarHandlerTest extends TestCase {
 		$this->assertSame( '2026-07-01 10:00:00', $result['start_date'] );
 		$this->assertSame( '2026-07-01 18:00:00', $result['end_date'] );
 		$this->assertSame( 'America/New_York', $result['timezone'] );
-		$this->assertFalse( $result['all_day'] );
+		$this->assertArrayNotHasKey( 'all_day', $result );
 		$this->assertSame( '<p>From Odoo</p>', $result['description'] );
 	}
 
@@ -428,7 +428,7 @@ class EventsCalendarHandlerTest extends TestCase {
 		$this->assertSame( '2026-07-01 10:00:00', $result['start_date'] );
 		$this->assertSame( '2026-07-01 18:00:00', $result['end_date'] );
 		$this->assertSame( '', $result['timezone'] );
-		$this->assertTrue( $result['all_day'] );
+		$this->assertArrayNotHasKey( 'all_day', $result );
 		$this->assertSame( 'Calendar desc', $result['description'] );
 	}
 
@@ -441,7 +441,7 @@ class EventsCalendarHandlerTest extends TestCase {
 		];
 
 		$result = $this->handler->parse_event_from_odoo( $odoo, false );
-		$this->assertFalse( $result['all_day'] );
+		$this->assertArrayNotHasKey( 'all_day', $result );
 	}
 
 	// ─── save_event ─────────────────────────────────────

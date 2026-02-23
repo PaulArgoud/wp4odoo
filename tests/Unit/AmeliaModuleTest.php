@@ -3,7 +3,6 @@ declare( strict_types=1 );
 
 namespace WP4Odoo\Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
 use WP4Odoo\Modules\Amelia_Module;
 
 /**
@@ -11,9 +10,7 @@ use WP4Odoo\Modules\Amelia_Module;
  *
  * @covers \WP4Odoo\Modules\Amelia_Module
  */
-class AmeliaModuleTest extends TestCase {
-
-	private Amelia_Module $module;
+class AmeliaModuleTest extends BookingModuleTestBase {
 
 	protected function setUp(): void {
 		global $wpdb;
@@ -26,83 +23,26 @@ class AmeliaModuleTest extends TestCase {
 		$this->module = new Amelia_Module( wp4odoo_test_client_provider(), wp4odoo_test_entity_map(), wp4odoo_test_settings() );
 	}
 
-	// ─── Identity ───────────────────────────────────────────
+	// ─── BookingModuleTestBase Configuration ────────────────
 
-	public function test_module_id_is_amelia(): void {
-		$ref = new \ReflectionProperty( $this->module, 'id' );
-		$this->assertSame( 'amelia', $ref->getValue( $this->module ) );
+	protected function get_module_id(): string {
+		return 'amelia';
 	}
 
-	public function test_module_name_is_amelia(): void {
-		$ref = new \ReflectionProperty( $this->module, 'name' );
-		$this->assertSame( 'Amelia', $ref->getValue( $this->module ) );
+	protected function get_module_name(): string {
+		return 'Amelia';
 	}
 
-	public function test_exclusive_group_is_empty(): void {
-		$this->assertSame( '', $this->module->get_exclusive_group() );
+	protected function get_booking_entity(): string {
+		return 'appointment';
 	}
 
-	public function test_sync_direction_is_bidirectional(): void {
-		$this->assertSame( 'bidirectional', $this->module->get_sync_direction() );
+	protected function get_sync_service_key(): string {
+		return 'sync_services';
 	}
 
-	// ─── Odoo Models ────────────────────────────────────────
-
-	public function test_declares_service_model(): void {
-		$ref = new \ReflectionProperty( $this->module, 'odoo_models' );
-		$this->assertSame( 'product.product', $ref->getValue( $this->module )['service'] );
-	}
-
-	public function test_declares_appointment_model(): void {
-		$ref = new \ReflectionProperty( $this->module, 'odoo_models' );
-		$this->assertSame( 'calendar.event', $ref->getValue( $this->module )['appointment'] );
-	}
-
-	public function test_declares_exactly_two_entity_types(): void {
-		$ref = new \ReflectionProperty( $this->module, 'odoo_models' );
-		$this->assertCount( 2, $ref->getValue( $this->module ) );
-	}
-
-	// ─── Default Settings ───────────────────────────────────
-
-	public function test_default_settings_has_sync_services(): void {
-		$this->assertTrue( $this->module->get_default_settings()['sync_services'] );
-	}
-
-	public function test_default_settings_has_sync_appointments(): void {
-		$this->assertTrue( $this->module->get_default_settings()['sync_appointments'] );
-	}
-
-	public function test_default_settings_has_pull_services(): void {
-		$this->assertTrue( $this->module->get_default_settings()['pull_services'] );
-	}
-
-	public function test_default_settings_has_exactly_three_keys(): void {
-		$this->assertCount( 3, $this->module->get_default_settings() );
-	}
-
-	// ─── Settings Fields ────────────────────────────────────
-
-	public function test_settings_fields_has_sync_services(): void {
-		$fields = $this->module->get_settings_fields();
-		$this->assertArrayHasKey( 'sync_services', $fields );
-		$this->assertSame( 'checkbox', $fields['sync_services']['type'] );
-	}
-
-	public function test_settings_fields_has_sync_appointments(): void {
-		$fields = $this->module->get_settings_fields();
-		$this->assertArrayHasKey( 'sync_appointments', $fields );
-		$this->assertSame( 'checkbox', $fields['sync_appointments']['type'] );
-	}
-
-	public function test_settings_fields_has_pull_services(): void {
-		$fields = $this->module->get_settings_fields();
-		$this->assertArrayHasKey( 'pull_services', $fields );
-		$this->assertSame( 'checkbox', $fields['pull_services']['type'] );
-	}
-
-	public function test_settings_fields_has_exactly_three_entries(): void {
-		$this->assertCount( 3, $this->module->get_settings_fields() );
+	protected function get_sync_booking_key(): string {
+		return 'sync_appointments';
 	}
 
 	// ─── Field Mappings ─────────────────────────────────────
@@ -182,12 +122,5 @@ class AmeliaModuleTest extends TestCase {
 		$status = $this->module->get_dependency_status();
 		$this->assertTrue( $status['available'] );
 		$this->assertEmpty( $status['notices'] );
-	}
-
-	// ─── Boot Guard ─────────────────────────────────────────
-
-	public function test_boot_does_not_crash_with_amelia(): void {
-		$this->module->boot();
-		$this->assertTrue( true );
 	}
 }

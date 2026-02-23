@@ -61,7 +61,7 @@ class Product_Handler {
 	 * Load WooCommerce product data.
 	 *
 	 * @param int $wp_id Product ID.
-	 * @return array
+	 * @return array<string, mixed>
 	 */
 	public function load( int $wp_id ): array {
 		$product = wc_get_product( $wp_id );
@@ -83,7 +83,7 @@ class Product_Handler {
 	 * Load WooCommerce variation data.
 	 *
 	 * @param int $wp_id Variation ID.
-	 * @return array
+	 * @return array<string, mixed>
 	 */
 	public function load_variant( int $wp_id ): array {
 		$product = wc_get_product( $wp_id );

@@ -118,6 +118,7 @@ WordPress For Odoo/
 │   │   │
 │   │   ├── # ─── Booking (Amelia + Bookly + FluentBooking + JetAppointments + JetBooking + WC Bookings) ──
 │   │   ├── class-booking-module-base.php     # Shared: abstract base class for booking/appointment modules
+│   │   ├── class-booking-handler-base.php   # Shared: abstract handler base for booking modules (service/booking load helpers)
 │   │   ├── trait-amelia-hooks.php            # Amelia: hook callbacks (booking saved/canceled/rescheduled, service saved)
 │   │   ├── class-amelia-handler.php          # Amelia: $wpdb queries on amelia_* tables (no CPT)
 │   │   ├── class-amelia-module.php           # Amelia: extends Booking_Module_Base (uses Amelia_Hooks trait)
@@ -191,6 +192,7 @@ WordPress For Odoo/
 │   │   │
 │   │   ├── # ─── Events (Events Calendar + MEC + FooEvents) ────
 │   │   ├── class-events-module-base.php     # Shared: abstract base class for event modules (dual-model, attendance resolution)
+│   │   ├── class-events-handler-base.php    # Shared: abstract handler base for event modules (format_event, parse_event_from_odoo, format_attendance)
 │   │   ├── trait-events-calendar-hooks.php   # Events Calendar: hook callbacks (event save, ticket save, attendee created)
 │   │   ├── class-events-calendar-handler.php # Events Calendar: event/ticket/attendee data load + formatting
 │   │   ├── class-events-calendar-module.php  # Events Calendar: extends Events_Module_Base, exclusive group: events
@@ -414,7 +416,7 @@ WordPress For Odoo/
 ├── templates/
 │   └── customer-portal.php           #   Customer portal HTML template (orders/invoices tabs)
 │
-├── tests/                             # 5410 unit tests (8139 assertions) + 45 integration tests (wp-env)
+├── tests/                             # 5410 unit tests (8141 assertions) + 45 integration tests (wp-env)
 │   ├── bootstrap.php                 #   Unit test bootstrap: constants, stub loading, plugin class requires
 │   ├── bootstrap-integration.php     #   Integration test bootstrap: loads WP test framework (wp-env)
 │   ├── stubs/
@@ -612,6 +614,8 @@ WordPress For Odoo/
 │       ├── DonationHandlerBaseTest.php #   10 tests for Donation_Handler_Base
 │       ├── MembershipModuleTestBase.php # Abstract base: 30 shared membership module tests
 │       ├── LMSModuleTestBase.php       # Abstract base: 29 shared LMS module tests
+│       ├── EventsModuleTestBase.php    # Abstract base: 18 shared event module tests
+│       ├── BookingModuleTestBase.php   # Abstract base: 16 shared booking module tests
 │       ├── HelpdeskHandlerBaseTest.php #   14 tests for Helpdesk_Handler_Base
 │       ├── LMSHandlerBaseTest.php      #   12 tests for LMS_Handler_Base
 │       ├── MembershipModuleBaseTest.php #  15 tests for Membership_Module_Base
@@ -1028,6 +1032,12 @@ Six booking modules (Amelia, Bookly, FluentBooking, JetAppointments, JetBooking,
 
 Used by `Amelia_Module`, `Bookly_Module`, `Fluent_Booking_Module`, `Jet_Appointments_Module`, `Jet_Booking_Module`, and `WC_Bookings_Module`.
 
+**`Booking_Handler_Base`** (`class-booking-handler-base.php`):
+- Abstract handler base class for 5 booking handlers (Amelia, Bookly, FluentBooking, JetBooking, JetAppointments)
+- Shared service/booking data loading helpers
+
+Extended by `Amelia_Handler`, `Bookly_Handler`, `Fluent_Booking_Handler`, `Jet_Booking_Handler`, and `Jet_Appointments_Handler`.
+
 ### 11. Shared Events Infrastructure
 
 Three event modules (Events Calendar, MEC, FooEvents) share a common event/attendance sync pattern:
@@ -1045,6 +1055,14 @@ Three event modules (Events Calendar, MEC, FooEvents) share a common event/atten
 - 4 abstract methods: `get_attendance_entity_type()`, `handler_load_event()`, `handler_load_attendance()`, `handler_save_event()`, `handler_get_event_id_for_attendance()`
 
 Used by `Events_Calendar_Module` (extends with ticket entity type), `MEC_Module`, and `FooEvents_Module`.
+
+**`Events_Handler_Base`** (`class-events-handler-base.php`):
+- Abstract handler base class for all 3 event handlers
+- Shared `format_event()`: builds Odoo event payload with dual-format support (`event.event` vs `calendar.event`)
+- Shared `parse_event_from_odoo()`: parses Odoo event data into WP-compatible structure
+- Shared `format_attendance()`: builds `event.registration` payload from attendee data
+
+Extended by `Events_Calendar_Handler`, `MEC_Handler`, and `FooEvents_Handler`.
 
 ### 12. Shared Helpdesk Infrastructure
 

@@ -37,8 +37,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	</div>
 	<ol class="wp4odoo-checklist-steps">
 		<?php foreach ( $steps as $step ) : ?>
-			<li class="<?php echo $step['done'] ? 'done' : ''; ?>">
-				<span class="wp4odoo-checklist-icon"><?php echo $step['done'] ? '&#10003;' : '&#9675;'; ?></span>
+			<li class="<?php echo esc_attr( $step['done'] ? 'done' : '' ); ?>">
+				<span class="wp4odoo-checklist-icon"><?php echo $step['done'] ? '&#10003;' : '&#9675;'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- hardcoded HTML entities ?></span>
 				<?php if ( ! empty( $step['tab'] ) && ! $step['done'] ) : ?>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wp4odoo&tab=' . $step['tab'] ) ); ?>">
 						<?php echo esc_html( $step['label'] ); ?>

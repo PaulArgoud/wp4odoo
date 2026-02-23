@@ -4,7 +4,6 @@ declare( strict_types=1 );
 namespace WP4Odoo\Modules;
 
 use WP4Odoo\Field_Mapper;
-use WP4Odoo\Logger;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -20,14 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @package WP4Odoo
  * @since   3.5.0
  */
-class Jet_Appointments_Handler {
-
-	/**
-	 * Logger instance.
-	 *
-	 * @var Logger
-	 */
-	private Logger $logger;
+class Jet_Appointments_Handler extends Booking_Handler_Base {
 
 	/**
 	 * Cached service CPT slug.
@@ -35,15 +27,6 @@ class Jet_Appointments_Handler {
 	 * @var string
 	 */
 	private string $service_cpt = '';
-
-	/**
-	 * Constructor.
-	 *
-	 * @param Logger $logger Logger instance.
-	 */
-	public function __construct( Logger $logger ) {
-		$this->logger = $logger;
-	}
 
 	// ─── Service data access ───────────────────────────────
 

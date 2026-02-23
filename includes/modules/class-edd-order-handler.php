@@ -52,7 +52,7 @@ class EDD_Order_Handler {
 	 * Load EDD order data.
 	 *
 	 * @param int $order_id EDD order ID.
-	 * @return array
+	 * @return array<string, mixed>
 	 */
 	public function load( int $order_id ): array {
 		$order = edd_get_order( $order_id );

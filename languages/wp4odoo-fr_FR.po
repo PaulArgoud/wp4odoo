@@ -266,7 +266,7 @@ msgstr "Module AffiliateWP activé mais AffiliateWP n'est pas actif."
 #: includes/class-cli.php:544
 #, php-format
 msgid "All caches flushed (%d schema transient(s) deleted)."
-msgstr ""
+msgstr "Tous les caches vidés (%d transient(s) de schéma supprimé(s))."
 
 #: admin/views/tab-health.php:118
 msgid "All closed"
@@ -1710,7 +1710,7 @@ msgstr "Disjoncteurs par module"
 #: includes/class-module-registry.php:489
 #, php-format
 msgid "Module failed to load (%1$s): %2$s"
-msgstr ""
+msgstr "Échec du chargement du module (%1$s) : %2$s"
 
 #: includes/admin/class-settings-page.php:45 admin/views/tab-logs.php:39
 #: admin/views/tab-modules.php:14
@@ -3414,7 +3414,7 @@ msgstr "Planifié"
 #: includes/admin/trait-ajax-monitor-handlers.php:235
 #, php-format
 msgid "Schema cache cleared (%d entries removed)."
-msgstr ""
+msgstr "Cache de schéma vidé (%d entrée(s) supprimée(s))."
 
 #: admin/views/tab-connection.php:116
 msgid "Scroll to \"Account Security\" and click \"New API Key\"."

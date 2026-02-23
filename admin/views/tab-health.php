@@ -58,7 +58,7 @@ $warning_count = count( $version_warnings );
 		</span>
 		<span class="wp4odoo-stat-label"><?php esc_html_e( 'Average latency', 'wp4odoo' ); ?></span>
 	</div>
-	<div class="wp4odoo-stat-card <?php echo $success_rate < 90.0 ? 'wp4odoo-stat-failed' : 'wp4odoo-stat-completed'; ?>">
+	<div class="wp4odoo-stat-card <?php echo esc_attr( $success_rate < 90.0 ? 'wp4odoo-stat-failed' : 'wp4odoo-stat-completed' ); ?>">
 		<span class="wp4odoo-stat-number"><?php echo esc_html( number_format( $success_rate, 1 ) . '%' ); ?></span>
 		<span class="wp4odoo-stat-label"><?php esc_html_e( 'Success rate', 'wp4odoo' ); ?></span>
 	</div>

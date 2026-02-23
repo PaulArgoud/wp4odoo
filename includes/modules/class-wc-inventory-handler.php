@@ -60,14 +60,6 @@ class WC_Inventory_Handler {
 	private Logger $logger;
 
 	/**
-	 * Closure returning the Odoo_Client (reserved for future API calls).
-	 *
-	 * @var \Closure
-	 * @phpstan-ignore property.onlyWritten
-	 */
-	private \Closure $client_fn;
-
-	/**
 	 * Entity map repository for cross-module lookups.
 	 *
 	 * @var Entity_Map_Repository
@@ -78,12 +70,10 @@ class WC_Inventory_Handler {
 	 * Constructor.
 	 *
 	 * @param Logger                $logger     Logger instance.
-	 * @param \Closure              $client_fn  Client provider closure.
 	 * @param Entity_Map_Repository $entity_map Entity map repository.
 	 */
-	public function __construct( Logger $logger, \Closure $client_fn, Entity_Map_Repository $entity_map ) {
+	public function __construct( Logger $logger, Entity_Map_Repository $entity_map ) {
 		$this->logger     = $logger;
-		$this->client_fn  = $client_fn;
 		$this->entity_map = $entity_map;
 	}
 

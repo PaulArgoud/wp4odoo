@@ -52,7 +52,7 @@ class Order_Handler {
 	 * Load WooCommerce order data.
 	 *
 	 * @param int $wp_id Order ID.
-	 * @return array
+	 * @return array<string, mixed>
 	 */
 	public function load( int $wp_id ): array {
 		$order = wc_get_order( $wp_id );

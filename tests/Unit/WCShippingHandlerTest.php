@@ -31,7 +31,6 @@ class WCShippingHandlerTest extends TestCase {
 
 		$this->handler = new WC_Shipping_Handler(
 			new Logger( 'test', wp4odoo_test_settings() ),
-			wp4odoo_test_client_provider(),
 			$this->entity_map
 		);
 	}

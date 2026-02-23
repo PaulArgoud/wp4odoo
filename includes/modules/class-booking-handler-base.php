@@ -13,7 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Abstract base for booking plugin handlers.
  *
  * Provides the shared Logger dependency used by Amelia_Handler,
- * Bookly_Handler, and WC_Bookings_Handler.
+ * Bookly_Handler, WC_Bookings_Handler, Jet_Booking_Handler,
+ * and Jet_Appointments_Handler.
  *
  * @package WP4Odoo
  * @since   3.2.0

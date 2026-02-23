@@ -85,7 +85,7 @@ class WC_Shipping_Module extends Module_Base {
 	 */
 	public function __construct( \Closure $client_provider, \WP4Odoo\Entity_Map_Repository $entity_map, \WP4Odoo\Settings_Repository $settings ) {
 		parent::__construct( 'wc_shipping', 'WC Shipping', $client_provider, $entity_map, $settings );
-		$this->handler = new WC_Shipping_Handler( $this->logger, fn() => $this->client(), $this->entity_map() );
+		$this->handler = new WC_Shipping_Handler( $this->logger, $this->entity_map() );
 	}
 
 	/**

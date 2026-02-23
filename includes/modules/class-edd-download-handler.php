@@ -42,7 +42,7 @@ class EDD_Download_Handler {
 	 * Load EDD download data.
 	 *
 	 * @param int $wp_id Download post ID.
-	 * @return array
+	 * @return array<string, mixed>
 	 */
 	public function load( int $wp_id ): array {
 		$post = get_post( $wp_id );

@@ -91,7 +91,7 @@ class WC_Inventory_Module extends Module_Base {
 	 */
 	public function __construct( \Closure $client_provider, \WP4Odoo\Entity_Map_Repository $entity_map, \WP4Odoo\Settings_Repository $settings ) {
 		parent::__construct( 'wc_inventory', 'WC Inventory', $client_provider, $entity_map, $settings );
-		$this->handler = new WC_Inventory_Handler( $this->logger, fn() => $this->client(), $this->entity_map() );
+		$this->handler = new WC_Inventory_Handler( $this->logger, $this->entity_map() );
 	}
 
 	/**
