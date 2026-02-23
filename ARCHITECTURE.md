@@ -138,7 +138,8 @@ WordPress For Odoo/
 │   │   ├── class-wc-bookings-module.php      # WC Bookings: extends Booking_Module_Base (uses WC_Bookings_Hooks trait)
 │   │   │
 │   │   ├── # ─── LMS (LearnDash + LifterLMS + TutorLMS + LearnPress + Sensei) ──
-│   │   ├── class-lms-module-base.php         # LMS shared: enrollment loading pipeline (synthetic ID → partner → product → sale order)
+│   │   ├── class-lms-module-base.php         # LMS shared: enrollment loading pipeline (synthetic ID → partner → product → sale order), shared load_enrollment_data()
+│   │   ├── class-lms-handler-base.php        # LMS shared: abstract handler base (load_course template, build_invoice, build_sale_order)
 │   │   ├── trait-learndash-hooks.php         # LearnDash: hook callbacks (course/group save, transaction, enrollment)
 │   │   ├── class-learndash-handler.php       # LearnDash: course/group/transaction/enrollment data load
 │   │   ├── class-learndash-module.php        # LearnDash: push sync coordinator (extends LMS_Module_Base, uses LearnDash_Hooks trait)
@@ -244,6 +245,19 @@ WordPress For Odoo/
 │   │   ├── trait-fluent-support-hooks.php   # FS: hook callbacks (ticket created, updated, response added)
 │   │   ├── class-fluent-support-handler.php # FS: ticket load/save via Fluent Support model API
 │   │   ├── class-fluent-support-module.php  # FS: extends Helpdesk_Module_Base (uses Fluent_Support_Hooks trait)
+│   │   │
+│   │   ├── # ─── Marketplace (Dokan + WCFM + WC Vendors) ────
+│   │   ├── class-marketplace-module-base.php  # Marketplace shared: vendor/sub_order/commission/payout patterns, settings, dedup, push/pull
+│   │   ├── class-marketplace-handler-base.php # Marketplace shared: status maps, sub-order load, PO line formatting
+│   │   ├── trait-dokan-hooks.php              # Dokan: hook callbacks (vendor status, order status, withdraw)
+│   │   ├── class-dokan-handler.php            # Dokan: vendor/sub-order/commission/payout data load
+│   │   ├── class-dokan-module.php             # Dokan: extends Marketplace_Module_Base (uses Dokan_Hooks trait)
+│   │   ├── trait-wcfm-hooks.php               # WCFM: hook callbacks (vendor status, order status, withdrawal)
+│   │   ├── class-wcfm-handler.php             # WCFM: vendor/sub-order/commission/payout data load
+│   │   ├── class-wcfm-module.php              # WCFM: extends Marketplace_Module_Base (uses WCFM_Hooks trait)
+│   │   ├── trait-wc-vendors-hooks.php         # WC Vendors: hook callbacks (vendor status, order, payout)
+│   │   ├── class-wc-vendors-handler.php       # WC Vendors: vendor/sub-order/commission/payout data load
+│   │   ├── class-wc-vendors-module.php        # WC Vendors: extends Marketplace_Module_Base (uses WC_Vendors_Hooks trait)
 │   │   │
 │   │   ├── # ─── AffiliateWP ────────────────────────
 │   │   ├── class-affiliatewp-module.php      # AffiliateWP: push-only, affiliates → res.partner, referrals → vendor bills
@@ -410,14 +424,12 @@ WordPress For Odoo/
 │   │   ├── wp-db-stub.php            #   WP_DB_Stub ($wpdb mock with call recording)
 │   │   ├── plugin-stub.php           #   WP4Odoo_Plugin test singleton
 │   │   ├── wp-cli-utils.php          #   WP_CLI\Utils\format_items stub
+│   │   ├── constants-only.php        #   Consolidated constants for 14 third-party plugins (AMELIA_VERSION, WPCF_VERSION, etc.)
 │   │   ├── form-classes.php          #   GFAPI, GF_Field, wpforms() stubs
 │   │   ├── edd-classes.php           #   Easy_Digital_Downloads, EDD_Download, EDD_Customer, EDD\Orders\Order
 │   │   ├── memberpress-classes.php   #   MeprProduct, MeprTransaction, MeprSubscription
 │   │   ├── givewp-classes.php        #   Give class, give() function, GIVE_VERSION
 │   │   ├── charitable-classes.php    #   Charitable class with instance()
-│   │   ├── simplepay-classes.php     #   SIMPLE_PAY_VERSION constant
-│   │   ├── wprm-classes.php          #   WPRM_VERSION constant
-│   │   ├── amelia-classes.php        #   AMELIA_VERSION constant
 │   │   ├── bookly-classes.php        #   Bookly\Lib\Plugin class
 │   │   ├── learndash-classes.php    #   LEARNDASH_VERSION, LearnDash functions
 │   │   ├── lifterlms-classes.php    #   LLMS_VERSION, LLMS_Order, LLMS_Student
@@ -427,34 +439,25 @@ WordPress For Odoo/
 │   │   ├── events-calendar-classes.php  # Tribe__Events__Main, Tribe__Tickets__Main
 │   │   ├── mec-classes.php             # MEC class, MEC_VERSION constant
 │   │   ├── fooevents-classes.php       # FooEvents class, FOOEVENTS_VERSION constant
-│   │   ├── fluent-booking-classes.php  # FLUENT_BOOKING_VERSION constant
 │   │   ├── wc-bookings-classes.php     # WC_Booking, WC_Product_Booking
 │   │   ├── sprout-invoices-classes.php  # SI_Post_Type, SI_Invoice, SI_Payment
 │   │   ├── wp-invoice-classes.php       # WPI_Invoice
-│   │   ├── crowdfunding-classes.php     # WPCF_VERSION constant
-│   │   ├── ecwid-classes.php            # ECWID_PLUGIN_DIR constant
-│   │   ├── shopwp-classes.php           # SHOPWP_PLUGIN_DIR constant
-│   │   ├── job-manager-classes.php     # WP_Job_Manager stubs
 │   │   ├── acf-classes.php             # ACF functions (get_field, update_field, acf_get_field)
 │   │   ├── wc-points-rewards-classes.php # WC_Points_Rewards, WC_Points_Rewards_Manager
 │   │   ├── wc-bundles-classes.php      # WC_Bundles, WC_Composite_Products, WC_Product_Bundle
 │   │   ├── awesome-support-classes.php # Awesome_Support, wpas_get_ticket_status
 │   │   ├── supportcandy-classes.php    # WPSC_VERSION, SupportCandy stubs
 │   │   ├── affiliatewp-classes.php     # AffiliateWP, affwp_get_affiliate
-│   │   ├── tutorlms-classes.php        # TUTOR_VERSION constant
 │   │   ├── fluentcrm-classes.php       # FLUENTCRM, FLUENTCRM_PLUGIN_VERSION, FluentCrm\App\Models stubs
 │   │   ├── funnelkit-classes.php          # FunnelKit: WFFN_VERSION constant
 │   │   ├── gamipress-classes.php          # GamiPress: GAMIPRESS_VERSION, gamipress(), points/achievement functions
 │   │   ├── buddyboss-classes.php          # BuddyBoss: BP_VERSION, buddypress(), xprofile/groups functions
-│   │   ├── knowledge-classes.php      # Knowledge module stubs (no WP plugin dependency, minimal)
-│   │   ├── wperp-classes.php          # WP ERP stubs (WPERP_VERSION constant)
-│   │   ├── wperp-crm-classes.php       # WP ERP CRM hooks/functions stubs
+│   │   ├── dokan-classes.php            # Dokan stubs (dokan() function, classes)
+│   │   ├── wcfm-classes.php             # WCFM stubs (WCFM() function, classes)
+│   │   ├── wc-vendors-classes.php       # WC Vendors stubs (WCV_VERSION constant, classes)
 │   │   ├── wpai-classes.php            # PMXI_VERSION, wp_all_import_get_import_id
 │   │   ├── jet-appointments-classes.php # JET_APB_VERSION, JET_APB\Plugin
-│   │   ├── jet-booking-classes.php     # JET_ABAF_VERSION, JET_ABAF\Plugin
-│   │   ├── jetformbuilder-classes.php  # JET_FORM_BUILDER_VERSION
 │   │   ├── jetengine-classes.php       # JET_ENGINE_VERSION, Jet_Engine
-│   │   ├── wp-project-manager-classes.php # CPM_VERSION, WeDevs PM classes
 │   │   ├── wc-product-addons-classes.php  # WC_PRODUCT_ADDONS_VERSION, WC_Product_Addons, THWEPO_VERSION, PPOM_VERSION
 │   │   ├── i18n-classes.php            # WPML + Polylang stubs (constants, classes, functions)
 │   │   ├── wperp-accounting-classes.php # WP ERP Accounting stubs
@@ -468,10 +471,7 @@ WordPress For Odoo/
 │   │   ├── wc-shipping-classes.php     # ShipStation, Sendcloud, Packlink, AST stubs
 │   │   ├── wc-returns-classes.php      # YITH Returns, ReturnGO stubs
 │   │   ├── fluent-support-classes.php  # FLUENT_SUPPORT_VERSION, FluentSupport model stubs
-│   │   ├── sensei-classes.php          # SENSEI_LMS_VERSION, Sensei_Main stubs
 │   │   ├── ultimate-member-classes.php # UM class, UM_VERSION stubs
-│   │   ├── wc-rental-classes.php       # WC Rental stubs (minimal)
-│   │   ├── field-service-classes.php   # Field Service stubs (no WP plugin dependency)
 │   │   └── surecart-classes.php        # SureCart stubs (SURECART_VERSION, SureCart model classes)
 │   ├── helpers/
 │   │   └── MockTransport.php            #   Shared mock Transport for API tests
@@ -584,6 +584,9 @@ WordPress For Odoo/
 │       ├── AffiliateWPModuleTest.php    # Tests for AffiliateWP_Module
 │       ├── AffiliateWPHandlerTest.php   # Tests for AffiliateWP_Handler
 │       ├── AffiliateWPHooksTest.php     # Tests for AffiliateWP_Hooks
+│       ├── DokanModuleTest.php          # Tests for Dokan_Module
+│       ├── WCFMModuleTest.php           # Tests for WCFM_Module
+│       ├── WCVendorsModuleTest.php      # Tests for WC_Vendors_Module
 │       ├── WPAllImportModuleTest.php    # Tests for WP_All_Import_Module
 │       ├── OdooAccountingFormatterTest.php # Tests for Odoo_Accounting_Formatter
 │       ├── OdooModelTest.php            # Tests for Odoo_Model enum
@@ -741,6 +744,13 @@ Module_Base (abstract)
 ├── WC_Points_Rewards_Module    → loyalty.card                                       [bidirectional]
 ├── Job_Manager_Module          → hr.job                                             [bidirectional]
 ├── AffiliateWP_Module          → res.partner (vendor), account.move (in_invoice)    [WP → Odoo]
+├── Marketplace_Module_Base (abstract)
+│   ├── Dokan_Module            → res.partner (vendor), purchase.order, account.move [bidirectional]
+│   │                             (exclusive group: marketplace, requires: woocommerce)
+│   ├── WCFM_Module             → res.partner (vendor), purchase.order, account.move [bidirectional]
+│   │                             (exclusive group: marketplace, requires: woocommerce)
+│   └── WC_Vendors_Module       → res.partner (vendor), purchase.order, account.move [bidirectional]
+│                                 (exclusive group: marketplace, requires: woocommerce)
 ├── FluentCRM_Module            → mailing.contact, mailing.list, res.partner.category  [bidirectional]
 ├── FunnelKit_Module            → crm.lead, crm.stage                               [bidirectional]
 ├── GamiPress_Module            → loyalty.card, product.template                     [bidirectional]
@@ -772,6 +782,7 @@ Module_Base (abstract)
 - **Helpdesk**: Awesome Support, SupportCandy, and Fluent Support are mutually exclusive (all target `helpdesk.ticket` / `project.task`). First-registered wins — registration order: Awesome Support → SupportCandy → Fluent Support.
 - **Gamification**: GamiPress and myCRED are mutually exclusive (both target `loyalty.card` via `Loyalty_Card_Resolver` with `partner_id` + `program_id`). First-registered wins (GamiPress before myCRED in registration order).
 - **Events**: Events Calendar and MEC are mutually exclusive (both target `event.event` / `calendar.event` with exclusive group `events`). First-registered wins — registration order: Events Calendar → MEC. Note: FooEvents is independent (not in the exclusive group) — it coexists with either events module.
+- **Marketplace**: Dokan, WCFM, and WC Vendors are mutually exclusive (all target multi-vendor operations: `res.partner` vendors, `purchase.order` sub-orders, `account.move` commissions/payouts). First-registered wins — registration order: Dokan → WCFM → WC Vendors.
 - All other modules are independent and can coexist freely (LMS, Subscriptions, Points & Rewards, FooEvents, Booking, Donations, Forms, WPRM, Crowdfunding, BOM, WC Add-Ons, Jeero Configurator, AffiliateWP, FluentCRM, FunnelKit, BuddyBoss, Ultimate Member, Knowledge, Documents, WP ERP, WP ERP CRM, WP ERP Accounting, WP Project Manager, JetEngine, JetEngine Meta, ACF, WP All Import, Job Manager, Food Ordering, WC Rental, Field Service, Survey & Quiz).
 
 **Module_Base provides** (uses traits: `Hook_Lifecycle`, `Translation_Accumulator`, `Sync_Orchestrator`, `Module_Helpers`):
@@ -811,7 +822,7 @@ Handler classes receive their dependencies via closures from their parent module
 
 Both patterns are intentional and follow a clear convention:
 
-- **Data Handlers** (pure transformers): `load_data()`, `parse_from_odoo()`, `save_data()`, `status_map()`. No Odoo API dependency. Examples: `Product_Handler`, `Order_Handler`, `WPRM_Handler`, `LearnDash_Handler`, `LifterLMS_Handler`, `TutorLMS_Handler`, `FluentCRM_Handler`, `Job_Manager_Handler`.
+- **Data Handlers** (pure transformers): `load_data()`, `parse_from_odoo()`, `save_data()`, `status_map()`. No Odoo API dependency. Examples: `Product_Handler`, `Order_Handler`, `WPRM_Handler`, `LearnDash_Handler`, `LifterLMS_Handler`, `TutorLMS_Handler`, `FluentCRM_Handler`, `Job_Manager_Handler`, `Dokan_Handler`, `WCFM_Handler`, `WC_Vendors_Handler`.
 
 - **Integration Handlers** (with side effects): access plugin DB tables via `$wpdb`, call third-party APIs, or manage external state. Examples: `Amelia_Handler`, `Bookly_Handler`, `Ecwid_Handler`, `ShopWP_Handler`, `SimplePay_Handler`.
 
@@ -819,7 +830,7 @@ Both patterns are intentional and follow a clear convention:
 
 ### Abstract Method Naming Convention
 
-Intermediate base classes (`Membership_Module_Base`, `Dual_Accounting_Module_Base`, `Booking_Module_Base`, `Events_Module_Base`, `Helpdesk_Module_Base`, `LMS_Module_Base`) define abstract methods for subclass configuration. Two naming prefixes distinguish their purpose:
+Intermediate base classes (`Membership_Module_Base`, `Dual_Accounting_Module_Base`, `Booking_Module_Base`, `Events_Module_Base`, `Helpdesk_Module_Base`, `LMS_Module_Base`, `Marketplace_Module_Base`) define abstract methods for subclass configuration. Two naming prefixes distinguish their purpose:
 
 - **`handler_*()`** — delegates to the handler class for data operations (load, save, parse, delete). These methods interact with the WordPress database or plugin APIs. Examples: `handler_load_level()`, `handler_load_child()`, `handler_parse_service_from_odoo()`, `handler_save_service()`.
 
@@ -2337,6 +2348,55 @@ All user inputs are sanitized with:
 - Detection: `SENSEI_LMS_VERSION`
 
 **Settings:** `sync_courses`, `pull_courses`, `sync_orders`, `sync_enrollments`
+
+### Dokan — COMPLETE
+
+**Files:** `class-dokan-module.php` (extends `Marketplace_Module_Base`, uses `Dokan_Hooks` trait), `trait-dokan-hooks.php` (hook callbacks), `class-dokan-handler.php` (extends `Marketplace_Handler_Base`, vendor/sub-order/commission/payout data)
+
+**Odoo models:** `res.partner` (vendors as suppliers), `purchase.order` (sub-orders), `account.move` (commissions as vendor bills, payouts as payments)
+
+**Key features:**
+- Multi-vendor marketplace sync via `Marketplace_Module_Base`
+- Exclusive group: `marketplace` (conflicts with WCFM, WC Vendors)
+- Requires WooCommerce (`required_modules: ['woocommerce']`)
+- Vendors → res.partner (suppliers), status bidirectional
+- Sub-orders → purchase.order with line items
+- Commissions → vendor bills (`in_invoice`)
+- Withdrawals → payments (auto-post bills)
+- Partner chain: vendor user → Odoo partner (pre-sync on push)
+- Detection: `dokan()` function
+
+**Settings:** `sync_vendors`, `sync_sub_orders`, `sync_commissions`, `sync_payouts`, `pull_vendors`, `auto_post_bills`
+
+### WCFM — COMPLETE
+
+**Files:** `class-wcfm-module.php` (extends `Marketplace_Module_Base`, uses `WCFM_Hooks` trait), `trait-wcfm-hooks.php` (hook callbacks), `class-wcfm-handler.php` (extends `Marketplace_Handler_Base`, vendor/sub-order/commission/withdrawal data)
+
+**Odoo models:** `res.partner` (vendors as suppliers), `purchase.order` (sub-orders), `account.move` (commissions as vendor bills, withdrawals as payments)
+
+**Key features:**
+- Multi-vendor marketplace sync via `Marketplace_Module_Base`
+- Exclusive group: `marketplace` (conflicts with Dokan, WC Vendors)
+- Requires WooCommerce (`required_modules: ['woocommerce']`)
+- Detection: `WCFM()` function
+- Same entity pattern as Dokan (shared via base class)
+
+**Settings:** `sync_vendors`, `sync_sub_orders`, `sync_commissions`, `sync_payouts`, `pull_vendors`, `auto_post_bills`
+
+### WC Vendors — COMPLETE
+
+**Files:** `class-wc-vendors-module.php` (extends `Marketplace_Module_Base`, uses `WC_Vendors_Hooks` trait), `trait-wc-vendors-hooks.php` (hook callbacks), `class-wc-vendors-handler.php` (extends `Marketplace_Handler_Base`, vendor/sub-order/commission/payout data)
+
+**Odoo models:** `res.partner` (vendors as suppliers), `purchase.order` (sub-orders), `account.move` (commissions as vendor bills, payouts as payments)
+
+**Key features:**
+- Multi-vendor marketplace sync via `Marketplace_Module_Base`
+- Exclusive group: `marketplace` (conflicts with Dokan, WCFM)
+- Requires WooCommerce (`required_modules: ['woocommerce']`)
+- Detection: `WCV_VERSION` constant
+- Same entity pattern as Dokan/WCFM (shared via base class)
+
+**Settings:** `sync_vendors`, `sync_sub_orders`, `sync_commissions`, `sync_payouts`, `pull_vendors`, `auto_post_bills`
 
 ### Ultimate Member — COMPLETE
 

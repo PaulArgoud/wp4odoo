@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **WP Crowdfunding compatibility** — Updated module detection from `wpneo_crowdfunding_init()` function to `WPCF_VERSION` constant, meta keys from `_wpneo_*` to `_nf_*` prefix, and version constant from `STARTER_VERSION` to `WPCF_VERSION`, matching WP Crowdfunding 2.x API surface
 
+### Changed
+- **Marketplace base classes** — Extracted shared logic from Dokan, WCFM, and WC Vendors into `Marketplace_Module_Base` and `Marketplace_Handler_Base`, eliminating ~477 lines of duplicated code across 6 module/handler files
+- **LMS handler template method** — Added `load_course()` template method to `LMS_Handler_Base` with 3 abstract hooks (`get_course_post_type()`, `get_course_price()`, `get_lms_label()`), eliminating identical implementations from 5 LMS handlers (~80 lines)
+- **LMS module shared enrollment** — Moved identical `load_enrollment_data()` from 5 LMS modules into `LMS_Module_Base` via `get_lms_handler()` abstract (~35 lines)
+- **Test stub consolidation** — Consolidated 14 single-constant stub files into `constants-only.php` and removed 4 empty stubs, reducing `bootstrap.php` requires from 68 to 50
+- **PHPDoc generics** — Added `array<string, mixed>` return types to 11 methods in `Module_Base` and `Settings_Repository`
+
 ## [3.9.0] - 2026-02-19
 
 ### Fixed (Architecture)
